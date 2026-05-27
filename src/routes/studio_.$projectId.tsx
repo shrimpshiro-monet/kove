@@ -27,7 +27,7 @@ import { Slider } from "@/components/ui/slider";
 import { useStudioProjects, type Clip } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/studio/$projectId")({
+export const Route = createFileRoute("/studio_/$projectId")({
   component: StudioPage,
 });
 

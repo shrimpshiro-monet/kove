@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as StudioProjectIdRouteImport } from './routes/studio.$projectId'
-import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
+import { Route as StudioProjectIdRouteImport } from './routes/studio_.$projectId'
+import { Route as ChatThreadIdRouteImport } from './routes/chat_.$threadId'
 
 const StudioRoute = StudioRouteImport.update({
   id: '/studio',
@@ -31,37 +31,37 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudioProjectIdRoute = StudioProjectIdRouteImport.update({
-  id: '/$projectId',
-  path: '/$projectId',
-  getParentRoute: () => StudioRoute,
+  id: '/studio_/$projectId',
+  path: '/studio/$projectId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
-  id: '/$threadId',
-  path: '/$threadId',
-  getParentRoute: () => ChatRoute,
+  id: '/chat_/$threadId',
+  path: '/chat/$threadId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRouteWithChildren
-  '/studio': typeof StudioRouteWithChildren
+  '/chat': typeof ChatRoute
+  '/studio': typeof StudioRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRouteWithChildren
-  '/studio': typeof StudioRouteWithChildren
+  '/chat': typeof ChatRoute
+  '/studio': typeof StudioRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/chat': typeof ChatRouteWithChildren
-  '/studio': typeof StudioRouteWithChildren
-  '/chat/$threadId': typeof ChatThreadIdRoute
-  '/studio/$projectId': typeof StudioProjectIdRoute
+  '/chat': typeof ChatRoute
+  '/studio': typeof StudioRoute
+  '/chat_/$threadId': typeof ChatThreadIdRoute
+  '/studio_/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,14 +78,16 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/studio'
-    | '/chat/$threadId'
-    | '/studio/$projectId'
+    | '/chat_/$threadId'
+    | '/studio_/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ChatRoute: typeof ChatRouteWithChildren
-  StudioRoute: typeof StudioRouteWithChildren
+  ChatRoute: typeof ChatRoute
+  StudioRoute: typeof StudioRoute
+  ChatThreadIdRoute: typeof ChatThreadIdRoute
+  StudioProjectIdRoute: typeof StudioProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -111,49 +113,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/studio/$projectId': {
-      id: '/studio/$projectId'
-      path: '/$projectId'
+    '/studio_/$projectId': {
+      id: '/studio_/$projectId'
+      path: '/studio/$projectId'
       fullPath: '/studio/$projectId'
       preLoaderRoute: typeof StudioProjectIdRouteImport
-      parentRoute: typeof StudioRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/chat/$threadId': {
-      id: '/chat/$threadId'
-      path: '/$threadId'
+    '/chat_/$threadId': {
+      id: '/chat_/$threadId'
+      path: '/chat/$threadId'
       fullPath: '/chat/$threadId'
       preLoaderRoute: typeof ChatThreadIdRouteImport
-      parentRoute: typeof ChatRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface ChatRouteChildren {
-  ChatThreadIdRoute: typeof ChatThreadIdRoute
-}
-
-const ChatRouteChildren: ChatRouteChildren = {
-  ChatThreadIdRoute: ChatThreadIdRoute,
-}
-
-const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
-
-interface StudioRouteChildren {
-  StudioProjectIdRoute: typeof StudioProjectIdRoute
-}
-
-const StudioRouteChildren: StudioRouteChildren = {
-  StudioProjectIdRoute: StudioProjectIdRoute,
-}
-
-const StudioRouteWithChildren =
-  StudioRoute._addFileChildren(StudioRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ChatRoute: ChatRouteWithChildren,
-  StudioRoute: StudioRouteWithChildren,
+  ChatRoute: ChatRoute,
+  StudioRoute: StudioRoute,
+  ChatThreadIdRoute: ChatThreadIdRoute,
+  StudioProjectIdRoute: StudioProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

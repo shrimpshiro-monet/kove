@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useChatThreads, cryptoId, type ChatMessage } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/chat/$threadId")({
+export const Route = createFileRoute("/chat_/$threadId")({
   component: ChatPage,
 });
 
