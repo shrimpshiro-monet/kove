@@ -34,7 +34,7 @@ export const Route = createFileRoute("/studio_/$projectId")({
 type PanelKey = "media" | "effects" | "text" | "audio" | "ai" | null;
 
 function StudioPage() {
-  const { projectId } = useParams({ from: "/studio/$projectId" });
+  const { projectId } = useParams({ from: "/studio_/$projectId" });
   const { projects, updateProject } = useStudioProjects();
   const project = projects.find((p) => p.id === projectId);
 

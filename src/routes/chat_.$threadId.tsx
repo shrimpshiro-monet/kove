@@ -11,7 +11,7 @@ export const Route = createFileRoute("/chat_/$threadId")({
 });
 
 function ChatPage() {
-  const { threadId } = useParams({ from: "/chat/$threadId" });
+  const { threadId } = useParams({ from: "/chat_/$threadId" });
   const navigate = useNavigate();
   const { threads, hydrated, createThread, deleteThread, updateThread } = useChatThreads();
   const [draft, setDraft] = useState("");
@@ -23,10 +23,10 @@ function ChatPage() {
   useEffect(() => {
     if (!hydrated) return;
     if (!active && threads.length > 0) {
-      navigate({ to: "/chat/$threadId", params: { threadId: threads[0].id }, replace: true });
+      navigate({ to: "/chat_/$threadId", params: { threadId: threads[0].id }, replace: true });
     } else if (!active && threads.length === 0) {
       const t = createThread();
-      navigate({ to: "/chat/$threadId", params: { threadId: t.id }, replace: true });
+      navigate({ to: "/chat_/$threadId", params: { threadId: t.id }, replace: true });
     }
   }, [hydrated, active, threads, navigate, createThread]);
 
@@ -65,7 +65,7 @@ function ChatPage() {
 
   const handleNew = () => {
     const t = createThread();
-    navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
+    navigate({ to: "/chat_/$threadId", params: { threadId: t.id } });
   };
 
   const handleDelete = (id: string) => {
@@ -73,10 +73,10 @@ function ChatPage() {
     if (id === threadId) {
       const remaining = threads.filter((t) => t.id !== id);
       if (remaining.length > 0) {
-        navigate({ to: "/chat/$threadId", params: { threadId: remaining[0].id } });
+        navigate({ to: "/chat_/$threadId", params: { threadId: remaining[0].id } });
       } else {
         const t = createThread();
-        navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
+        navigate({ to: "/chat_/$threadId", params: { threadId: t.id } });
       }
     }
   };
@@ -112,7 +112,7 @@ function ChatPage() {
               <button
                 className="flex-1 truncate text-left"
                 onClick={() =>
-                  navigate({ to: "/chat/$threadId", params: { threadId: t.id } })
+                  navigate({ to: "/chat_/$threadId", params: { threadId: t.id } })
                 }
               >
                 {t.title || "New conversation"}
