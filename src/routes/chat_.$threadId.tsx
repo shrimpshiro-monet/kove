@@ -5,6 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChatThreads, cryptoId, type ChatMessage } from "@/lib/storage";
 import { cn } from "@/lib/utils";
+import { VideoUploader } from "@/components/chat/VideoUploader";
+import { ThinkingPanel, type ThinkingStage } from "@/components/chat/ThinkingPanel";
+import { EDLPreview } from "@/components/chat/EDLPreview";
+import { VideoPreview } from "@/components/chat/VideoPreview";
+import { decodeIntent, analyzeMedia, generateEDL, uploadFile } from "@/lib/api-client";
+
+interface UploadedFile {
+  id: string;
+  file: File;
+  type: "footage" | "music" | "reference";
+  preview?: string;
+}
 
 export const Route = createFileRoute("/chat_/$threadId")({
   component: ChatPage,
@@ -15,6 +27,11 @@ function ChatPage() {
   const navigate = useNavigate();
   const { threads, hydrated, createThread, deleteThread, updateThread } = useChatThreads();
   const [draft, setDraft] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [mediaUrls, setMediaUrls] = useState<Map<string, string>>(new Map());
+  const [thinkingStage, setThinkingStage] = useState<ThinkingStage>("idle");
+  const [thinkingData, setThinkingData] = useState<any>({});
+  const [isGenerating, setIsGenerating] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -38,30 +55,147 @@ function ChatPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [active?.messages.length]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = draft.trim();
-    if (!text || !active) return;
+    if (!text || !active || isGenerating) return;
+
+    // Add user message
     const userMsg: ChatMessage = {
       id: cryptoId(),
       role: "user",
       content: text,
       createdAt: Date.now(),
     };
-    const assistantMsg: ChatMessage = {
-      id: cryptoId(),
-      role: "assistant",
-      content: mockReply(text),
-      createdAt: Date.now() + 1,
-    };
+
     updateThread(threadId, (t) => ({
       ...t,
       title: t.messages.length === 0 ? text.slice(0, 40) : t.title,
       updatedAt: Date.now(),
-      messages: [...t.messages, userMsg, assistantMsg],
+      messages: [...t.messages, userMsg],
     }));
+
     setDraft("");
-    requestAnimationFrame(() => taRef.current?.focus());
+    setIsGenerating(true);
+    setThinkingData({});
+
+    try {
+      // Stage 1: Intent Extraction
+      setThinkingStage("intent");
+      const intentRes = await decodeIntent(text, threadId);
+
+      if (!intentRes.success) {
+        throw new Error(intentRes.error || "Intent extraction failed");
+      }
+
+      setThinkingData((prev: any) => ({
+        ...prev,
+        intentConfidence: intentRes.result?.confidence,
+      }));
+
+      // Stage 2: Analysis (mock for now - need actual uploads)
+      setThinkingStage("analysis");
+
+      // Get uploaded file IDs (mock for now)
+      const footageIds = uploadedFiles
+        .filter((f) => f.type === "footage")
+        .map((f) => `mock-${f.file.name}`);
+      const musicId = uploadedFiles.find((f) => f.type === "music")
+        ? `mock-music-${Date.now()}`
+        : undefined;
+
+      const analysisRes = await analyzeMedia(threadId, footageIds, musicId);
+
+      if (!analysisRes.success) {
+        throw new Error(analysisRes.error || "Analysis failed");
+      }
+
+      // Stage 3: EDL Generation
+      setThinkingStage("edl");
+      const edlRes = await generateEDL(
+        threadId,
+        intentRes.intentId!,
+        analysisRes.analysisId!
+      );
+
+      if (!edlRes.success) {
+        throw new Error(edlRes.error || "EDL generation failed");
+      }
+
+      setThinkingData((prev: any) => ({
+        ...prev,
+        edlShots: edlRes.edl?.shots.length || 0,
+        scores: edlRes.scores,
+        usedFallback: edlRes.usedFallback,
+      }));
+
+      setThinkingStage("complete");
+
+      // Store EDL for preview
+      setThinkingData((prev: any) => ({
+        ...prev,
+        edl: edlRes.edl,
+      }));
+
+      // Add assistant response
+      const assistantMsg: ChatMessage = {
+        id: cryptoId(),
+        role: "assistant",
+        content: generateSuccessMessage(edlRes),
+        createdAt: Date.now(),
+      };
+
+      updateThread(threadId, (t) => ({
+        ...t,
+        updatedAt: Date.now(),
+        messages: [...t.messages, assistantMsg],
+      }));
+    } catch (error) {
+      console.error("Generation error:", error);
+      setThinkingStage("error");
+      setThinkingData((prev: any) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }));
+
+      // Add error message
+      const errorMsg: ChatMessage = {
+        id: cryptoId(),
+        role: "assistant",
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+        createdAt: Date.now(),
+      };
+
+      updateThread(threadId, (t) => ({
+        ...t,
+        updatedAt: Date.now(),
+        messages: [...t.messages, errorMsg],
+      }));
+    } finally {
+      setIsGenerating(false);
+      setTimeout(() => setThinkingStage("idle"), 3000);
+    }
   };
+
+  function generateSuccessMessage(edlRes: any): string {
+    const shots = edlRes.edl?.shots.length || 0;
+    const duration = edlRes.edl?.timeline.duration || 30;
+    const avgShot = shots > 0 ? (duration / shots).toFixed(1) : "0";
+    const beatSync = edlRes.scores?.beatSyncScore
+      ? Math.round(edlRes.scores.beatSyncScore * 100)
+      : 0;
+
+    let message = `✨ Edit complete!\n\n`;
+    message += `📊 ${shots} shots, ${duration}s total (${avgShot}s avg)\n`;
+    message += `🎵 Beat sync: ${beatSync}%\n`;
+
+    if (edlRes.usedFallback) {
+      message += `\n⚠️ Generated with deterministic fallback (LLM busy)`;
+    }
+
+    message += `\n\nReady to preview and refine!`;
+
+    return message;
+  }
 
   const handleNew = () => {
     const t = createThread();
@@ -165,18 +299,67 @@ function ChatPage() {
             {active?.messages.map((m) => (
               <Message key={m.id} message={m} />
             ))}
+
+            {/* Show thinking panel during generation */}
+            {isGenerating && (
+              <div className="mt-6">
+                <ThinkingPanel
+                  stage={thinkingStage}
+                  intentConfidence={thinkingData.intentConfidence}
+                  edlShots={thinkingData.edlShots}
+                  scores={thinkingData.scores}
+                  usedFallback={thinkingData.usedFallback}
+                  error={thinkingData.error}
+                />
+              </div>
+            )}
+
+            {/* Show EDL preview after complete */}
+            {thinkingStage === "complete" && thinkingData.edl && (
+              <div className="mt-6 space-y-6">
+                <EDLPreview edl={thinkingData.edl} />
+
+                {/* Video Preview with Playback */}
+                <div className="border-t border-border pt-6">
+                  <h3 className="text-sm font-medium mb-4">Preview</h3>
+                  <VideoPreview edl={thinkingData.edl} mediaUrls={mediaUrls} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="border-t border-border bg-background">
-          <div className="mx-auto max-w-3xl px-6 py-4">
+          <div className="mx-auto max-w-3xl px-6 py-4 space-y-4">
+            {/* File uploader (show if no messages yet) */}
+            {active && active.messages.length === 0 && (
+              <VideoUploader
+                onFilesChange={(files) => {
+                  setUploadedFiles(files);
+
+                  // Create blob URLs for local playback
+                  const urls = new Map<string, string>();
+                  for (const file of files) {
+                    if (file.type === "footage") {
+                      const blobUrl = URL.createObjectURL(file.file);
+                      urls.set(file.id, blobUrl);
+                    }
+                  }
+                  setMediaUrls(urls);
+                }}
+                disabled={isGenerating}
+              />
+            )}
+
+            {/* Prompt input */}
             <div className="relative rounded-xl border border-border bg-card focus-within:border-primary/50 transition-colors">
               <Textarea
                 ref={taRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="Describe the edit you want… (e.g. ‘cut to the beat, add a slow-mo on the goal’)"
-                className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-24 focus-visible:ring-0"
+                placeholder="Describe the edit you want… (e.g. ‘make a 30s anime AMV cut to the beat’)"
+                className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-12 focus-visible:ring-0"
+                disabled={isGenerating}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -184,22 +367,21 @@ function ChatPage() {
                   }
                 }}
               />
-              <div className="absolute right-2 bottom-2 flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                  <Paperclip className="h-4 w-4" />
-                </Button>
+              <div className="absolute right-2 bottom-2">
                 <Button
                   size="icon"
                   onClick={sendMessage}
-                  disabled={!draft.trim()}
+                  disabled={!draft.trim() || isGenerating}
                   className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <p className="mt-2 text-[10px] text-muted-foreground tracking-widest uppercase">
-              Monet handles cuts, color, captions, music — all from your prompt.
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
+              {uploadedFiles.length > 0
+                ? `${uploadedFiles.length} file(s) ready • Monet will analyze and edit`
+                : "Upload footage and music to get started"}
             </p>
           </div>
         </div>
@@ -258,6 +440,3 @@ function EmptyChat() {
   );
 }
 
-function mockReply(text: string) {
-  return `I'll work on: "${text}".\n\nThis is a scaffold — wire me up to Lovable AI to start cutting, color-grading, and rendering. Ask me anything; in the meantime your conversation is saved locally.`;
-}

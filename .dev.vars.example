@@ -1,0 +1,14 @@
+# Monet AI Director - Environment Variables
+# Copy this to .dev.vars and fill in your credentials
+
+# Option 1: Vertex AI via GCP (recommended - better rate limits)
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_LOCATION=us-central1
+# Optional: GCP service account credentials as JSON string
+# GCP_CREDENTIALS={"type":"service_account",...}
+
+# Option 2: Gemini API (free tier - 20 requests/day)
+# GEMINI_API_KEY=your-gemini-api-key
+
+# Environment
+ENVIRONMENT=development
