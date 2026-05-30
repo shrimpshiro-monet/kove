@@ -7,8 +7,7 @@
 	],
 	"main": "src/server.ts",
 	"vars": {
-		"ENVIRONMENT": "development",
-		"GEMINI_API_KEY": "AIzaSyADt7T72roaSn1BzIgVg08GGR-JYDl-dAw"
+		"ENVIRONMENT": "development"
 	},
 	"r2_buckets": [
 		{
@@ -26,14 +25,14 @@
 		{
 			"binding": "DB",
 			"database_name": "monet-db-dev",
-			"database_id": "1a3e7df9-5d1a-4ad0-a781-488200692a6e"
+			"database_id": "TO_BE_CREATED"
 		}
 	],
 	"kv_namespaces": [
 		{
 			"binding": "MONET_KV",
-			"id": "1f14a68b4c994e6093f7132cc7f35ef3",
-			"preview_id": "2bfdf90e80d245dbb243ff924a12e97f"
+			"id": "TO_BE_CREATED",
+			"preview_id": "TO_BE_CREATED"
 		}
 	]
 }

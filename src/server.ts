@@ -2,6 +2,11 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import type { Env } from "./server/types/env";
+import { handleUploadRequest, handleCompleteUpload } from "./server/api/upload";
+import { handleDecodeIntent, handleUpdateIntent } from "./server/api/decode-intent";
+import { handleAnalyze } from "./server/api/analyze";
+import { handleGenerateEDL } from "./server/api/generate-edl";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -68,6 +73,72 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    const typedEnv = env as Env;
+
+    // API Routes
+    if (url.pathname.startsWith("/api/")) {
+      try {
+        // Handle CORS preflight
+        if (request.method === "OPTIONS") {
+          return new Response(null, {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+              "Access-Control-Max-Age": "86400",
+            },
+          });
+        }
+
+        // Upload endpoints
+        if (url.pathname === "/api/upload" && request.method === "POST") {
+          return await handleUploadRequest(request, typedEnv);
+        }
+
+        if (url.pathname === "/api/upload/complete" && request.method === "POST") {
+          return await handleCompleteUpload(request, typedEnv);
+        }
+
+        // Intent extraction endpoints
+        if (url.pathname === "/api/decode-intent" && request.method === "POST") {
+          return await handleDecodeIntent(request, typedEnv);
+        }
+
+        if (url.pathname === "/api/intent/update" && request.method === "POST") {
+          return await handleUpdateIntent(request, typedEnv);
+        }
+
+        // Analysis endpoint
+        if (url.pathname === "/api/analyze" && request.method === "POST") {
+          return await handleAnalyze(request, typedEnv);
+        }
+
+        // EDL generation endpoint
+        if (url.pathname === "/api/generate-edl" && request.method === "POST") {
+          return await handleGenerateEDL(request, typedEnv);
+        }
+
+        // API route not found
+        return new Response(JSON.stringify({ error: "Not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("API error:", error);
+        return new Response(
+          JSON.stringify({
+            error: error instanceof Error ? error.message : "Internal server error",
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    // SSR routes (TanStack Start)
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
