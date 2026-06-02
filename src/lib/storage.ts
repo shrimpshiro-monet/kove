@@ -2,17 +2,31 @@ import { useEffect, useState, useCallback } from "react";
 
 // ---------- Chat threads ----------
 export type ChatRole = "user" | "assistant";
+export interface ChatAttachment {
+  id: string;
+  type: "footage" | "music" | "reference";
+  name: string;
+  sizeBytes: number;
+  r2FileId?: string;
+}
 export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
   createdAt: number;
+  attachments?: ChatAttachment[];
 }
 export interface ChatThread {
   id: string;
   title: string;
   updatedAt: number;
   messages: ChatMessage[];
+  /** Latest generated EDL — stored for Studio import */
+  latestEdl?: unknown;
+  latestEdlId?: string;
+  /** Latest analyzed reference editing DNA for replication mode */
+  latestReferenceStyle?: unknown;
+  projectId?: string;
 }
 
 const THREADS_KEY = "monet.chat.threads.v1";
@@ -93,6 +107,11 @@ export interface StudioProject {
   name: string;
   updatedAt: number;
   clips: Clip[];
+  /** Source chat thread this project was imported from */
+  sourceThreadId?: string;
+  /** Latest imported/generated EDL for advanced rendering/editing */
+  latestEdl?: unknown;
+  latestEdlId?: string;
 }
 
 const PROJECTS_KEY = "monet.studio.projects.v1";

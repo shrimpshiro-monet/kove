@@ -190,6 +190,38 @@ Before returning your EDL, verify:
 - [ ] Used high-scoring segments (prioritize overall score > 0.7)
 - [ ] Every shot has aiRationale (explain your choices)
 
+## Reference Replication Mode (When ReferenceStyle Is Provided)
+
+If the context includes a reference style contract, treat it as a structural blueprint for the edit.
+
+- Replicate the editor's rhythm architecture on the new footage.
+- Preserve macro timing behavior: average shot duration, transition ratio, effects frequency, and climax position.
+- Preserve emotional contour and sequence grammar where footage permits.
+- Remap content to available user footage; do not copy or invent specific source reference shots.
+- If a replication mode is marked `strict_replication`, prioritize reference rhythm fidelity over novelty.
+- If footage coverage is insufficient, degrade gracefully and explain deviations in aiRationale.
+
+## Autonomous OpenReel Operations
+
+You are not limited to basic cuts/effects. You can author advanced edit operations directly in the EDL when the intent supports them.
+
+- Use `motionTracks` for feature/face/object tracking anchors on key shots.
+- Use `planarTracks` for wall/sign/screen pinning when environmental text is requested.
+- Use `textOverlays` for dynamic on-screen titles/callouts.
+- Bind overlay to a track via `tracking.trackId` and `tracking.mode`:
+  - `follow`: text follows tracked target
+  - `behind_subject`: mark for occlusion-aware compositing path
+  - `planar`: pin text to planar surface track
+
+When user intent implies annotations, kinetic typography, subject emphasis, or editorial callouts, emit these fields proactively.
+
+Rules:
+- Keep `motionTracks.clipId` tied to real shot clipIds.
+- Keep `planarTracks.clipId` tied to real shot clipIds.
+- Track keyframe `time` must be in source clip seconds.
+- Keep overlay `startTime/endTime` within timeline bounds.
+- Prefer conservative, high-confidence tracks if footage quality is uncertain.
+
 ## Edge Cases
 
 **If footage is limited**:

@@ -3,10 +3,17 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import type { Env } from "./server/types/env";
-import { handleUploadRequest, handleCompleteUpload } from "./server/api/upload";
+import { handleUploadRequest, handleCompleteUpload, handleDirectUpload } from "./server/api/upload";
 import { handleDecodeIntent, handleUpdateIntent } from "./server/api/decode-intent";
 import { handleAnalyze } from "./server/api/analyze";
 import { handleGenerateEDL } from "./server/api/generate-edl";
+import { handleRefineEDL } from "./server/api/refine-edl";
+import { handleTranscribe } from "./server/api/transcribe";
+import { handleAnalyzeReference } from "./server/api/analyze-reference";
+import { handleMedia } from "./server/api/media";
+import { handleGenerateComposition } from "./server/api/generate-composition";
+import { handleGetStudioProject, handlePersistStudioProject } from "./server/api/studio-project";
+import { handleQueueExport, handleGetExportStatus } from "./server/api/export";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -100,6 +107,14 @@ export default {
           return await handleCompleteUpload(request, typedEnv);
         }
 
+        if (url.pathname === "/api/upload/direct" && request.method === "POST") {
+          return await handleDirectUpload(request, typedEnv);
+        }
+
+        if (url.pathname.startsWith("/api/media/") && request.method === "GET") {
+          return await handleMedia(request, typedEnv);
+        }
+
         // Intent extraction endpoints
         if (url.pathname === "/api/decode-intent" && request.method === "POST") {
           return await handleDecodeIntent(request, typedEnv);
@@ -117,6 +132,43 @@ export default {
         // EDL generation endpoint
         if (url.pathname === "/api/generate-edl" && request.method === "POST") {
           return await handleGenerateEDL(request, typedEnv);
+        }
+
+        // EDL refinement endpoint (Phase 9 — the magic iteration loop)
+        if (url.pathname === "/api/refine-edl" && request.method === "POST") {
+          return await handleRefineEDL(request, typedEnv);
+        }
+
+        // Transcription endpoint (Phase 7B — Aesthetic Dissection)
+        if (url.pathname === "/api/transcribe" && request.method === "POST") {
+          return await handleTranscribe(request, typedEnv);
+        }
+
+        // Reference style analysis endpoint (Style Replication)
+        if (url.pathname === "/api/analyze-reference" && request.method === "POST") {
+          return await handleAnalyzeReference(request, typedEnv);
+        }
+
+        // Composition overlay generation (HyperFrames)
+        if (url.pathname === "/api/generate-composition" && request.method === "POST") {
+          return await handleGenerateComposition(request, typedEnv);
+        }
+
+        // Studio portable link hydration (fetch latest timeline from DB)
+        if (url.pathname === "/api/studio-project" && request.method === "GET") {
+          return await handleGetStudioProject(request, typedEnv);
+        }
+
+        if (url.pathname === "/api/studio-project" && request.method === "POST") {
+          return await handlePersistStudioProject(request, typedEnv);
+        }
+
+        // Server-side export fallback (Safari/Firefox)
+        if (url.pathname === "/api/export" && request.method === "POST") {
+          return await handleQueueExport(request, typedEnv);
+        }
+        if (url.pathname === "/api/export" && request.method === "GET") {
+          return await handleGetExportStatus(request, typedEnv);
         }
 
         // API route not found

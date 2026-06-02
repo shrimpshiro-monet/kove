@@ -237,7 +237,15 @@ export class GeminiService {
       throw new Error(`Gemini generate failed: ${error}`);
     }
 
-    const result = await response.json();
+    const result = await response.json() as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string;
+          }>;
+        };
+      }>;
+    };
 
     console.log("Gemini response:", JSON.stringify(result, null, 2));
 

@@ -55,11 +55,31 @@ export class MediaLoader {
   private async loadVideo(id: string, url: string): Promise<MediaAsset> {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
-      video.crossOrigin = "anonymous";
+      if (isRemoteUrl(url)) {
+        video.crossOrigin = "anonymous";
+      }
       video.preload = "auto";
       video.muted = true; // Muted for preview (audio handled separately)
+      video.playsInline = true;
+
+      const timeoutMs = 15000;
+      const timeout = window.setTimeout(() => {
+        cleanup();
+        reject(
+          new Error(
+            `Failed to load video: ${url} (timeout after ${timeoutMs}ms)`
+          )
+        );
+      }, timeoutMs);
+
+      const cleanup = () => {
+        window.clearTimeout(timeout);
+        video.onloadedmetadata = null;
+        video.onerror = null;
+      };
 
       video.onloadedmetadata = () => {
+        cleanup();
         resolve({
           id,
           type: "video",
@@ -71,17 +91,32 @@ export class MediaLoader {
       };
 
       video.onerror = () => {
-        reject(new Error(`Failed to load video: ${url}`));
+        cleanup();
+        const mediaError = video.error;
+        const hint =
+          mediaError?.code === 4
+            ? " The browser likely cannot decode this container/codec."
+            : "";
+        reject(
+          new Error(
+            `Failed to load video: ${url}${
+              mediaError ? ` (code ${mediaError.code})` : ""
+            }${hint}`
+          )
+        );
       };
 
       video.src = url;
+      video.load();
     });
   }
 
   private async loadAudio(id: string, url: string): Promise<MediaAsset> {
     return new Promise((resolve, reject) => {
       const audio = document.createElement("audio");
-      audio.crossOrigin = "anonymous";
+      if (isRemoteUrl(url)) {
+        audio.crossOrigin = "anonymous";
+      }
       audio.preload = "auto";
 
       audio.onloadedmetadata = () => {
@@ -100,13 +135,16 @@ export class MediaLoader {
       };
 
       audio.src = url;
+      audio.load();
     });
   }
 
   private async loadImage(id: string, url: string): Promise<MediaAsset> {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      if (isRemoteUrl(url)) {
+        img.crossOrigin = "anonymous";
+      }
 
       img.onload = () => {
         resolve({
@@ -168,4 +206,8 @@ export class MediaLoader {
     this.assets.clear();
     this.loadingPromises.clear();
   }
+}
+
+function isRemoteUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
 }

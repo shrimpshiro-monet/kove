@@ -9,7 +9,14 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "hf:clone": "zsh -lc 'if [[ -d hyperframes/.git ]]; then echo \"HyperFrames already present at ./hyperframes\"; else git clone https://github.com/heygen-com/hyperframes.git hyperframes; fi'",
+    "hf:check": "zsh -lc 'git -C hyperframes remote -v && git -C hyperframes rev-parse --short HEAD'",
+    "hf:bridge": "node scripts/monet-hyperframes-bridge.mjs",
+    "hf:preview": "echo 'Usage: cd hyperframes && npx hyperframes preview ../hyperframes-out/index.html'",
+    "hf:render": "echo 'Usage: cd hyperframes && npx hyperframes render ../hyperframes-out/index.html -o ../hyperframes-out/render.mp4'",
+    "openreel:dev": "pnpm -C openreel-video --filter @openreel/web dev",
+    "openreel:check": "pnpm -C openreel-video --filter @openreel/web --version"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

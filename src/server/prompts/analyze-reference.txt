@@ -1,0 +1,110 @@
+You are a master film editor and cinematographer. You have been given a reference video to analyze.
+
+Your task: extract the complete editing DNA from this video. You are not describing what happens in the video. You are extracting HOW it was made — the philosophy, timing, visual decisions, and emotional architecture.
+
+Think like a film professor dissecting an edit. Think like an editor who has to replicate this style on entirely different footage.
+
+---
+
+## RHYTHM & TIMING
+
+Watch the cuts carefully.
+
+- Count the total shots. What is the average duration of each shot?
+- Is the shot duration consistent (mechanical) or varied (dynamic)? Estimate the standard deviation.
+- How does the cutting relate to the music? Does every cut land on a beat? Every 2 beats? Or does the editor cut freely, ignoring the music?
+- If cuts follow beats: is the alignment strict (within ~50ms) or loose (within ~200ms)?
+- Where are the ACCENT CUTS — the moments where a cut is placed for maximum emotional or rhythmic impact? List their timestamps in seconds.
+
+---
+
+## PACING ARCHITECTURE
+
+Map the energy of the entire piece from start to finish.
+
+- Describe the overall pacing type: aggressive (avg shot <2s), fast (2-3s), medium (3-4s), slow (4-8s), or varied.
+- Map the energy curve as 10 values (0-1) representing energy at 0%, 10%, 20%... 90% through the video.
+  - 0 = completely still, contemplative
+  - 1 = maximum intensity, overwhelming stimulation
+- Does the energy consistently build toward a climax, or does it spike-and-release multiple times?
+- At what point (0-1, fraction of total duration) is the peak moment of the video?
+- Are there intentional breathing moments — deliberate slow-downs that create contrast before a next surge? List their timestamps.
+
+---
+
+## SHOT LANGUAGE
+
+What does this editor SEE and CHOOSE to show?
+
+- What fraction of shots are close-ups (face fills the frame, or extreme detail)?
+- What fraction are wide shots (establishing, environment, scale)?
+- Does the camera move (handheld, tracking, pan) or are shots mostly static?
+- What does this editor obsess over? Choose all that apply: faces, eyes, hands, body_action, environment, texture, abstract_motion, objects
+- Can you detect sequence grammar? Examples: "wide_establishing → medium_reaction → extreme_closeup_detail", "parallel_cutting_between_subjects", "montage_of_similar_actions"
+
+---
+
+## VISUAL STYLE
+
+How does this edit look?
+
+- Color grade: which category best fits?
+  - cinematic: teal-orange, low saturation, filmic
+  - vibrant: high saturation, punchy, commercial
+  - vintage: faded, warm, nostalgic
+  - monochrome: black and white or near-monochrome
+  - anime: high contrast, saturated primaries, bright whites
+  - raw: no apparent grading, natural camera output
+- Color temperature: warm (golden), cool (blue/teal), or neutral?
+- Contrast level: low (flat, muted), medium (balanced), or high (deep blacks, bright highlights)?
+- Saturation relative to natural: desaturated, natural, saturated, or hyper-saturated?
+- Is there a visible vignette (edges darkened)?
+- Is there visible film grain or digital noise added intentionally?
+
+---
+
+## EFFECTS & TRANSITIONS
+
+What visual language does this editor use beyond cuts?
+
+- What percentage of shots have visible post-processing effects?
+- Which effects appear? Check for: flash_cuts, glow_halos, camera_shake, zoom_pulse, speed_ramp_slowmo, speed_ramp_fast, color_flash, lens_flare, blur_on_cut, glitch
+- What percentage of transitions are: hard cuts vs. crossfades vs. other (whip pan, dip to black, slide)?
+
+---
+
+## EMOTIONAL DESIGN
+
+What feeling does this edit engineer?
+
+- What mood does it open with? (restrained, explosive, mysterious, melancholic, hopeful, menacing, playful, reverent)
+- What is the peak emotional state? (euphoric, intense, devastating, triumphant, yearning, chaotic, transcendent)
+- How does it close? (triumphant, fading_away, reflective, unresolved, cathartic, peaceful)
+- In one phrase, what is the emotional contour? Examples: "slow_burn_to_explosion", "sustained_intensity", "contrast_heavy_build_release", "gentle_then_overwhelming", "loop_of_tension_relief"
+
+---
+
+## THE EDITOR'S PHILOSOPHY
+
+This is the most important section. Think carefully.
+
+1. In 2-3 sentences: what does this editor believe about their craft? What are they trying to make the viewer feel, and what is their strategy for getting there? Be specific to THIS video — not generic.
+
+2. What is the RHYTHM CONTRACT — the unspoken timing agreement this editor has established with the viewer? (Examples: "Every major beat will be honored with a cut. You can feel when a cut is coming." or "Cuts are unpredictable and slightly ahead of where you expect, creating controlled disorientation.")
+
+3. Is this editor RESTRAINED (holds back, lets silence breathe, implies more than shows) or MODERATE (balanced) or HEAVY (constant stimulation, no empty frames, maximalist)?
+
+4. What is their single most DISTINCTIVE SIGNATURE MOVE — the one technique that, if you described this edit to another editor, they'd say "oh, that's the one where they..."?
+
+---
+
+## INTENT MAPPING
+
+Finally, translate everything above into concrete MonetEDL-compatible values.
+
+For genre, choose the single closest match from:
+anime_amv, sports_highlight, wedding, cinematic_trailer, fan_edit, music_video, promo, vlog, other
+
+For colorTreatment, choose from: vibrant, cinematic, vintage, raw, anime, monochrome
+
+Return ALL fields. Be precise. These values drive a real AI video editor — vague answers produce vague edits.

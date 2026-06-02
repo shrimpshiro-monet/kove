@@ -12,15 +12,18 @@ import { now } from "../types/env";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { getCachedIntent, cacheIntent } from "../lib/intent-cache";
+import type { ReferenceStyle } from "../types/reference-style";
+import { normalizeReferenceStyle } from "../types/reference-style";
 
 interface DecodeIntentRequest {
   prompt: string;
   projectId: string;
   context?: {
     hasMusic?: boolean;
-    hasFoot age?: boolean;
+    hasFootage?: boolean;
     hasReference?: boolean;
     estimatedFootageDuration?: number;
+    referenceStyle?: ReferenceStyle;
   };
 }
 
@@ -48,11 +51,21 @@ export async function handleDecodeIntent(
   env: Env
 ): Promise<Response> {
   try {
-    // Debug: log env to see what's available
-    console.log("ENV received:", {
-      hasGeminiKey: !!env?.GEMINI_API_KEY,
-      envKeys: env ? Object.keys(env) : "env is undefined",
-      processEnvKey: typeof process !== "undefined" ? !!process.env.GEMINI_API_KEY : "no process",
+    const workerEnvKeys = env ? Object.keys(env) : [];
+    const processHasGeminiKey =
+      typeof process !== "undefined" ? !!process.env.GEMINI_API_KEY : false;
+    const processHasGcpProjectId =
+      typeof process !== "undefined" ? !!process.env.GCP_PROJECT_ID : false;
+
+    console.log("AI env sources:", {
+      workerEnvPresent: !!env,
+      workerEnvKeys,
+      workerHasGeminiKey: !!env?.GEMINI_API_KEY,
+      workerHasGcpProjectId: !!env?.GCP_PROJECT_ID,
+      processHasGeminiKey,
+      processHasGcpProjectId,
+      runtimeSource:
+        env && workerEnvKeys.length > 0 ? "worker-bindings" : "process.env/local-dev",
     });
 
     const body: DecodeIntentRequest = await request.json();
@@ -81,7 +94,14 @@ export async function handleDecodeIntent(
     const promptTemplate = loadPromptTemplate("decode-intent.txt");
 
     // Build context string
-    const context = buildContextString(body.context);
+    const normalizedContext =
+      body.context?.referenceStyle
+        ? {
+            ...body.context,
+            referenceStyle: normalizeReferenceStyle(body.context.referenceStyle),
+          }
+        : body.context;
+    const context = buildContextString(normalizedContext);
 
     // Replace placeholders
     const fullPrompt = promptTemplate
@@ -180,15 +200,31 @@ function buildContextString(context?: DecodeIntentRequest["context"]): string {
     }
   }
 
-  if (context.hasReference) {
+  if (context.hasReference && !context.referenceStyle) {
     parts.push(
       "- User has provided a reference video (match this style/pacing)"
     );
   }
 
+  if (context.referenceStyle) {
+    const rs = context.referenceStyle;
+    const im = rs.intentMapping;
+    parts.push("- User has provided a REFERENCE VIDEO that has been analyzed. Replicate this editing style:");
+    parts.push(`  Genre: ${im.genre}`);
+    parts.push(`  Pacing: ${im.pacing} (avg shot ${im.avgShotDuration.toFixed(1)}s)`);
+    parts.push(`  Beat sync: ${im.syncToBeat ? `YES (strength: ${im.beatSyncStrength})` : "no"}`);
+    parts.push(`  Color treatment: ${im.colorTreatment}`);
+    parts.push(`  Effects intensity: ${im.effectsIntensity}`);
+    parts.push(`  Transition style: ${im.transitionStyle}`);
+    parts.push(`  Mood: ${im.mood.join(", ")}`);
+    parts.push(`  Editor's philosophy: "${rs.editingPhilosophy.summary}"`);
+    parts.push(`  Rhythm contract: "${rs.editingPhilosophy.rhythmContract}"`);
+    parts.push("  IMPORTANT: The user wants the final edit to FEEL like this reference. Use these values as strong priors when extracting intent.");
+  }
+
   return parts.length > 0
     ? "Media context:\n" + parts.join("\n")
-    : "No media uploaded yet.";
+    : "No media uploaded yet";
 }
 
 /**
@@ -235,7 +271,11 @@ export async function handleUpdateIntent(
   env: Env
 ): Promise<Response> {
   try {
-    const { intentId, answers } = await request.json();
+    const body = (await request.json()) as {
+      intentId?: string;
+      answers?: Record<string, string>;
+    };
+    const { intentId, answers } = body;
 
     if (!intentId || !answers) {
       return jsonResponse(
@@ -318,14 +358,8 @@ function applyAnswersToIntent(
     if (question.includes("pacing")) {
       if (answer.includes("Fast")) {
         refined.style.pacing = "fast";
-        if (refined.technical.avgShotDuration) {
-          refined.technical.avgShotDuration *= 0.7;
-        }
       } else if (answer.includes("Slow")) {
         refined.style.pacing = "slow";
-        if (refined.technical.avgShotDuration) {
-          refined.technical.avgShotDuration *= 1.5;
-        }
       }
     }
   }

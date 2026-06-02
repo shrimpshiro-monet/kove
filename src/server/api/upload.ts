@@ -2,6 +2,7 @@
 
 import type { Env } from "../types/env";
 import { generateId, now } from "../types/env";
+import { putLocalMedia } from "../lib/local-media-cache";
 
 interface UploadRequest {
   projectId: string;
@@ -176,17 +177,119 @@ function isValidMediaType(type: string, contentType: string): boolean {
 }
 
 // Helper: Generate signed upload URL for R2
-async function generateSignedUploadUrl(bucket: R2Bucket, key: string): Promise<string> {
-  // For MVP, we'll use R2's presigned URL feature
-  // In production, you might want to implement custom signing
-
-  // Note: This is a simplified version. R2 presigned URLs require additional setup
-  // For now, we'll return a placeholder that the client will use with direct upload
-
-  // TODO: Implement proper R2 presigned URL generation
-  // See: https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#presigned-urls
-
+async function generateSignedUploadUrl(_bucket: R2Bucket, key: string): Promise<string> {
+  // Placeholder - direct upload is preferred for MVP
   return `https://monet-media-dev.r2.cloudflarestorage.com/${key}`;
+}
+
+/**
+ * Direct upload: client sends file as FormData, we put it into R2 and register it.
+ * Simpler than presigned URLs for MVP — no CORS setup required.
+ *
+ * POST /api/upload/direct
+ * FormData fields:
+ *   file       - the binary file
+ *   projectId  - project ID
+ *   type       - "footage" | "music" | "reference"
+ */
+export async function handleDirectUpload(
+  request: Request,
+  env: Env
+): Promise<Response> {
+  try {
+    const formData = await request.formData();
+
+    const file = formData.get("file") as File | null;
+    const projectId = formData.get("projectId") as string | null;
+    const type = formData.get("type") as string | null;
+
+    if (!file || !projectId || !type) {
+      return jsonResponse(
+        { success: false, error: "Missing file, projectId, or type" },
+        400
+      );
+    }
+
+    if (!["footage", "music", "reference"].includes(type)) {
+      return jsonResponse({ success: false, error: "Invalid type" }, 400);
+    }
+
+    const contentType = file.type || "application/octet-stream";
+    if (!isValidMediaType(type, contentType)) {
+      return jsonResponse(
+        { success: false, error: `Invalid content type ${contentType} for ${type}` },
+        400
+      );
+    }
+
+    // Max 500 MB safety guard
+    if (file.size > 500 * 1024 * 1024) {
+      return jsonResponse({ success: false, error: "File too large (max 500 MB)" }, 413);
+    }
+
+    const fileId = generateId();
+    const r2Key = `${projectId}/${type}/${fileId}/${file.name}`;
+
+    // Stream file into R2
+    const arrayBuffer = await file.arrayBuffer();
+
+    if (env?.MONET_MEDIA) {
+      await env.MONET_MEDIA.put(r2Key, arrayBuffer, {
+        httpMetadata: { contentType },
+      });
+    } else {
+      console.warn("No R2 bucket bound — skipping R2 write (dev mode)");
+    }
+
+    // Store in D1
+    if (env?.DB) {
+      await env.DB.prepare(
+        `INSERT INTO media_items (
+          id, project_id, type, r2_key, r2_bucket, filename, file_size, mime_type,
+          gemini_upload_status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+        .bind(
+          fileId,
+          projectId,
+          type,
+          r2Key,
+          "MONET_MEDIA",
+          file.name,
+          file.size,
+          contentType,
+          "pending",
+          Date.now()
+        )
+        .run();
+    } else {
+      console.warn("No D1 DB bound — skipping metadata write (dev mode)");
+    }
+
+    // Dev resiliency: keep a process-local copy when bindings are unavailable,
+    // so /api/media/{fileId} still works across chat and advanced studio.
+    if (!env?.MONET_MEDIA || !env?.DB) {
+      putLocalMedia(fileId, {
+        data: arrayBuffer,
+        mimeType: contentType,
+        r2Key,
+      });
+    }
+
+    return jsonResponse({
+      success: true,
+      fileId,
+      r2Key,
+      filename: file.name,
+      size: file.size,
+    });
+  } catch (error) {
+    console.error("Direct upload error:", error);
+    return jsonResponse(
+      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
+      500
+    );
+  }
 }
 
 // Helper: Extract basic metadata from file

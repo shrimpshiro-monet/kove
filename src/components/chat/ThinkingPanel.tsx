@@ -46,13 +46,7 @@ export function ThinkingPanel({
         <StageRow
           icon={<Brain className="h-4 w-4" />}
           label="Understanding your vision"
-          status={
-            stage === "intent"
-              ? "loading"
-              : stage === "idle"
-              ? "pending"
-              : "complete"
-          }
+          status={stage === "intent" ? "loading" : stage === "error" ? "error" : "complete"}
           detail={
             intentConfidence !== undefined
               ? `${Math.round(intentConfidence * 100)}% confidence`
@@ -67,8 +61,10 @@ export function ThinkingPanel({
           status={
             stage === "analysis"
               ? "loading"
-              : stage === "idle" || stage === "intent"
+              : stage === "intent"
               ? "pending"
+              : stage === "error"
+              ? "error"
               : "complete"
           }
           detail={analysisProgress}

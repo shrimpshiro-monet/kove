@@ -4,6 +4,13 @@ export interface Env {
   // Environment variables
   ENVIRONMENT: string;
   GEMINI_API_KEY: string;
+  GEMINI_MODEL?: string;
+  
+  // GCP Vertex AI credentials
+  GCP_PROJECT_ID?: string;
+  GCP_LOCATION?: string;
+  GCP_CREDENTIALS?: string;
+  VERTEX_GEMINI_MODEL?: string;
 
   // R2 Buckets
   MONET_MEDIA: R2Bucket;
@@ -14,6 +21,9 @@ export interface Env {
 
   // KV Namespace
   MONET_KV: KVNamespace;
+
+  // Render queue — server-side export fallback for non-WebCodecs browsers
+  RENDER_QUEUE?: Queue;
 }
 
 // Helper to generate unique IDs

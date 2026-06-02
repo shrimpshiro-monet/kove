@@ -42,7 +42,7 @@ export function EDLPreview({ edl }: EDLPreviewProps) {
 
           return (
             <div
-              key={shot.id}
+              key={shot.id ? `${shot.id}-${idx}` : idx}
               className={cn(
                 "absolute top-0 bottom-0 border-r border-background",
                 hasBeatLock ? "bg-primary/60" : "bg-primary/30",
@@ -100,7 +100,7 @@ export function EDLPreview({ edl }: EDLPreviewProps) {
         </div>
         {shots.slice(0, 5).map((shot, idx) => (
           <div
-            key={shot.id}
+            key={shot.id ? `${shot.id}-list-${idx}` : `list-${idx}`}
             className="flex items-center gap-2 text-xs rounded px-2 py-1.5 bg-secondary/50"
           >
             <span className="text-muted-foreground w-8">#{idx + 1}</span>
@@ -109,13 +109,14 @@ export function EDLPreview({ edl }: EDLPreviewProps) {
               {shot.timing.duration.toFixed(1)}s
             </span>
             {shot.beatLock && (
-              <Music className="h-3 w-3 text-primary" title="Beat-synced" />
+              <span title="Beat-synced">
+                <Music className="h-3 w-3 text-primary" />
+              </span>
             )}
             {shot.effects && shot.effects.length > 0 && (
-              <Zap
-                className="h-3 w-3 text-primary"
-                title={`${shot.effects.length} effect(s)`}
-              />
+              <span title={`${shot.effects.length} effect(s)`}>
+                <Zap className="h-3 w-3 text-primary" />
+              </span>
             )}
           </div>
         ))}

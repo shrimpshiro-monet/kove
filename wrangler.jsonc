@@ -35,5 +35,20 @@
 			"id": "1f14a68b4c994e6093f7132cc7f35ef3",
 			"preview_id": "2bfdf90e80d245dbb243ff924a12e97f"
 		}
-	]
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "RENDER_QUEUE",
+				"queue": "monet-render-queue"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "monet-render-queue",
+				"max_batch_size": 1,
+				"max_retries": 3
+			}
+		]
+	}
 }
