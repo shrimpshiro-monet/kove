@@ -5,6 +5,8 @@ import { renderErrorPage } from "./lib/error-page";
 import type { Env } from "./server/types/env";
 import { handleUploadRequest, handleCompleteUpload, handleDirectUpload } from "./server/api/upload";
 import { handleDecodeIntent, handleUpdateIntent } from "./server/api/decode-intent";
+import { handleSyncFromAdvancedEditor } from "./server/api/sync-from-advanced-editor";
+import { handleUploadAndDetect } from "./server/api/upload-and-detect";
 import { handleAnalyze } from "./server/api/analyze";
 import { handleGenerateEDL } from "./server/api/generate-edl";
 import { handleRefineEDL } from "./server/api/refine-edl";
@@ -122,6 +124,14 @@ export default {
 
         if (url.pathname === "/api/intent/update" && request.method === "POST") {
           return await handleUpdateIntent(request, typedEnv);
+        }
+
+        if (url.pathname === "/api/upload-and-detect" && request.method === "POST") {
+          return await handleUploadAndDetect(request, typedEnv);
+        }
+
+        if (url.pathname === "/api/sync-from-advanced-editor" && request.method === "POST") {
+          return await handleSyncFromAdvancedEditor(request, typedEnv);
         }
 
         // Analysis endpoint
