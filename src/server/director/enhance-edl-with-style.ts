@@ -99,6 +99,32 @@ export function enhanceEDLWithStyleDirectives(
       );
     }
 
+    // ===== GPU EFFECTS — add variety beyond baseline =====
+    // Cycle through GPU effects to ensure visual diversity
+    const gpuEffectPool = [
+      { type: "hologram", params: { intensity: 0.6 } },
+      { type: "thermal", params: { intensity: 0.5 } },
+      { type: "plasma", params: { intensity: 0.4 } },
+      { type: "bloom_highlights", params: { intensity: 0.5 } },
+      { type: "crt_monitor", params: { intensity: 0.6 } },
+      { type: "duotone", params: {} },
+      { type: "film_scratches", params: { intensity: 0.3 } },
+      { type: "vignette_punch", params: { intensity: 0.4 } },
+      { type: "lens_blur", params: { intensity: 0.5 } },
+      { type: "sepia", params: { intensity: 0.4 } },
+    ];
+
+    // Add GPU effect to every other shot for variety
+    if (index % 2 === 0 && directives.mode === "strict_replication") {
+      const gpuEffect = gpuEffectPool[index % gpuEffectPool.length];
+      effects.push(makeEffect(gpuEffect.type, gpuEffect.params));
+    }
+
+    // Add color grade effects based on frequency
+    if (shouldApplyEvery(index, directives.effects.glowFrequency ?? "medium")) {
+      effects.push(makeEffect("bloom_highlights", { intensity: 0.4 }));
+    }
+
     return {
       ...shot,
       timing: {
