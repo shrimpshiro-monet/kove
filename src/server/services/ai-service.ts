@@ -18,6 +18,8 @@ export type AIService = GeminiService | VertexAIService | AzureOpenAIService | A
  * 3. Gemini API (if GEMINI_API_KEY configured) - free tier, quick start
  */
 export function getAIService(env?: Env): AIService {
+  console.log("[AI Service] Resolving provider...");
+
   // HIGHEST PRIORITY: Azure AI Foundry (per-stage model routing)
   const foundryEndpoint =
     env?.AZURE_FOUNDRY_ENDPOINT ||
@@ -27,8 +29,13 @@ export function getAIService(env?: Env): AIService {
     (typeof process !== "undefined" ? process.env.AZURE_FOUNDRY_KEY : "");
 
   if (foundryEndpoint && foundryKey) {
-    console.log("Using Azure AI Foundry for per-stage model routing");
+    console.log("[AI Service] ✅ Azure AI Foundry configured, using it");
     return getAzureFoundry(env!);
+  } else {
+    console.log("[AI Service] ❌ Azure Foundry not configured", {
+      endpoint: foundryEndpoint ? "set" : "MISSING",
+      key: foundryKey ? "set" : "MISSING",
+    });
   }
 
   // PRIORITY: Azure OpenAI (if configured) - most reliable for production
@@ -37,8 +44,10 @@ export function getAIService(env?: Env): AIService {
     (typeof process !== "undefined" ? process.env.AZURE_OPENAI_API_KEY : "");
 
   if (azureKey && azureKey.trim()) {
-    console.log("Using Azure OpenAI for AI models");
+    console.log("[AI Service] ✅ Azure OpenAI configured, using it");
     return new AzureOpenAIService(env);
+  } else {
+    console.log("[AI Service] ❌ Azure OpenAI not configured");
   }
 
   // Fallback: Vertex AI (if GCP_PROJECT_ID configured) - production, better limits
@@ -47,8 +56,7 @@ export function getAIService(env?: Env): AIService {
     (typeof process !== "undefined" ? process.env.GCP_PROJECT_ID : "");
 
   if (gcpProjectId && gcpProjectId.trim()) {
-    console.log("Using Vertex AI (GCP) for Gemini models");
-    console.log(`Project: ${gcpProjectId}`);
+    console.log("[AI Service] ⚠️ Falling back to Vertex AI (GCP)");
     return new VertexAIService(env);
   }
 
@@ -58,7 +66,7 @@ export function getAIService(env?: Env): AIService {
     (typeof process !== "undefined" ? process.env.GEMINI_API_KEY : "");
 
   if (geminiKey && geminiKey.trim()) {
-    console.log("Using Gemini API (direct)");
+    console.log("[AI Service] ⚠️ Falling back to Gemini API (free tier)");
     return new GeminiService(env);
   }
 

@@ -93,7 +93,7 @@ echo "--------------------------------------------------------"
 cd "$ROOT_DIR"
 
 echo -e "🧹 ${YELLOW}Clearing port conflicts...${NC}"
-for PORT in 3000 8787 8101 8102; do
+for PORT in 3000 8787 8788 8101 8102; do
   kill_port "$PORT"
 done
 
@@ -163,10 +163,18 @@ echo -e "🧵 ${YELLOW}Starting Node Queue Worker...${NC}"
 PIDS+=("$!")
 print_log_hint "$LOG_DIR/worker-node.log"
 
-echo -e "🌐 ${YELLOW}Starting Vite Frontend + Wrangler API on port 8787...${NC}"
+echo -e "🌐 ${YELLOW}Starting Wrangler API on port 8788...${NC}"
 (
   cd "$ROOT_DIR"
-  exec npx wrangler dev --port 8787 --host 127.0.0.1
+  exec npx wrangler dev --port 8788 --host 127.0.0.1
+) > "$LOG_DIR/wrangler.log" 2>&1 &
+PIDS+=("$!")
+print_log_hint "$LOG_DIR/wrangler.log"
+
+echo -e "🎨 ${YELLOW}Starting Vite Frontend on port 8787...${NC}"
+(
+  cd "$ROOT_DIR"
+  exec npx vite --port 8787 --host 127.0.0.1
 ) > "$LOG_DIR/vite.log" 2>&1 &
 PIDS+=("$!")
 print_log_hint "$LOG_DIR/vite.log"
@@ -176,12 +184,15 @@ echo "--------------------------------------------------------"
 wait_for_http "Python Audio Service" "http://127.0.0.1:8101/health" "$LOG_DIR/python-audio.log" 60
 wait_for_http "Python AI Service" "http://127.0.0.1:8102/health" "$LOG_DIR/python-ai.log" 60
 wait_for_http "Fastify REST API" "http://127.0.0.1:3000/health" "$LOG_DIR/api.log" 30
-wait_for_http "Vite Frontend + Wrangler API" "http://127.0.0.1:8787" "$LOG_DIR/vite.log" 30
+wait_for_http "Vite Frontend" "http://127.0.0.1:8787" "$LOG_DIR/vite.log" 30
+wait_for_http "Wrangler API" "http://127.0.0.1:8788" "$LOG_DIR/wrangler.log" 30
 
 echo "--------------------------------------------------------"
 echo -e "✨ ${GREEN}${BOLD}Monet AI Studio is ONLINE.${NC}"
 echo ""
-echo -e "🔗 ${BOLD}Frontend + API:${NC}       ${BLUE}http://127.0.0.1:8787${NC}"
+echo -e "🔗 ${BOLD}Frontend UI:${NC}          ${BLUE}http://127.0.0.1:8787${NC}"
+echo -e "🔗 ${BOLD}Wrangler API:${NC}         ${BLUE}http://127.0.0.1:8788${NC}"
+echo -e "🔗 ${BOLD}Fastify REST API:${NC}     ${BLUE}http://127.0.0.1:3000${NC}"
 echo -e "🔗 ${BOLD}Python Audio Service:${NC} ${BLUE}http://127.0.0.1:8101${NC}"
 echo -e "🔗 ${BOLD}Python AI Service:${NC}    ${BLUE}http://127.0.0.1:8102${NC}"
 echo ""
