@@ -16,7 +16,7 @@ const ProbedMetadataSchema = z.object({
   duration: z.number().positive(),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
-  fps: z.number().positive().optional(),
+  fps: z.number().min(0).optional(),
   codec: z.string().optional(),
   aspectRatio: z.number().positive().optional(),
   isVertical: z.boolean().optional(),

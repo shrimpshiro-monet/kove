@@ -132,6 +132,10 @@ CLIP USAGE CONSTRAINTS (STRICT):
 Use the EFFECT VOCABULARY from the COMPILED STYLE DNA section above as your source of truth. Do not invent effect types not listed there.
 Each effect below maps to a real renderer. Anything else is silently dropped.
 
+⚠️ CRITICAL: DO NOT just use push_in + impact_flash + color_pulse on every shot.
+You have 50+ effects available. USE THEM. Mix GPU stylize, GPU color, GPU blur, GPU distort, and specialist effects.
+The user expects to see holograms, thermal vision, CRT effects, bloom, vignettes, plasma, kaleidoscope — not just the same 3 baseline effects repeated.
+
   push_in         intensity 0.4-0.8, full shot duration
   pull_out        intensity 0.4-0.8, full shot duration
   context_shake   intensity 0.2-0.6, decay 0.5-0.8
@@ -247,16 +251,28 @@ EFFECT STACKING:
   - Maximum 2 effects per shot
   - Valid stacks: (impact_flash + chromatic_burst) on hero
                   (push_in + color_pulse) on emotional peaks
+                  (hologram + bloom_highlights) for cyberpunk/neon vibes
+                  (thermal + subject_isolation) for intense moments
+                  (crt_monitor + film_scratches) for retro/80s aesthetics
+                  (lens_blur + depth_focus) for cinematic DOF
+                  (plasma + context_shake) for psychedelic energy
   - Invalid: speed_ramp + push_in (visual conflict)
 
 EFFECT DIVERSITY RULES (MANDATORY):
   - No effect type may exceed 30% of total effects across the edit
   - Each shot must have at least 1 UNIQUE effect not used in the previous shot
+  - MUST use a MIX of effect categories — do NOT just use push_in/impact_flash/color_pulse
+  - REQUIRED: at least 40% of shots must use effects from the GPU/Stylize/Distort/Color lists below
   - Alternate between:
       • motion effects (push_in, pull_out, whip_pan)
-      • lighting effects (color_pulse, glow, vignette_punch)
+      • GPU stylize (hologram, thermal, plasma, crt_monitor, duotone, film_scratches)
+      • GPU color (bloom_highlights, sepia, vibrance, shift_towards)
+      • GPU blur (lens_blur, tilt_shift, dream_blur, zoom_blur)
+      • GPU distort (swirl_gfx, heat_wave, kaleidoscope, liquid)
       • impact effects (impact_flash, chromatic_burst, context_shake)
+      • specialist (subject_isolation, depth_focus, smooth_slowmo — if tier allows)
   - Avoid repeating the same effect type in more than 2 consecutive shots
+  - Every edit MUST include at least 2 effects from the GPU lists — not just baseline effects
   - If you catch yourself writing the same effect 3 times in a row, STOP and pick a different one
 
 SPIDERVERSE RULES:

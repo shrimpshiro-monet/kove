@@ -260,7 +260,7 @@ export async function probeVideoClientSide(file: File): Promise<ClientProbeResul
             duration: video.duration,
             width,
             height,
-            fps,
+            fps: fps || 30,
             mimeType: file.type,
             aspectRatio,
             isVertical,
