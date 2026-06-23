@@ -28,6 +28,12 @@ export function enhanceEDLWithStyleDirectives(
   // Global intensity scales all enhanced effects
   const intensity = Math.max(0, Math.min(1, (edl as any).intensity ?? 0.5));
 
+  // Read style DNA from EDL meta to get actual visual settings
+  const styleDNA = (edl as any).meta?.styleDNA ?? null;
+  const grade = styleDNA?.grade ?? {};
+  const isSubtle = (grade.saturation ?? 1) < 1.0 && (grade.contrast ?? 1) < 1.15;
+  const isAggressive = (grade.saturation ?? 1) > 1.3 || (grade.contrast ?? 1) > 1.3;
+
   const shots = (edl.shots ?? []).map((shot: any, index: number) => {
     const effects = normalizeEffects(shot.effects);
 
@@ -41,38 +47,43 @@ export function enhanceEDLWithStyleDirectives(
       })
     );
 
+    // Only add push_in if the style actually uses camera movement
     if (shouldApplyEvery(index, directives.motion.pushInFrequency)) {
+      // Subtle styles get tiny push-in, aggressive styles get bigger push-in
+      const scaleAmount = isSubtle ? 1.05 : isAggressive ? 1.15 : 1.10;
       effects.push(
         makeEffect("push_in", {
           scaleFrom: 1,
-          scaleTo: directives.mode === "strict_replication" ? 1.14 : 1.07,
-          intensity: 0.4 * intensity,
+          scaleTo: scaleAmount,
+          intensity: 0.3 * intensity,
           easing: "easeOutCubic",
         })
       );
     }
 
-    if (shouldApplyEvery(index, directives.effects.flashFrequency)) {
+    // Only add flash/pulse if the style wants it — not every edit needs impact effects
+    if (shouldApplyEvery(index, directives.effects.flashFrequency) && !isSubtle) {
       effects.push(
         makeEffect("impact_flash", {
-          intensity: (directives.mode === "strict_replication" ? 0.85 : 0.5) * intensity,
-          durationSec: 0.08,
+          intensity: (directives.mode === "strict_replication" ? 0.7 : 0.4) * intensity,
+          durationSec: 0.06,
         })
       );
       effects.push(
         makeEffect("color_pulse", {
-          intensity: (directives.mode === "strict_replication" ? 0.42 : 0.25) * intensity,
-          durationSec: 0.16,
+          intensity: (directives.mode === "strict_replication" ? 0.35 : 0.2) * intensity,
+          durationSec: 0.12,
         })
       );
     }
 
-    if (shouldApplyEvery(index, directives.motion.cameraShakeFrequency)) {
+    // Camera shake — only for aggressive/kinetic styles
+    if (shouldApplyEvery(index, directives.motion.cameraShakeFrequency) && !isSubtle) {
       effects.push(
         makeEffect("context_shake", {
-          intensity: (directives.mode === "strict_replication" ? 0.7 : 0.35) * intensity,
+          intensity: (directives.mode === "strict_replication" ? 0.6 : 0.3) * intensity,
           decay: 0.65,
-          durationSec: 0.18,
+          durationSec: 0.15,
         })
       );
     }
@@ -103,20 +114,31 @@ export function enhanceEDLWithStyleDirectives(
       );
     }
 
-    // ===== GPU EFFECTS — add variety beyond baseline =====
-    // Cycle through GPU effects to ensure visual diversity
-    const gpuEffectPool = [
-      { type: "hologram", params: { intensity: 0.6 } },
-      { type: "thermal", params: { intensity: 0.5 } },
-      { type: "plasma", params: { intensity: 0.4 } },
-      { type: "bloom_highlights", params: { intensity: 0.5 } },
-      { type: "crt_monitor", params: { intensity: 0.6 } },
-      { type: "duotone", params: {} },
-      { type: "film_scratches", params: { intensity: 0.3 } },
-      { type: "vignette_punch", params: { intensity: 0.4 } },
-      { type: "lens_blur", params: { intensity: 0.5 } },
-      { type: "sepia", params: { intensity: 0.4 } },
-    ];
+    // ===== GPU EFFECTS — style-aware selection =====
+    // Pick GPU effects that MATCH the style DNA, not random ones
+    const gpuEffectPool = isSubtle
+      ? [
+          { type: "vignette_punch", params: { intensity: 0.3 } },
+          { type: "sepia", params: { intensity: 0.3 } },
+          { type: "bloom_highlights", params: { intensity: 0.2 } },
+          { type: "vibrance", params: { intensity: 0.2 } },
+          { type: "lens_blur", params: { intensity: 0.2 } },
+        ]
+      : isAggressive
+      ? [
+          { type: "hologram", params: { intensity: 0.6 } },
+          { type: "thermal", params: { intensity: 0.5 } },
+          { type: "plasma", params: { intensity: 0.4 } },
+          { type: "bloom_highlights", params: { intensity: 0.5 } },
+          { type: "crt_monitor", params: { intensity: 0.5 } },
+        ]
+      : [
+          { type: "bloom_highlights", params: { intensity: 0.35 } },
+          { type: "sepia", params: { intensity: 0.3 } },
+          { type: "vignette_punch", params: { intensity: 0.3 } },
+          { type: "vibrance", params: { intensity: 0.25 } },
+          { type: "heat_wave", params: { intensity: 0.3 } },
+        ];
 
     // Add GPU effect to every other shot for variety
     if (index % 2 === 0 && directives.mode === "strict_replication") {
@@ -127,9 +149,9 @@ export function enhanceEDLWithStyleDirectives(
       }));
     }
 
-    // Add color grade effects based on frequency
-    if (shouldApplyEvery(index, directives.effects.glowFrequency ?? "medium")) {
-      effects.push(makeEffect("bloom_highlights", { intensity: 0.4 * intensity }));
+    // Add color grade effects — only if style wants it
+    if (shouldApplyEvery(index, directives.effects.glowFrequency ?? "medium") && !isSubtle) {
+      effects.push(makeEffect("bloom_highlights", { intensity: 0.3 * intensity }));
     }
 
     return {
