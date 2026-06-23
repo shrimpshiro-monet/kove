@@ -143,6 +143,7 @@ function ChatPage() {
   const [directorPreviewUrl, setDirectorPreviewUrl] = useState<string | null>(null);
   const [patchSummary, setPatchSummary] = useState<string | null>(null);
   const [upgradeCta, setUpgradeCta] = useState<UpgradeCta | null>(null);
+  const [editIntensity, setEditIntensity] = useState(0.5);
   const lastPersistedStudioSnapshotRef = useRef<string | null>(null);
   const chatUiStorageKey = `monet.chat.ui.${threadId}`;
 
@@ -763,7 +764,8 @@ function ChatPage() {
         text,
         undefined,
         undefined,
-        styleResult?.success ? styleResult.style : undefined
+        styleResult?.success ? styleResult.style : undefined,
+        editIntensity
       );
 
       console.log("[ChatPage] Director diagnostics", {
@@ -1737,6 +1739,23 @@ function ChatPage() {
                 </button>
               </div>
             )}
+
+            {/* Edit Intensity Slider */}
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Edit intensity</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={editIntensity}
+                onChange={(e) => setEditIntensity(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+              />
+              <span className="text-xs text-muted-foreground w-8 text-right font-mono">
+                {Math.round(editIntensity * 100)}%
+              </span>
+            </div>
 
             {/* Prompt input */}
             <div className="relative rounded-xl border border-border bg-card focus-within:border-primary/50 transition-colors">

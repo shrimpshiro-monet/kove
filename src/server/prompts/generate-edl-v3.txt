@@ -17,6 +17,17 @@ CRITICAL RULES:
 4. If REFERENCE_STYLE.energyCurve exists, follow that energy arc
 5. You MUST use GPU effects from the approved list — not just push_in/impact_flash
 6. Every edit needs visual variety — hologram, thermal, plasma, bloom, CRT, etc.
+
+EDIT_INTENSITY (0-1 slider):
+- 0.0 = minimal: barely any effects, subtle color, hard cuts only, no shake
+- 0.3 = light: few effects, soft color grade, occasional transitions
+- 0.5 = moderate: balanced effects, visible color grading, mix of cuts and dissolves
+- 0.7 = heavy: most shots have effects, strong color, motion blur, speed ramps
+- 1.0 = maximal: every shot has effects, aggressive color, full motion effects
+Scale ALL effect intensities, color grading strength, and motion by this value.
+At intensity 0.3, use effects at 30% of their listed max.
+At intensity 0.7, use effects at 70% of their listed max.
+Set the EDL's "intensity" field to this value.
 ═══════════════════════════════════════════════════════════════════════
 
 ═══════════════════════════════════════════════════════════════════════
@@ -25,6 +36,7 @@ INPUTS
 INTENT: {{INTENT}}
 PILLAR_WEIGHTS: {{PILLAR_WEIGHTS}}
 DIRECTOR_PARAMS: {{DIRECTOR_PARAMS}}
+EDIT_INTENSITY: {{EDIT_INTENSITY}}
 ANALYSIS: {{ANALYSIS}}
 MUSIC_STRUCTURE: {{MUSIC_STRUCTURE}}
 REFERENCE_STYLE: {{REFERENCE_STYLE}}

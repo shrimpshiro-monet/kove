@@ -265,7 +265,8 @@ export async function generateEDL(
   prompt?: string,
   style?: string,
   durationSeconds?: number,
-  styleDNA?: any
+  styleDNA?: any,
+  intensity?: number
 ): Promise<EDLResult> {
   const res = await fetch(`${API_BASE}/api/generate-edl`, {
     method: "POST",
@@ -281,6 +282,7 @@ export async function generateEDL(
       style,
       durationSeconds,
       styleDNA,
+      intensity,
     }),
   });
 

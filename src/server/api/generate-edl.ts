@@ -429,6 +429,9 @@ export async function handleGenerateEDL(
             heroMomentCount: 2, crossClipBias: 0.6, effectBudget: 25,
           }
         ))
+        .replace("{{EDIT_INTENSITY}}", String(
+          (body as any)?.intensity ?? (intent as any)?.intensity ?? 0.5
+        ))
         .replace("{{ANALYSIS}}", JSON.stringify(analysis ?? {}))
         .replace("{{MUSIC_STRUCTURE}}", JSON.stringify(musicStructure ?? null))
         .replace("{{REFERENCE_STYLE}}", JSON.stringify(normalizedReferenceStyle ?? null))
@@ -581,6 +584,11 @@ export async function handleGenerateEDL(
         intentId: resolvedIntentId || "unknown",
         analysisId: body.analysisId || "unknown",
       };
+
+      // Set global edit intensity (0-1 slider)
+      edl.intensity = Math.max(0, Math.min(1,
+        (body as any)?.intensity ?? (intent as any)?.intensity ?? 0.5
+      ));
 
       if (normalizedReferenceStyle) {
         edl = enforceReferenceStyleOnEDL(

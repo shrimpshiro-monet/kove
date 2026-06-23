@@ -87,10 +87,8 @@ export interface MonetEDL {
 
   shots: Shot[]; // Ordered list of shots
 
-  masks?: MaskAsset[];
-  motionTracks?: MotionTrack[];
-  planarTracks?: PlanarTrack[];
-  textOverlays?: TextOverlay[];
+  /** Global edit intensity 0-1. Scales all effects, color, motion, transitions. */
+  intensity?: number;
 
   globalEffects?: {
     colorGrade?: ColorGradePreset;

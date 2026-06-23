@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
+import { clampEffectIntensity, enforceShotBudget, enforceIntensityBudget } from "../lib/effect-limits";
 
 export interface RenderEDLOptions {
   edl: any;
@@ -226,7 +227,7 @@ export class FFmpegRenderer {
       ];
 
       // Apply per-shot effects from EDL
-      const effectFilters = this.buildShotEffectFilters(shot, width, height, shotDuration, fps);
+      const effectFilters = this.buildShotEffectFilters(shot, width, height, shotDuration, fps, edl.intensity ?? 0.5);
       baseChain.push(...effectFilters);
 
       // CRITICAL: NORMALIZATION at the end — forces every shot to identical
@@ -274,14 +275,20 @@ export class FFmpegRenderer {
     width: number,
     height: number,
     shotDuration: number,
-    fps: number
+    fps: number,
+    globalIntensity: number = 0.5
   ): string[] {
     const filters: string[] = [];
     const effects = shot.effects ?? [];
 
-    for (const effect of effects) {
+    // Enforce shot budget: max effects per shot, max total intensity
+    const budgetedEffects = enforceIntensityBudget(enforceShotBudget(effects));
+
+    for (const effect of budgetedEffects) {
       const type = (effect.type ?? effect.kind ?? "").toString().toLowerCase();
-      const intensity = clamp01(effect.intensity ?? 0.7);
+      // Scale intensity by global edit intensity (0-1 slider)
+      const rawIntensity = clampEffectIntensity(type, effect.intensity ?? 0.7);
+      const intensity = rawIntensity * globalIntensity;
       const effectStart = numberOr(effect.startTime, 0);
       const effectDuration = numberOr(effect.duration, shotDuration);
       const effectEnd = effectStart + effectDuration;

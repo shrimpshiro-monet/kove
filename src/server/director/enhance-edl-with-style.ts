@@ -25,6 +25,9 @@ export function enhanceEDLWithStyleDirectives(
   edl: MonetEDL,
   directives: StyleDirectives
 ): MonetEDL {
+  // Global intensity scales all enhanced effects
+  const intensity = Math.max(0, Math.min(1, (edl as any).intensity ?? 0.5));
+
   const shots = (edl.shots ?? []).map((shot: any, index: number) => {
     const effects = normalizeEffects(shot.effects);
 
@@ -43,6 +46,7 @@ export function enhanceEDLWithStyleDirectives(
         makeEffect("push_in", {
           scaleFrom: 1,
           scaleTo: directives.mode === "strict_replication" ? 1.14 : 1.07,
+          intensity: 0.4 * intensity,
           easing: "easeOutCubic",
         })
       );
@@ -51,13 +55,13 @@ export function enhanceEDLWithStyleDirectives(
     if (shouldApplyEvery(index, directives.effects.flashFrequency)) {
       effects.push(
         makeEffect("impact_flash", {
-          intensity: directives.mode === "strict_replication" ? 0.85 : 0.5,
+          intensity: (directives.mode === "strict_replication" ? 0.85 : 0.5) * intensity,
           durationSec: 0.08,
         })
       );
       effects.push(
         makeEffect("color_pulse", {
-          intensity: directives.mode === "strict_replication" ? 0.42 : 0.25,
+          intensity: (directives.mode === "strict_replication" ? 0.42 : 0.25) * intensity,
           durationSec: 0.16,
         })
       );
@@ -66,7 +70,7 @@ export function enhanceEDLWithStyleDirectives(
     if (shouldApplyEvery(index, directives.motion.cameraShakeFrequency)) {
       effects.push(
         makeEffect("context_shake", {
-          intensity: directives.mode === "strict_replication" ? 0.7 : 0.35,
+          intensity: (directives.mode === "strict_replication" ? 0.7 : 0.35) * intensity,
           decay: 0.65,
           durationSec: 0.18,
         })
@@ -117,12 +121,15 @@ export function enhanceEDLWithStyleDirectives(
     // Add GPU effect to every other shot for variety
     if (index % 2 === 0 && directives.mode === "strict_replication") {
       const gpuEffect = gpuEffectPool[index % gpuEffectPool.length];
-      effects.push(makeEffect(gpuEffect.type, gpuEffect.params));
+      effects.push(makeEffect(gpuEffect.type, {
+        ...gpuEffect.params,
+        intensity: (gpuEffect.params.intensity ?? 0.4) * intensity,
+      }));
     }
 
     // Add color grade effects based on frequency
     if (shouldApplyEvery(index, directives.effects.glowFrequency ?? "medium")) {
-      effects.push(makeEffect("bloom_highlights", { intensity: 0.4 }));
+      effects.push(makeEffect("bloom_highlights", { intensity: 0.4 * intensity }));
     }
 
     return {
