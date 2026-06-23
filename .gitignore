@@ -48,6 +48,18 @@ venv/
 # Monet reference edits (large media files)
 monet-reference-edits/
 
+# External engines (large, not part of core)
+remotion/
+openreel-video/
+hyperframes/
+moviepy/
+editly/
+external/
+freecut/
+twick/
+OpenCut/
+CapC-Pro-2/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -76,3 +88,8 @@ check-tmp.*
 GEMINI.md
 MONET-CORE-LOOP.md
 monet-src.txt
+repomix-output.*
+tree.md
+tree.txt
+tree_for_production_*.md
+test_output.txt
