@@ -1,0 +1,537 @@
+{
+  "version": "1.0.0",
+  "description": "Monet AI Editor — Reference Edit Catalog. Analyzed from 16 real edit videos.",
+  "analyzedAt": "2026-06-23",
+  "videos": [
+    {
+      "id": "spiderman-important",
+      "file": "monet-reference-edits/SPIDERMAN (IMPORTANT).MP4",
+      "name": "Spider-Man Edit",
+      "style": "spiderverse_comic",
+      "duration": 46.6,
+      "resolution": "576x1104",
+      "aspectRatio": "9:16",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 34,
+      "cutRate": 0.73,
+      "avgShotDuration": 1.37,
+      "colorProfile": {
+        "avgRGB": [42, 49, 83],
+        "brightness": 23,
+        "saturation": 49,
+        "hue": 220,
+        "classification": "DARK_BLUE_TONED"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate",
+        "effects": ["comic_halftone", "ink_edges", "frame_stutter", "chromatic_glitch", "impact_flash"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "desaturated_blue",
+        "vfxIntensity": "high",
+        "referenceStyle": "spiderverse_action"
+      },
+      "tags": ["spider-verse", "comic", "superhero", "halftone", "ink", "animation_style"]
+    },
+    {
+      "id": "spiderman-same",
+      "file": "monet-reference-edits/IMPORTANT (SAME AS SPIDERAN).MP4",
+      "name": "Spider-Man Variant",
+      "style": "spiderverse_comic",
+      "duration": 22.85,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 22,
+      "cutRate": 0.96,
+      "avgShotDuration": 1.04,
+      "colorProfile": {
+        "avgRGB": [118, 128, 109],
+        "brightness": 46,
+        "saturation": 15,
+        "hue": 100,
+        "classification": "DESAUTURATED_GREEN"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate_fast",
+        "effects": ["comic_halftone", "ink_edges", "impact_flash"],
+        "transitions": ["cut"],
+        "colorGrade": "desaturated_natural",
+        "vfxIntensity": "medium_high",
+        "referenceStyle": "spiderverse_action"
+      },
+      "tags": ["spider-verse", "comic", "square_format", "instagram"]
+    },
+    {
+      "id": "2nd-important",
+      "file": "monet-reference-edits/2nd imporatnt.MP4",
+      "name": "Sports Edit #2",
+      "style": "sports_highlight",
+      "duration": 79.32,
+      "resolution": "576x650",
+      "aspectRatio": "0.89:1",
+      "fps": 24,
+      "codec": "h264",
+      "cuts": 114,
+      "cutRate": 1.44,
+      "avgShotDuration": 0.70,
+      "colorProfile": {
+        "avgRGB": [82, 68, 64],
+        "brightness": 28,
+        "saturation": 22,
+        "hue": 15,
+        "classification": "DARK_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "fast",
+        "effects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "warm_desaturated",
+        "vfxIntensity": "high",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["sports", "basketball", "fast_cuts", "energy", "warm_tones"]
+    },
+    {
+      "id": "3rd-important",
+      "file": "monet-reference-edits/3rd important.MP4",
+      "name": "Sports Edit #3",
+      "style": "sports_highlight",
+      "duration": 64.47,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 300,
+      "cutRate": 4.65,
+      "avgShotDuration": 0.21,
+      "colorProfile": {
+        "avgRGB": [174, 154, 137],
+        "brightness": 61,
+        "saturation": 21,
+        "hue": 25,
+        "classification": "BRIGHT_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "extreme_fast",
+        "effects": ["impact_flash", "color_pulse", "speed_ramp", "chromatic_burst", "context_shake"],
+        "transitions": ["cut", "flash"],
+        "colorGrade": "bright_warm",
+        "vfxIntensity": "very_high",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["sports", "rapid_cuts", "extreme_fast", "micro_cuts", "energy"]
+    },
+    {
+      "id": "4th-important",
+      "file": "monet-reference-edits/4TH IMPORTANT.MP4",
+      "name": "Sports Edit #4",
+      "style": "sports_highlight",
+      "duration": 67.37,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 66,
+      "cutRate": 0.98,
+      "avgShotDuration": 1.02,
+      "colorProfile": {
+        "avgRGB": [84, 64, 57],
+        "brightness": 27,
+        "saturation": 32,
+        "hue": 12,
+        "classification": "DARK_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate",
+        "effects": ["impact_flash", "color_pulse", "speed_ramp"],
+        "transitions": ["cut"],
+        "colorGrade": "warm_dark",
+        "vfxIntensity": "medium",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["sports", "basketball", "moderate_cuts", "warm", "dark"]
+    },
+    {
+      "id": "tiktok-unknown-1",
+      "file": "monet-reference-edits/v1c044g50000d7u06h7og65mnbolgl90.MP4",
+      "name": "TikTok Edit #1",
+      "style": "tiktok_dynamic",
+      "duration": 24.1,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 22,
+      "cutRate": 0.91,
+      "avgShotDuration": 1.10,
+      "colorProfile": {
+        "avgRGB": [45, 49, 49],
+        "brightness": 19,
+        "saturation": 8,
+        "hue": 180,
+        "classification": "DARK_DESATURATED"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate",
+        "effects": ["impact_flash", "vignette_punch"],
+        "transitions": ["cut"],
+        "colorGrade": "dark_desaturated",
+        "vfxIntensity": "low_medium",
+        "referenceStyle": "tiktok_dynamic"
+      },
+      "tags": ["tiktok", "dark", "moody", "square", "instagram"]
+    },
+    {
+      "id": "harvey",
+      "file": "reference-edits-2/harvey.MP4",
+      "name": "Harvey Basketball",
+      "style": "sports_cinematic",
+      "duration": 74.16,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 24,
+      "codec": "h264",
+      "cuts": 66,
+      "cutRate": 0.89,
+      "avgShotDuration": 1.12,
+      "colorProfile": {
+        "avgRGB": [87, 91, 100],
+        "brightness": 36,
+        "saturation": 13,
+        "hue": 220,
+        "classification": "DARK_BLUE_COOL"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate",
+        "effects": ["push_in", "impact_flash", "speed_ramp", "context_shake"],
+        "transitions": ["cut", "dissolve"],
+        "colorGrade": "cool_desaturated",
+        "vfxIntensity": "medium",
+        "referenceStyle": "sports_cinematic"
+      },
+      "tags": ["basketball", "sports", "cinematic", "cool_tones", "moderate_pacing"]
+    },
+    {
+      "id": "lewis-hamilton",
+      "file": "reference-edits-2/lewis hamilton.MP4",
+      "name": "Lewis Hamilton F1",
+      "style": "sports_highlight",
+      "duration": 21.11,
+      "resolution": "768x576",
+      "aspectRatio": "4:3",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 68,
+      "cutRate": 3.22,
+      "avgShotDuration": 0.31,
+      "colorProfile": {
+        "avgRGB": [116, 105, 103],
+        "brightness": 42,
+        "saturation": 11,
+        "hue": 10,
+        "classification": "MID_TONE_NEUTRAL"
+      },
+      "editCharacteristics": {
+        "pacing": "very_fast",
+        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan"],
+        "transitions": ["cut", "whip_pan", "flash"],
+        "colorGrade": "neutral_desaturated",
+        "vfxIntensity": "very_high",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["f1", "racing", "formula1", "extreme_fast", "neutral_tones"]
+    },
+    {
+      "id": "new-york",
+      "file": "reference-edits-2/new york living the moment.MP4",
+      "name": "New York Living The Moment",
+      "style": "lifestyle_cinematic",
+      "duration": 19.37,
+      "resolution": "1024x576",
+      "aspectRatio": "16:9",
+      "fps": 30,
+      "codec": "hevc",
+      "cuts": 67,
+      "cutRate": 3.46,
+      "avgShotDuration": 0.29,
+      "colorProfile": {
+        "avgRGB": [111, 109, 92],
+        "brightness": 41,
+        "saturation": 17,
+        "hue": 80,
+        "classification": "MID_TONE_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "very_fast",
+        "effects": ["push_in", "impact_flash", "speed_ramp", "chromatic_burst"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "warm_cinematic",
+        "vfxIntensity": "high",
+        "referenceStyle": "lifestyle_cinematic"
+      },
+      "tags": ["lifestyle", "nyc", "city", "cinematic", "fast_cuts", "travel"]
+    },
+    {
+      "id": "steph-curry",
+      "file": "reference-edits-2/steph curry.MP4",
+      "name": "Steph Curry Highlights",
+      "style": "sports_highlight",
+      "duration": 19.16,
+      "resolution": "576x576",
+      "aspectRatio": "1:1",
+      "fps": 30,
+      "codec": "hevc",
+      "cuts": 27,
+      "cutRate": 1.41,
+      "avgShotDuration": 0.71,
+      "colorProfile": {
+        "avgRGB": [58, 51, 55],
+        "brightness": 21,
+        "saturation": 12,
+        "hue": 330,
+        "classification": "DARK_COOL"
+      },
+      "editCharacteristics": {
+        "pacing": "fast",
+        "effects": ["impact_flash", "speed_ramp", "context_shake", "chromatic_burst"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "cool_dark",
+        "vfxIntensity": "high",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["basketball", "steph_curry", "warriors", "sports", "fast_cuts", "dark_cool"]
+    },
+    {
+      "id": "tyler-the-creator",
+      "file": "reference-edits-2/tyler_the_creator.MP4",
+      "name": "Tyler The Creator Edit",
+      "style": "music_video_vibrant",
+      "duration": 55.68,
+      "resolution": "800x576",
+      "aspectRatio": "1.39:1",
+      "fps": 24,
+      "codec": "hevc",
+      "cuts": 32,
+      "cutRate": 0.57,
+      "avgShotDuration": 1.74,
+      "colorProfile": {
+        "avgRGB": [144, 81, 54],
+        "brightness": 36,
+        "saturation": 62,
+        "hue": 15,
+        "classification": "VIBRANT_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate",
+        "effects": ["push_in", "color_pulse", "vignette_punch", "bloom_highlights"],
+        "transitions": ["cut", "dissolve"],
+        "colorGrade": "vibrant_warm",
+        "vfxIntensity": "medium",
+        "referenceStyle": "music_video_vibrant"
+      },
+      "tags": ["music_video", "tyler_the_creator", "vibrant", "warm", "creative", "colorful"]
+    },
+    {
+      "id": "tiktok-unknown-2",
+      "file": "reference-edits-2/v1c044g50000d7sijfnog65qd2015cqg.MP4",
+      "name": "TikTok Edit #2",
+      "style": "tiktok_dynamic",
+      "duration": 46.3,
+      "resolution": "1024x576",
+      "aspectRatio": "16:9",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 138,
+      "cutRate": 2.98,
+      "avgShotDuration": 0.34,
+      "colorProfile": {
+        "avgRGB": [89, 91, 100],
+        "brightness": 37,
+        "saturation": 11,
+        "hue": 220,
+        "classification": "DARK_COOL"
+      },
+      "editCharacteristics": {
+        "pacing": "very_fast",
+        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "cool_dark",
+        "vfxIntensity": "high",
+        "referenceStyle": "tiktok_dynamic"
+      },
+      "tags": ["tiktok", "fast_cuts", "dynamic", "cool", "dark"]
+    },
+    {
+      "id": "tiktok-unknown-3",
+      "file": "reference-edits-2/v24044gl0000d5e58cvog65p89sa6v30.MP4",
+      "name": "TikTok Edit #3",
+      "style": "tiktok_dynamic",
+      "duration": 66.43,
+      "resolution": "1382x576",
+      "aspectRatio": "2.4:1",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 76,
+      "cutRate": 1.14,
+      "avgShotDuration": 0.87,
+      "colorProfile": {
+        "avgRGB": [126, 127, 122],
+        "brightness": 49,
+        "saturation": 4,
+        "hue": 90,
+        "classification": "MID_TONE_NEUTRAL"
+      },
+      "editCharacteristics": {
+        "pacing": "moderate_fast",
+        "effects": ["push_in", "impact_flash", "speed_ramp"],
+        "transitions": ["cut"],
+        "colorGrade": "neutral",
+        "vfxIntensity": "medium",
+        "referenceStyle": "tiktok_dynamic"
+      },
+      "tags": ["tiktok", "ultrawide", "neutral", "moderate_cuts"]
+    },
+    {
+      "id": "tiktok-unknown-4",
+      "file": "reference-edits-2/v24044gl0000d7368pfog65ufcnb2f60.MP4",
+      "name": "TikTok Edit #4",
+      "style": "tiktok_dynamic",
+      "duration": 67.53,
+      "resolution": "576x650",
+      "aspectRatio": "0.89:1",
+      "fps": 24,
+      "codec": "h264",
+      "cuts": 148,
+      "cutRate": 2.19,
+      "avgShotDuration": 0.46,
+      "colorProfile": {
+        "avgRGB": [47, 37, 38],
+        "brightness": 16,
+        "saturation": 21,
+        "hue": 350,
+        "classification": "DARK_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "fast",
+        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
+        "transitions": ["cut", "whip_pan"],
+        "colorGrade": "dark_warm",
+        "vfxIntensity": "high",
+        "referenceStyle": "tiktok_dynamic"
+      },
+      "tags": ["tiktok", "dark", "warm", "fast_cuts", "energetic"]
+    },
+    {
+      "id": "tiktok-unknown-5",
+      "file": "reference-edits-2/v26044gc0000d7s94ivog65r9lu88r30.MP4",
+      "name": "TikTok Edit #5",
+      "style": "tiktok_vibrant",
+      "duration": 25.08,
+      "resolution": "1024x576",
+      "aspectRatio": "16:9",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 2,
+      "cutRate": 0.08,
+      "avgShotDuration": 12.54,
+      "colorProfile": {
+        "avgRGB": [89, 17, 12],
+        "brightness": 15,
+        "saturation": 87,
+        "hue": 5,
+        "classification": "DARK_RED_VIVID"
+      },
+      "editCharacteristics": {
+        "pacing": "very_slow",
+        "effects": ["color_pulse", "vignette_punch", "bloom_highlights"],
+        "transitions": ["dissolve"],
+        "colorGrade": "vivid_red",
+        "vfxIntensity": "high",
+        "referenceStyle": "tiktok_vibrant"
+      },
+      "tags": ["tiktok", "vibrant", "red", "slow", "artistic", "single_clip"]
+    },
+    {
+      "id": "valentino-rossi",
+      "file": "reference-edits-2/valentino rossi.MP4",
+      "name": "Valentino Rossi MotoGP",
+      "style": "sports_highlight",
+      "duration": 27.93,
+      "resolution": "1024x576",
+      "aspectRatio": "16:9",
+      "fps": 30,
+      "codec": "h264",
+      "cuts": 102,
+      "cutRate": 3.65,
+      "avgShotDuration": 0.27,
+      "colorProfile": {
+        "avgRGB": [153, 140, 126],
+        "brightness": 55,
+        "saturation": 18,
+        "hue": 30,
+        "classification": "BRIGHT_WARM"
+      },
+      "editCharacteristics": {
+        "pacing": "extreme_fast",
+        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan", "context_shake"],
+        "transitions": ["cut", "whip_pan", "flash"],
+        "colorGrade": "bright_warm",
+        "vfxIntensity": "very_high",
+        "referenceStyle": "sports_highlight"
+      },
+      "tags": ["motogp", "racing", "valentino_rossi", "extreme_fast", "warm_bright"]
+    }
+  ],
+  "styleSummary": {
+    "spiderverse_comic": {
+      "count": 2,
+      "avgCutRate": 0.85,
+      "avgBrightness": 35,
+      "avgSaturation": 32,
+      "commonEffects": ["comic_halftone", "ink_edges", "impact_flash", "frame_stutter"],
+      "colorSignature": "desaturated_blue/green, high contrast"
+    },
+    "sports_highlight": {
+      "count": 6,
+      "avgCutRate": 2.44,
+      "avgBrightness": 36,
+      "avgSaturation": 21,
+      "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan", "context_shake"],
+      "colorSignature": "warm/cool neutral, high energy"
+    },
+    "tiktok_dynamic": {
+      "count": 5,
+      "avgCutRate": 1.74,
+      "avgBrightness": 29,
+      "avgSaturation": 29,
+      "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
+      "colorSignature": "varies from dark to vibrant"
+    },
+    "music_video_vibrant": {
+      "count": 1,
+      "avgCutRate": 0.57,
+      "avgBrightness": 36,
+      "avgSaturation": 62,
+      "commonEffects": ["push_in", "color_pulse", "vignette_punch", "bloom_highlights"],
+      "colorSignature": "vibrant warm, high saturation"
+    },
+    "lifestyle_cinematic": {
+      "count": 1,
+      "avgCutRate": 3.46,
+      "avgBrightness": 41,
+      "avgSaturation": 17,
+      "commonEffects": ["push_in", "impact_flash", "speed_ramp", "chromatic_burst"],
+      "colorSignature": "warm cinematic, fast cuts"
+    },
+    "sports_cinematic": {
+      "count": 1,
+      "avgCutRate": 0.89,
+      "avgBrightness": 36,
+      "avgSaturation": 13,
+      "commonEffects": ["push_in", "impact_flash", "speed_ramp", "context_shake"],
+      "colorSignature": "cool desaturated, moderate pacing"
+    }
+  }
+}
