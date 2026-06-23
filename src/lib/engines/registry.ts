@@ -62,6 +62,10 @@ export const ENGINE_REGISTRY: EngineCapability[] = [
       "floating_dust", "infrared", "film_scratches", "liquid", "bloom_highlights",
       // pro-grade effects
       "film_grain_pro", "vignette_pro_v2", "color_temperature",
+      // custom VFX (reference-matched)
+      "spiderverse_halftone", "sports_speed_trail", "tyler_vibrant_pop",
+      "racing_motion_streak", "dark_moody_cinematic", "lifestyle_glitch",
+      "tiktok_energy_pulse",
     ]),
     preferredFor: new Set([
       "glitch", "vhs", "rgb_shift",

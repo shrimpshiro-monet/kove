@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "description": "Long-form YouTube reference catalog — real content analysis from Azure GPT-4o-mini vision",
+  "analyzedAt": "2026-06-23",
+  "longFormVideos": [
+    {
+      "id": "bmw-m3-build",
+      "file": "longer-reference-videos-for-youtube/Building Quinn's BMW M3 - throtl (1080p, h264, youtube).mp4",
+      "name": "Building Quinn's BMW M3 - throtl",
+      "genre": "automotive_build_vlog",
+      "duration": 3223,
+      "resolution": "1080p",
+      "fps": 29.97,
+      "editStyle": {
+        "hook": "Close-up of engine + hands working creates immediate intrigue",
+        "pacingPattern": "slow_intro → fast_work → peak_climax → calm_outro",
+        "cutFrequency": "1-2s during work, 3-5s during talking",
+        "transitionTypes": ["hard_cut"],
+        "effectsUsed": ["vintage_filter", "close_ups", "graphic_overlays"],
+        "musicSync": "cuts aligned with music beats during high-energy moments",
+        "energyArc": [3, 4, 5, 7, 7, 5, 4]
+      },
+      "contentStructure": {
+        "intro": "0-30s: Establishing shots of BMW M3 and parts",
+        "workProcess": "30s-2min: Detailed shots of building/modifying",
+        "productShowcase": "2-3min: Merchandise and presenter segments",
+        "climax": "3-4min: High-energy critical modifications",
+        "outro": "4min+: Recap and call to action"
+      },
+      "replicablePatterns": [
+        "Close-ups to highlight details (hands on parts)",
+        "Hard cuts to maintain pacing and energy",
+        "Cuts aligned with musical beats",
+        "Gradual increase in cut frequency as energy builds",
+        "Mix of wide and close-up shots for context + detail"
+      ],
+      "engagementMechanics": "High-energy visuals + dynamic pacing + relatable content + music sync",
+      "tags": ["automotive", "build", "diy", "cinematic", "long_form"]
+    },
+    {
+      "id": "minecraft-op-structures",
+      "file": "longer-reference-videos-for-youtube/Minecraft, But Structures Are EXTREMELY OP... - Wallibear (1080p, h264, youtube).mp4",
+      "name": "Minecraft But Structures Are EXTREMELY OP - Wallibear",
+      "genre": "gaming_content",
+      "duration": 1873,
+      "resolution": "1080p",
+      "fps": 60,
+      "editStyle": {
+        "hook": "Diamond pickaxe mining close-up + exciting structure reveal",
+        "pacingPattern": "slow_intro → accelerating → peak_action → resolution",
+        "cutFrequency": "2-3s intro, 1-2s during action, 3-5s resolution",
+        "transitionTypes": ["hard_cut", "dissolve", "whip_pan"],
+        "effectsUsed": ["text_overlays", "zooms", "speed_ramps", "animated_text"],
+        "musicSync": "cuts align with music beats during high-energy moments",
+        "energyArc": [5, 6, 7, 8, 7, 5, 4]
+      },
+      "contentStructure": {
+        "intro": "0-30s: Premise + character introduction",
+        "exploration": "30s-2min: Exploring structures, showcasing features",
+        "climax": "2-3:30min: Challenges and powerful items",
+        "resolution": "3:30-4:30min: Reflection and items acquired",
+        "outro": "4:30-5min: Wrap-up + call to action"
+      },
+      "replicablePatterns": [
+        "Quick cuts between scenes to maintain interest",
+        "Text overlays to highlight key moments/items",
+        "Dynamic camera angles (close-ups + wide shots)",
+        "Music syncing cuts to beats",
+        "Energy variation: build → peak → taper"
+      ],
+      "engagementMechanics": "Strong hook + dynamic pacing + visual/audio synergy + humor + relatable content",
+      "tags": ["gaming", "minecraft", "fast_cuts", "60fps", "text_overlays"]
+    },
+    {
+      "id": "dude-perfect-smallest-tv",
+      "file": "longer-reference-videos-for-youtube/World's Smallest TV  OT 30 - Dude Perfect (1080p, h264, youtube).mp4",
+      "name": "World's Smallest TV - Dude Perfect",
+      "genre": "entertainment_challenge",
+      "duration": 1182,
+      "resolution": "1080p",
+      "fps": 29.97,
+      "editStyle": {
+        "hook": "Animated battle scene with vibrant visuals and high energy",
+        "pacingPattern": "slow_start → accelerating → peak_reactions → resolution",
+        "cutFrequency": "3-5s intro, 1-2s during action, 2-3s resolution",
+        "transitionTypes": ["hard_cut", "cut"],
+        "effectsUsed": ["colorful_graphics", "text_effects", "zooms", "reaction_shots"],
+        "musicSync": "cuts align with beats during gameplay",
+        "energyArc": [8, 5, 6, 7, 9, 10, 8]
+      },
+      "contentStructure": {
+        "intro": "0-30s: Animated battle + host introduction",
+        "gameplay": "30s-2min: Game with props and reactions",
+        "climax": "2-3min: High-energy dramatic reactions",
+        "outro": "3min+: Wrap-up discussions"
+      },
+      "replicablePatterns": [
+        "Animated intro for hook",
+        "Host reactions as energy peaks",
+        "Colorful graphics and text overlays",
+        "Mix of live action and animated content",
+        "Reaction shots for emotional engagement"
+      ],
+      "engagementMechanics": "Visual spectacle + reaction shots + progressive challenge + humor",
+      "tags": ["entertainment", "challenge", "reactions", "graphics", "long_form"]
+    }
+  ],
+  "editingInsights": {
+    "hookPatterns": [
+      "Show the most exciting moment first (preview)",
+      "Close-up of action creates immediate intrigue",
+      "Text overlay with bold statement grabs attention",
+      "Animated/graphic intro for visual impact"
+    ],
+    "pacingPrinciples": [
+      "Start slow (3-5s shots) → accelerate to 1-2s → peak at climax → taper",
+      "Cut frequency should mirror energy arc",
+      "Never stay at same pace for more than 30 seconds"
+    ],
+    "transitionRules": [
+      "Hard cuts for most transitions (maintains energy)",
+      "Dissolves only for section transitions (intro→body, body→outro)",
+      "Whip pans for action sequences",
+      "No transitions during peak energy (cut only)"
+    ],
+    "effectUsage": [
+      "Text overlays for key information (not decoration)",
+      "Zooms for emphasis (not constant)",
+      "Speed ramps for dramatic moments only",
+      "Music sync for emotional resonance"
+    ],
+    "engagementFormula": "Hook(5s) → Build(30s) → Peak(climax) → Resolution(30s) → CTA"
+  }
+}

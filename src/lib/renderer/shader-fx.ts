@@ -4,6 +4,7 @@
 import { SPIDERVERSE_SHADERS } from "../shaders/spiderverse";
 import { GLFX_SHADERS } from "../shaders/glfx-effects";
 import { SHADERTOY_SHADERS } from "../shaders/shadertoy-collection";
+import { CUSTOM_VFX_SHADERS } from "../shaders/custom-vfx";
 import { FILM_GRAIN_PRO_FRAG, FILM_GRAIN_PRO_UNIFORMS } from "../shaders/pro-effects/film-grain-pro";
 import { VIGNETTE_PRO_FRAG, VIGNETTE_PRO_UNIFORMS } from "../shaders/pro-effects/vignette-pro";
 import { COLOR_TEMPERATURE_FRAG, COLOR_TEMPERATURE_UNIFORMS } from "../shaders/pro-effects/color-temperature";
@@ -186,7 +187,15 @@ export type ShaderEffectKind =
   // pro-grade effects
   | "film_grain_pro"
   | "vignette_pro_v2"
-  | "color_temperature";
+  | "color_temperature"
+  // custom VFX (matched to reference videos)
+  | "spiderverse_halftone"
+  | "sports_speed_trail"
+  | "tyler_vibrant_pop"
+  | "racing_motion_streak"
+  | "dark_moody_cinematic"
+  | "lifestyle_glitch"
+  | "tiktok_energy_pulse";
 
 interface ShaderProgram {
   program: WebGLProgram;
@@ -316,6 +325,16 @@ export class ShaderFXRenderer {
       ));
     } catch (e) {
       console.warn("[shader-fx] failed to register pro effects:", e);
+    }
+
+    // Register custom VFX shaders (matched to reference videos)
+    for (const spec of CUSTOM_VFX_SHADERS) {
+      const uniformNames = ["u_texture", "u_resolution", "u_time", ...Object.keys(spec.defaultUniforms)];
+      try {
+        this.programs.set(spec.id as ShaderEffectKind, this.buildProgram(spec.id as ShaderEffectKind, spec.fragmentShader, uniformNames));
+      } catch (e) {
+        console.warn(`[shader-fx] failed to compile custom VFX ${spec.id}:`, e);
+      }
     }
 
     console.log(`[shader-fx] registered ${this.programs.size} total shader programs`);

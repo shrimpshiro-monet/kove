@@ -136,6 +136,20 @@ const FEATURE_ALIASES: Record<string, string> = {
   bloom_highlights: "bloom_highlights",
   bloom: "bloom_highlights",
   glow_pro: "bloom_highlights",
+  // custom VFX (reference-matched)
+  spiderverse_halftone: "spiderverse_halftone",
+  sports_speed_trail: "sports_speed_trail",
+  tyler_vibrant_pop: "tyler_vibrant_pop",
+  racing_motion_streak: "racing_motion_streak",
+  dark_moody_cinematic: "dark_moody_cinematic",
+  lifestyle_glitch: "lifestyle_glitch",
+  tiktok_energy_pulse: "tiktok_energy_pulse",
+  speed_trail: "sports_speed_trail",
+  vibrant_pop: "tyler_vibrant_pop",
+  racing_streak: "racing_motion_streak",
+  dark_moody: "dark_moody_cinematic",
+  nyc_glitch: "lifestyle_glitch",
+  tiktok_energy: "tiktok_energy_pulse",
 
   // Specialist AI aliases
   subject_isolation: "subject_isolation",
@@ -217,7 +231,11 @@ export type FeatureKind =
   | "depth_focus" | "depth_parallax" | "text_behind_subject"
   | "smooth_slowmo" | "rife_slowmo"
   // OpenCV browser effects
-  | "face_detect_overlay" | "edge_outline" | "optical_flow_vis";
+  | "face_detect_overlay" | "edge_outline" | "optical_flow_vis"
+  // custom VFX (reference-matched)
+  | "spiderverse_halftone" | "sports_speed_trail" | "tyler_vibrant_pop"
+  | "racing_motion_streak" | "dark_moody_cinematic" | "lifestyle_glitch"
+  | "tiktok_energy_pulse";
 
 export interface MonetEDL {
   shots: MonetShot[];
@@ -705,6 +723,10 @@ export class MonetActionExecutor {
         case "text_behind_subject": case "smooth_slowmo": case "rife_slowmo":
         // OpenCV browser effects
         case "face_detect_overlay": case "edge_outline": case "optical_flow_vis":
+        // custom VFX (reference-matched) — dispatched to shader engine
+        case "spiderverse_halftone": case "sports_speed_trail": case "tyler_vibrant_pop":
+        case "racing_motion_streak": case "dark_moody_cinematic": case "lifestyle_glitch":
+        case "tiktok_energy_pulse":
           break;
       }
     }
