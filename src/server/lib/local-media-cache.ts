@@ -27,12 +27,20 @@ function ensureDir(): boolean {
   }
 }
 
+export interface LocalMediaRecord {
+  data: ArrayBuffer;
+  mimeType: string;
+  r2Key: string;
+  fileName?: string;
+  originalName?: string;
+}
+
 // In-memory fallback (used when fs is unavailable)
-const memStore = new Map<string, { data: ArrayBuffer; mimeType: string; r2Key?: string }>();
+const memStore = new Map<string, LocalMediaRecord>();
 
 export function putLocalMedia(
   fileId: string,
-  payload: { data: ArrayBuffer; mimeType: string; r2Key?: string }
+  payload: LocalMediaRecord
 ): void {
   // Try disk first
   if (ensureDir()) {
@@ -40,7 +48,12 @@ export function putLocalMedia(
       writeFileSync(join(DEV_DIR, fileId), Buffer.from(payload.data));
       writeFileSync(
         join(DEV_DIR, `${fileId}.meta`),
-        JSON.stringify({ mimeType: payload.mimeType, r2Key: payload.r2Key })
+        JSON.stringify({
+          mimeType: payload.mimeType,
+          r2Key: payload.r2Key,
+          fileName: payload.fileName,
+          originalName: payload.originalName,
+        })
       );
       return;
     } catch {
@@ -54,7 +67,7 @@ export function putLocalMedia(
 
 export function getLocalMedia(
   fileId: string
-): { data: ArrayBuffer; mimeType: string; r2Key?: string } | null {
+): LocalMediaRecord | null {
   // Try disk
   const dataPath = join(DEV_DIR, fileId);
   const metaPath = join(DEV_DIR, `${fileId}.meta`);
@@ -63,11 +76,17 @@ export function getLocalMedia(
       const data = readFileSync(dataPath);
       const meta = JSON.parse(readFileSync(metaPath, "utf8")) as {
         mimeType: string;
-        r2Key?: string;
+        r2Key: string;
+        fileName?: string;
+        originalName?: string;
       };
-      // Create an exact copy of the ArrayBuffer so we don't accidentally send the Node.js shared buffer pool
-      const exactBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-      return { data: exactBuffer as ArrayBuffer, mimeType: meta.mimeType, r2Key: meta.r2Key };
+      return {
+        data: data.buffer as ArrayBuffer,
+        mimeType: meta.mimeType,
+        r2Key: meta.r2Key,
+        fileName: meta.fileName,
+        originalName: meta.originalName,
+      };
     } catch {
       // Fall through
     }

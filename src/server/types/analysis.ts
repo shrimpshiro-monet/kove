@@ -1,181 +1,180 @@
-// Analysis Result Types
-// What Gemini returns after analyzing footage + music
+import { z } from "zod";
 
-export interface AnalysisResult {
-  version: string; // "1.0.0"
-  projectId: string;
-  timestamp: number;
+const Score01Schema = z.number().min(0).max(1);
 
-  footage: FootageAnalysis[];
-  music?: MusicAnalysis;
-  reference?: ReferenceAnalysis;
-}
+export const SegmentSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    start: z.number().min(0),
+    end: z.number().min(0),
+    duration: z.number().positive(),
+    scores: z.object({
+      motion: Score01Schema,
+      emotion: Score01Schema,
+      visual: Score01Schema,
+      overall: Score01Schema,
+      interest: Score01Schema,
+    }),
+    tags: z.array(z.string()),
+    description: z.string().min(1),
+    aiRationale: z.string().optional(),
+    faceDetected: z.boolean().optional(),
+    dialogue: z.string().optional(),
+    salientSubjects: z.array(z.string()).optional(),
+    peaks: z
+      .array(
+        z.object({
+          time: z.number(),
+          type: z.enum(["audio", "emotional", "action"]),
+          intensity: Score01Schema,
+          description: z.string().optional(),
+        })
+      )
+      .optional(),
+  })
+  .refine((segment) => segment.end > segment.start, {
+    message: "Segment end must be greater than start",
+    path: ["end"],
+  })
+  .refine(
+    (segment) => Math.abs(segment.duration - (segment.end - segment.start)) <= 0.25,
+    {
+      message: "Segment duration must approximately match end - start",
+      path: ["duration"],
+    }
+  );
 
-/**
- * Analysis of a single video clip
- * Gemini scores segments for motion, emotion, visual quality
- */
-export interface FootageAnalysis {
-  clipId: string;
-  duration: number;
-  resolution: { width: number; height: number };
-  fps: number;
+export const FootageCharacteristicsSchema = z.object({
+  avgBrightness: Score01Schema,
+  avgMotion: Score01Schema,
+  dominantColors: z.array(z.string()),
+  visualStyle: z.string().min(1),
+  contentType: z.array(z.string()),
+  cameraMotion: z.enum(["static", "moving", "mixed"]).optional(),
+  shotDensity: z.enum(["low", "medium", "high"]).optional(),
+  quality: Score01Schema.optional(),
+});
 
-  // Scored segments (high-quality moments)
-  segments: ScoredSegment[];
+export const FootageAnalysisSchema = z.object({
+  clipId: z.string().min(1),
+  r2Key: z.string().min(1).optional(),
+  duration: z.number().positive(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  fps: z.number().positive().optional(),
+  rotation: z.number().optional(),
+  confidence: Score01Schema,
+  analysisMode: z.enum(["video", "text_fallback", "metadata_fallback"]),
+  segments: z.array(SegmentSchema).min(1),
+  characteristics: FootageCharacteristicsSchema,
+});
 
-  // Overall clip characteristics
-  characteristics: {
-    avgBrightness: number; // 0-1
-    avgMotion: number; // 0-1
-    dominantColors: string[]; // ["#FF5733", "#33FF57"]
-    visualStyle: string; // "cinematic", "handheld", "static", etc.
-    contentType: string[]; // ["action", "dialogue", "landscape"]
-  };
-}
+export type Segment = z.infer<typeof SegmentSchema>;
+export type FootageCharacteristics = z.infer<typeof FootageCharacteristicsSchema>;
+export type FootageAnalysis = z.infer<typeof FootageAnalysisSchema>;
 
-/**
- * A scored segment within a clip
- * AI identifies the best moments to use
- */
-export interface ScoredSegment {
-  start: number; // Seconds into clip
-  end: number;
-  duration: number;
+export const BeatGridSchema = z.array(z.number().min(0));
 
-  // Scoring metrics (0-1)
-  scores: {
-    overall: number; // Combined score
-    motion: number; // Camera/subject movement
-    emotion: number; // Emotional intensity
-    visual: number; // Composition, lighting quality
-    interest: number; // How engaging/unique
-  };
+export const MusicCharacteristicsSchema = z.object({
+  mood: z.array(z.string()),
+  energy: Score01Schema,
+  intensity: Score01Schema,
+  genreHints: z.array(z.string()),
+  hasVocals: z.boolean().optional(),
+});
 
-  // What makes this segment good
-  description: string; // "intense close-up with high emotion"
-  tags: string[]; // ["closeup", "action", "emotional"]
+export const MusicAnalysisSchema = z.object({
+  musicId: z.string().min(1),
+  r2Key: z.string().min(1).optional(),
+  duration: z.number().positive(),
+  bpm: z.number().positive(),
+  beatGrid: BeatGridSchema,
+  downbeats: z.array(z.number().min(0)).optional(),
+  confidence: Score01Schema,
+  characteristics: MusicCharacteristicsSchema,
+});
 
-  // Technical details
-  avgBrightness: number;
-  dominantColor: string;
-  faceDetected: boolean;
-}
+export type MusicCharacteristics = z.infer<typeof MusicCharacteristicsSchema>;
+export type MusicAnalysis = z.infer<typeof MusicAnalysisSchema>;
 
-/**
- * Music analysis - beats, structure, energy
- */
-export interface MusicAnalysis {
-  musicId: string;
-  duration: number;
+export const AnalysisResultSchema = z.object({
+  version: z.string().min(1),
+  projectId: z.string().min(1),
+  timestamp: z.number(),
+  footage: z.array(FootageAnalysisSchema),
+  music: MusicAnalysisSchema.optional(),
+  referenceId: z.string().min(1).optional(),
+});
 
-  // Beat detection
-  bpm: number; // Beats per minute
-  beatGrid: number[]; // Timestamps of beats [0.5, 0.93, 1.36, ...]
-  beatConfidence: number; // 0-1, how confident we are in beat detection
+export type AnalysisResult = z.infer<typeof AnalysisResultSchema>;
 
-  // Song structure
-  structure?: {
-    intro?: [number, number]; // [start, end] in seconds
-    verse?: [number, number][];
-    chorus?: [number, number][];
-    bridge?: [number, number];
-    outro?: [number, number];
-    drop?: number[]; // Timestamps of drops/climaxes
-  };
-
-  // Energy curve (0-1 per second)
-  energyCurve: number[]; // [0.3, 0.4, 0.5, 0.7, 0.9, ...]
-
-  // Musical characteristics
-  characteristics: {
-    genre: string; // "electronic", "rock", "orchestral"
-    mood: string[]; // ["energetic", "dark", "triumphant"]
-    tempo: "slow" | "medium" | "fast" | "variable";
-    intensity: number; // 0-1
-  };
-}
-
-/**
- * Reference video analysis (optional)
- * Extracts style/pacing to match
- */
-export interface ReferenceAnalysis {
-  referenceId: string;
-  duration: number;
-
-  // Pacing analysis
-  pacing: {
-    avgShotDuration: number; // Seconds
-    shotDurations: number[]; // All shot lengths
-    pacingVariance: number; // 0-1, how varied the pacing is
-    cutsPerMinute: number;
-  };
-
-  // Transition analysis
-  transitions: {
-    mostCommon: string; // "cut", "crossfade", "whip_pan"
-    transitionTypes: Record<string, number>; // { "cut": 45, "crossfade": 5 }
-    avgTransitionDuration: number;
-  };
-
-  // Visual style
-  visualStyle: {
-    colorGrading: string; // "vibrant", "cinematic", "desaturated"
-    dominantColors: string[];
-    avgBrightness: number;
-    contrastLevel: number; // 0-1
-    motionLevel: number; // 0-1, how much camera movement
-  };
-
-  // Effects detected
-  effects: string[]; // ["glow", "shake", "speed_ramp"]
-
-  // Overall style summary
-  styleSummary: string; // "TikTok-style fast cuts with vibrant colors and whip pan transitions"
-}
-
-/**
- * JSON schema for Gemini structured output (footage analysis)
- */
-export const FOOTAGE_ANALYSIS_SCHEMA = {
+export const FOOTAGE_ANALYSIS_JSON_SCHEMA: Record<string, unknown> = {
   type: "object",
   properties: {
+    clipId: { type: "string" },
+    r2Key: { type: "string" },
+    duration: { type: "number" },
+    confidence: { type: "number" },
+    analysisMode: {
+      type: "string",
+      enum: ["video", "text_fallback", "metadata_fallback"],
+    },
     segments: {
       type: "array",
+      minItems: 1,
       items: {
         type: "object",
         properties: {
+          id: { type: "string" },
           start: { type: "number" },
           end: { type: "number" },
           duration: { type: "number" },
           scores: {
             type: "object",
             properties: {
-              overall: { type: "number" },
               motion: { type: "number" },
               emotion: { type: "number" },
               visual: { type: "number" },
+              overall: { type: "number" },
               interest: { type: "number" },
             },
-            required: ["overall", "motion", "emotion", "visual", "interest"],
+            required: ["motion", "emotion", "visual", "overall", "interest"],
+          },
+          tags: {
+            type: "array",
+            items: { type: "string" },
           },
           description: { type: "string" },
-          tags: { type: "array", items: { type: "string" } },
-          avgBrightness: { type: "number" },
-          dominantColor: { type: "string" },
-          faceDetected: { type: "boolean" },
+          aiRationale: { type: "string" },
+          dialogue: { type: "string" },
+          salientSubjects: {
+            type: "array",
+            items: { type: "string" },
+          },
+          peaks: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                time: { type: "number" },
+                type: {
+                  type: "string",
+                  enum: ["audio", "emotional", "action"],
+                },
+                intensity: { type: "number" },
+                description: { type: "string" },
+              },
+              required: ["time", "type", "intensity"],
+            },
+          },
         },
         required: [
           "start",
           "end",
           "duration",
           "scores",
-          "description",
           "tags",
-          "avgBrightness",
-          "dominantColor",
-          "faceDetected",
+          "description",
         ],
       },
     },
@@ -184,9 +183,24 @@ export const FOOTAGE_ANALYSIS_SCHEMA = {
       properties: {
         avgBrightness: { type: "number" },
         avgMotion: { type: "number" },
-        dominantColors: { type: "array", items: { type: "string" } },
+        dominantColors: {
+          type: "array",
+          items: { type: "string" },
+        },
         visualStyle: { type: "string" },
-        contentType: { type: "array", items: { type: "string" } },
+        contentType: {
+          type: "array",
+          items: { type: "string" },
+        },
+        cameraMotion: {
+          type: "string",
+          enum: ["static", "moving", "mixed"],
+        },
+        shotDensity: {
+          type: "string",
+          enum: ["low", "medium", "high"],
+        },
+        quality: { type: "number" },
       },
       required: [
         "avgBrightness",
@@ -197,40 +211,56 @@ export const FOOTAGE_ANALYSIS_SCHEMA = {
       ],
     },
   },
-  required: ["segments", "characteristics"],
+  required: [
+    "clipId",
+    "duration",
+    "confidence",
+    "analysisMode",
+    "segments",
+    "characteristics",
+  ],
 };
 
-/**
- * JSON schema for music analysis
- */
-export const MUSIC_ANALYSIS_SCHEMA = {
+export const MUSIC_ANALYSIS_JSON_SCHEMA: Record<string, unknown> = {
   type: "object",
   properties: {
+    musicId: { type: "string" },
+    r2Key: { type: "string" },
+    duration: { type: "number" },
     bpm: { type: "number" },
-    beatGrid: { type: "array", items: { type: "number" } },
-    beatConfidence: { type: "number" },
-    structure: {
-      type: "object",
-      properties: {
-        intro: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 },
-        verse: { type: "array", items: { type: "array", items: { type: "number" } } },
-        chorus: { type: "array", items: { type: "array", items: { type: "number" } } },
-        bridge: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 },
-        outro: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 },
-        drop: { type: "array", items: { type: "number" } },
-      },
+    beatGrid: {
+      type: "array",
+      items: { type: "number" },
     },
-    energyCurve: { type: "array", items: { type: "number" } },
+    downbeats: {
+      type: "array",
+      items: { type: "number" },
+    },
+    confidence: { type: "number" },
     characteristics: {
       type: "object",
       properties: {
-        genre: { type: "string" },
-        mood: { type: "array", items: { type: "string" } },
-        tempo: { type: "string", enum: ["slow", "medium", "fast", "variable"] },
+        mood: {
+          type: "array",
+          items: { type: "string" },
+        },
+        energy: { type: "number" },
         intensity: { type: "number" },
+        genreHints: {
+          type: "array",
+          items: { type: "string" },
+        },
+        hasVocals: { type: "boolean" },
       },
-      required: ["genre", "mood", "tempo", "intensity"],
+      required: ["mood", "energy", "intensity", "genreHints"],
     },
   },
-  required: ["bpm", "beatGrid", "beatConfidence", "energyCurve", "characteristics"],
+  required: [
+    "musicId",
+    "duration",
+    "bpm",
+    "beatGrid",
+    "confidence",
+    "characteristics",
+  ],
 };

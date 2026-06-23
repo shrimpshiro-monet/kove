@@ -1,37 +1,95 @@
 // POST /api/decode-intent - Extract creative intent from user prompt
 // THE MOAT - This is what makes Monet a creative intelligence system
 
+import { z } from "zod";
 import type { Env } from "../types/env";
 import { getAIService } from "../services/ai-service";
-import type {
-  IntentExtractionResult,
-  SimplifiedIntent,
-} from "../types/intent";
+import type { IntentExtractionResult } from "../types/intent";
 import { INTENT_JSON_SCHEMA } from "../types/intent";
 import { now } from "../types/env";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { getCachedIntent, cacheIntent } from "../lib/intent-cache";
 import type { ReferenceStyle } from "../types/reference-style";
 import { normalizeReferenceStyle } from "../types/reference-style";
+import { apiError, ApiErrorCode, jsonResponse } from "../lib/api-response";
+import { withRetry } from "../lib/retry";
+import { loadPromptTemplate } from "../prompts";
+import { ensureCompleteIntent } from "../services/intent-service";
 
-interface DecodeIntentRequest {
-  prompt: string;
-  projectId: string;
-  context?: {
-    hasMusic?: boolean;
-    hasFootage?: boolean;
-    hasReference?: boolean;
-    estimatedFootageDuration?: number;
-    referenceStyle?: ReferenceStyle;
-  };
-}
+const DecodeIntentRequestSchema = z.object({
+  prompt: z.string().min(1).max(10000),
+  projectId: z.string().min(1).optional(),
+  threadId: z.string().min(1).optional(),
+  context: z
+    .object({
+      hasMusic: z.boolean().optional(),
+      hasFootage: z.boolean().optional(),
+      hasReference: z.boolean().optional(),
+      estimatedFootageDuration: z.number().optional(),
+      referenceStyle: z.unknown().optional(),
+    })
+    .optional(),
+}).refine(
+  (data) => !!(data.projectId || data.threadId),
+  { message: "Either projectId or threadId is required" }
+);
 
-interface DecodeIntentResponse {
-  success: boolean;
-  intentId?: string;
-  result?: IntentExtractionResult;
-  error?: string;
+const UpdateIntentRequestSchema = z.object({
+  intentId: z.string().min(1),
+  answers: z.record(z.string(), z.string()),
+});
+
+const SimplifiedIntentSchema = z.object({
+  version: z.string().optional(),
+  goal: z.object({
+    primary: z.string(),
+  }),
+  style: z.object({
+    genre: z.string().optional(),
+    pacing: z.enum(["slow", "medium", "fast", "aggressive"]),
+    mood: z.array(z.string()).optional(),
+  }),
+  structure: z.object({
+    duration: z.number(),
+    energyCurve: z.array(z.number()),
+  }),
+  technical: z.object({
+    syncToBeat: z.boolean(),
+    beatSyncStrength: z.number(),
+    transitionStyle: z.enum(["cut", "smooth", "dynamic"]),
+    colorTreatment: z.string(),
+    effectsIntensity: z.number(),
+  }),
+  contentPreferences: z.object({
+    focusOn: z.array(z.string()),
+  }),
+});
+
+type SimplifiedIntent = z.infer<typeof SimplifiedIntentSchema>;
+
+function parseSimplifiedIntent(raw: string):
+  | { ok: true; value: SimplifiedIntent }
+  | { ok: false; error: unknown } {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    const validation = SimplifiedIntentSchema.safeParse(parsed);
+
+    if (!validation.success) {
+      return {
+        ok: false,
+        error: validation.error,
+      };
+    }
+
+    return {
+      ok: true,
+      value: validation.data,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error,
+    };
+  }
 }
 
 /**
@@ -51,37 +109,25 @@ export async function handleDecodeIntent(
   env: Env
 ): Promise<Response> {
   try {
-    const workerEnvKeys = env ? Object.keys(env) : [];
-    const processHasGeminiKey =
-      typeof process !== "undefined" ? !!process.env.GEMINI_API_KEY : false;
-    const processHasGcpProjectId =
-      typeof process !== "undefined" ? !!process.env.GCP_PROJECT_ID : false;
+    const body = await request.json();
+    const validation = DecodeIntentRequestSchema.safeParse(body);
 
-    console.log("AI env sources:", {
-      workerEnvPresent: !!env,
-      workerEnvKeys,
-      workerHasGeminiKey: !!env?.GEMINI_API_KEY,
-      workerHasGcpProjectId: !!env?.GCP_PROJECT_ID,
-      processHasGeminiKey,
-      processHasGcpProjectId,
-      runtimeSource:
-        env && workerEnvKeys.length > 0 ? "worker-bindings" : "process.env/local-dev",
-    });
-
-    const body: DecodeIntentRequest = await request.json();
-
-    // Validate input
-    if (!body.prompt || !body.projectId) {
-      return jsonResponse(
-        { success: false, error: "Missing prompt or projectId" },
-        400
+    if (!validation.success) {
+      return apiError(
+        ApiErrorCode.InvalidRequest,
+        "Invalid intent request",
+        400,
+        validation.error
       );
     }
 
+    const { prompt, context: rawContext } = validation.data;
+    const projectId = validation.data.projectId || validation.data.threadId!;
+
     // Check cache first (THE COST SAVER)
-    const cached = getCachedIntent(body.prompt);
+    const cached = getCachedIntent(prompt);
     if (cached) {
-      console.log("🚀 Intent cache hit - skipping Gemini call");
+      console.info("🚀 Intent cache hit - skipping Gemini call");
       return jsonResponse({
         success: true,
         intentId: `cached-${Date.now()}`,
@@ -90,23 +136,27 @@ export async function handleDecodeIntent(
       });
     }
 
-    // Load intent extraction prompt template
+    // Load intent extraction prompt template (bundled)
     const promptTemplate = loadPromptTemplate("decode-intent.txt");
 
     // Build context string
-    const normalizedContext =
-      body.context?.referenceStyle
-        ? {
-            ...body.context,
-            referenceStyle: normalizeReferenceStyle(body.context.referenceStyle),
-          }
-        : body.context;
-    const context = buildContextString(normalizedContext);
+    const normalizedReferenceStyle = rawContext?.referenceStyle
+      ? normalizeReferenceStyle(rawContext.referenceStyle)
+      : undefined;
+
+    const normalizedContext = rawContext
+      ? {
+          ...rawContext,
+          referenceStyle: normalizedReferenceStyle,
+        }
+      : undefined;
+
+    const contextStr = buildContextString(normalizedContext);
 
     // Replace placeholders
     const fullPrompt = promptTemplate
-      .replace("{USER_PROMPT}", body.prompt)
-      .replace("{CONTEXT}", context);
+      .replace("{USER_PROMPT}", prompt)
+      .replace("{CONTEXT}", contextStr);
 
     // Call AI service (Vertex or Gemini) with JSON mode for structured output
     const ai = getAIService(env);
@@ -114,33 +164,33 @@ export async function handleDecodeIntent(
     const systemInstruction =
       "You are Monet, an AI video director. Extract creative intent from user prompts with professional editor instincts.";
 
-    // Use the SDK's JSON mode - much cleaner!
-    const result: IntentExtractionResult = await ai.generateContentJSON({
-      prompt: fullPrompt,
-      systemInstruction,
-      temperature: 0.7,
-      schema: INTENT_JSON_SCHEMA,
-    });
+    // Use the SDK's JSON mode
+    const rawResult = await withRetry(() =>
+      ai.generateContentJSON<IntentExtractionResult>({
+        prompt: fullPrompt,
+        systemInstruction,
+        temperature: 0.7,
+        schema: INTENT_JSON_SCHEMA,
+      })
+    );
+    const result = ensureCompleteIntent(rawResult);
 
     // Validate confidence threshold
     if (result.confidence < 0.3) {
-      return jsonResponse(
-        {
-          success: false,
-          error:
-            "Unable to understand prompt. Please provide more details about what you want to create.",
-        },
+      return apiError(
+        ApiErrorCode.IntentDecodeFailed,
+        "Unable to understand prompt. Please provide more details about what you want to create.",
         400
       );
     }
 
-    // Cache successful intent (THE REAL MOAT)
-    cacheIntent(body.prompt, result);
+    // Cache successful intent
+    cacheIntent(prompt, result);
 
     // Store intent in database (if DB available)
     const intentId = env?.DB
-      ? await storeIntent(env.DB, body.projectId, body.prompt, result)
-      : `intent-${Date.now()}`; // Fallback ID for dev without DB bindings
+      ? await storeIntent(env.DB, projectId, prompt, result)
+      : `intent-${Date.now()}`;
 
     // Return result
     return jsonResponse({
@@ -151,35 +201,24 @@ export async function handleDecodeIntent(
     });
   } catch (error) {
     console.error("Decode intent error:", error);
-    return jsonResponse(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+    return apiError(
+      ApiErrorCode.IntentDecodeFailed,
+      error instanceof Error ? error.message : "Unknown error",
       500
     );
   }
 }
 
 /**
- * Load prompt template from file
- */
-function loadPromptTemplate(filename: string): string {
-  try {
-    // In production/Cloudflare Workers, prompts should be bundled
-    // For now, read from filesystem
-    const path = join(process.cwd(), "src", "server", "prompts", filename);
-    return readFileSync(path, "utf-8");
-  } catch (error) {
-    console.error("Failed to load prompt template:", error);
-    throw new Error(`Prompt template not found: ${filename}`);
-  }
-}
-
-/**
  * Build context string from uploaded media info
  */
-function buildContextString(context?: DecodeIntentRequest["context"]): string {
+function buildContextString(context?: {
+  hasMusic?: boolean;
+  hasFootage?: boolean;
+  hasReference?: boolean;
+  estimatedFootageDuration?: number;
+  referenceStyle?: ReferenceStyle;
+}): string {
   if (!context) {
     return "No media uploaded yet.";
   }
@@ -238,6 +277,22 @@ async function storeIntent(
 ): Promise<string> {
   const intentId = crypto.randomUUID();
 
+  // Ensure the project exists in the projects table first (satisfies foreign key constraint)
+  await db
+    .prepare(
+      `INSERT INTO projects (id, name, created_at, updated_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO NOTHING`
+    )
+    .bind(projectId, "Untitled Project", now(), now())
+    .run();
+
+  const intentToStore = {
+    ...result.intent,
+    pillarWeights: result.pillarWeights,
+    directorParams: result.directorParams,
+  };
+
   await db
     .prepare(
       `INSERT INTO edit_intents (
@@ -250,7 +305,7 @@ async function storeIntent(
       projectId,
       result.intent.version,
       userPrompt,
-      JSON.stringify(result.intent),
+      JSON.stringify(intentToStore),
       result.confidence,
       result.clarifyingQuestions && result.clarifyingQuestions.length > 0 ? 1 : 0,
       result.clarifyingQuestions
@@ -271,20 +326,20 @@ export async function handleUpdateIntent(
   env: Env
 ): Promise<Response> {
   try {
-    const body = (await request.json()) as {
-      intentId?: string;
-      answers?: Record<string, string>;
-    };
-    const { intentId, answers } = body;
+    const body = await request.json();
+    const validation = UpdateIntentRequestSchema.safeParse(body);
 
-    if (!intentId || !answers) {
-      return jsonResponse(
-        { success: false, error: "Missing intentId or answers" },
-        400
+    if (!validation.success) {
+      return apiError(
+        ApiErrorCode.InvalidRequest,
+        "Invalid update intent request",
+        400,
+        validation.error
       );
     }
 
-    // Fetch original intent
+    const { intentId, answers } = validation.data;
+
     const result = await env.DB.prepare(
       "SELECT intent_data, user_prompt FROM edit_intents WHERE id = ?"
     )
@@ -292,16 +347,29 @@ export async function handleUpdateIntent(
       .first<{ intent_data: string; user_prompt: string }>();
 
     if (!result) {
-      return jsonResponse({ success: false, error: "Intent not found" }, 404);
+      return apiError(ApiErrorCode.IntentNotFound, "Intent not found", 404);
     }
 
-    const originalIntent: SimplifiedIntent = JSON.parse(result.intent_data);
+    const originalIntentResult = parseSimplifiedIntent(result.intent_data);
+    if (!originalIntentResult.ok) {
+      console.error("[intent/update] Stored intent failed validation", {
+        operation: "handleUpdateIntent",
+        intentId,
+        error: originalIntentResult.error,
+      });
 
-    // Apply answers to refine intent
-    // This is a simplified version - in production, would use Gemini to interpret answers
-    const refinedIntent = applyAnswersToIntent(originalIntent, answers);
+      return apiError(
+        ApiErrorCode.ValidationFailed,
+        "Stored intent is invalid",
+        500
+      );
+    }
 
-    // Update in database
+    const refinedIntent = applyAnswersToIntent(
+      originalIntentResult.value,
+      answers
+    );
+
     await env.DB.prepare(
       "UPDATE edit_intents SET intent_data = ?, has_clarifying_questions = 0, clarifying_questions = NULL WHERE id = ?"
     )
@@ -313,31 +381,28 @@ export async function handleUpdateIntent(
       intent: refinedIntent,
     });
   } catch (error) {
-    console.error("Update intent error:", error);
-    return jsonResponse(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+    console.error("[intent/update] Update intent failed", {
+      operation: "handleUpdateIntent",
+      error,
+    });
+
+    return apiError(
+      ApiErrorCode.IntentUpdateFailed,
+      "Failed to update intent",
       500
     );
   }
 }
 
 /**
- * Apply user answers to refine intent
- * In MVP, this is simple field updates
- * In production, could use Gemini to interpret answers
+ * Apply user answers to refine intent.
  */
 function applyAnswersToIntent(
   intent: SimplifiedIntent,
   answers: Record<string, string>
 ): SimplifiedIntent {
-  // Clone intent
-  const refined = JSON.parse(JSON.stringify(intent)) as SimplifiedIntent;
+  const refined: SimplifiedIntent = structuredClone(intent);
 
-  // Apply answers (simplified for MVP)
-  // In production, would use JSONPath and smarter interpretation
   for (const [question, answer] of Object.entries(answers)) {
     if (question.includes("action") || question.includes("emotional")) {
       if (answer.includes("Action")) {
@@ -365,17 +430,4 @@ function applyAnswersToIntent(
   }
 
   return refined;
-}
-
-// Helper: JSON response
-function jsonResponse(data: unknown, status: number = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
 }

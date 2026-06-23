@@ -1,0 +1,206 @@
+import type { StyleDNA } from "../types";
+
+export const nolanTrailer = {
+  id: "nolan_trailer_imax",
+  name: "Nolan Trailer IMAX",
+  category: "film_reference",
+  tags: ["nolan", "imax", "trailer", "epic", "blockbuster"],
+  sourceInfluences: ["Interstellar", "Dunkirk", "Tenet", "Oppenheimer", "The Dark Knight"],
+  confidence: 0.93,
+
+  grade: {
+    lift: [-0.05, -0.05, -0.04],
+    gamma: [1.0, 1.0, 1.02],
+    gain: [1.0, 1.0, 1.05],
+    offset: [0, 0, 0],
+    saturation: 0.9,
+    vibrance: 0,
+    contrast: 1.35,
+    pivot: 0.45,
+    hueShift: 0,
+    mix: 1.0,
+    temperature: -8,
+    tint: 0,
+    exposure: 0,
+    highlights: 0,
+    shadows: 0,
+    whites: 0,
+    blacks: 0,
+    tealOrange: false,
+    orangeTealIntensity: 0.6,
+    bleachBypass: false,
+    bleachBypassIntensity: 0.4,
+    splitToning: null,
+    filmStock: "kodak_vision3_250d",
+    grain: {
+      intensity: 0.12,
+      size: 0.4,
+      color: true,
+      temporal: true,
+    },
+    vignette: {
+      amount: 0.3,
+      midpoint: 0.5,
+      roundness: 0.85,
+      feather: 0.4,
+      color: [0.0, 0.0, 0.02],
+    },
+    bloom: {
+      intensity: 0.1,
+      threshold: 0.88,
+      radius: 20,
+      softness: 0.8,
+      color: [0.9, 0.92, 1.0],
+    },
+    chromaticAberration: null,
+  },
+
+  globalEffects: {
+    effects: [
+      {
+        id: "noise_grain_global",
+        type: "noise_grain",
+        enabled: true,
+        params: { intensity: 0.12, filmic: true },
+        applyToShots: ["all"],
+      },
+    ],
+    overallIntensity: 0.95,
+    blendMode: "normal",
+  },
+
+  heroEffects: {
+    effects: [
+      {
+        id: "light_leak_hero",
+        type: "light_leak",
+        enabled: true,
+        params: { intensity: 0.3, color: [1.0, 0.95, 0.8] },
+        applyToShots: ["hero"],
+      },
+      {
+        id: "context_shake_hero",
+        type: "context_shake",
+        enabled: true,
+        params: { intensity: 0.15, decay: 0.95 },
+        applyToShots: ["hero"],
+      },
+    ],
+    overallIntensity: 1.1,
+    blendMode: "screen",
+  },
+
+  timing: {
+    frameRateFeel: { type: "normal", fps: 24 },
+    speedRampStyle: "slowburn",
+    tempo: "leisurely_to_brisk",
+    averageShotDurationSec: 4.0,
+    stutterConfig: null,
+    motionBlur: {
+      enabled: true,
+      shutterAngle: 180,
+      samples: 32,
+      directional: true,
+    },
+  },
+
+  camera: {
+    energy: "steady",
+    movement: {
+      baseMovement: "push_pull",
+      amplitude: 0.3,
+      frequency: 0.1,
+      randomJitter: 0.0,
+    },
+    lensSimulation: {
+      focalLength: 35,
+      distortion: 0.0,
+      anamorphicSqueeze: 1.0,
+      flareType: "anamorphic_streaks",
+      flareIntensity: 0.1,
+    },
+    dofSimulation: {
+      enabled: true,
+      focalDepth: 0.5,
+      aperture: 4.0,
+      blurQuality: "high",
+      edgeBoost: true,
+    },
+  },
+
+  graphics: {
+    text: {
+      fontFamily: "context_aware",
+      sizeFeel: "large",
+      sizeRange: [20, 35],
+      weight: 700,
+      animation: {
+        entryAnimation: "scale_pop",
+        exitAnimation: "scale_pop_reverse",
+        idleBehavior: "static",
+        perWordStagger: true,
+        syncToAudio: true,
+        bounceWiggle: 0,
+        glitchFrequency: 0,
+      },
+      placement: "center_title",
+      colorMode: { type: "solid", color: [1.0, 1.0, 1.0] },
+      outline: {
+        enabled: true,
+        width: 2,
+        color: [0.0, 0.0, 0.0],
+        opacity: 1.0,
+      },
+      shadow: {
+        enabled: true,
+        offsetX: 3,
+        offsetY: 3,
+        blur: 6,
+        color: [0.0, 0.0, 0.0],
+        opacity: 0.9,
+      },
+      glow: null,
+      backgroundPlate: null,
+      captionStyle: "interstitial_title",
+    },
+  },
+
+  editorial: {
+    avgShotDurationSec: 4.0,
+    shotDurationVariance: 0.5,
+    preferredDurations: [2, 3, 4, 6, 10],
+    cutStyle: "hard_cut",
+    cutAlignment: "on_beat",
+    closeupBias: 0.45,
+    wideShotBias: 0.35,
+    defaultTransition: {
+      type: "dip_to_black",
+      durationMs: 500,
+      ease: "linear",
+    },
+    heroTransition: {
+      type: "flash",
+      durationMs: 200,
+      ease: "linear",
+    },
+    pacingCurve: "rising",
+    useMontage: true,
+    matchActionRequired: true,
+  },
+
+  audioReactivity: {
+    enabled: true,
+    onBeat: {
+      triggerEffect: null,
+      cutProbability: 0.15,
+      zoomPulse: 0.01,
+    },
+    onDrop: {
+      triggerEffect: "light_leak",
+      maximumIntensity: 1.3,
+      slowMotionFactor: 0.6,
+    },
+    sensitivity: 0.8,
+    smoothing: 0.3,
+  },
+} as const satisfies StyleDNA;

@@ -3,7 +3,7 @@
 import type { Env } from "../types/env";
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const GEMINI_MODEL = "models/gemini-1.5-flash"; // Full model path
+const GEMINI_MODEL = "gemini-2.5-flash"; // Just the model name, URL template adds "models/"
 
 export interface GeminiFile {
   name: string;

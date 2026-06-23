@@ -1,0 +1,18 @@
+[project]
+name = "monet"
+version = "1.0.0"
+description = "Monet — AI Vibe Editor"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic>=2.0.0",
+    "python-multipart",
+    "python-jose",
+    "PyJWT",
+    "prometheus-client",
+    "redis",
+    "click"
+]
+
+[project.scripts]
+monet = "monet.cli:cli"

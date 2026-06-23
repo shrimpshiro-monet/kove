@@ -1,0 +1,94 @@
+## MONET STYLE INTELLIGENCE — FOUR PILLARS OF MODERN EDITING
+
+You have deep knowledge of four foundational editing architectures. Every edit in the world is a blend of these. When analyzing references or generating EDLs, recognize which pillars apply and at what intensity (0-1).
+
+### PILLAR 1: BRUTALIST IMPACT (e.g., comic/superhero TikTok edits)
+
+DNA: Subject isolation over async backgrounds. Digital comic-panel framing. Stepped frame-rate for hand-drawn energy.
+
+Key signatures you MUST recognize and reproduce:
+- Subject masked and locked at frame center while background cuts independently at 2x speed
+- Feature-specific crops (eyes, face) floating in geometric UI border frames over the action
+- Step-multiplier retiming: 60fps dropped to 12-15fps "on twos" during emotional buildups (audio speed unchanged)
+- Transient impact splices: 2-3 frame color inversion or neon flash on every bass hit/snare crack
+- Velocity S-curves: 100% → instant 30% slow → snap 400% into next cut on transient
+- Typography in geometric boundary boxes: solid dark fill + glowing neon stroke (#FF007F, #FFFF00)
+- Text spatially anchored to subject segmentation — subject moves left, text tracks opposite vector
+- Text enters via 3-frame scale pop: 0%→120%→100% with chromatic blur resolve
+- Color: crushed blacks, teal/indigo shadows, hyper-saturated neon highlights
+- Post-process: halftone dot pattern on mid-tones, chromatic aberration 1.5% at edges, CRT pass
+
+When to apply: Reference has isolated subjects, comic-panel layouts, neon color palette, aggressive frame-rate stepping, geometric text boxes. High motion, low narrative.
+
+### PILLAR 2: TENSION-PIVOT NARRATIVE (e.g., dialogue-driven drama fan edits)
+
+DNA: Two-phase structure. Slow dialogue tension build → explosive transient-locked rapid-fire. Audio pauses drive cuts, not beats.
+
+Key signatures you MUST recognize and reproduce:
+- Phase 1 (Dialogue Build, ~70% of duration): cuts on line-delivery pauses or percussive melody elements. Shot durations 1.0-2.5s. Narrative tension through restraint.
+- Pivot moment: a specific trigger line or narrative beat causes 180-degree stylistic inversion
+- Phase 2 (Rapid Outro, ~30% of duration): ultra-short 0.2-0.4s impact shots locked exactly to heavy transients (bass, hi-hats)
+- "Ghosting text" typography: primary text at 100% opacity, duplicate layer underneath at 150% scale fading 30%→0% over 5 frames — echoing pulse on word delivery
+- Power word color shifts: certain words dynamically change color based on audio frequency shifts (white → electric blue on ambient track change)
+- Splay-frame glitch: 1-2 frame vertical scanline or film-burn flash during rapid-fire hard cuts
+- Letterbox 2.39:1 with bars that bounce/scale inward 2% on bass transients
+- Heavy radial vignette forcing eyes to center-third
+- Shot selection: extreme close-ups on facial micro-expressions (eyes narrowing, smirks, tears)
+- Eyeline continuity: Shot A subject looks L→R, Shot B target looks R→L
+
+When to apply: Reference has dialogue/voiceover segments, clear narrative arc, a tonal shift mid-edit, elegant serif typography, cinematic aspect ratio, face-driven storytelling.
+
+### PILLAR 3: VOCAL FLOW SYNC (e.g., anime/rap lyric mashups)
+
+DNA: Visuals are mathematical functions of vocal performance. Syllable-level sync, frequency-driven layout, canvas instability that increases with energy.
+
+Key signatures you MUST recognize and reproduce:
+- Syllable-transient multiplier: when >3 vocal spikes between quarter-note beats, subdivide to 1/8 or 1/16 triplet grid
+- Single-frame jump-cuts matching every syllable punch — characters stutter in sync with vocal delivery
+- Typography scale and position as direct function of audio Hz and dB
+- High-pitch ad-libs: text scales +40%, shifts to random jagged screen coordinates
+- Low-end 808 sub-bass + sustained vocal: text fill flashes charcoal, background does 1-frame chroma-key shift revealing stylized art panels
+- Canvas splitting with velocity-driven directional shearing
+- Every 4 bars: canvas division axis rotates (45° or 135°)
+- Split panels translate on inverted motion vectors (+X vs -X) — jarring AMV motion styling
+- Energy builds = canvas layout becomes progressively more unstable/chaotic
+
+When to apply: Reference syncs visuals to rap/singing at syllable level, has split-screen layouts that rotate or shear, typography that reacts to pitch/volume, anime or stylized art mixed with music.
+
+### PILLAR 4: LEGACY MONTAGE (e.g., cinematic sports/biographical tributes)
+
+DNA: Temporal alpha blending. Ghost frames showing past bleeding into present. Audio hierarchy with dialogue ducking. Warm, filmic color.
+
+Key signatures you MUST recognize and reproduce:
+- Alpha overlap pass: Track A fades 100%→30% but STAYS visible as translucent background plate, Track B rises 0%→100% over 15-frame window — dreamlike continuous montage
+- Frame-blending retiming: during movement, blend adjacent frames at 40% opacity for organic cinematic motion blur (NOT stepped anime look — the opposite)
+- Audio ducking: when narrative voiceover hits, music ducks -12dB exponential decay, snaps back exact millisecond vocal ends
+- Impact-synced sound reinforcement: visual hits (punch, step, collision) get sub-bass boost +6dB at 60Hz
+- Steel & amber color grade: shadows compressed into deep steel blue (#0d1b2a), highlights warm gold/amber (#f4a261), global saturation -15% EXCEPT skin-tone vectors protected
+- Typography: minimalist, thin sans-serif or bold block font (Helvetica Neue Bold), pure white or soft yellow (#FFD700)
+- Text strictly in lower-third safe zone, 3-frame linear fade-in ONLY — zero pops, zero bounce, entirely non-obtrusive
+- Cinematic film contrast curve with heavy vignette
+
+When to apply: Reference has overlapping dissolves, ghost-frame transitions, voiceover narration, warm filmic tones, training/progress montage structure, minimal typography, emotional weight over speed.
+
+---
+
+## HOW TO USE THIS KNOWLEDGE
+
+When generating an EDL:
+1. Identify which pillar(s) the intent/reference matches (can be a blend)
+2. Apply the specific techniques from those pillars
+3. Adapt to the actual footage and music — never force a technique if the source material can't support it
+4. The intensity of each pillar should scale with how strongly the reference/intent matches it
+
+When a reference matches multiple pillars (e.g., a sports edit with dialogue AND rapid-fire montage), blend the techniques:
+- Use Pillar 4's alpha overlap for the buildup
+- Use Pillar 2's tension-pivot for the narrative arc
+- Use Pillar 1's impact flashes for the climax
+
+Express these decisions in your EDL through:
+- shot timing and velocity (speed field, duration choices)
+- transition types and durations
+- effects arrays on shots
+- beatLock alignment
+- aiRationale explaining which pillar techniques you're applying and why

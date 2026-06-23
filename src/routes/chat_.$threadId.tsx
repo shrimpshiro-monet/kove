@@ -1,24 +1,52 @@
-import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Type, Loader2, StickyNote } from "lucide-react";
+import { UpgradePrompt, type UpgradeCta } from "@/components/chat/UpgradePrompt";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useChatThreads, cryptoId, type ChatMessage, type ChatAttachment } from "@/lib/storage";
+import { useChatThreads, cryptoId, type ChatMessage, type ChatAttachment, type ChatThread } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { VideoUploader, type UploadedFile } from "@/components/chat/VideoUploader";
 import { ThinkingPanel, type ThinkingStage } from "@/components/chat/ThinkingPanel";
-import { EDLPreview } from "@/components/chat/EDLPreview";
+import { BlueprintPreview } from "@/components/chat/BlueprintPreview";
 import { VideoPreview } from "@/components/chat/VideoPreview";
 import { TextTimeline } from "@/components/chat/TextTimeline";
-import { decodeIntent, analyzeMedia, generateEDL, uploadFileDirect, refineEDL, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, generateCompositionOverlay, persistStudioProject } from "@/lib/api-client";
+import { decodeIntent, analyzeMedia, generateEDL, uploadFileDirect, refineEDL, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, generateCompositionOverlay, persistStudioProject, submitDirectorFeedback, pollDirectorRender, compileStyle } from "@/lib/api-client";
 import type { ReferenceStyle } from "@/server/types/reference-style";
 import type { TimelineAnnotation } from "@/server/types/annotation";
-import { exportEDLToMP4, type ExportProgress } from "@/lib/export-engine";
-import type { MonetEDL } from "@/server/types/edl";
+import { type ExportProgress } from "@/lib/export-engine";
+import type { MonetEDL, Shot } from "@monet/edl";
 import type { TranscriptResult } from "@/server/api/transcribe";
 import { addDemoTrackedTextOverlay } from "@/lib/openreel/motion-tracking";
 import { addAutoFaceTrack } from "@/lib/openreel/face-tracking";
 import { addDemoPlanarTextOverlay } from "@/lib/openreel/planar-tracking";
+import { useProjectStore } from "../../apps/web/src/stores/project-store";
+import { registerMonetExecutor } from "../../apps/web/src/lib/executors/monet-action-executor";
+import { syncUploadedFilesAndEDLToProject } from "../../apps/web/src/lib/media/project-media-hydration";
+import { probeVideoClientSide } from "@/lib/client-probe";
+import { scoreSimilarity } from "../lib/style/reference-similarity";
+import { routeEDL, summarizeRouting } from "../lib/engines/router";
+
+const ENABLE_HYPERFRAMES = false;
+
+registerMonetExecutor(useProjectStore);
+
+if (typeof window !== "undefined") {
+  (window as any).__monetStore = useProjectStore;
+  console.log("[monet] debug: store available at window.__monetStore");
+}
+
+
+function formatApiError(error: any): string {
+  if (!error) return "";
+  if (typeof error === "string") return error;
+  if (typeof error === "object") {
+    if (typeof error.message === "string") return error.message;
+    if (typeof error.error === "object" && typeof error.error.message === "string") return error.error.message;
+    return JSON.stringify(error);
+  }
+  return String(error);
+}
 
 type ThinkingData = {
   intentConfidence?: number;
@@ -31,15 +59,19 @@ type ThinkingData = {
   usedFallback?: boolean;
   error?: string;
   edl?: MonetEDL;
+  creativeDensity?: any;
+  styleDirectives?: any;
+  referenceSimilarity?: any;
 };
 
+// @ts-ignore - Route tree generation pending
 export const Route = createFileRoute("/chat_/$threadId")({
   component: ChatPage,
 });
 
 function ChatPage() {
-  const { threadId } = useParams({ from: "/chat_/$threadId" });
-  const navigate = useNavigate();
+  const { threadId } = Route.useParams();
+  const navigate = Route.useNavigate();
   const { threads, hydrated, createThread, deleteThread, updateThread } = useChatThreads();
   const [draft, setDraft] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
@@ -70,24 +102,61 @@ function ChatPage() {
   const [previewTimeMs, setPreviewTimeMs] = useState(0);
   const [seekToMs, setSeekToMs] = useState<number | undefined>(undefined);
   const [referenceStyle, setReferenceStyle] = useState<ReferenceStyle | null>(null);
+  const [referenceTrace, setReferenceTrace] = useState<any | null>(null);
   const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
   const [isAutoTrackingFace, setIsAutoTrackingFace] = useState(false);
   const [compositionHtml, setCompositionHtml] = useState<string | null>(null);
   const [currentIntent, setCurrentIntent] = useState<unknown>(null);
+  const [directorJobId, setDirectorJobId] = useState<string | null>(null);
+  const [engineRouting, setEngineRouting] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!currentEDL) {
+      setEngineRouting(null);
+      return;
+    }
+    try {
+      const routing = routeEDL(currentEDL, { tier: "free" });
+      setEngineRouting(summarizeRouting(routing));
+    } catch (e) {
+      console.warn("Client side routing summary failed", e);
+    }
+  }, [currentEDL]);
+
+  // After EDL is generated or restored, compute and log similarity scores
+  useEffect(() => {
+    if (!currentEDL) return;
+    const score = scoreSimilarity(currentEDL as any, referenceStyle);
+    console.log("[ChatPage] Director diagnostics", {
+      styleDirectives: (currentEDL as any).style || (currentEDL as any).globalEffects,
+      creativeDensity: {
+        featuresPerShot:
+          currentEDL.shots.reduce(
+            (s, sh) => s + ((sh as any).effects?.length || 0),
+            0
+          ) / Math.max(1, currentEDL.shots.length),
+      },
+      referenceSimilarity: score,
+    });
+  }, [currentEDL, referenceStyle]);
+  const [directorRenderStatus, setDirectorRenderStatus] = useState<string | null>(null);
+  const [directorPreviewUrl, setDirectorPreviewUrl] = useState<string | null>(null);
+  const [patchSummary, setPatchSummary] = useState<string | null>(null);
+  const [upgradeCta, setUpgradeCta] = useState<UpgradeCta | null>(null);
   const lastPersistedStudioSnapshotRef = useRef<string | null>(null);
   const chatUiStorageKey = `monet.chat.ui.${threadId}`;
 
   const resolveMediaKeys = (file: UploadedFile): string[] => {
-    const keys = [file.id, `dev-${file.file.name}`];
+    const keys = [file.id, `dev-${file.file.name}`, file.file.name];
 
     if (file.r2FileId) {
       keys.push(file.r2FileId);
     }
 
-    return keys;
+    return Array.from(new Set(keys.filter(Boolean)));
   };
 
-  const active = threads.find((t) => t.id === threadId);
+  const active = (threads as ChatThread[]).find((t) => t.id === threadId);
 
   const resolvableMediaIds = useMemo(() => {
     const ids = new Set<string>();
@@ -110,18 +179,22 @@ function ChatPage() {
     return ids;
   }, [uploadedFiles, active?.messages]);
 
-  const missingPreviewClips = currentEDL
+  const canResolvePreviewClip = (clipId: string): boolean => {
+    return mediaUrls.has(clipId) || resolvableMediaIds.has(clipId);
+  };
+
+  const missingPreviewClips: string[] = currentEDL
     ? Array.from(
         new Set(
           currentEDL.shots
-            .map((shot) => shot.source.clipId)
-            .filter((clipId) => !resolvableMediaIds.has(clipId))
+            .map((shot: Shot) => shot.source.clipId)
+            .filter((clipId: string) => !canResolvePreviewClip(clipId))
         )
       )
     : [];
 
   const mediaApiBase =
-    (import.meta.env.VITE_API_BASE ||
+    ((import.meta as any).env?.VITE_API_BASE ||
       (typeof window !== "undefined" ? window.location.origin : ""))
       .replace(/\/$/, "");
 
@@ -130,13 +203,18 @@ function ChatPage() {
       ? `${mediaApiBase}/api/media/${encodeURIComponent(mediaId)}`
       : `/api/media/${encodeURIComponent(mediaId)}`;
 
+  const buildPreviewMediaUrl = (mediaId: string) => {
+    if (mediaId.endsWith("_proxy")) return buildMediaUrl(mediaId);
+    return buildMediaUrl(`${mediaId}_proxy`);
+  };
+
   useEffect(() => {
     if (!hydrated) return;
     if (!active && threads.length > 0) {
-      navigate({ to: "/chat/$threadId", params: { threadId: threads[0].id }, replace: true });
+      navigate({ to: "/chat/$threadId", params: { threadId: threads[0].id }, replace: true } as any);
     } else if (!active && threads.length === 0) {
       const t = createThread();
-      navigate({ to: "/chat/$threadId", params: { threadId: t.id }, replace: true });
+      navigate({ to: "/chat/$threadId", params: { threadId: t.id }, replace: true } as any);
     }
   }, [hydrated, active, threads, navigate, createThread]);
 
@@ -169,6 +247,10 @@ function ChatPage() {
     setIsAnalyzingReference(false);
     setCompositionHtml(null);
     setCurrentIntent(null);
+    setDirectorJobId(null);
+    setDirectorRenderStatus(null);
+    setDirectorPreviewUrl(null);
+    setPatchSummary(null);
     analyzedRefIds.current.clear();
   }, [threadId]);
 
@@ -177,11 +259,31 @@ function ChatPage() {
     if (!active) return;
     setCurrentEDL(active.latestEdl ? (active.latestEdl as MonetEDL) : null);
     setCurrentEdlId(active.latestEdlId ?? null);
-    setReferenceStyle(
-      active.latestReferenceStyle
-        ? (active.latestReferenceStyle as ReferenceStyle)
-        : null
-    );
+    setCurrentIntentId(active.latestIntentId ?? null);
+    setCurrentAnalysisId(active.latestAnalysisId ?? null);
+    const latestRef = active.latestReferenceStyle
+      ? (active.latestReferenceStyle as ReferenceStyle)
+      : null;
+    setReferenceStyle(latestRef);
+    const latestTrace = (active as any).latestReferenceTrace ?? null;
+    setReferenceTrace(latestTrace);
+
+    // Auto-wire ReferenceStyle into Project Store settings
+    const project = useProjectStore.getState().project;
+    if (project) {
+      const updatedProject = {
+        ...project,
+        settings: {
+          ...project.settings,
+          monet: {
+            ...project.settings?.monet,
+            referenceStyle: latestRef || undefined,
+            referenceStyleId: (active as any).latestReferenceStyleId || undefined
+          }
+        }
+      };
+      useProjectStore.setState({ project: updatedProject });
+    }
   }, [threadId, active]);
 
   useEffect(() => {
@@ -197,6 +299,7 @@ function ChatPage() {
     for (const file of footageWithPreview) {
       if (file.type !== "footage" || !file.preview) continue;
       for (const key of resolveMediaKeys(file)) {
+        // Prefer local blob URL for immediate playback to avoid waiting for server proxy generation.
         urls.set(key, file.preview);
       }
     }
@@ -204,7 +307,11 @@ function ChatPage() {
     // Resiliency: if the EDL references unknown clip IDs but the user has only
     // one footage source loaded, bind unresolved IDs to that source.
     if (currentEDL && footageWithPreview.length === 1) {
-      const fallbackPreview = footageWithPreview[0].preview;
+      const firstFootage = footageWithPreview[0];
+      const fallbackPreview = firstFootage.r2FileId
+        ? buildMediaUrl(`${firstFootage.r2FileId}_proxy`)
+        : firstFootage.preview;
+
       if (fallbackPreview) {
         for (const shot of currentEDL.shots) {
           if (!urls.has(shot.source.clipId)) {
@@ -232,7 +339,7 @@ function ChatPage() {
       for (const shot of currentEDL.shots) {
         const mediaId = shot.source.clipId;
         if (!urls.has(mediaId)) {
-          urls.set(mediaId, buildMediaUrl(mediaId));
+          urls.set(mediaId, buildPreviewMediaUrl(mediaId));
         }
       }
 
@@ -245,7 +352,11 @@ function ChatPage() {
     // If there is one footage source in memory, still map unresolved EDL IDs to
     // that local preview as a last-resort resiliency path.
     if (currentEDL && footageWithPreview.length === 1 && footageWithPreview[0].preview) {
-      const fallbackPreview = footageWithPreview[0].preview;
+      const firstFootage = footageWithPreview[0];
+      const fallbackPreview = firstFootage.r2FileId
+        ? buildMediaUrl(`${firstFootage.r2FileId}_proxy`)
+        : firstFootage.preview ?? "";
+
       for (const shot of currentEDL.shots) {
         if (!urls.has(shot.source.clipId)) {
           urls.set(shot.source.clipId, fallbackPreview);
@@ -311,7 +422,7 @@ function ChatPage() {
         edl: currentEDL,
       },
       abortRef.current?.signal ?? undefined
-    ).catch((err) => {
+    ).catch((err: any) => {
       console.warn("Failed to persist studio snapshot:", err);
     });
   }, [active, threadId, currentEDL, currentEdlId]);
@@ -319,7 +430,7 @@ function ChatPage() {
   const previewShotCount = currentEDL?.shots.length ?? 0;
   const previewDuration = currentEDL?.timeline.duration ?? 0;
   const previewClipCount = currentEDL
-    ? new Set(currentEDL.shots.map((shot) => shot.source.clipId)).size
+    ? new Set(currentEDL.shots.map((shot: Shot) => shot.source.clipId)).size
     : 0;
   const previewReady = currentEDL != null && mediaUrls.size > 0 && missingPreviewClips.length === 0;
 
@@ -328,35 +439,63 @@ function ChatPage() {
 
     // Eagerly analyze any reference file not yet analyzed
     const newRef = files.find(
-      (f) => f.type === "reference" && !analyzedRefIds.current.has(f.id)
+      (f: UploadedFile) => f.type === "reference" && !analyzedRefIds.current.has(f.id)
     );
     if (!newRef || isAnalyzingReference) return;
     analyzedRefIds.current.add(newRef.id);
 
     setIsAnalyzingReference(true);
     try {
-      let fileId = newRef.r2FileId;
-      if (!fileId) {
-        const uploadRes = await uploadFileDirect(newRef.file, threadId, "reference");
-        if (!uploadRes.success) throw new Error(uploadRes.error ?? "Reference upload failed");
+     let fileId = newRef.r2FileId;
+     if (!fileId) {
+       let metadata;
+       try {
+         if (newRef.file.type.startsWith("video/")) {
+           metadata = await probeVideoClientSide(newRef.file);
+         }
+       } catch (probeErr) {
+         console.warn("Reference probe failed", probeErr);
+       }
+
+       const uploadRes = await uploadFileDirect(newRef.file, threadId, "reference", metadata);        if (!uploadRes.success) throw new Error(formatApiError(uploadRes.error) || "Reference upload failed");
         fileId = uploadRes.fileId;
-        setUploadedFiles((prev) =>
+        setUploadedFiles((prev: UploadedFile[]) =>
           prev.map((f) => (f.id === newRef.id ? { ...f, r2FileId: fileId } : f))
         );
       }
       const styleRes = await analyzeReferenceStyle(threadId, fileId);
       if (styleRes.success && styleRes.style) {
         setReferenceStyle(styleRes.style);
-        updateThread(threadId, (t) => ({
+        if ((styleRes as any).trace) setReferenceTrace((styleRes as any).trace);
+        updateThread(threadId, (t: ChatThread) => ({
           ...t,
           updatedAt: Date.now(),
           latestReferenceStyle: styleRes.style,
+          latestReferenceStyleId: styleRes.referenceStyleId,
+          latestReferenceTrace: (styleRes as any).trace,
         }));
+
+        // Instantly sync analyzed style into the active Project Store
+        const project = useProjectStore.getState().project;
+        if (project) {
+          const updatedProject = {
+            ...project,
+            settings: {
+              ...project.settings,
+              monet: {
+                ...project.settings?.monet,
+                referenceStyle: styleRes.style,
+                referenceStyleId: styleRes.referenceStyleId
+              }
+            }
+          };
+          useProjectStore.setState({ project: updatedProject });
+        }
       } else {
         console.warn("Reference analysis returned no style:", styleRes.error);
         analyzedRefIds.current.delete(newRef.id); // allow retry
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Reference analysis failed:", err);
       analyzedRefIds.current.delete(newRef.id);
     } finally {
@@ -372,26 +511,87 @@ function ChatPage() {
       const styleRes = await analyzeReferenceStyleByUrl(threadId, url);
       if (styleRes.success && styleRes.style) {
         setReferenceStyle(styleRes.style);
-        updateThread(threadId, (t) => ({
+        if ((styleRes as any).trace) setReferenceTrace((styleRes as any).trace);
+        updateThread(threadId, (t: ChatThread) => ({
           ...t,
           updatedAt: Date.now(),
           latestReferenceStyle: styleRes.style,
+          latestReferenceStyleId: styleRes.referenceStyleId,
+          latestReferenceTrace: (styleRes as any).trace,
         }));
+
+        // Instantly sync analyzed style into the active Project Store
+        const project = useProjectStore.getState().project;
+        if (project) {
+          const updatedProject = {
+            ...project,
+            settings: {
+              ...project.settings,
+              monet: {
+                ...project.settings?.monet,
+                referenceStyle: styleRes.style,
+                referenceStyleId: styleRes.referenceStyleId
+              }
+            }
+          };
+          useProjectStore.setState({ project: updatedProject });
+        }
       } else {
         console.warn("YouTube reference analysis returned no style:", styleRes.error);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("YouTube reference analysis failed:", err);
     } finally {
       setIsAnalyzingReference(false);
     }
   };
 
-  const sendMessage = async () => {
-    const text = draft.trim();
+  const applyGeneratedEDLToProject = async (
+    generatedEdl: MonetEDL,
+    currentFiles: UploadedFile[]
+  ) => {
+    console.log("[ChatPage] Applying generated EDL to project store...");
+
+    const store = useProjectStore.getState();
+    const project = store.project ?? store.bootstrapEmptyProject();
+
+    const syncedProject = syncUploadedFilesAndEDLToProject({
+      project,
+      uploadedFiles: currentFiles,
+      edl: generatedEdl,
+      buildMediaUrl,
+    });
+
+    useProjectStore.setState({ project: syncedProject });
+
+    console.log("[ChatPage] Synced project media before apply", {
+      mediaCount: syncedProject.mediaLibrary?.items?.length ?? 0,
+      mediaIds: syncedProject.mediaLibrary?.items?.map((item: any) => item.id),
+      edlClipIds: Array.from(
+        new Set(generatedEdl.shots.map((shot: any) => shot.source?.clipId).filter(Boolean))
+      ),
+    });
+
+    const applyResult = await useProjectStore.getState().applyMonetEDLToProject(generatedEdl);
+
+    if (!applyResult.success) {
+      throw new Error(
+        formatApiError(applyResult.error) ||
+          "Failed to apply Monet EDL to project tracks"
+      );
+    }
+
+    console.log("[ChatPage] Monet EDL applied successfully to OpenReel project tracks", {
+      appliedShots: applyResult.data?.appliedShots,
+      duration: applyResult.data?.duration,
+    });
+  };
+
+  const sendMessage = async (overrideText?: string | React.MouseEvent) => {
+    const text = (typeof overrideText === "string" ? overrideText : draft).trim();
     if (!text || !active || isGenerating) return;
 
-    const messageAttachments: ChatAttachment[] = uploadedFiles.map((file) => ({
+    const messageAttachments: ChatAttachment[] = uploadedFiles.map((file: UploadedFile) => ({
       id: file.id,
       type: file.type,
       name: file.file.name,
@@ -408,7 +608,7 @@ function ChatPage() {
       attachments: messageAttachments.length > 0 ? messageAttachments : undefined,
     };
 
-    updateThread(threadId, (t) => ({
+    updateThread(threadId, (t: ChatThread) => ({
       ...t,
       title: t.messages.length === 0 ? text.slice(0, 40) : t.title,
       updatedAt: Date.now(),
@@ -432,8 +632,27 @@ function ChatPage() {
       if (filesToUpload.length > 0) {
         const uploadResults = await Promise.all(
           filesToUpload.map(async (f) => {
-            const res = await uploadFileDirect(f.file, threadId, f.type, abort.signal);
-            return { localId: f.id, r2FileId: res.fileId };
+            let metadata;
+            try {
+              if (f.file.type.startsWith("video/")) {
+                metadata = await probeVideoClientSide(f.file);
+              }
+            } catch (probeErr) {
+              console.warn(`Probe failed for ${f.file.name}`, probeErr);
+            }
+
+            const res = await uploadFileDirect(f.file, threadId, f.type, metadata, abort.signal);
+
+            if (!res.success || !res.fileId) {
+              throw new Error(
+                formatApiError(res.error) || `Upload failed for ${f.file.name}`
+              );
+            }
+
+            return {
+              localId: f.id,
+              r2FileId: res.fileId,
+            };
           })
         );
 
@@ -446,11 +665,11 @@ function ChatPage() {
         setUploadedFiles(workingFiles);
 
         // Persist resolved R2 IDs into the just-added user message attachments.
-        updateThread(threadId, (t) => {
-          const updatedMessages = t.messages.map((message) => {
+        updateThread(threadId, (t: ChatThread) => {
+          const updatedMessages = t.messages.map((message: ChatMessage) => {
             if (message.id !== userMsg.id || !message.attachments) return message;
 
-            const attachments = message.attachments.map((attachment) => {
+            const attachments = message.attachments.map((attachment: ChatAttachment) => {
               const resolved = workingFiles.find((f) => f.id === attachment.id);
               if (!resolved?.r2FileId) return attachment;
               return {
@@ -481,7 +700,7 @@ function ChatPage() {
       const intentRes = await decodeIntent(text, threadId, referenceStyle ?? undefined);
 
       if (!intentRes.success) {
-        throw new Error(intentRes.error ?? "Intent extraction failed");
+        throw new Error(formatApiError(intentRes.error) || "Intent extraction failed");
       }
 
       setCurrentIntentId(intentRes.intentId ?? null);
@@ -490,6 +709,12 @@ function ChatPage() {
         ...prev,
         intentConfidence: intentRes.result?.confidence,
       }));
+
+      // Stage 1.5: StyleDNA Compilation (non-blocking, fires in parallel with analysis)
+      const stylePromise = compileStyle(text, abortRef.current?.signal ?? undefined).catch((err: any) => {
+        console.warn("[ChatPage] style compilation failed (non-critical):", err);
+        return null;
+      });
 
       // Stage 2: Analysis
       setThinkingStage("analysis");
@@ -500,64 +725,114 @@ function ChatPage() {
       const musicFile = workingFiles.find((f) => f.type === "music");
       const musicId = musicFile ? getFileId(musicFile) : undefined;
 
+      console.log("[ChatPage] analyzeMedia inputs", {
+        workingFiles: workingFiles.map((f) => ({
+          id: f.id,
+          r2FileId: f.r2FileId,
+          name: f.file.name,
+          type: f.type,
+        })),
+        footageIds,
+        musicId,
+      });
+
       const analysisRes = await analyzeMedia(threadId, footageIds, musicId);
 
       if (!analysisRes.success) {
-        throw new Error(analysisRes.error ?? "Analysis failed");
+        throw new Error(formatApiError(analysisRes.error) || "Analysis failed");
       }
 
       setCurrentAnalysisId(analysisRes.analysisId ?? null);
 
       // Stage 3: EDL Generation
       setThinkingStage("edl");
+      console.log("DEBUGGING EDL GENERATION HANDSHAKE:", { 
+        threadId, 
+        intentId: intentRes.intentId, 
+        analysisId: analysisRes.analysisId 
+      });
+      const styleResult = await stylePromise;
+
       const edlRes = await generateEDL(
         threadId,
         intentRes.intentId!,
         analysisRes.analysisId!,
-        referenceStyle ?? undefined,  // Drive shot selection & philosophy from reference editor
-        referenceStyle ? "strict_replication" : "inspired"
+        referenceStyle ?? undefined,
+        referenceTrace ?? undefined,
+        referenceStyle ? "strict_replication" : "inspired",
+        text,
+        undefined,
+        undefined,
+        styleResult?.success ? styleResult.style : undefined
       );
 
+      console.log("[ChatPage] Director diagnostics", {
+        styleDirectives: (edlRes as any).styleDirectives,
+        creativeDensity: (edlRes as any).creativeDensity,
+        referenceSimilarity: (edlRes as any).referenceSimilarity,
+      });
+
       if (!edlRes.success) {
-        throw new Error(edlRes.error ?? "EDL generation failed");
+        throw new Error(formatApiError(edlRes.error) || "EDL generation failed");
       }
 
       const generatedEDL = edlRes.edl as MonetEDL;
-      setCurrentEDL(generatedEDL);
-      setCurrentEdlId(edlRes.edlId ?? null);
+
+      const styledEDL = generatedEDL;
+      if (styleResult?.success && styleResult.style) {
+        console.log(
+          `[ChatPage] style compiled (${styleResult.source}, cached=${styleResult.cached}):`,
+          styleResult.style.name,
+          "→ server-side application",
+        );
+      }
+
+      if ((edlRes as any).styleApplicationSummary) {
+        console.log("[ChatPage] style applied", (edlRes as any).styleApplicationSummary);
+      }
 
       // Generate HyperFrames visual treatment composition via Gemini
+      // Generate HyperFrames visual treatment composition via Gemini
       // Non-blocking: fires in background, updates overlay when ready
-      const userPrompt = active?.messages.find((m) => m.role === "user")?.content ?? text;
-      generateCompositionOverlay(
-        userPrompt,
-        generatedEDL,
-        intentRes.result?.intent,
-        abortRef.current?.signal ?? undefined
-      ).then((compRes) => {
-        if (compRes.success && compRes.html) {
-          console.log(`Composition generated via ${compRes.source}`);
-          setCompositionHtml(compRes.html);
-        }
-      }).catch((compErr) => {
-        console.warn("Composition generation failed (non-critical):", compErr);
-      });
+      const userPrompt = text;
+      if (ENABLE_HYPERFRAMES) {
+        generateCompositionOverlay(
+          userPrompt,
+          generatedEDL,
+          intentRes.result?.intent,
+          abortRef.current?.signal ?? undefined
+        ).then((compRes: any) => {
+          if (compRes.success && compRes.html) {
+            console.log(`Composition generated via ${compRes.source}`);
+            setCompositionHtml(compRes.html);
+          }
+        }).catch((compErr: any) => {
+          console.warn("Composition generation failed (non-critical):", compErr);
+        });
+      }
 
       setThinkingData((prev) => ({
         ...prev,
-        edlShots: generatedEDL?.shots?.length ?? 0,
+        edlShots: styledEDL?.shots?.length ?? 0,
         scores: edlRes.scores,
         usedFallback: edlRes.usedFallback,
-        edl: generatedEDL,
+        edl: styledEDL,
+        styleDirectives: (edlRes as any).styleDirectives,
+        creativeDensity: (edlRes as any).creativeDensity,
+        referenceSimilarity: (edlRes as any).referenceSimilarity,
       }));
 
+      await applyGeneratedEDLToProject(styledEDL, workingFiles);
+
+      setCurrentEDL(styledEDL);
+      setCurrentEdlId(edlRes.edlId ?? null);
       setThinkingStage("complete");
 
       // Persist EDL in thread for Studio import
-      updateThread(threadId, (t) => ({
+      updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
-        latestEdl: generatedEDL,
+        latestEdl: styledEDL,
         latestEdlId: edlRes.edlId,
         projectId: threadId,
       }));
@@ -570,36 +845,41 @@ function ChatPage() {
         createdAt: Date.now(),
       };
 
-      updateThread(threadId, (t) => ({
+      updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
         messages: [...t.messages, assistantMsg],
       }));
-    } catch (error) {
-      console.error("Generation error:", error);
-      setThinkingStage("error");
-      setThinkingData((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }));
+    } catch (error: any) {
+      if (error?.upgradeCta) {
+        setUpgradeCta(error.upgradeCta);
+        console.log("[ChatPage] HF rate limited, used browser fallback. Upgrade CTA shown.");
+      } else {
+        console.error("Generation error:", error);
+        setThinkingStage("error");
+        setThinkingData((prev: ThinkingData) => ({
+          ...prev,
+          error: error instanceof Error ? error.message : "Unknown error",
+        }));
 
-      const errorMsg: ChatMessage = {
-        id: cryptoId(),
-        role: "assistant",
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
-        createdAt: Date.now(),
-      };
+        const errorMsg: ChatMessage = {
+          id: cryptoId(),
+          role: "assistant",
+          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+          createdAt: Date.now(),
+        };
 
-      updateThread(threadId, (t) => ({
-        ...t,
-        updatedAt: Date.now(),
-        messages: [...t.messages, errorMsg],
-      }));
+        updateThread(threadId, (t: ChatThread) => ({
+          ...t,
+          updatedAt: Date.now(),
+          messages: [...t.messages, errorMsg],
+        }));
+      }
     } finally {
       setIsGenerating(false);
       abortRef.current = null;
       setTimeout(() => {
-        setThinkingStage((s) => (s === "error" ? "idle" : s));
+        setThinkingStage((s: ThinkingStage) => (s === "error" ? "idle" : s));
       }, 3000);
     }
   };
@@ -620,16 +900,110 @@ function ChatPage() {
     return message;
   }
 
+  const handleDirectorFeedback = async (feedback: string) => {
+    if (!feedback || isRefining) return;
+    setIsRefining(true);
+    setDirectorJobId(null);
+    setDirectorRenderStatus(null);
+    setDirectorPreviewUrl(null);
+    setPatchSummary(null);
+
+    try {
+      // 1. Submit feedback to Director
+      const res = await submitDirectorFeedback(
+        threadId,
+        feedback,
+        currentEDL ?? undefined,
+        [], // No keyframes for now to keep it fast, but could be added
+        currentIntentId ?? undefined,
+        currentAnalysisId ?? undefined
+      );
+
+      if (!res.success) {
+        if (res.action === "GENERATE_FIRST_DRAFT") {
+          // If no EDL, route to full generation
+          await sendMessage(feedback);
+          return;
+        }
+        throw new Error(formatApiError(res.error) || "Director feedback failed");
+      }
+
+      // 2. Instant patch summary display (<2s goal met by server)
+      setPatchSummary(res.patchSummary ?? "Applying changes...");
+      if (res.newEDL) {
+        setCurrentEDL(res.newEDL);
+        updateThread(threadId, (t: ChatThread) => ({
+          ...t,
+          latestEdl: res.newEDL,
+          updatedAt: Date.now(),
+        }));
+      }
+
+      // 3. Poll render progress if jobId exists
+      if (res.jobId) {
+        setDirectorJobId(res.jobId);
+        setDirectorRenderStatus("queued");
+        
+        const poll = async () => {
+          try {
+            const status = await pollDirectorRender(res.jobId!);
+            setDirectorRenderStatus(status.status);
+            if (status.status === "done") {
+              setDirectorPreviewUrl(status.downloadUrl ?? null);
+              return true; // Stop polling
+            }
+            if (status.status === "error") {
+              return true;
+            }
+            return false;
+          } catch (err: any) {
+            console.error("Polling error:", err);
+            return true;
+          }
+        };
+
+        const interval = setInterval(async () => {
+          const stop = await poll();
+          if (stop) clearInterval(interval);
+        }, 2000);
+      }
+
+      // Add assistant message for feedback
+      const msg: ChatMessage = {
+        id: cryptoId(),
+        role: "assistant",
+        content: `🎬 Director: "${feedback}"\n${res.patchSummary}`,
+        createdAt: Date.now(),
+      };
+      updateThread(threadId, (t: ChatThread) => ({
+        ...t,
+        messages: [...t.messages, msg],
+      }));
+
+    } catch (err: any) {
+      console.error("Director loop error:", err);
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   const handleRefine = async () => {
     const feedback = refineFeedback.trim();
-    if (!feedback || !currentEDL || !currentEdlId || isRefining) return;
+    if (!feedback || isRefining) return;
+    
+    // Redirect refine to Director loop if EDL exists
+    if (currentEDL) {
+      setRefineFeedback("");
+      await handleDirectorFeedback(feedback);
+      return;
+    }
 
     setIsRefining(true);
     setRefineFeedback("");
     try {
       const res = await refineEDL(
         threadId,
-        currentEdlId,
+        currentEdlId!,
         currentEDL as never,
         feedback,
         currentIntentId ?? undefined,
@@ -639,7 +1013,7 @@ function ChatPage() {
         referenceStyle ? "strict_replication" : "inspired"
       );
 
-      if (!res.success) throw new Error(res.error ?? "Refinement failed");
+      if (!res.success) throw new Error(formatApiError(res.error) || "Refinement failed");
 
       const refined = res.edl as MonetEDL;
       setCurrentEDL(refined);
@@ -648,14 +1022,16 @@ function ChatPage() {
 
       // Re-generate composition for the refined EDL
       const refinedPrompt = `${active?.messages[0]?.content ?? ""} — ${feedback}`;
-      generateCompositionOverlay(refinedPrompt, refined, currentIntent ?? undefined)
-        .then((compRes) => {
-          if (compRes.success && compRes.html) setCompositionHtml(compRes.html);
-        })
-        .catch(() => {/* non-critical */});
+      if (ENABLE_HYPERFRAMES) {
+        generateCompositionOverlay(refinedPrompt, refined, currentIntent ?? undefined)
+          .then((compRes: any) => {
+            if (compRes.success && compRes.html) setCompositionHtml(compRes.html);
+          })
+          .catch(() => {/* non-critical */});
+      }
 
       // Persist updated EDL
-      updateThread(threadId, (t) => ({
+      updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
         latestEdl: refined,
@@ -668,11 +1044,11 @@ function ChatPage() {
         content: `✏️ Refined! "${feedback}"\n${res.edl?.shots?.length ?? 0} shots · ${(res.edl?.timeline?.duration ?? 0).toFixed(1)}s`,
         createdAt: Date.now(),
       };
-      updateThread(threadId, (t) => ({
+      updateThread(threadId, (t: ChatThread) => ({
         ...t,
         messages: [...t.messages, msg],
       }));
-    } catch (err) {
+    } catch (err: any) {
       console.error("Refinement error:", err);
     } finally {
       setIsRefining(false);
@@ -683,19 +1059,67 @@ function ChatPage() {
     if (!currentEDL || isExporting) return;
     setIsExporting(true);
     setExportProgress(null);
+
     try {
-      const blob = await exportEDLToMP4(currentEDL, mediaUrls, (p) => {
-        setExportProgress(p);
+      setExportProgress({ percent: 0, stage: "Preparing assets..." } as any);
+
+      // CRITICAL: Build server-accessible URLs for each clip.
+      // Server-side FFmpeg can't read browser blob URLs — it needs HTTP URLs.
+      // The clip already exists on the server at /api/media/<clipId>
+      const serverMediaUrls = new Map<string, string>();
+
+      const apiBase =
+        ((import.meta as any).env?.VITE_API_BASE ||
+          (typeof window !== "undefined" ? window.location.origin : ""))
+          .replace(/\/$/, "");
+
+      // Get all unique clip IDs from the EDL
+      const uniqueClipIds = new Set<string>();
+      for (const shot of currentEDL.shots) {
+        const cid = shot.source?.clipId;
+        if (cid) uniqueClipIds.add(cid);
+      }
+
+      // For each unique clip, generate the server media URL
+      for (const clipId of uniqueClipIds) {
+        const serverUrl = `${apiBase}/api/media/${encodeURIComponent(clipId)}`;
+        serverMediaUrls.set(clipId, serverUrl);
+      }
+
+      console.log("[export] using server URLs for FFmpeg:", {
+        count: serverMediaUrls.size,
+        sample: Array.from(serverMediaUrls.entries()).slice(0, 2),
       });
+
+      setExportProgress({ percent: 5, stage: "Sending to server..." } as any);
+
+      const { exportEDLToMP4ViaServer } = await import("@/lib/export-engine");
+
+      const blob = await exportEDLToMP4ViaServer(
+        currentEDL,
+        serverMediaUrls,
+        (p) => {
+          setExportProgress({ ...p, stage: p.stage } as any);
+        }
+      );
+
+      // Download
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `monet-edit-${Date.now()}.mp4`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      console.log("✨ Server export complete, MP4 downloading", { size: blob.size });
+    } catch (err: any) {
       console.error("Export error:", err);
-      alert(err instanceof Error ? err.message : "Export failed");
+      alert(
+        `Export failed: ${err.message || "Unknown error"}\n\n` +
+        `Make sure FFmpeg is installed and the dev server is running.`
+      );
     } finally {
       setIsExporting(false);
       setExportProgress(null);
@@ -703,7 +1127,7 @@ function ChatPage() {
   };
 
   const handleTranscribe = async () => {
-    const footageFile = uploadedFiles.find((f) => f.type === "footage");
+    const footageFile = uploadedFiles.find((f: UploadedFile) => f.type === "footage");
     if (!footageFile || isTranscribing) return;
     setIsTranscribing(true);
     try {
@@ -719,7 +1143,7 @@ function ChatPage() {
         } satisfies TranscriptResult);
         setShowTextTimeline(true);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Transcription error:", err);
     } finally {
       setIsTranscribing(false);
@@ -728,7 +1152,7 @@ function ChatPage() {
 
   const handleOpenInStudio = () => {
     if (currentEDL) {
-      updateThread(threadId, (t) => ({ ...t, latestEdl: currentEDL, latestEdlId: currentEdlId ?? undefined }));
+      updateThread(threadId, (t: ChatThread) => ({ ...t, latestEdl: currentEDL, latestEdlId: currentEdlId ?? undefined }));
     }
     window.location.assign(`/studio?threadId=${encodeURIComponent(threadId)}`);
   };
@@ -737,8 +1161,8 @@ function ChatPage() {
     if (!currentEDL) return;
     const updated = addDemoTrackedTextOverlay(currentEDL, "TRACKED TITLE");
     setCurrentEDL(updated);
-    setThinkingData((prev) => ({ ...prev, edl: updated }));
-    updateThread(threadId, (t) => ({
+    setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+    updateThread(threadId, (t: ChatThread) => ({
       ...t,
       updatedAt: Date.now(),
       latestEdl: updated,
@@ -751,13 +1175,13 @@ function ChatPage() {
     try {
       const updated = await addAutoFaceTrack(currentEDL, mediaUrls);
       setCurrentEDL(updated);
-      setThinkingData((prev) => ({ ...prev, edl: updated }));
-      updateThread(threadId, (t) => ({
+      setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+      updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
         latestEdl: updated,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Auto face tracking failed:", error);
     } finally {
       setIsAutoTrackingFace(false);
@@ -768,8 +1192,8 @@ function ChatPage() {
     if (!currentEDL) return;
     const updated = addDemoPlanarTextOverlay(currentEDL, "WALL TEXT");
     setCurrentEDL(updated);
-    setThinkingData((prev) => ({ ...prev, edl: updated }));
-    updateThread(threadId, (t) => ({
+    setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+    updateThread(threadId, (t: ChatThread) => ({
       ...t,
       updatedAt: Date.now(),
       latestEdl: updated,
@@ -778,18 +1202,18 @@ function ChatPage() {
 
   const handleNew = () => {
     const t = createThread();
-    navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
+    navigate({ to: "/chat/$threadId", params: { threadId: t.id } } as any);
   };
 
   const handleDelete = (id: string) => {
     deleteThread(id);
     if (id === threadId) {
-      const remaining = threads.filter((t) => t.id !== id);
+      const remaining = (threads as ChatThread[]).filter((t) => t.id !== id);
       if (remaining.length > 0) {
-        navigate({ to: "/chat/$threadId", params: { threadId: remaining[0].id } });
+        navigate({ to: "/chat/$threadId", params: { threadId: remaining[0].id } } as any);
       } else {
         const t = createThread();
-        navigate({ to: "/chat/$threadId", params: { threadId: t.id } });
+        navigate({ to: "/chat/$threadId", params: { threadId: t.id } } as any);
       }
     }
   };
@@ -812,7 +1236,7 @@ function ChatPage() {
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3">
-          {threads.map((t) => (
+          {threads.map((t: ChatThread) => (
             <div
               key={t.id}
               className={cn(
@@ -825,7 +1249,7 @@ function ChatPage() {
               <button
                 className="flex-1 truncate text-left"
                 onClick={() =>
-                  navigate({ to: "/chat/$threadId", params: { threadId: t.id } })
+                  navigate({ to: "/chat/$threadId", params: { threadId: t.id } } as any)
                 }
               >
                 {t.title || "New conversation"}
@@ -875,7 +1299,7 @@ function ChatPage() {
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-6 py-10">
             {active && active.messages.length === 0 && <EmptyChat />}
-            {active?.messages.map((m) => (
+            {active?.messages.map((m: ChatMessage) => (
               <Message key={m.id} message={m} />
             ))}
 
@@ -917,20 +1341,56 @@ function ChatPage() {
                   </div>
                 </div>
 
-                <EDLPreview edl={currentEDL} />
+                {/* Engine routing breakdown */}
+                {engineRouting && (
+                  <div className="rounded-lg border border-border bg-card p-3 text-xs">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Film className="h-3 w-3 text-primary" />
+                      Rendering Engines Dispatched
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(engineRouting.engineLoadCounts).map(([engine, count]) => {
+                        if ((count as number) <= 0) return null;
+                        return (
+                          <div key={engine} className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-foreground border border-border">
+                            <span>{engine}</span>{" "}
+                            <span className="text-muted-foreground ml-1">×{String(count)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 text-[10px] text-muted-foreground flex gap-3">
+                      <span>Avg Quality: {(engineRouting.avgQualityPerEffect || 0).toFixed(1)}×</span>
+                      <span>Cost Efficiency: {(engineRouting.costEfficiency || 0).toFixed(1)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <BlueprintPreview
+                  edl={currentEDL as any}
+                  creativeDensity={(thinkingData as any).creativeDensity}
+                  referenceSimilarity={(thinkingData as any).referenceSimilarity}
+                />
 
                 {/* Video Preview — only when footage blob URLs are available */}
                 <div className="border-t border-border pt-4">
                   <h3 className="text-sm font-medium mb-3">Preview</h3>
+                  {upgradeCta && (
+                    <UpgradePrompt
+                      cta={upgradeCta}
+                      onDismiss={() => setUpgradeCta(null)}
+                    />
+                  )}
                   {previewReady ? (
                     <VideoPreview
                       edl={currentEDL}
                       mediaUrls={mediaUrls}
-                      compositionHtml={compositionHtml ?? undefined}
-                      onAnnotation={(a) => setAnnotations((prev) => [...prev, a])}
+                      compositionHtml={ENABLE_HYPERFRAMES ? (compositionHtml ?? undefined) : undefined}
+                      onAnnotation={(a: TimelineAnnotation) => setAnnotations((prev) => [...prev, a])}
                       annotations={annotations}
                       onTimeUpdate={setPreviewTimeMs}
                       seekToMs={seekToMs}
+                      playing={false}
                     />
                   ) : (
                     <div className="rounded-lg border border-border bg-secondary/20 p-4">
@@ -946,7 +1406,7 @@ function ChatPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {missingPreviewClips.slice(0, 4).map((clipId) => (
+                        {missingPreviewClips.slice(0, 4).map((clipId: string) => (
                           <span
                             key={clipId}
                             className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground"
@@ -1022,6 +1482,71 @@ function ChatPage() {
                     )}
                   </Button>
                   <Button
+                    variant="default"
+                    size="sm"
+                    className="gap-1.5 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                    onClick={async () => {
+                      if (!currentEdlId) {
+                        alert("No generated EDL ID found - please generate an edit first");
+                        return;
+                      }
+                      const res = await fetch("/api/export", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          "X-User-Tier": "pro",  // wire to real tier later
+                        },
+                        body: JSON.stringify({
+                          edlId: currentEdlId,
+                          threadId,
+                          resolution: "1080p",
+                          codec: "h264",
+                        }),
+                      });
+                      const data = (await res.json()) as any;
+                      if (data.success) {
+                        alert(`HD render started! Job ID: ${data.jobId}\nWe'll email you when ready.`);
+                      } else {
+                        alert(`Failed: ${data.error}`);
+                      }
+                    }}
+                  >
+                    ⚡ HD Export
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => {
+                      if (!currentEDL) return;
+                      const flipped = {
+                        ...currentEDL,
+                        timeline: {
+                          ...currentEDL.timeline,
+                          sourceRotation: ((currentEDL.timeline as any)?.sourceRotation ?? 0) + 180,
+                        },
+                      };
+                      setCurrentEDL(flipped as any);
+                    }}
+                  >
+                    🔄 Flip 180°
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => {
+                      if (!currentEDL) return;
+                      const tinted = {
+                        ...currentEDL,
+                        globalEffects: { ...currentEDL.globalEffects, colorGrade: "cinematic" },
+                      };
+                      setCurrentEDL(tinted as any);
+                    }}
+                  >
+                    🎨 Test Cinematic Grade
+                  </Button>
+                  <Button
                     variant="outline"
                     size="sm"
                     className="gap-1.5 text-xs"
@@ -1052,20 +1577,54 @@ function ChatPage() {
                       transcript={transcript}
                       edl={currentEDL}
                       currentTimeMs={previewTimeMs}
-                      onEDLChange={(updated) => {
+                      onEDLChange={(updated: MonetEDL) => {
                         setCurrentEDL(updated);
-                        setThinkingData((prev) => ({ ...prev, edl: updated }));
-                        updateThread(threadId, (t) => ({ ...t, latestEdl: updated }));
+                        setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+                        updateThread(threadId, (t: ChatThread) => ({ ...t, latestEdl: updated, updatedAt: Date.now() }));
                       }}
-                      onSeek={(ms) => setSeekToMs(ms)}
+                      onSeek={(ms: number) => setSeekToMs(ms)}
                     />
                   </div>
                 )}
 
-                {/* Refinement section */}
+              {/* Refinement section */}
                 <div className="border-t border-border pt-4">
+                  {patchSummary && (
+                    <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="text-xs font-medium text-primary flex items-center gap-1.5">
+                          <Sparkles className="h-3 w-3" />
+                          Director Patch Applied
+                        </div>
+                        {directorRenderStatus && (
+                          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {directorRenderStatus === "done" ? (
+                              <span className="text-emerald-500">Render Ready</span>
+                            ) : (
+                              <>
+                                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                Rendering...
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-foreground/80">{patchSummary}</p>
+                      
+                      {directorPreviewUrl && (
+                        <div className="mt-3 rounded-md overflow-hidden border border-border bg-black aspect-video">
+                          <video 
+                            src={directorPreviewUrl} 
+                            controls 
+                            className="w-full h-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="text-xs text-muted-foreground mb-2 tracking-wider uppercase">
-                    Refine this edit
+                    Refine with Director
                   </div>
                   <div className="flex gap-2 flex-wrap mb-2">
                     {["Faster cuts", "Hit the drop harder", "More energy", "Calmer pace", "Add glow effect"].map((chip) => (
@@ -1102,11 +1661,11 @@ function ChatPage() {
                   <div className="flex gap-2">
                     <Textarea
                       value={refineFeedback}
-                      onChange={(e) => setRefineFeedback(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRefineFeedback(e.target.value)}
                       placeholder={annotations.length > 0 ? `${annotations.length} annotation${annotations.length !== 1 ? "s" : ""} queued — add global feedback or just hit Apply` : "What would you like to change? (e.g. 'make it more intense')"}
                       className="min-h-[56px] resize-none bg-background border-border text-sm"
                       disabled={isRefining}
-                      onKeyDown={(e) => {
+                      onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           handleRefine();
@@ -1165,7 +1724,7 @@ function ChatPage() {
                 <button
                   onClick={() => {
                     setReferenceStyle(null);
-                    updateThread(threadId, (t) => ({
+                    updateThread(threadId, (t: ChatThread) => ({
                       ...t,
                       updatedAt: Date.now(),
                       latestReferenceStyle: undefined,
@@ -1184,11 +1743,11 @@ function ChatPage() {
               <Textarea
                 ref={taRef}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
                 placeholder="Describe the edit you want… (e.g. ‘make a 30s anime AMV cut to the beat’)"
                 className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-12 focus-visible:ring-0"
                 disabled={isGenerating}
-                onKeyDown={(e) => {
+                onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
@@ -1198,7 +1757,7 @@ function ChatPage() {
               <div className="absolute right-2 bottom-2">
                 <Button
                   size="icon"
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={!draft.trim() || isGenerating}
                   className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
@@ -1226,7 +1785,7 @@ function Message({ message }: { message: ChatMessage }) {
           <div>{message.content}</div>
           {message.attachments && message.attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {message.attachments.map((attachment) => (
+              {message.attachments.map((attachment: ChatAttachment) => (
                 <span
                   key={`${attachment.id}-${attachment.name}`}
                   className="inline-flex items-center gap-1 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-2 py-0.5 text-[11px] text-primary-foreground/90"

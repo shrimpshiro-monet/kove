@@ -1,6 +1,6 @@
 import type { Env } from "../types/env";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-pro";
+export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 export function getConfiguredGeminiModel(env?: Env): string {
   return (

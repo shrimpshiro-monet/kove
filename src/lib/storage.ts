@@ -24,6 +24,8 @@ export interface ChatThread {
   /** Latest generated EDL — stored for Studio import */
   latestEdl?: unknown;
   latestEdlId?: string;
+  latestIntentId?: string;
+  latestAnalysisId?: string;
   /** Latest analyzed reference editing DNA for replication mode */
   latestReferenceStyle?: unknown;
   projectId?: string;

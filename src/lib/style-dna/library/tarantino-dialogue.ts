@@ -1,0 +1,191 @@
+import type { StyleDNA } from "../types";
+
+export const tarantinoDialogue = {
+  id: "tarantino_dialogue",
+  name: "Tarantino Dialogue",
+  category: "film_reference",
+  tags: ["tarantino", "dialogue", "70mm", "neo-noir", "retro"],
+  sourceInfluences: ["Pulp Fiction", "Kill Bill", "Django Unchained", "Once Upon a Time in Hollywood"],
+  confidence: 0.92,
+
+  grade: {
+    lift: [-0.02, -0.03, -0.02],
+    gamma: [1.0, 0.98, 0.95],
+    gain: [1.05, 1.0, 0.95],
+    offset: [0, 0, 0],
+    saturation: 0.95,
+    vibrance: 0,
+    contrast: 1.15,
+    pivot: 0.45,
+    hueShift: 0,
+    mix: 1.0,
+    temperature: 12,
+    tint: 2,
+    exposure: 0,
+    highlights: 0,
+    shadows: 0,
+    whites: 0,
+    blacks: 0,
+    tealOrange: false,
+    orangeTealIntensity: 0.6,
+    bleachBypass: false,
+    bleachBypassIntensity: 0.4,
+    splitToning: null,
+    filmStock: "kodak_vision3_250d",
+    grain: {
+      intensity: 0.18,
+      size: 0.5,
+      color: true,
+      temporal: true,
+    },
+    vignette: {
+      amount: 0.2,
+      midpoint: 0.5,
+      roundness: 0.9,
+      feather: 0.6,
+      color: [0.0, 0.0, 0.0],
+    },
+    chromaticAberration: {
+      intensity: 0.005,
+      angle: 0,
+      radial: true,
+      channelOffsets: null,
+    },
+    bloom: null,
+  },
+
+  globalEffects: {
+    effects: [
+      {
+        id: "noise_grain_global",
+        type: "noise_grain",
+        enabled: true,
+        params: { intensity: 0.18, filmic: true },
+        applyToShots: ["all"],
+      },
+    ],
+    overallIntensity: 0.9,
+    blendMode: "normal",
+  },
+
+  heroEffects: {
+    effects: [],
+    overallIntensity: 1.0,
+    blendMode: "normal",
+  },
+
+  timing: {
+    frameRateFeel: { type: "normal", fps: 24 },
+    speedRampStyle: "slowburn",
+    tempo: "leisurely",
+    averageShotDurationSec: 8.0,
+    stutterConfig: null,
+    motionBlur: {
+      enabled: true,
+      shutterAngle: 180,
+      samples: 16,
+      directional: true,
+    },
+  },
+
+  camera: {
+    energy: "steady",
+    movement: {
+      baseMovement: "subtle_drift",
+      amplitude: 0.05,
+      frequency: 0.1,
+      randomJitter: 0.0,
+    },
+    lensSimulation: {
+      focalLength: 50,
+      distortion: 0.0,
+      anamorphicSqueeze: 2.35,
+      flareType: "anamorphic_streaks",
+      flareIntensity: 0.15,
+    },
+    dofSimulation: {
+      enabled: true,
+      focalDepth: 0.5,
+      aperture: 2.8,
+      blurQuality: "bokeh_shapes",
+      edgeBoost: true,
+    },
+  },
+
+  graphics: {
+    text: {
+      fontFamily: "context_aware",
+      sizeFeel: "medium",
+      weight: 400,
+      animation: {
+        entryAnimation: "fade_in",
+        exitAnimation: "fade_out",
+        idleBehavior: "static",
+        perWordStagger: false,
+        syncToAudio: false,
+        bounceWiggle: 0,
+        glitchFrequency: 0,
+      },
+      placement: "lower_third",
+      colorMode: { type: "solid", color: [1.0, 1.0, 1.0] },
+      outline: null,
+      shadow: {
+        enabled: true,
+        offsetX: 2,
+        offsetY: 2,
+        blur: 4,
+        color: [0.0, 0.0, 0.0],
+        opacity: 0.8,
+      },
+      glow: null,
+      backgroundPlate: {
+        enabled: true,
+        opacity: 0.4,
+        color: [0.0, 0.0, 0.0],
+        padding: 8,
+        cornerRadius: 0,
+        blur: 8,
+      },
+      captionStyle: "lower_third_name",
+    },
+  },
+
+  editorial: {
+    avgShotDurationSec: 8.0,
+    shotDurationVariance: 0.3,
+    preferredDurations: [6, 8, 12, 15, 20],
+    cutStyle: "hard_cut",
+    cutAlignment: "dialogue_rhythm",
+    closeupBias: 0.65,
+    extremeCloseupBias: 0.25,
+    wideShotBias: 0.1,
+    defaultTransition: {
+      type: "cut",
+      durationMs: 200,
+      ease: "linear",
+    },
+    heroTransition: {
+      type: "cut",
+      durationMs: 100,
+      ease: "linear",
+    },
+    pacingCurve: "arc",
+    useMontage: false,
+    useSplitScreen: false,
+    useJumpCuts: false,
+    matchActionRequired: false,
+  },
+
+  audioReactivity: {
+    enabled: false,
+    onBeat: {
+      triggerEffect: null,
+      cutProbability: 0,
+    },
+    onDialogue: {
+      lowerThirdAuto: true,
+      suppressMusicVisuals: true,
+      focusPull: true,
+    },
+  },
+} as const satisfies StyleDNA;

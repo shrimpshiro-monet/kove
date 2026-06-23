@@ -8,7 +8,11 @@
 	"main": "src/server.ts",
 	"vars": {
 		"ENVIRONMENT": "development",
-		"GEMINI_API_KEY": "AIzaSyADt7T72roaSn1BzIgVg08GGR-JYDl-dAw"
+		"GEMINI_API_KEY": "AIzaSyADt7T72roaSn1BzIgVg08GGR-JYDl-dAw",
+		"MONET_API_URL": "http://localhost:3000",
+		"MONET_AI_SERVICE_URL": "https://ai.monet.app",
+		"MONET_AI_SERVICE_KEY": "development-test-key",
+		"HUGGINGFACE_API_KEY": "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"
 	},
 	"r2_buckets": [
 		{

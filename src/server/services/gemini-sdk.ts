@@ -38,7 +38,7 @@ export class GeminiService {
    * Wrapped in retry logic for production reliability
    */
   async generateContentJSON<T = any>(params: {
-    prompt: string;
+    prompt: string | any[];
     systemInstruction?: string;
     temperature?: number;
     schema?: any; // JSON schema for structured output

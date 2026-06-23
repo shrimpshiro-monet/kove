@@ -1,83 +1,99 @@
-// POST /api/upload - Upload media files to R2 and extract metadata
+// POST /api/upload - Upload media files to R2 and register them
+// This version is optimized for Cloudflare Workers: 
+// - No local filesystem usage (node:fs)
+// - No subprocess spawning (ffmpeg)
+// - Metadata is provided by the client after client-side probing
 
+import { z } from "zod";
 import type { Env } from "../types/env";
 import { generateId, now } from "../types/env";
 import { putLocalMedia } from "../lib/local-media-cache";
+import { apiError, ApiErrorCode, jsonResponse } from "../lib/api-response";
 
-interface UploadRequest {
-  projectId: string;
-  type: "footage" | "music" | "reference";
-  filename: string;
-  contentType: string;
-}
+const MediaTypeSchema = z.enum(["footage", "music", "reference"]);
 
-interface UploadResponse {
-  success: boolean;
-  uploadUrl?: string;
-  fileId?: string;
-  error?: string;
-}
+const ProbedMetadataSchema = z.object({
+  duration: z.number().positive(),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  fps: z.number().positive().optional(),
+  codec: z.string().optional(),
+  aspectRatio: z.number().positive().optional(),
+  isVertical: z.boolean().optional(),
+  rotation: z.number().optional(),
+  mimeType: z.string().optional(),
+});
 
-interface CompleteUploadRequest {
-  projectId: string;
-  fileId: string;
-  type: "footage" | "music" | "reference";
-  filename: string;
-  fileSize: number;
-  contentType: string;
-}
+const UploadRequestSchema = z.object({
+  projectId: z.string().min(1),
+  type: MediaTypeSchema,
+  filename: z.string().min(1),
+  contentType: z.string().min(1),
+});
 
-interface CompleteUploadResponse {
-  success: boolean;
-  fileId?: string;
-  metadata?: MediaMetadata;
-  error?: string;
-}
+const CompleteUploadRequestSchema = z.object({
+  projectId: z.string().min(1),
+  fileId: z.string().min(1),
+  type: MediaTypeSchema,
+  filename: z.string().min(1),
+  fileSize: z.number().positive(),
+  contentType: z.string().min(1),
+  metadata: ProbedMetadataSchema,
+});
 
-interface MediaMetadata {
-  duration?: number;
-  width?: number;
-  height?: number;
-  fps?: number;
-  codec?: string;
+async function readJsonBody(request: Request): Promise<unknown | null> {
+  try {
+    return await request.json();
+  } catch (error) {
+    console.warn("[upload] Invalid JSON body", {
+      operation: "readJsonBody",
+      error,
+    });
+    return null;
+  }
 }
 
 /**
  * Generate a signed upload URL for direct client → R2 upload
- *
- * Flow:
- * 1. Client requests upload URL
- * 2. Server generates signed URL with R2 key
- * 3. Client uploads directly to R2
- * 4. Client calls /api/upload/complete with fileId
- * 5. Server extracts metadata and stores in DB
+ * Note: In production, this should use real AWS SigV4 signing.
  */
 export async function handleUploadRequest(
   request: Request,
   env: Env
 ): Promise<Response> {
-  try {
-    const body: UploadRequest = await request.json();
+  const body = await readJsonBody(request);
+  if (body === null) {
+    return apiError(ApiErrorCode.InvalidRequest, "Invalid JSON body", 400);
+  }
 
-    // Validate input
-    if (!body.projectId || !body.type || !body.filename || !body.contentType) {
-      return jsonResponse({ success: false, error: "Missing required fields" }, 400);
+  try {
+    const validation = UploadRequestSchema.safeParse(body);
+
+    if (!validation.success) {
+      return apiError(
+        ApiErrorCode.InvalidRequest,
+        "Invalid upload request",
+        400,
+        validation.error
+      );
     }
 
-    // Validate file type
-    if (!isValidMediaType(body.type, body.contentType)) {
-      return jsonResponse(
-        { success: false, error: `Invalid content type ${body.contentType} for ${body.type}` },
+    const { projectId, type, filename, contentType } = validation.data;
+
+    if (!isValidMediaType(type, contentType)) {
+      return apiError(
+        ApiErrorCode.InvalidMediaType,
+        `Invalid content type ${contentType} for ${type}`,
         400
       );
     }
 
-    // Generate file ID and R2 key
     const fileId = generateId();
-    const r2Key = `${body.projectId}/${body.type}/${fileId}/${body.filename}`;
-
-    // Generate signed upload URL (valid for 1 hour)
-    const uploadUrl = await generateSignedUploadUrl(env.MONET_MEDIA, r2Key);
+    const r2Key = `${projectId}/${type}/${fileId}/${filename}`;
+    
+    // In dev we return a direct R2 URL (assumes public or local R2 dev)
+    // In prod, use real signing logic
+    const uploadUrl = await generateSignedUploadUrl(env, r2Key, contentType);
 
     return jsonResponse({
       success: true,
@@ -86,8 +102,9 @@ export async function handleUploadRequest(
     });
   } catch (error) {
     console.error("Upload request error:", error);
-    return jsonResponse(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
+    return apiError(
+      ApiErrorCode.UploadFailed,
+      error instanceof Error ? error.message : "Unknown error",
       500
     );
   }
@@ -95,71 +112,102 @@ export async function handleUploadRequest(
 
 /**
  * Complete the upload after client has uploaded to R2
- * Extract metadata and store in database
  */
 export async function handleCompleteUpload(
   request: Request,
   env: Env
 ): Promise<Response> {
+  const body = await readJsonBody(request);
+  if (body === null) {
+    return apiError(ApiErrorCode.InvalidRequest, "Invalid JSON body", 400);
+  }
+
   try {
-    const body: CompleteUploadRequest = await request.json();
+    const validation = CompleteUploadRequestSchema.safeParse(body);
 
-    // Validate input
-    if (!body.projectId || !body.fileId || !body.type || !body.filename) {
-      return jsonResponse({ success: false, error: "Missing required fields" }, 400);
+    if (!validation.success) {
+      return apiError(
+        ApiErrorCode.InvalidRequest,
+        "Invalid complete upload request",
+        400,
+        validation.error
+      );
     }
 
-    // Construct R2 key
-    const r2Key = `${body.projectId}/${body.type}/${body.fileId}/${body.filename}`;
+    const { projectId, fileId, type, filename, fileSize, contentType, metadata } =
+      validation.data;
 
-    // Verify file exists in R2
-    const r2Object = await env.MONET_MEDIA.get(r2Key);
-    if (!r2Object) {
-      return jsonResponse({ success: false, error: "File not found in storage" }, 404);
-    }
+    const r2Key = `${projectId}/${type}/${fileId}/${filename}`;
 
-    // Extract metadata (basic for MVP - full extraction in Phase 2)
-    const metadata = await extractBasicMetadata(r2Object, body.contentType);
+    // Ensure the project and media_item exist in a single transaction (batch)
+    if (env.DB) {
+      console.log("[upload/complete] Running batch insert for project + media item:", {
+        projectId,
+        fileId,
+      });
 
-    // Store in database
-    const insertResult = await env.DB.prepare(
-      `INSERT INTO media_items (
-        id, project_id, type, r2_key, r2_bucket, filename, file_size, mime_type,
-        duration, width, height, fps, codec, gemini_upload_status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        body.fileId,
-        body.projectId,
-        body.type,
-        r2Key,
-        "MONET_MEDIA",
-        body.filename,
-        body.fileSize,
-        body.contentType,
-        metadata.duration || null,
-        metadata.width || null,
-        metadata.height || null,
-        metadata.fps || null,
-        metadata.codec || null,
-        "pending",
-        now()
-      )
-      .run();
+      try {
+        await env.DB.batch([
+          env.DB.prepare(
+            `INSERT INTO projects (id, name, created_at, updated_at)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(id) DO NOTHING`
+          ).bind(projectId, "Untitled Project", now(), now()),
+          env.DB.prepare(
+            `INSERT INTO media_items (
+              id, project_id, type, r2_key, r2_bucket, filename, file_size, mime_type,
+              duration, width, height, fps, codec, gemini_upload_status, proxy_r2_key, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            fileId,
+            projectId,
+            type,
+            r2Key,
+            "MONET_MEDIA",
+            filename,
+            fileSize,
+            contentType,
+            metadata?.duration ?? 0,
+            metadata?.width ?? 0,
+            metadata?.height ?? 0,
+            metadata?.fps ?? null,
+            metadata?.codec ?? null,
+            "pending",
+            null, // Proxy generated asynchronously
+            now()
+          )
+        ]);
 
-    if (!insertResult.success) {
-      return jsonResponse({ success: false, error: "Database insert failed" }, 500);
+        // Enqueue proxy generation job
+        if (env.RENDER_QUEUE) {
+          await env.RENDER_QUEUE.send({
+            type: "GENERATE_PROXY",
+            projectId,
+            fileId,
+            r2Key,
+          });
+          console.log("[upload/complete] Enqueued proxy generation job", { fileId });
+        }
+      } catch (batchError) {
+        console.error("[upload/complete] Batch insert failed:", batchError);
+        return apiError(
+          ApiErrorCode.DatabaseInsertFailed,
+          batchError instanceof Error ? batchError.message : "Database insert failed",
+          500
+        );
+      }
     }
 
     return jsonResponse({
       success: true,
-      fileId: body.fileId,
+      fileId,
       metadata,
     });
   } catch (error) {
     console.error("Complete upload error:", error);
-    return jsonResponse(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
+    return apiError(
+      ApiErrorCode.UploadFailed,
+      error instanceof Error ? error.message : "Unknown error",
       500
     );
   }
@@ -177,20 +225,18 @@ function isValidMediaType(type: string, contentType: string): boolean {
 }
 
 // Helper: Generate signed upload URL for R2
-async function generateSignedUploadUrl(_bucket: R2Bucket, key: string): Promise<string> {
-  // Placeholder - direct upload is preferred for MVP
+async function generateSignedUploadUrl(
+  _env: Env,
+  key: string,
+  _contentType: string
+): Promise<string> {
+  // TODO: Implement real SigV4 signing using aws4fetch or similar
   return `https://monet-media-dev.r2.cloudflarestorage.com/${key}`;
 }
 
 /**
  * Direct upload: client sends file as FormData, we put it into R2 and register it.
- * Simpler than presigned URLs for MVP — no CORS setup required.
- *
- * POST /api/upload/direct
- * FormData fields:
- *   file       - the binary file
- *   projectId  - project ID
- *   type       - "footage" | "music" | "reference"
+ * Note: This puts file bytes through the Worker memory. Recommending two-step upload for production.
  */
 export async function handleDirectUpload(
   request: Request,
@@ -199,81 +245,131 @@ export async function handleDirectUpload(
   try {
     const formData = await request.formData();
 
-    const file = formData.get("file") as File | null;
-    const projectId = formData.get("projectId") as string | null;
-    const type = formData.get("type") as string | null;
+    const file = formData.get("file");
+    const projectId = formData.get("projectId");
+    const type = formData.get("type");
+    const metadataRaw = formData.get("metadata");
 
-    if (!file || !projectId || !type) {
-      return jsonResponse(
-        { success: false, error: "Missing file, projectId, or type" },
-        400
+    const fieldsValidation = z
+      .object({
+        projectId: z.string().min(1),
+        type: MediaTypeSchema,
+        metadata: ProbedMetadataSchema.optional(),
+      })
+      .safeParse({ 
+        projectId, 
+        type, 
+        metadata: metadataRaw ? JSON.parse(metadataRaw as string) : undefined 
+      });
+
+    if (!fieldsValidation.success) {
+      return apiError(
+        ApiErrorCode.InvalidRequest,
+        "Missing or invalid parameters (projectId or type)",
+        400,
+        fieldsValidation.error
       );
     }
 
-    if (!["footage", "music", "reference"].includes(type)) {
-      return jsonResponse({ success: false, error: "Invalid type" }, 400);
+    if (!(file instanceof File)) {
+      return apiError(ApiErrorCode.InvalidRequest, "Missing file", 400);
     }
+
+    const { projectId: validatedProjectId, type: validatedType, metadata } =
+      fieldsValidation.data;
 
     const contentType = file.type || "application/octet-stream";
-    if (!isValidMediaType(type, contentType)) {
-      return jsonResponse(
-        { success: false, error: `Invalid content type ${contentType} for ${type}` },
+    if (!isValidMediaType(validatedType, contentType)) {
+      return apiError(
+        ApiErrorCode.InvalidMediaType,
+        `Invalid content type ${contentType} for ${validatedType}`,
         400
       );
     }
 
-    // Max 500 MB safety guard
-    if (file.size > 500 * 1024 * 1024) {
-      return jsonResponse({ success: false, error: "File too large (max 500 MB)" }, 413);
+    if (file.size > 100 * 1024 * 1024) {
+      return apiError(
+        ApiErrorCode.FileTooLarge,
+        "File too large for direct upload (max 100 MB). Use two-step upload.",
+        413
+      );
     }
 
     const fileId = generateId();
-    const r2Key = `${projectId}/${type}/${fileId}/${file.name}`;
-
-    // Stream file into R2
+    const r2Key = `${validatedProjectId}/${validatedType}/${fileId}/${file.name}`;
     const arrayBuffer = await file.arrayBuffer();
 
     if (env?.MONET_MEDIA) {
       await env.MONET_MEDIA.put(r2Key, arrayBuffer, {
         httpMetadata: { contentType },
       });
-    } else {
-      console.warn("No R2 bucket bound — skipping R2 write (dev mode)");
     }
 
-    // Store in D1
-    if (env?.DB) {
-      await env.DB.prepare(
-        `INSERT INTO media_items (
-          id, project_id, type, r2_key, r2_bucket, filename, file_size, mime_type,
-          gemini_upload_status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-        .bind(
-          fileId,
-          projectId,
-          type,
-          r2Key,
-          "MONET_MEDIA",
-          file.name,
-          file.size,
-          contentType,
-          "pending",
-          Date.now()
-        )
-        .run();
-    } else {
-      console.warn("No D1 DB bound — skipping metadata write (dev mode)");
-    }
-
-    // Dev resiliency: keep a process-local copy when bindings are unavailable,
-    // so /api/media/{fileId} still works across chat and advanced studio.
-    if (!env?.MONET_MEDIA || !env?.DB) {
+    try {
       putLocalMedia(fileId, {
         data: arrayBuffer,
         mimeType: contentType,
         r2Key,
       });
+    } catch (cacheError) {
+      console.warn("[upload/direct] Failed to populate local cache", cacheError);
+    }
+
+    if (env?.DB) {
+      console.log("[upload/direct] Running batch insert for project + media item:", {
+        validatedProjectId,
+        fileId,
+      });
+
+      try {
+        await env.DB.batch([
+          env.DB.prepare(
+            `INSERT INTO projects (id, name, created_at, updated_at)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(id) DO NOTHING`
+          ).bind(validatedProjectId, "Untitled Project", now(), now()),
+          env.DB.prepare(
+            `INSERT INTO media_items (
+              id, project_id, type, r2_key, r2_bucket, filename, file_size, mime_type,
+              duration, width, height, fps, codec, gemini_upload_status, proxy_r2_key, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          ).bind(
+            fileId,
+            validatedProjectId,
+            validatedType,
+            r2Key,
+            "MONET_MEDIA",
+            file.name,
+            file.size,
+            contentType,
+            metadata?.duration ?? 0,
+            metadata?.width ?? 0,
+            metadata?.height ?? 0,
+            metadata?.fps ?? null,
+            metadata?.codec ?? null,
+            "pending",
+            null, // Proxy generated asynchronously
+            now()
+          )
+        ]);
+
+        // Enqueue proxy generation job
+        if (env.RENDER_QUEUE) {
+          await env.RENDER_QUEUE.send({
+            type: "GENERATE_PROXY",
+            projectId: validatedProjectId,
+            fileId,
+            r2Key,
+          });
+        }
+      } catch (batchError) {
+        console.error("[upload/direct] Batch insert failed:", batchError);
+        return apiError(
+          ApiErrorCode.DatabaseInsertFailed,
+          batchError instanceof Error ? batchError.message : "Database insert failed",
+          500
+        );
+      }
     }
 
     return jsonResponse({
@@ -282,51 +378,14 @@ export async function handleDirectUpload(
       r2Key,
       filename: file.name,
       size: file.size,
+      metadata,
     });
   } catch (error) {
     console.error("Direct upload error:", error);
-    return jsonResponse(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
+    return apiError(
+      ApiErrorCode.UploadFailed,
+      error instanceof Error ? error.message : "Unknown error",
       500
     );
   }
-}
-
-// Helper: Extract basic metadata from file
-async function extractBasicMetadata(
-  r2Object: R2ObjectBody,
-  contentType: string
-): Promise<MediaMetadata> {
-  // For MVP, we'll extract very basic info
-  // Full metadata extraction (duration, resolution, codec) happens in Phase 2 with Gemini
-
-  const metadata: MediaMetadata = {};
-
-  // For video files, we could use a library like mp4box.js or similar
-  // For MVP, we'll rely on Gemini to extract this during analysis phase
-
-  // Placeholder for future implementation
-  if (contentType.startsWith("video/")) {
-    // TODO: Extract video metadata
-    // For now, client can optionally provide these during upload
-  }
-
-  if (contentType.startsWith("audio/")) {
-    // TODO: Extract audio metadata
-  }
-
-  return metadata;
-}
-
-// Helper: JSON response
-function jsonResponse(data: unknown, status: number = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*", // TODO: Restrict in production
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
 }

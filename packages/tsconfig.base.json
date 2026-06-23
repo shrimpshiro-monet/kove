@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@monet/edl-enhancers": ["packages/edl-enhancers/src/index.ts"],
+      "@monet/edl": ["packages/edl/src/index.ts"],
+      "@monet/core": ["packages/core/src/index.ts"],
+      "@monet/job-contracts": ["packages/job-contracts/src/index.ts"],
+      "@monet/openreel-adapter": ["packages/openreel-adapter/src/index.ts"],
+      "@monet/engine-freecut": ["packages/engine-freecut/src/index.ts"]
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  }
+}

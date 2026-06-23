@@ -1,0 +1,26 @@
+{
+  "name": "@monet/worker-node",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@monet/edl": "workspace:",
+    "@monet/edl-enhancers": "workspace:",
+    "@monet/job-contracts": "workspace:",
+    "@monet/render-adapters": "workspace:",
+    "bullmq": "^5.78.0",
+    "dotenv": "^16.4.7",
+    "editly": "^0.14.2",
+    "execa": "^9.5.2",
+    "ioredis": "^5.4.2",
+    "nanoid": "^5.0.9",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

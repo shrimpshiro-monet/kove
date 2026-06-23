@@ -1,412 +1,285 @@
 // POST /api/analyze - Analyze footage and music
 // Phase 3: Video understanding before EDL generation
 
+import { z } from "zod";
 import type { Env } from "../types/env";
 import { getAIService } from "../services/ai-service";
-import type {
-  AnalysisResult,
-  FootageAnalysis,
-  MusicAnalysis,
+import {
+  AnalysisResultSchema,
+  type AnalysisResult,
+  type FootageAnalysis,
 } from "../types/analysis";
 import {
-  FOOTAGE_ANALYSIS_SCHEMA,
-  MUSIC_ANALYSIS_SCHEMA,
-} from "../types/analysis";
-import { now } from "../types/env";
-import { readFileSync } from "fs";
-import { join } from "path";
+  analyzeClip,
+  analyzeMusic,
+  type AnalysisServiceError,
+} from "../services/footage-analysis";
 import { getCachedAnalysis, cacheAnalysis } from "../lib/analysis-cache";
 import { storeAnalysisResult } from "../lib/analysis-store";
+import { apiError, ApiErrorCode, jsonResponse } from "../lib/api-response";
 
-const ANALYZE_TIMEOUT_MS = 18_000;
 const MAX_FOOTAGE_ANALYZE_CONCURRENCY = 3;
 
-interface AnalyzeRequest {
-  projectId: string;
-  footageIds?: string[]; // R2 keys for video files
-  musicId?: string; // R2 key for audio file
-  referenceId?: string; // R2 key for reference video (future)
-}
+const AnalyzeRequestSchema = z.object({
+  projectId: z.string().min(1),
+  footageIds: z.array(z.string().min(1)).optional(),
+  musicId: z.string().min(1).optional(),
+  referenceId: z.string().min(1).optional(),
+});
 
-interface AnalyzeResponse {
-  success: boolean;
-  analysisId?: string;
-  result?: AnalysisResult;
-  error?: string;
-}
+type AnalyzeRequest = z.infer<typeof AnalyzeRequestSchema>;
+
+type ClipAnalysisFailure = {
+  clipId: string;
+  error: AnalysisServiceError;
+};
 
 /**
- * Analyze uploaded media for edit generation
- *
- * Flow:
- * 1. Fetch media files from R2
- * 2. Upload to Gemini Files API (if not cached)
- * 3. Analyze footage: segment scoring, motion/emotion detection
- * 4. Analyze music: beat detection, BPM, energy curve
- * 5. Store analysis in D1 for EDL generation
- * 6. Return structured analysis JSON
+ * Analyze uploaded media for edit generation.
  */
 export async function handleAnalyze(
   request: Request,
   env: Env
 ): Promise<Response> {
+  console.log("[handleAnalyze] Received env, keys:", Object.keys(env || {}));
+  if (!env || !env.MONET_MEDIA) {
+    console.error("[handleAnalyze] Critical error: MONET_MEDIA binding is missing from env");
+  }
+
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.ok) {
+    return bodyResult.response;
+  }
+
+  console.log("[handleAnalyze] Request body:", JSON.stringify(bodyResult.value));
+
+  const validation = AnalyzeRequestSchema.safeParse(bodyResult.value);
+  if (!validation.success) {
+    return apiError(
+      ApiErrorCode.InvalidRequest,
+      "Invalid analysis request",
+      400,
+      validation.error
+    );
+  }
+
   try {
-    const body: AnalyzeRequest = await request.json();
+    return await analyzeRequest(validation.data, env);
+  } catch (error: any) {
+    console.error("[handleAnalyze] Unexpected error:", error);
+    return apiError(
+      ApiErrorCode.InternalError,
+      error.message || "An unexpected error occurred during analysis",
+      500,
+      { stack: error.stack }
+    );
+  }
+}
 
-    // Validate input
-    if (!body.projectId) {
-      return jsonResponse(
-        { success: false, error: "Missing projectId" },
-        400
-      );
-    }
+async function analyzeRequest(
+  request: AnalyzeRequest,
+  env: Env
+): Promise<Response> {
+  const { projectId, footageIds = [], musicId, referenceId } = request;
 
-    if (!body.footageIds?.length && !body.musicId) {
-      return jsonResponse(
-        {
-          success: false,
-          error: "Must provide at least footageIds or musicId to analyze",
-        },
-        400
-      );
-    }
+  if (footageIds.length === 0 && !musicId) {
+    return apiError(
+      ApiErrorCode.InvalidRequest,
+      "Must provide at least one footageId or a musicId to analyze",
+      400
+    );
+  }
 
-    // Check cache first (HUGE COST SAVER for refinements)
-    const cached = getCachedAnalysis(body.footageIds || [], body.musicId);
-    if (cached) {
-      console.log("🚀 Analysis cache hit - skipping Gemini analysis");
+  // Check cache first (HUGE COST SAVER for refinements)
+  const cached = getCachedAnalysis(footageIds, musicId);
+  if (cached) {
+    const cacheValidation = AnalysisResultSchema.safeParse(cached);
+    if (!cacheValidation.success) {
+      console.warn("[analysis] Cached analysis failed validation; ignoring cache", {
+        operation: "handleAnalyze",
+        projectId,
+        error: cacheValidation.error,
+      });
+    } else {
       const analysisId = `cached-${Date.now()}`;
-      storeAnalysisResult(analysisId, cached);
+      storeAnalysisResult(analysisId, cacheValidation.data);
+
       return jsonResponse({
         success: true,
         analysisId,
-        result: cached,
+        result: cacheValidation.data,
         cached: true,
       });
     }
+  }
 
-    const ai = getAIService(env);
-    const result: Partial<AnalysisResult> = {
-      version: "1.0.0",
-      projectId: body.projectId,
-      timestamp: Date.now(),
-      footage: [],
-    };
+  const ai = getAIService(env);
 
-    // Analyze footage (if provided)
-    if (body.footageIds?.length) {
-      console.log(`Analyzing ${body.footageIds.length} video clip(s)...`);
+  const footageResult = await analyzeFootageIds(footageIds, env, ai);
+  if (!footageResult.ok) {
+    return apiError(
+      ApiErrorCode.AnalysisFailed,
+      "Failed to analyze one or more clips",
+      502,
+      footageResult.error
+    );
+  }
 
-      const clipResults = await analyzeFootageBatch(body.footageIds, ai, env);
-      for (const clipResult of clipResults) {
-        if (clipResult.ok) {
-          result.footage!.push(clipResult.value);
-        } else {
-          console.error(`Failed to analyze clip ${clipResult.clipId}:`, clipResult.error);
-        }
-      }
-    }
+  const musicResult = musicId
+    ? await analyzeMusic({ musicId, env, ai })
+    : undefined;
 
-    // Analyze music (if provided)
-    if (body.musicId) {
-      console.log("Analyzing music track...");
-      try {
-        result.music = await analyzeMusicTrack(body.musicId, ai, env);
-      } catch (error) {
-        console.error("Failed to analyze music:", error);
-        // Music analysis failure is not fatal
-      }
-    }
+  if (musicResult && !musicResult.ok) {
+    return apiError(
+      ApiErrorCode.AnalysisFailed,
+      "Failed to analyze music",
+      502,
+      musicResult.error
+    );
+  }
 
-    // Cache analysis for refinements (THE REAL COST SAVER)
-    cacheAnalysis(body.footageIds || [], body.musicId, result as AnalysisResult);
+  const analysisResult: AnalysisResult = {
+    version: "1.0.0",
+    projectId,
+    timestamp: Date.now(),
+    footage: footageResult.value,
+    ...(musicResult?.ok ? { music: musicResult.value } : {}),
+    ...(referenceId ? { referenceId } : {}),
+  };
 
-    // Store analysis in D1 (if DB available)
-    const analysisId = env?.DB
-      ? await storeAnalysis(env.DB, result as AnalysisResult)
-      : `analysis-${Date.now()}`;
-
-    storeAnalysisResult(analysisId, result as AnalysisResult);
-
-    return jsonResponse({
-      success: true,
-      analysisId,
-      result: result as AnalysisResult,
-      cached: false,
+  const finalValidation = AnalysisResultSchema.safeParse(analysisResult);
+  if (!finalValidation.success) {
+    console.error("[analysis] Final AnalysisResult failed validation", {
+      operation: "handleAnalyze",
+      projectId,
+      error: finalValidation.error,
     });
-  } catch (error) {
-    console.error("Analysis error:", error);
-    return jsonResponse(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+
+    return apiError(
+      ApiErrorCode.ValidationFailed,
+      "Analysis result failed validation",
       500
     );
   }
+
+  const validAnalysis = finalValidation.data;
+  const analysisId = crypto.randomUUID();
+
+  storeAnalysisResult(analysisId, validAnalysis);
+
+  const storeResult = await storeAnalysisInD1(env, analysisId, validAnalysis);
+  if (!storeResult.ok) {
+    return apiError(
+      ApiErrorCode.DatabaseInsertFailed,
+      "Failed to store analysis result",
+      500,
+      storeResult.error
+    );
+  }
+
+  cacheAnalysis(footageIds, musicId, validAnalysis);
+
+  return jsonResponse({
+    success: true,
+    analysisId,
+    result: validAnalysis,
+    cached: false,
+  });
 }
 
-type FootageBatchResult =
-  | { ok: true; clipId: string; value: FootageAnalysis }
-  | { ok: false; clipId: string; error: unknown };
+async function analyzeFootageIds(
+  footageIds: string[],
+  env: Env,
+  ai: ReturnType<typeof getAIService>
+): Promise<
+  | { ok: true; value: FootageAnalysis[] }
+  | { ok: false; error: { failures: ClipAnalysisFailure[] } }
+> {
+  if (footageIds.length === 0) {
+    return { ok: true, value: [] };
+  }
 
-async function analyzeFootageBatch(
-  clipIds: string[],
-  ai: ReturnType<typeof getAIService>,
-  env: Env
-): Promise<FootageBatchResult[]> {
-  const results: FootageBatchResult[] = [];
-  for (let i = 0; i < clipIds.length; i += MAX_FOOTAGE_ANALYZE_CONCURRENCY) {
-    const batch = clipIds.slice(i, i + MAX_FOOTAGE_ANALYZE_CONCURRENCY);
-    const settled = await Promise.allSettled(
-      batch.map(async (clipId) => ({
-        clipId,
-        analysis: await analyzeFootageClip(clipId, ai, env),
-      }))
-    );
+  const results = await runWithConcurrency(
+    footageIds,
+    MAX_FOOTAGE_ANALYZE_CONCURRENCY,
+    async (clipId) => {
+      const result = await analyzeClip({ clipId, env, ai });
+      return { clipId, result };
+    }
+  );
 
-    for (let j = 0; j < settled.length; j++) {
-      const outcome = settled[j];
-      const clipId = batch[j];
-      if (outcome.status === "fulfilled") {
-        results.push({ ok: true, clipId, value: outcome.value.analysis });
-      } else {
-        results.push({ ok: false, clipId, error: outcome.reason });
-      }
+  const footage: FootageAnalysis[] = [];
+  const failures: ClipAnalysisFailure[] = [];
+
+  for (const item of results) {
+    if (item.result.ok) {
+      footage.push(item.result.value);
+    } else {
+      failures.push({
+        clipId: item.clipId,
+        error: item.result.error,
+      });
     }
   }
+
+  if (failures.length > 0) {
+    return { ok: false, error: { failures } };
+  }
+
+  return { ok: true, value: footage };
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = [];
+  let nextIndex = 0;
+
+  async function runWorker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex]);
+    }
+  }
+
+  const workerCount = Math.min(limit, items.length);
+  const workers: Promise<void>[] = Array.from({ length: workerCount }, runWorker);
+
+  await Promise.all(workers);
   return results;
 }
 
-/**
- * Analyze a single video clip
- */
-async function analyzeFootageClip(
-  clipId: string,
-  ai: ReturnType<typeof getAIService>,
-  env: Env
-): Promise<FootageAnalysis> {
-  // TODO: Fetch video from R2
-  // TODO: Upload to Gemini Files API
-  // TODO: Get video metadata (duration, resolution, fps)
+async function storeAnalysisInD1(
+  env: Env,
+  analysisId: string,
+  analysis: AnalysisResult
+): Promise<{ ok: true } | { ok: false; error: unknown }> {
+  if (!env?.DB) return { ok: true };
 
-  // For MVP: Mock R2 fetch, assume video is already uploaded to Gemini
-  // In production, this would:
-  // 1. const videoBlob = await env.R2.get(clipId)
-  // 2. const geminiFile = await gemini.uploadFile(videoBlob)
-  // 3. Use geminiFile.uri in prompt
-
-  // Load prompt template
-  const promptTemplate = loadPromptTemplate("analyze-footage.txt");
-
-  // Call AI service with video analysis prompt
-  let analysis: Partial<FootageAnalysis>;
   try {
-    analysis = await withTimeout(
-      ai.generateContentJSON<Partial<FootageAnalysis>>({
-        prompt: `${promptTemplate}\n\nVideo clip ID: ${clipId}\n\nAnalyze this video and return the JSON response.`,
-        temperature: 0.5, // Lower temp for more consistent analysis
-        schema: FOOTAGE_ANALYSIS_SCHEMA,
-      }),
-      ANALYZE_TIMEOUT_MS,
-      `Footage analysis timed out for ${clipId}`
-    );
-  } catch (error) {
-    console.warn(`Falling back to deterministic footage analysis for ${clipId}:`, error);
-    analysis = {
-      segments: buildFallbackSegments(30, clipId),
-      characteristics: {
-        avgBrightness: 0.5,
-        avgMotion: 0.6,
-        dominantColors: ["#202020", "#f5f5f5"],
-        visualStyle: "mixed",
-        contentType: ["action"],
-      },
-    };
-  }
-
-  // Add metadata (in production, this comes from R2 object metadata)
-  return {
-    clipId,
-    duration: 30, // TODO: Get from video metadata
-    resolution: { width: 1920, height: 1080 }, // TODO: Get from metadata
-    fps: 30, // TODO: Get from metadata
-    segments: analysis.segments || [],
-    characteristics: analysis.characteristics || {
-      avgBrightness: 0.5,
-      avgMotion: 0.5,
-      dominantColors: ["#000000"],
-      visualStyle: "unknown",
-      contentType: ["unknown"],
-    },
-  };
-}
-
-function buildFallbackSegments(duration: number, clipId: string): FootageAnalysis["segments"] {
-  const count = 6;
-  const segmentLength = Math.max(1.5, duration / (count + 1));
-  const baseSeed = clipId.length;
-  const segments: FootageAnalysis["segments"] = [];
-
-  for (let i = 0; i < count; i++) {
-    const jitter = ((baseSeed + i * 7) % 11) / 20;
-    const start = Math.max(0, Math.min(duration - 1.2, i * segmentLength + jitter));
-    const rawDuration = 1.4 + ((baseSeed + i * 5) % 14) / 10;
-    const end = Math.min(duration, start + rawDuration);
-    const segDuration = Math.max(1.0, end - start);
-    const motion = 0.58 + ((baseSeed + i * 3) % 20) / 100;
-    const emotion = 0.52 + ((baseSeed + i * 9) % 22) / 100;
-    const visual = 0.6 + ((baseSeed + i * 4) % 16) / 100;
-    const overall = Math.min(0.82, motion * 0.4 + emotion * 0.3 + visual * 0.3);
-
-    segments.push({
-      start: Number(start.toFixed(3)),
-      end: Number((start + segDuration).toFixed(3)),
-      duration: Number(segDuration.toFixed(3)),
-      scores: {
-        motion: Number(motion.toFixed(3)),
-        emotion: Number(emotion.toFixed(3)),
-        visual: Number(visual.toFixed(3)),
-        overall: Number(overall.toFixed(3)),
-        interest: Number((overall * 0.94).toFixed(3)),
-      },
-      tags: ["fallback", i % 2 === 0 ? "dynamic" : "closeup"],
-      description: "Deterministic fallback segment (analysis timeout)",
-      avgBrightness: Number((0.42 + (i % 4) * 0.08).toFixed(2)),
-      dominantColor: i % 2 === 0 ? "#202020" : "#2f2a38",
-      faceDetected: i % 3 === 1,
-    });
-  }
-
-  return segments;
-}
-
-/**
- * Analyze music track for beat detection and structure
- */
-async function analyzeMusicTrack(
-  musicId: string,
-  ai: ReturnType<typeof getAIService>,
-  env: Env
-): Promise<MusicAnalysis> {
-  // TODO: Fetch audio from R2
-  // TODO: Upload to Gemini Files API
-  // TODO: Get audio metadata (duration)
-
-  // Load prompt template
-  const promptTemplate = loadPromptTemplate("analyze-music.txt");
-
-  // Call AI service with music analysis prompt
-  let analysis: Partial<MusicAnalysis>;
-  try {
-    analysis = await withTimeout(
-      ai.generateContentJSON<Partial<MusicAnalysis>>({
-        prompt: `${promptTemplate}\n\nAudio track ID: ${musicId}\n\nAnalyze this audio and return the JSON response.`,
-        temperature: 0.3, // Very low temp for precise beat detection
-        schema: MUSIC_ANALYSIS_SCHEMA,
-      }),
-      ANALYZE_TIMEOUT_MS,
-      `Music analysis timed out for ${musicId}`
-    );
-  } catch (error) {
-    console.warn(`Falling back to deterministic music analysis for ${musicId}:`, error);
-    const fallbackBpm = 120;
-    const beatStep = 60 / fallbackBpm;
-    const beatGrid: number[] = [];
-    for (let t = 0; t < 30; t += beatStep) beatGrid.push(Number(t.toFixed(3)));
-    analysis = {
-      bpm: fallbackBpm,
-      beatGrid,
-      beatConfidence: 0.5,
-      energyCurve: [0.4, 0.5, 0.65, 0.7, 0.8, 0.9, 0.75, 0.6, 0.5, 0.45],
-      characteristics: {
-        genre: "unknown",
-        mood: ["energetic"],
-        tempo: "medium",
-        intensity: 0.6,
-      },
-    };
-  }
-
-  // Add metadata
-  return {
-    musicId,
-    duration: 30, // TODO: Get from audio metadata
-    bpm: analysis.bpm || 120,
-    beatGrid: analysis.beatGrid || [],
-    beatConfidence: analysis.beatConfidence || 0.5,
-    structure: analysis.structure,
-    energyCurve: analysis.energyCurve || [],
-    characteristics: analysis.characteristics || {
-      genre: "unknown",
-      mood: [],
-      tempo: "medium",
-      intensity: 0.5,
-    },
-  };
-}
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message: string
-): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-}
-
-/**
- * Store analysis result in D1
- */
-async function storeAnalysis(
-  db: D1Database,
-  result: AnalysisResult
-): Promise<string> {
-  const analysisId = crypto.randomUUID();
-
-  await db
-    .prepare(
-      `INSERT INTO analysis_results (
-        id, project_id, analysis_data, created_at
-      ) VALUES (?, ?, ?, ?)`
+    const insertResult = await env.DB.prepare(
+      `INSERT INTO analysis_results (id, project_id, analysis_data, created_at) 
+       VALUES (?, ?, ?, ?)`
     )
-    .bind(analysisId, result.projectId, JSON.stringify(result), now())
-    .run();
+      .bind(analysisId, analysis.projectId, JSON.stringify(analysis), Date.now())
+      .run();
 
-  return analysisId;
-}
-
-/**
- * Load prompt template from file
- */
-function loadPromptTemplate(filename: string): string {
-  try {
-    const path = join(process.cwd(), "src", "server", "prompts", filename);
-    return readFileSync(path, "utf-8");
+    return insertResult.success ? { ok: true } : { ok: false, error: "D1 insert failed" };
   } catch (error) {
-    console.error("Failed to load prompt template:", error);
-    throw new Error(`Prompt template not found: ${filename}`);
+    return { ok: false, error };
   }
 }
 
-// Helper: JSON response
-function jsonResponse(data: unknown, status: number = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+async function readJsonBody(request: Request): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
+  try {
+    return { ok: true, value: await request.json() };
+  } catch (error) {
+    return {
+      ok: false,
+      response: apiError(ApiErrorCode.InvalidRequest, "Invalid JSON body", 400),
+    };
+  }
 }

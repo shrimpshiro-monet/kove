@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: monet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--maxmemory",
+        "512mb",
+        "--maxmemory-policy",
+        "allkeys-lru"
+      ]
+    volumes:
+      - redis-data:/data
+
+  python-audio:
+    build:
+      context: ../workers/python-audio
+      dockerfile: Dockerfile
+    container_name: monet-python-audio
+    restart: unless-stopped
+    ports:
+      - "8101:8101"
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace/workers/python-audio
+    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8101"]
+
+  python-ai:
+    build:
+      context: ../workers/python-ai
+      dockerfile: Dockerfile
+    container_name: monet-python-ai
+    restart: unless-stopped
+    ports:
+      - "8102:8102"
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace/workers/python-ai
+    environment:
+      - WHISPER_MODEL=small
+      - WHISPER_DEVICE=cpu
+      - WHISPER_COMPUTE_TYPE=int8
+    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8102"]

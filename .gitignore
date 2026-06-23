@@ -6,7 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+gcp-local-key.json
 node_modules
 dist
 dist-ssr
@@ -20,6 +20,34 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Sensitive files
+*.key
+*.pem
+gcp-local-key*.txt
+gcp-local-key*.json
+monet-key.json
+
+# Uploads / media files
+apps/api/storage/
+*.MP4
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+
+# Monet reference edits (large media files)
+monet-reference-edits/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -31,3 +59,20 @@ dist-ssr
 *.sln
 *.sw?
 .aider*
+
+# AI助手配置
+.claude/
+.junie/
+
+# Turbo cache
+.turbo/
+
+# Temp files
+check-tmp.*
+.ignore
+.ignore.save
+
+# Documentation (not code)
+GEMINI.md
+MONET-CORE-LOOP.md
+monet-src.txt

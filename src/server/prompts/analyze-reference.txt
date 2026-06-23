@@ -48,18 +48,12 @@ What does this editor SEE and CHOOSE to show?
 
 How does this edit look?
 
-- Color grade: which category best fits?
-  - cinematic: teal-orange, low saturation, filmic
-  - vibrant: high saturation, punchy, commercial
-  - vintage: faded, warm, nostalgic
-  - monochrome: black and white or near-monochrome
-  - anime: high contrast, saturated primaries, bright whites
-  - raw: no apparent grading, natural camera output
-- Color temperature: warm (golden), cool (blue/teal), or neutral?
-- Contrast level: low (flat, muted), medium (balanced), or high (deep blacks, bright highlights)?
+- Color grade: which category best fits? cinematic, vibrant, vintage, monochrome, anime, raw.
+- Color temperature: warm, cool, or neutral?
+- Contrast level: low, medium, or high?
 - Saturation relative to natural: desaturated, natural, saturated, or hyper-saturated?
-- Is there a visible vignette (edges darkened)?
-- Is there visible film grain or digital noise added intentionally?
+- Is there a visible vignette?
+- Is there visible film grain?
 
 ---
 
@@ -68,8 +62,39 @@ How does this edit look?
 What visual language does this editor use beyond cuts?
 
 - What percentage of shots have visible post-processing effects?
-- Which effects appear? Check for: flash_cuts, glow_halos, camera_shake, zoom_pulse, speed_ramp_slowmo, speed_ramp_fast, color_flash, lens_flare, blur_on_cut, glitch
+- Which effects appear? Check for: flash_cuts, glow_halos, camera_shake, zoom_pulse, speed_ramp_slowmo, speed_ramp_fast, color_flash, lens_flare, blur_on_cut, glitch, chromatic_aberration, color_shift.
 - What percentage of transitions are: hard cuts vs. crossfades vs. other (whip pan, dip to black, slide)?
+
+---
+
+## COMPOSITION & LAYERING (PHASE 1)
+
+How are elements stacked in the frame?
+
+- How many layers are typically stacked? (1 = single clip, 2 = clip + overlay/text, 3+ = complex compositing)
+- How frequently are character/foreground masks used to separate the subject from the background? (0-1)
+- What is the depth order? Does text go behind the subject (using masks) or on top?
+- What blend modes are commonly used for overlays? (normal, screen, overlay, multiply, add, difference)
+
+---
+
+## TEXT & GRAPHICS (PHASE 1)
+
+Analyze the typography and motion graphics.
+
+- Pacing of text: snappy (pops in/out on beat), lingering (stays for full shot), or none.
+- Positioning: center, lower_third, or dynamic (following subjects/motion).
+- Font Vibe: Describe the font style (e.g., "bold_sans", "elegant_serif", "handwritten", "glitchy").
+- Animation Style: How does text enter/exit? (e.g., "pop_in", "fade", "directional_slide", "scale_up").
+
+---
+
+## EFFECT TRIGGERS (PHASE 1)
+
+When do effects happen?
+
+- Identify specific triggers for effects (e.g., "glitch happens on Every Cut", "chromatic aberration peaks on Music Bass Drop", "color shift occurs during Action Start").
+- Map these to the `effectTriggers` list with their type, trigger event (cut, beat, action_start, random), and intensity.
 
 ---
 
@@ -77,34 +102,35 @@ What visual language does this editor use beyond cuts?
 
 What feeling does this edit engineer?
 
-- What mood does it open with? (restrained, explosive, mysterious, melancholic, hopeful, menacing, playful, reverent)
-- What is the peak emotional state? (euphoric, intense, devastating, triumphant, yearning, chaotic, transcendent)
-- How does it close? (triumphant, fading_away, reflective, unresolved, cathartic, peaceful)
-- In one phrase, what is the emotional contour? Examples: "slow_burn_to_explosion", "sustained_intensity", "contrast_heavy_build_release", "gentle_then_overwhelming", "loop_of_tension_relief"
+- What mood does it open with? peak? close?
+- What is the emotional contour?
 
 ---
 
 ## THE EDITOR'S PHILOSOPHY
 
-This is the most important section. Think carefully.
+1. In 2-3 sentences: what does this editor believe about their craft?
+2. What is the RHYTHM CONTRACT?
+3. Is this editor RESTRAINED, MODERATE, or HEAVY?
+4. What is their single most DISTINCTIVE SIGNATURE MOVE?
 
-1. In 2-3 sentences: what does this editor believe about their craft? What are they trying to make the viewer feel, and what is their strategy for getting there? Be specific to THIS video — not generic.
+---
 
-2. What is the RHYTHM CONTRACT — the unspoken timing agreement this editor has established with the viewer? (Examples: "Every major beat will be honored with a cut. You can feel when a cut is coming." or "Cuts are unpredictable and slightly ahead of where you expect, creating controlled disorientation.")
+## STYLE PILLARS
 
-3. Is this editor RESTRAINED (holds back, lets silence breathe, implies more than shows) or MODERATE (balanced) or HEAVY (constant stimulation, no empty frames, maximalist)?
+Classify which of these editing pillars this video uses and at what intensity (0.0-1.0):
 
-4. What is their single most DISTINCTIVE SIGNATURE MOVE — the one technique that, if you described this edit to another editor, they'd say "oh, that's the one where they..."?
+1. BRUTALIST IMPACT: Subject isolation, comic-panel framing, stepped fps, neon colors, geometric text
+2. TENSION-PIVOT NARRATIVE: Dialogue-driven pacing, two-phase structure, ghosting text, eyeline continuity
+3. VOCAL FLOW SYNC: Syllable-level cuts, frequency-driven typography, canvas splitting/shearing
+4. LEGACY MONTAGE: Alpha overlap transitions, ghost frames, audio ducking, warm filmic grade, minimal text
+
+Return these in the JSON field "pillarScores": { "brutalistImpact": 0.0, ... }
 
 ---
 
 ## INTENT MAPPING
 
-Finally, translate everything above into concrete MonetEDL-compatible values.
-
-For genre, choose the single closest match from:
-anime_amv, sports_highlight, wedding, cinematic_trailer, fan_edit, music_video, promo, vlog, other
-
-For colorTreatment, choose from: vibrant, cinematic, vintage, raw, anime, monochrome
-
-Return ALL fields. Be precise. These values drive a real AI video editor — vague answers produce vague edits.
+Translate everything into concrete MonetEDL-compatible values.
+Ensure all Phase 1 fields (composition, textStyle, effectTriggers) are filled out accurately.
+These values drive a real AI video editor — be precise.

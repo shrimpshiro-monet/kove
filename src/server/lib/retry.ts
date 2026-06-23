@@ -19,9 +19,9 @@ export async function withRetry<T>(
   options: RetryOptions = {}
 ): Promise<T> {
   const {
-    retries = 2,
-    baseDelay = 300,
-    maxDelay = 3000,
+    retries = 5,
+    baseDelay = 5000,
+    maxDelay = 20000,
     onRetry,
   } = options;
 
@@ -72,6 +72,8 @@ function isRetryableError(error: Error): boolean {
 
   // Retryable: Rate limits, service unavailable, timeouts
   const retryablePatterns = [
+    "429",
+    "resource exhausted",
     "503",
     "service unavailable",
     "high demand",
@@ -86,10 +88,12 @@ function isRetryableError(error: Error): boolean {
   const nonRetryablePatterns = [
     "401",
     "403",
+    "400",
     "invalid api key",
     "authentication",
     "not found",
     "404",
+    "unsupported mime type",
   ];
 
   // Check non-retryable first (higher priority)
@@ -116,7 +120,7 @@ export function classifyError(error: Error): {
 } {
   const message = error.message.toLowerCase();
 
-  if (message.includes("503") || message.includes("high demand")) {
+  if (message.includes("429") || message.includes("resource exhausted") || message.includes("503") || message.includes("high demand")) {
     return {
       type: "rate_limit",
       userMessage:

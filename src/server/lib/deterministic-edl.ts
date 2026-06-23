@@ -2,8 +2,12 @@
 // Fallback path with temporal + emotional graph planning.
 
 import type { MonetEDL, Shot } from "../types/edl";
-import type { IntentExtractionResult, SimplifiedIntent } from "../types/intent";
-import type { AnalysisResult, ScoredSegment } from "../types/analysis";
+import type { AnalysisResult, Segment } from "../types/analysis";
+import type { SimplifiedIntent } from "../types/intent";
+import { normalizeIntent, isRecord, durationFromAnalysis as getAnalysisDurationSeconds } from "./intent-normalization";
+import type { NormalizedIntent as DeterministicIntent } from "./intent-normalization";
+
+type ScoredSegment = Segment;
 
 type PacingRules = {
   avgShotDuration: number;
@@ -27,21 +31,33 @@ type PlanContext = {
   syncToBeat: boolean;
 };
 
-export function generateDeterministicEDL(
-  intent: IntentExtractionResult | SimplifiedIntent,
-  analysis: AnalysisResult,
-  metadata: {
-    intentId: string;
-    analysisId: string;
-    projectId: string;
-  }
-): MonetEDL {
-  const intentData = normalizeIntent(intent);
-  const targetDuration = intentData.structure.duration;
+export function generateDeterministicEDL(params: {
+  intent: unknown;
+  analysis: AnalysisResult;
+  intentId: string;
+  analysisId: string;
+  projectId: string;
+  prompt?: string;
+  durationSeconds?: number;
+}): MonetEDL {
+  const { intent, analysis, intentId, analysisId, projectId, prompt, durationSeconds } = params;
+  const metadata = { intentId, analysisId, projectId, prompt, durationSeconds };
+  const first = intent;
+  const rawIntent = isRecord(first) ? (first as any).intent || first : first;
+  const analysisDurationSeconds = getAnalysisDurationSeconds(analysis);
+
+  const intentData = normalizeIntent({
+    rawIntent,
+    prompt: metadata.prompt,
+    requestedDurationSeconds: metadata.durationSeconds,
+    analysis,
+  });
+
+  const targetDuration = intentData.durationSeconds;
   const pacingRules = getPacingRules(intentData.style.pacing);
   const beatGrid = analysis.music?.beatGrid || [];
   const bpm = analysis.music?.bpm || 120;
-  const syncToBeat = intentData.technical.syncToBeat && beatGrid.length > 0;
+  const syncToBeat = (intentData as any).technical?.syncToBeat !== false && beatGrid.length > 0;
 
   const nodes = buildSegmentNodes(analysis, intentData);
   const initialShots = planTemporalEmotionalPath(nodes, intentData, {
@@ -66,7 +82,7 @@ export function generateDeterministicEDL(
       title: "Deterministic Edit",
       createdAt: Date.now(),
       aiModel: "deterministic-fallback",
-      prompt: intentData.goal.primary,
+      prompt: intentData.prompt,
       intentId: metadata.intentId,
       analysisId: metadata.analysisId,
     },
@@ -76,11 +92,12 @@ export function generateDeterministicEDL(
       duration: targetDuration,
     },
     shots,
-    globalEffects: getGlobalEffects(intentData.style.genre),
+    globalEffects: getGlobalEffects(intentData.style.genre || ""),
   };
 
   if (analysis.music) {
     edl.music = {
+      id: "music-main",
       sourceId: analysis.music.musicId,
       bpm: analysis.music.bpm,
       beatGrid: analysis.music.beatGrid,
@@ -92,56 +109,15 @@ export function generateDeterministicEDL(
   return edl;
 }
 
-function normalizeIntent(intent: IntentExtractionResult | SimplifiedIntent): SimplifiedIntent {
-  if (!("intent" in intent)) {
-    return intent;
-  }
 
-  const full = intent.intent;
 
-  return {
-    version: full.version,
-    goal: {
-      primary: full.goal.primary,
-    },
-    style: {
-      genre: full.style.genre,
-      pacing: normalizePacing(full.style.pacing),
-      mood: full.style.mood,
-    },
-    structure: {
-      duration: full.structure.duration,
-      energyCurve:
-        full.structure.energyCurve && full.structure.energyCurve.length > 0
-          ? full.structure.energyCurve
-          : [0.5, 0.6, 0.7, 0.8, 0.6],
-    },
-    technical: {
-      syncToBeat: full.technical.syncToBeat,
-      beatSyncStrength: full.technical.beatSyncStrength ?? 0.8,
-      transitionStyle: normalizeTransitionStyle(full.technical.transitionStyle),
-      colorTreatment: full.technical.colorTreatment,
-      effectsIntensity: full.technical.effectsIntensity,
-    },
-    contentPreferences: {
-      focusOn: full.contentPreferences.focusOn ?? [],
-    },
-  };
-}
 
-function normalizePacing(
-  pacing: "slow" | "medium" | "fast" | "aggressive" | "varied"
-): "slow" | "medium" | "fast" | "aggressive" {
-  return pacing === "varied" ? "medium" : pacing;
-}
 
-function normalizeTransitionStyle(
-  style: "cut" | "smooth" | "dynamic" | "aggressive" | "mixed"
-): "cut" | "smooth" | "dynamic" {
-  if (style === "aggressive") return "dynamic";
-  if (style === "mixed") return "dynamic";
-  return style;
-}
+
+
+
+
+
 
 function planTemporalEmotionalPath(
   nodes: SegmentNode[],
@@ -158,18 +134,19 @@ function planTemporalEmotionalPath(
   let currentTime = 0;
   let previousNode: SegmentNode | null = null;
   const maxShots = Math.max(1, Math.ceil(ctx.targetDuration / 0.5));
+  const shotCeiling = Math.max(0.5, 0.3 * ctx.targetDuration);
 
   while (currentTime < ctx.targetDuration && shots.length < maxShots) {
     const progress = currentTime / Math.max(0.001, ctx.targetDuration);
     const targetEnergy = getTargetEnergy(intent, progress);
     const targetDuration = getTargetShotDuration(intent, ctx, targetEnergy, shots.length);
 
-    const node = selectBestNode(nodes, previousNode, intent, targetEnergy, shots.length);
+    const node = selectBestNode(nodes, previousNode, intent, targetEnergy, shots.length, progress);
     if (!node) break;
 
     const availableDuration = Math.max(0, node.segment.end - node.segment.start);
     let duration = Math.min(targetDuration, availableDuration);
-    duration = Math.max(0.5, Math.min(duration, ctx.pacingRules.maxDuration));
+    duration = Math.max(0.5, Math.min(duration, ctx.pacingRules.maxDuration, shotCeiling));
 
     if (currentTime + duration > ctx.targetDuration) {
       duration = Math.max(0.5, ctx.targetDuration - currentTime);
@@ -201,6 +178,8 @@ function planTemporalEmotionalPath(
       aiRationale: buildShotRationale(node, targetEnergy, shots.length),
     };
 
+    const intentAsSimplified = intent as unknown as SimplifiedIntent;
+
     if (ctx.syncToBeat) {
       shot.beatLock = {
         beatIndex: findNearestBeatIndex(currentTime, ctx.beatGrid),
@@ -208,7 +187,7 @@ function planTemporalEmotionalPath(
       };
     }
 
-    shot.effects = maybeAddEffect(node, intent, targetEnergy, shots.length, maxShots);
+    shot.effects = maybeAddEffect(node, intentAsSimplified, targetEnergy, shots.length, maxShots);
 
     shots.push(shot);
     node.usedCount += 1;
@@ -226,7 +205,8 @@ function applyQualityCorrection(
 ): Shot[] {
   if (shots.length === 0) return shots;
 
-  const maxDuration = intent.style.pacing === "slow" ? 8 : 6;
+  const shotCeiling = Math.max(0.5, 0.3 * ctx.targetDuration);
+  const maxDuration = Math.min(intent.style.pacing === "slow" ? 8 : 6, shotCeiling);
   const corrected = shots
     .map((shot, idx) => {
       const duration = Math.min(maxDuration, Math.max(0.5, shot.timing.duration));
@@ -258,7 +238,7 @@ function applyQualityCorrection(
   if (Math.abs(delta) > 0.001) {
     const last = corrected[corrected.length - 1];
     if (last) {
-      const maxLast = intent.style.pacing === "slow" ? 8 : 6;
+      const maxLast = Math.min(intent.style.pacing === "slow" ? 8 : 6, shotCeiling);
       const nextDuration = Math.max(0.5, Math.min(maxLast, last.timing.duration + delta));
       last.timing.duration = nextDuration;
       last.source.outPoint = last.source.inPoint + nextDuration;
@@ -271,7 +251,7 @@ function applyQualityCorrection(
     cursor += corrected[i].timing.duration;
   }
 
-  enforceEffectBudget(corrected);
+  enforceEffectBudget(corrected, intent);
   enforceTransitionBudget(corrected, intent);
 
   return corrected;
@@ -313,10 +293,15 @@ function selectBestNode(
   previousNode: SegmentNode | null,
   intent: SimplifiedIntent,
   targetEnergy: number,
-  shotIndex: number
+  shotIndex: number,
+  progress?: number
 ): SegmentNode | null {
   let best: SegmentNode | null = null;
   let bestScore = -Infinity;
+
+  const params = (intent as any).directorParams;
+  const climaxPos = params?.climaxPosition ?? 0.65;
+  const isClimaxShot = progress !== undefined && Math.abs(progress - climaxPos) < 0.05;
 
   for (const node of nodes) {
     const quality = node.adjustedScore;
@@ -326,8 +311,11 @@ function selectBestNode(
 
     let transitionScore = 0;
     if (previousNode) {
-      transitionScore += previousNode.clipId === node.clipId ? -0.18 : 0.06;
-      transitionScore += previousNode.segment.tags.some((tag) => node.segment.tags.includes(tag))
+      const bias = params?.crossClipBias ?? 0.5;
+      const sameClipPenalty = -0.4 * bias;
+      const diffClipReward = 0.2 * bias;
+      transitionScore += previousNode.clipId === node.clipId ? sameClipPenalty : diffClipReward;
+      transitionScore += previousNode.segment.tags.some((tag: string) => node.segment.tags.includes(tag))
         ? 0.05
         : 0;
     }
@@ -335,13 +323,19 @@ function selectBestNode(
     const noveltyPenalty = node.usedCount * 0.09;
     const deterministicJitter = seededNoise(`${node.id}:${shotIndex}`) * 0.025;
 
+    let climaxBoost = 0;
+    if (isClimaxShot) {
+      climaxBoost = node.segment.scores.overall * 0.5;
+    }
+
     const score =
       quality * 0.45 +
       emotionFit * 0.22 +
       motionFit * 0.17 +
       transitionScore -
       noveltyPenalty +
-      deterministicJitter;
+      deterministicJitter +
+      climaxBoost;
 
     if (score > bestScore) {
       bestScore = score;
@@ -386,10 +380,17 @@ function getTargetShotDuration(
     duration = (beatsPerCut * 60) / Math.max(1, ctx.bpm);
   }
 
-  return clamp(duration, ctx.pacingRules.minDuration, ctx.pacingRules.maxDuration);
+  const shotCeiling = Math.max(0.5, 0.3 * ctx.targetDuration);
+  return clamp(duration, ctx.pacingRules.minDuration, Math.min(ctx.pacingRules.maxDuration, shotCeiling));
 }
 
 function getTargetEnergy(intent: SimplifiedIntent, progress: number): number {
+  const params = (intent as any).directorParams;
+  const climaxPos = params?.climaxPosition ?? 0.65;
+  if (Math.abs(progress - climaxPos) < 0.05) {
+    return 1.0;
+  }
+
   const curve = intent.structure.energyCurve;
   if (!curve || curve.length === 0) {
     return intent.style.pacing === "slow" ? 0.35 : 0.7;
@@ -411,10 +412,10 @@ function maybeAddEffect(
   if (intent.technical.effectsIntensity < 0.2) return undefined;
 
   if (targetEnergy > 0.82) {
-    return [{ type: "shake", intensity: clamp(intent.technical.effectsIntensity, 0.25, 0.75) }];
+    return [{ id: `effect-shake-${shotIndex}`, type: "shake", intensity: clamp(intent.technical.effectsIntensity, 0.25, 0.75) }];
   }
 
-  return [{ type: "glow", intensity: clamp(intent.technical.effectsIntensity * 0.85, 0.2, 0.65) }];
+  return [{ id: `effect-glow-${shotIndex}`, type: "glow", intensity: clamp(intent.technical.effectsIntensity * 0.85, 0.2, 0.65) }];
 }
 
 function chooseTransition(
@@ -445,8 +446,12 @@ function buildShotRationale(node: SegmentNode, targetEnergy: number, shotIndex: 
   return `Use ${node.segment.description.toLowerCase()} to match ${mode} while keeping the visual story progressing.`;
 }
 
-function enforceEffectBudget(shots: Shot[]): void {
-  const maxEffectShots = Math.floor(shots.length * 0.3);
+function enforceEffectBudget(shots: Shot[], intent: SimplifiedIntent): void {
+  const params = (intent as any).directorParams;
+  const restraint = params?.restraintLevel ?? "moderate";
+  const ratio = restraint === "heavy" ? 0.05 : restraint === "moderate" ? 0.25 : 0.5;
+  const maxEffectShots = Math.floor(shots.length * ratio);
+
   let count = 0;
   for (let i = 0; i < shots.length; i++) {
     const effects = shots[i].effects;
@@ -477,23 +482,23 @@ function enforceTransitionBudget(shots: Shot[], intent: SimplifiedIntent): void 
   }
 }
 
-function scoreSegmentForIntent(segment: ScoredSegment, intent: SimplifiedIntent): number {
+function scoreSegmentForIntent(segment: Segment, intent: SimplifiedIntent): number {
   let score = segment.scores.overall;
 
   if (intent.style.pacing === "aggressive" || intent.style.pacing === "fast") {
     score += segment.scores.motion * 0.2;
   }
 
-  if (intent.style.mood.some((m) => ["emotional", "melancholic", "intense", "dramatic"].includes(m))) {
-    score += segment.scores.emotion * 0.2;
+  if ((intent.style.mood || []).some((m: string) => ["emotional", "melancholic", "intense", "dramatic"].includes(m))) {
+    score += 0.2;
   }
 
   const focusOn = intent.contentPreferences.focusOn || [];
-  if (focusOn.some((f) => ["face_closeups", "closeup", "faces"].includes(f)) && segment.faceDetected) {
+  if (focusOn.some((f: string) => ["face_closeups", "closeup", "faces"].includes(f)) && segment.faceDetected) {
     score += 0.15;
   }
 
-  if (focusOn.some((f) => ["action_scenes", "action", "impact"].includes(f)) && segment.scores.motion > 0.8) {
+  if (focusOn.some((f: string) => ["action_scenes", "action", "impact"].includes(f)) && segment.scores.motion > 0.8) {
     score += 0.15;
   }
 

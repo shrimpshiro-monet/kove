@@ -10,17 +10,49 @@ import { readFileSync } from "fs";
 // Load .dev.vars for local development
 function loadDevVars() {
   try {
-    const devVars = readFileSync(".dev.vars", "utf-8");
+    const content = readFileSync(".dev.vars", "utf-8");
     const vars: Record<string, string> = {};
-    devVars.split("\n").forEach((line) => {
-      line = line.trim();
-      if (line && !line.startsWith("#")) {
-        const [key, ...valueParts] = line.split("=");
-        if (key && valueParts.length > 0) {
-          vars[key.trim()] = valueParts.join("=").trim();
+    const lines = content.split("\n");
+    
+    let currentKey = "";
+    let currentValue = "";
+    let inQuotes = false;
+    let quoteChar = "";
+
+    for (const line of lines) {
+      if (!inQuotes) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        
+        const equalsIdx = line.indexOf("=");
+        if (equalsIdx !== -1) {
+          const key = line.slice(0, equalsIdx).trim();
+          let value = line.slice(equalsIdx + 1).trim();
+          
+          if (value.startsWith("'") || value.startsWith('"')) {
+            quoteChar = value[0];
+            inQuotes = true;
+            currentKey = key;
+            currentValue = value.slice(1);
+            
+            // Check if it ends on the same line
+            if (currentValue.endsWith(quoteChar) && currentValue.length > 0) {
+              vars[currentKey] = currentValue.slice(0, -1);
+              inQuotes = false;
+            }
+          } else {
+            vars[key] = value;
+          }
+        }
+      } else {
+        // We are inside quotes, append the line
+        currentValue += "\n" + line;
+        if (currentValue.endsWith(quoteChar)) {
+          vars[currentKey] = currentValue.slice(0, -1);
+          inQuotes = false;
         }
       }
-    });
+    }
     return vars;
   } catch {
     return {};
@@ -34,6 +66,17 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    server: {
+      host: "127.0.0.1",
+      port: 8787,
+      proxy: {
+        "/uploads": {
+          target: "http://127.0.0.1:3000",
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     define: {
       // Inject .dev.vars into process.env for SSR
       "process.env.GEMINI_API_KEY": JSON.stringify(
@@ -48,8 +91,20 @@ export default defineConfig({
       "process.env.GCP_CREDENTIALS": JSON.stringify(
         loadDevVars().GCP_CREDENTIALS || ""
       ),
+      "process.env.GCS_BUCKET": JSON.stringify(
+        loadDevVars().GCS_BUCKET || ""
+      ),
       "process.env.ENVIRONMENT": JSON.stringify(
         loadDevVars().ENVIRONMENT || "development"
+      ),
+      "process.env.AZURE_OPENAI_API_KEY": JSON.stringify(
+        loadDevVars().AZURE_OPENAI_API_KEY || ""
+      ),
+      "process.env.AZURE_OPENAI_ENDPOINT": JSON.stringify(
+        loadDevVars().AZURE_OPENAI_ENDPOINT || ""
+      ),
+      "process.env.AZURE_OPENAI_DEPLOYMENT": JSON.stringify(
+        loadDevVars().AZURE_OPENAI_DEPLOYMENT || ""
       ),
     },
   },

@@ -90,6 +90,41 @@ export interface ReferenceStyle {
     signatureMove: string; // The most distinctive technique this editor uses
   };
 
+  // === COMPOSITION & LAYERING ===
+  // How elements are stacked and combined
+  composition: {
+    avgLayerCount: number; // How many elements typically stacked
+    maskingFrequency: number; // 0-1, how often character masks are used
+    depthOrder: "subject_on_top" | "text_behind_subject" | "mixed";
+    commonBlendModes: string[];
+  };
+
+  // === STYLE PILLARS ===
+  // Core editing DNA
+  pillarScores: {
+    brutalistImpact: number; // 0-1
+    tensionPivot: number; // 0-1
+    vocalFlowSync: number; // 0-1
+    legacyMontage: number; // 0-1
+  };
+
+  // === TEXT & GRAPHICS ===
+  // Timing, style and content of overlays
+  textStyle: {
+    pacing: "snappy" | "lingering" | "none";
+    positioning: "center" | "dynamic" | "lower_third";
+    fontVibe: string; // e.g. "bold_sans", "elegant_serif", "glitchy"
+    animationStyle: string; // e.g. "pop_in", "fade_with_motion"
+  };
+
+  // === EFFECT TRIGGERS ===
+  // Temporal placement of effects
+  effectTriggers: {
+    type: string; // e.g. "glitch", "chromatic_aberration", "color_shift"
+    triggerEvent: "cut" | "beat" | "action_start" | "random";
+    intensity: number;
+  }[];
+
   // === MONET INTENT MAPPING ===
   // Concrete values to inject directly into EditIntent — no interpretation needed
   intentMapping: {
@@ -156,10 +191,10 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
         },
         energyCurve: {
           type: "array",
-          items: { type: "number", minimum: 0, maximum: 1 },
+          items: { type: "number" },
         },
         intensityBuilds: { type: "boolean" },
-        climaxPosition: { type: "number", minimum: 0, maximum: 1 },
+        climaxPosition: { type: "number" },
         breathingMoments: { type: "array", items: { type: "number" } },
       },
       required: [
@@ -233,8 +268,8 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
     effects: {
       type: "object",
       properties: {
-        overallIntensity: { type: "number", minimum: 0, maximum: 1 },
-        effectsFrequency: { type: "number", minimum: 0, maximum: 1 },
+        overallIntensity: { type: "number" },
+        effectsFrequency: { type: "number" },
         commonEffects: { type: "array", items: { type: "string" } },
         transitionsBreakdown: {
           type: "object",
@@ -312,9 +347,9 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
           enum: ["aggressive", "fast", "medium", "slow", "varied"],
         },
         syncToBeat: { type: "boolean" },
-        beatSyncStrength: { type: "number", minimum: 0, maximum: 1 },
+        beatSyncStrength: { type: "number" },
         colorTreatment: { type: "string" },
-        effectsIntensity: { type: "number", minimum: 0, maximum: 1 },
+        effectsIntensity: { type: "number" },
         transitionStyle: {
           type: "string",
           enum: ["cut", "smooth", "dynamic", "aggressive", "mixed"],
@@ -336,6 +371,48 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
         "contentFocus",
       ],
     },
+    composition: {
+      type: "object",
+      properties: {
+        avgLayerCount: { type: "number" },
+        maskingFrequency: { type: "number" },
+        depthOrder: { type: "string", enum: ["subject_on_top", "text_behind_subject", "mixed"] },
+        commonBlendModes: { type: "array", items: { type: "string" } },
+      },
+      required: ["avgLayerCount", "maskingFrequency", "depthOrder", "commonBlendModes"],
+    },
+    pillarScores: {
+      type: "object",
+      properties: {
+        brutalistImpact: { type: "number" },
+        tensionPivot: { type: "number" },
+        vocalFlowSync: { type: "number" },
+        legacyMontage: { type: "number" },
+      },
+      required: ["brutalistImpact", "tensionPivot", "vocalFlowSync", "legacyMontage"],
+    },
+    textStyle: {
+      type: "object",
+      properties: {
+        pacing: { type: "string", enum: ["snappy", "lingering", "none"] },
+        positioning: { type: "string", enum: ["center", "dynamic", "lower_third"] },
+        fontVibe: { type: "string" },
+        animationStyle: { type: "string" },
+      },
+      required: ["pacing", "positioning", "fontVibe", "animationStyle"],
+    },
+    effectTriggers: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          type: { type: "string" },
+          triggerEvent: { type: "string", enum: ["cut", "beat", "action_start", "random"] },
+          intensity: { type: "number" },
+        },
+        required: ["type", "triggerEvent", "intensity"],
+      },
+    },
   },
   required: [
     "rhythm",
@@ -346,6 +423,10 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
     "emotionalArc",
     "editingPhilosophy",
     "intentMapping",
+    "composition",
+    "pillarScores",
+    "textStyle",
+    "effectTriggers",
   ],
 } as const;
 
@@ -363,7 +444,10 @@ export function isValidReferenceStyle(data: unknown): data is ReferenceStyle {
     typeof d.effects === "object" &&
     typeof d.emotionalArc === "object" &&
     typeof d.editingPhilosophy === "object" &&
-    typeof d.intentMapping === "object"
+    typeof d.intentMapping === "object" &&
+    typeof d.composition === "object" &&
+    typeof d.textStyle === "object" &&
+    Array.isArray(d.effectTriggers)
   );
 }
 
@@ -381,7 +465,13 @@ function normalizeRatio(v: number): number {
 /**
  * Normalizes mixed-scale ReferenceStyle values (0..1 vs 0..100) into stable 0..1 ratios.
  */
-export function normalizeReferenceStyle(style: ReferenceStyle): ReferenceStyle {
+export function normalizeReferenceStyle(
+  style: unknown
+): ReferenceStyle | undefined {
+  if (!isValidReferenceStyle(style)) {
+    return undefined;
+  }
+
   return {
     ...style,
     rhythm: {
@@ -413,5 +503,16 @@ export function normalizeReferenceStyle(style: ReferenceStyle): ReferenceStyle {
       beatSyncStrength: normalizeRatio(style.intentMapping.beatSyncStrength),
       effectsIntensity: normalizeRatio(style.intentMapping.effectsIntensity),
     },
+    composition: {
+      ...style.composition,
+      maskingFrequency: normalizeRatio(style.composition.maskingFrequency),
+    },
+    textStyle: {
+      ...style.textStyle,
+    },
+    effectTriggers: (style.effectTriggers ?? []).map((et: any) => ({
+      ...et,
+      intensity: normalizeRatio(et.intensity),
+    })),
   };
 }

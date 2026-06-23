@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+vendor/
+.venv/
+
+# Build outputs
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# Large binaries / media
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.wav
+*.mp3
+assets/videos/
+assets/audio/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+tmp/
+temp/
+.cache/
+
+# Sensitive
+.env
+.env.local
+.env.production
+secrets/
+config/credentials.json
+
+# Test coverage
+coverage/
+.nyc_output/
+

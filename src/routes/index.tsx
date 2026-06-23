@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { MessageSquare, Film, ArrowUpRight } from "lucide-react";
+import { MessageSquare, Film, ArrowUpRight, Sparkles, Layers, Dna, FileVideo, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -47,6 +47,41 @@ function Index() {
             kicker="Advanced"
             title="Studio"
             desc="Full timeline, inspector, tools — your hands on every frame."
+          />
+          <EntryCard
+            to="/pure-effects"
+            icon={<Layers className="h-5 w-5" />}
+            kicker="Testing Sandbox"
+            title="Pure Effects Tester"
+            desc="Drag in a video and toggle preset visual effects to verify the rendering engine works perfectly."
+          />
+          <EntryCard
+            to="/editly-showcase"
+            icon={<FileVideo className="h-5 w-5" />}
+            kicker="Engine Sandbox"
+            title="Editly Engine Showcase"
+            desc="Upload footage and write a Gemini prompt to generate and natively render Editly configurations in the browser."
+          />
+          <EntryCard
+            to="/hyperframes-showcase"
+            icon={<Layers className="h-5 w-5 text-indigo-500" />}
+            kicker="HTML5 Engine"
+            title="HyperFrames Sandbox"
+            desc="Generate interactive overlays, kinetic typography, and GSAP animations via Gemini."
+          />
+          <EntryCard
+            to="/reference-analysis"
+            icon={<Dna className="h-5 w-5" />}
+            kicker="Intelligence"
+            title="Deep Reference Analysis"
+            desc="Dissect the editing DNA of any YouTube video. Learn its rhythm, effects, and cinematic secrets."
+          />
+          <EntryCard
+            to="/engines-sandbox"
+            icon={<ShieldCheck className="h-5 w-5 text-indigo-400" />}
+            kicker="Engine Sandbox"
+            title="Advanced Engines & Compliance Sandbox"
+            desc="Test compliance, view capabilities, and simulate AI director controls for MLT, FreeCut, OpenReel, Kdenlive, and Blender."
           />
         </div>
       </section>

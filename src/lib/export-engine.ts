@@ -17,11 +17,230 @@ export interface ExportProgress {
 export type ProgressCallback = (progress: ExportProgress) => void;
 
 /**
+ * Server-side FFmpeg export — produces a guaranteed-valid MP4
+ * with proper metadata, codecs, and moov atom positioning.
+ * QuickTime, VLC, and all video players will accept this output.
+ */
+export async function exportEDLToMP4ViaServer(
+  edl: any,
+  mediaUrls: Map<string, string>,
+  onProgress?: (p: { percent: number; stage: string }) => void
+): Promise<Blob> {
+  onProgress?.({ percent: 5, stage: "Uploading EDL to server..." });
+
+  // Convert Map to plain object, skip blob URLs (server can't access them)
+  const mediaUrlsObj: Record<string, string> = {};
+  for (const [k, v] of mediaUrls.entries()) {
+    if (v.startsWith("blob:")) {
+      console.warn(`[export] Skipping blob URL for clip ${k} — server can't access blobs`);
+      continue;
+    }
+    mediaUrlsObj[k] = v;
+  }
+
+  if (Object.keys(mediaUrlsObj).length === 0) {
+    throw new Error(
+      "No server-accessible media URLs. Re-upload clips so they're stored on the server."
+    );
+  }
+
+  const response = await fetch("/api/export-mp4", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ edl, mediaUrls: mediaUrlsObj }),
+  });
+
+  onProgress?.({ percent: 50, stage: "Server is rendering with FFmpeg..." });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(
+      `Server export failed: HTTP ${response.status} — ${errText.slice(0, 200)}`
+    );
+  }
+
+  onProgress?.({ percent: 90, stage: "Downloading rendered MP4..." });
+
+  const blob = await response.blob();
+
+  onProgress?.({ percent: 100, stage: "Complete" });
+
+  console.log("[export] server render complete:", {
+    size: blob.size,
+    type: blob.type,
+  });
+
+  return blob;
+}
+
+interface SupportedEncoderProfile {
+  codec: string;
+  width: number;
+  height: number;
+  bitrate: number;
+  hardwareAcceleration: HardwareAcceleration;
+  avc?: AvcEncoderConfig;
+}
+
+type HardwareAcceleration = "no-preference" | "prefer-hardware" | "prefer-software";
+
+interface AvcEncoderConfig {
+  format: "avc" | "annexb";
+}
+
+function even(value: number): number {
+  const rounded = Math.max(2, Math.round(value));
+  return rounded % 2 === 0 ? rounded : rounded - 1;
+}
+
+function clampFps(value: number): number {
+  if (!Number.isFinite(value)) return 30;
+  return Math.max(1, Math.min(60, Math.round(value)));
+}
+
+function scaleToMaxArea(params: {
+  width: number;
+  height: number;
+  maxWidth: number;
+  maxHeight: number;
+}): { width: number; height: number } {
+  const widthScale = params.maxWidth / params.width;
+  const heightScale = params.maxHeight / params.height;
+  const scale = Math.min(1, widthScale, heightScale);
+
+  return {
+    width: even(params.width * scale),
+    height: even(params.height * scale),
+  };
+}
+
+function buildCandidateProfiles(params: {
+  requestedWidth: number;
+  requestedHeight: number;
+  fps: number;
+  bitrate?: number;
+}): SupportedEncoderProfile[] {
+  const requestedWidth = even(params.requestedWidth);
+  const requestedHeight = even(params.requestedHeight);
+
+  const bitrate1080 = params.bitrate ?? 8_000_000;
+  const bitrate720 = Math.min(params.bitrate ?? 4_000_000, 5_000_000);
+
+  const downscaled720 = scaleToMaxArea({
+    width: requestedWidth,
+    height: requestedHeight,
+    maxWidth: 1280,
+    maxHeight: 720,
+  });
+
+  const candidates: SupportedEncoderProfile[] = [];
+
+  /*
+   * H.264 codec string format:
+   * avc1.PPCCLL
+   *
+   * 640028 = High profile, level 4.0 (suited for 1080p @ 30fps)
+   * 4d0028 = Main profile, level 4.0
+   * 42e028 = Baseline profile, level 4.0
+   * 42e01f = Baseline profile, level 3.1 (suited for 720p fallback)
+   * 42001f = Baseline, level 3.1
+   */
+  candidates.push(
+    {
+      codec: "avc1.640028",
+      width: requestedWidth,
+      height: requestedHeight,
+      bitrate: bitrate1080,
+      hardwareAcceleration: "prefer-hardware",
+      avc: { format: "avc" },
+    },
+    {
+      codec: "avc1.4d0028",
+      width: requestedWidth,
+      height: requestedHeight,
+      bitrate: bitrate1080,
+      hardwareAcceleration: "prefer-hardware",
+      avc: { format: "avc" },
+    },
+    {
+      codec: "avc1.42e028",
+      width: requestedWidth,
+      height: requestedHeight,
+      bitrate: bitrate1080,
+      hardwareAcceleration: "prefer-hardware",
+      avc: { format: "avc" },
+    },
+    {
+      codec: "avc1.42e01f",
+      width: downscaled720.width,
+      height: downscaled720.height,
+      bitrate: bitrate720,
+      hardwareAcceleration: "prefer-hardware",
+      avc: { format: "avc" },
+    },
+    {
+      codec: "avc1.42001f",
+      width: downscaled720.width,
+      height: downscaled720.height,
+      bitrate: bitrate720,
+      hardwareAcceleration: "no-preference",
+      avc: { format: "avc" },
+    }
+  );
+
+  return candidates;
+}
+
+async function selectSupportedEncoderProfile(params: {
+  requestedWidth: number;
+  requestedHeight: number;
+  fps: number;
+  bitrate?: number;
+}): Promise<SupportedEncoderProfile | null> {
+  const candidates = buildCandidateProfiles(params);
+
+  for (const candidate of candidates) {
+    const config: VideoEncoderConfig = {
+      codec: candidate.codec,
+      width: candidate.width,
+      height: candidate.height,
+      bitrate: candidate.bitrate,
+      framerate: params.fps,
+      hardwareAcceleration: candidate.hardwareAcceleration,
+      avc: candidate.avc,
+    };
+
+    try {
+      const support = await VideoEncoder.isConfigSupported(config);
+
+      if (support.supported) {
+        return candidate;
+      }
+
+      console.warn("[export-engine] Encoder config unsupported", {
+        codec: candidate.codec,
+        width: candidate.width,
+        height: candidate.height,
+        bitrate: candidate.bitrate,
+      });
+    } catch (error) {
+      console.warn("[export-engine] Encoder support check failed", {
+        codec: candidate.codec,
+        width: candidate.width,
+        height: candidate.height,
+        error,
+      });
+    }
+  }
+
+  return null;
+}
+
+/**
  * Export a MonetEDL to an MP4 Blob.
  * Uses WebCodecs VideoEncoder + a simple MP4 muxer.
  *
- * Target spec: H.264 Baseline, 1080p, 30fps, ~8Mbps
- * Audio: AAC 128kbps from music track (if present)
+ * Target spec: H.264 Baseline/Main/High, up to 1080p, 30fps, ~8Mbps
  *
  * Returns a Blob that can be used with URL.createObjectURL() for download.
  */
@@ -37,12 +256,15 @@ export async function exportEDLToMP4(
     );
   }
 
-  const { width, height, fps, duration } = {
-    width: edl.timeline.resolution.width,
-    height: edl.timeline.resolution.height,
-    fps: edl.timeline.fps,
-    duration: edl.timeline.duration,
-  };
+  const rawFps = edl.timeline.fps;
+  const rawDuration = edl.timeline.duration;
+
+  if (typeof rawDuration !== "number" || !Number.isFinite(rawDuration) || rawDuration <= 0) {
+    throw new Error(`Invalid timeline duration: ${rawDuration}. Duration must be a positive finite number.`);
+  }
+
+  const fps = clampFps(rawFps);
+  const duration = rawDuration;
 
   const totalFrames = Math.ceil(duration * fps);
   const startTime = performance.now();
@@ -62,10 +284,35 @@ export async function exportEDLToMP4(
     });
   };
 
+  const roundedWidth = even(edl.timeline.resolution.width);
+  const roundedHeight = even(edl.timeline.resolution.height);
+
+  // Auto-detect and select supported WebCodecs profile (downscaling to 720p if 1080p level 4.0 is unsupported)
+  const profile = await selectSupportedEncoderProfile({
+    requestedWidth: roundedWidth,
+    requestedHeight: roundedHeight,
+    fps,
+    bitrate: 8_000_000,
+  });
+
+  if (!profile) {
+    throw new Error(
+      "No supported H.264 WebCodecs encoder configuration was found for this browser/device."
+    );
+  }
+
+  console.log("[export-engine] Export encoder configuration selected", {
+    codec: profile.codec,
+    width: profile.width,
+    height: profile.height,
+    bitrate: profile.bitrate,
+    fps,
+  });
+
   // --- Set up off-screen canvas for rendering ---
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = profile.width;
+  canvas.height = profile.height;
 
   const renderer = new MonetRenderer();
   await renderer.initialize(edl, canvas, mediaUrls);
@@ -73,6 +320,8 @@ export async function exportEDLToMP4(
   // --- Collect encoded video chunks ---
   const videoChunks: EncodedVideoChunk[] = [];
   let avcDescription: ArrayBuffer | undefined;
+  let encoderClosed = false;
+  let encoderError: Error | null = null;
 
   const encoder = new VideoEncoder({
     output: (chunk, metadata) => {
@@ -90,55 +339,106 @@ export async function exportEDLToMP4(
       }
       videoChunks.push(chunk);
     },
-    error: (e) => { throw e; },
+    error: (e) => {
+      encoderError = e;
+      encoderClosed = true;
+      console.error("[export-engine] VideoEncoder encountered an asynchronous error:", e);
+    },
   });
 
-  encoder.configure({
-    codec: "avc1.42001f", // H.264 Baseline Level 3.1
-    width,
-    height,
-    bitrate: 8_000_000, // 8 Mbps
-    framerate: fps,
-    latencyMode: "quality",
-  });
+  try {
+    encoder.configure({
+      codec: profile.codec,
+      width: profile.width,
+      height: profile.height,
+      bitrate: profile.bitrate,
+      framerate: fps,
+      hardwareAcceleration: profile.hardwareAcceleration,
+      avc: profile.avc,
+    });
+  } catch (configError) {
+    encoderClosed = true;
+    renderer.cleanup();
+    throw configError;
+  }
 
   // --- Render and encode each frame ---
   report("rendering", 0);
 
-  for (let frameIdx = 0; frameIdx < totalFrames; frameIdx++) {
-    const time = frameIdx / fps;
+  try {
+    for (let frameIdx = 0; frameIdx < totalFrames; frameIdx++) {
+      if (encoderError) {
+        throw encoderError;
+      }
+      if (encoderClosed) {
+        throw new Error("VideoEncoder closed before all frames could be encoded.");
+      }
 
-    // Render this frame to canvas
-    await renderer.renderFrame(time);
+      const time = frameIdx / fps;
 
-    // Create VideoFrame from canvas
-    const frame = new VideoFrame(canvas, {
-      timestamp: Math.round(time * 1_000_000), // microseconds
-      duration: Math.round((1 / fps) * 1_000_000),
-    });
+      // Render this frame to canvas
+      await renderer.renderFrame(time);
 
-    const isKey = frameIdx % (fps * 2) === 0; // keyframe every 2s
-    encoder.encode(frame, { keyFrame: isKey });
-    frame.close();
+      // Create VideoFrame from canvas
+      const frame = new VideoFrame(canvas, {
+        timestamp: Math.round(time * 1_000_000), // microseconds
+        duration: Math.round((1 / fps) * 1_000_000),
+      });
 
-    if (frameIdx % 10 === 0) {
-      report("rendering", frameIdx);
-      // Yield to browser event loop every 10 frames
-      await yieldToMain();
+      const isKey = frameIdx % (fps * 2) === 0; // keyframe every 2s
+      
+      try {
+        encoder.encode(frame, { keyFrame: isKey });
+      } catch (encodeErr) {
+        frame.close();
+        throw encodeErr;
+      }
+      
+      frame.close();
+
+      if (frameIdx % 10 === 0) {
+        report("rendering", frameIdx);
+        // Yield to browser event loop every 10 frames
+        await yieldToMain();
+      }
     }
+
+    if (encoderError) {
+      throw encoderError;
+    }
+
+    if (!encoderClosed) {
+      report("encoding", totalFrames);
+      await encoder.flush();
+      if (encoderError) {
+        throw encoderError;
+      }
+      encoder.close();
+      encoderClosed = true;
+    }
+  } catch (err) {
+    if (!encoderClosed) {
+      try {
+        encoder.close();
+      } catch {}
+      encoderClosed = true;
+    }
+    renderer.cleanup();
+    throw err;
   }
 
-  report("encoding", totalFrames);
-  await encoder.flush();
-  encoder.close();
+  if (encoderError) {
+    throw encoderError;
+  }
 
   // --- Mux into MP4 ---
   report("muxing", totalFrames);
 
-  const mp4Blob = muxToMP4(videoChunks, width, height, fps, duration, avcDescription);
+  const mp4Blob = muxToMP4(videoChunks, profile.width, profile.height, fps, duration, avcDescription);
 
   report("done", totalFrames);
 
+  renderer.cleanup();
   return mp4Blob;
 }
 
@@ -203,39 +503,47 @@ function muxToMP4(
     ...writeString("mp41"),
   ]);
 
-  // mdat box: concatenate all sample data
-  const mdatPayload: number[] = [];
+  // Calculate size of mdat payload
+  let mdatPayloadSize = 0;
+  for (const s of samples) {
+    mdatPayloadSize += 4 + s.data.length; // 4-byte size prefix + frame data
+  }
+  const mdatBoxSize = 8 + mdatPayloadSize;
+
+  // Build mdat header (length + "mdat")
+  const mdatHeader = new Uint8Array(8);
+  const mdatHeaderView = new DataView(mdatHeader.buffer);
+  mdatHeaderView.setUint32(0, mdatBoxSize, false);
+  mdatHeader.set([109, 100, 97, 116], 4); // "mdat" in ASCII
+
+  // Compute precise sample offsets in the final file
+  const ftypSize = ftyp.length;
+  let currentOffset = ftypSize + 8; // ftyp size + 8 bytes of mdat header
   const sampleOffsets: number[] = [];
-  let mdatOffset = 8; // ftyp size + mdat header (8 bytes)
-  mdatOffset += ftyp.length;
-  mdatOffset += 8; // mdat header
 
-  const sampleDataArrays = samples.map((s) => {
-    sampleOffsets.push(mdatOffset);
-    mdatOffset += s.data.length + 4; // +4 for size prefix
-    return s.data;
-  });
-
-  const mdatPayloadArr: Uint8Array[] = [];
-  for (const sArr of sampleDataArrays) {
-    const sizePrefix = new Uint8Array(4);
-    const view = new DataView(sizePrefix.buffer);
-    view.setUint32(0, sArr.length, false);
-    mdatPayloadArr.push(sizePrefix);
-    mdatPayloadArr.push(sArr);
-    for (let i = 0; i < sizePrefix.length; i++) mdatPayload.push(sizePrefix[i]);
-    for (let i = 0; i < sArr.length; i++) mdatPayload.push(sArr[i]);
+  for (const s of samples) {
+    sampleOffsets.push(currentOffset);
+    currentOffset += 4 + s.data.length;
   }
 
-  const mdat = writeBox("mdat", mdatPayload);
+  // Construct blob parts sequentially to avoid stack/array-limit memory overhead
+  const blobParts: any[] = [];
+  blobParts.push(new Uint8Array(ftyp));
+  blobParts.push(mdatHeader);
 
-  // Build a minimal moov box
-  // This is a simplified version — a proper muxer would compute full stbl tables
+  for (const s of samples) {
+    const sizePrefix = new Uint8Array(4);
+    const view = new DataView(sizePrefix.buffer);
+    view.setUint32(0, s.data.length, false);
+    blobParts.push(sizePrefix);
+    blobParts.push(s.data);
+  }
+
+  // Build moov box using precise offsets
   const moov = buildMoovBox(samples, sampleOffsets, width, height, fps, durationTS, timescale, avcDescription);
+  blobParts.push(new Uint8Array(moov));
 
-  // Combine all boxes
-  const allBytes = [...ftyp, ...mdat, ...moov];
-  return new Blob([new Uint8Array(allBytes)], { type: "video/mp4" });
+  return new Blob(blobParts, { type: "video/mp4" });
 }
 
 function buildMoovBox(

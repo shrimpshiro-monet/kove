@@ -3,6 +3,78 @@
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
+async function handleResponse<T>(response: Response): Promise<T> {
+  const url = response.url;
+  const status = response.status;
+  const contentType = response.headers.get("content-type") ?? "";
+
+  let rawText = "";
+
+  try {
+    rawText = await response.text();
+  } catch {
+    rawText = "";
+  }
+
+  let parsed: any = null;
+
+  if (rawText) {
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      parsed = null;
+    }
+  }
+
+  console.log(`[api-client] ${url} responded with status ${status}`);
+
+  if (!response.ok) {
+    // Handle 429 (rate limited) and 503 (model loading) — these come with upgradeCta
+    if ((status === 429 || status === 503) && parsed?.upgradeCta) {
+      const error: any = new Error(parsed.error || `HTTP ${status}`);
+      error.upgradeCta = parsed.upgradeCta;
+      error.code = parsed.code;
+      error.retryAfterSec = parsed.retryAfterSec;
+      error.status = status;
+      error.fallbackTriggered = true;
+      throw error;
+    }
+
+    const message =
+      parsed?.error?.message ||
+      parsed?.error ||
+      parsed?.message ||
+      parsed?.details ||
+      rawText ||
+      response.statusText ||
+      `HTTP ${status}`;
+
+    console.error("[api-client] request failed", {
+      url,
+      status,
+      contentType,
+      parsed,
+      rawText,
+    });
+
+    throw new Error(
+      typeof message === "string"
+        ? `HTTP ${status}: ${message}`
+        : `HTTP ${status}: ${JSON.stringify(message, null, 2)}`
+    );
+  }
+
+  if (!rawText) {
+    return undefined as T;
+  }
+
+  if (parsed !== null) {
+    return parsed as T;
+  }
+
+  throw new Error(`Expected JSON from ${url}, got: ${rawText.slice(0, 500)}`);
+}
+
 export interface IntentResult {
   success: boolean;
   intentId?: string;
@@ -62,6 +134,28 @@ export interface ReferenceStyleResult {
   error?: string;
 }
 
+export interface StyleCompileResult {
+  success: boolean;
+  style?: any;
+  cached?: boolean;
+  source?: string;
+  error?: string;
+}
+
+export async function compileStyle(
+  prompt: string,
+  signal?: AbortSignal,
+): Promise<StyleCompileResult> {
+  const res = await fetch(`${API_BASE}/api/style/compile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+    signal,
+  });
+
+  return handleResponse<StyleCompileResult>(res);
+}
+
 /**
  * Extract creative intent from user prompt.
  * Optionally pass a reference style to steer generation toward that visual/rhythm DNA.
@@ -86,7 +180,7 @@ export async function decodeIntent(
     signal,
   });
 
-  return res.json();
+  return handleResponse<IntentResult>(res);
 }
 
 /**
@@ -106,7 +200,7 @@ export async function analyzeReferenceStyle(
     signal,
   });
 
-  return res.json();
+  return handleResponse<ReferenceStyleResult>(res);
 }
 
 /**
@@ -126,7 +220,7 @@ export async function analyzeReferenceStyleByUrl(
     signal,
   });
 
-  return res.json();
+  return handleResponse<ReferenceStyleResult>(res);
 }
 
 /**
@@ -135,15 +229,25 @@ export async function analyzeReferenceStyleByUrl(
 export async function analyzeMedia(
   projectId: string,
   footageIds: string[],
-  musicId?: string
+  musicId?: string,
+  signal?: AbortSignal
 ): Promise<AnalysisResult> {
+  const payload = {
+    projectId,
+    footageIds,
+    musicId,
+  };
+
+  console.log("[api-client] analyzeMedia payload", payload);
+
   const res = await fetch(`${API_BASE}/api/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ projectId, footageIds, musicId }),
+    body: JSON.stringify(payload),
+    signal,
   });
 
-  return res.json();
+  return handleResponse<AnalysisResult>(res);
 }
 
 /**
@@ -156,15 +260,31 @@ export async function generateEDL(
   intentId: string,
   analysisId: string,
   referenceStyle?: import("../server/types/reference-style").ReferenceStyle,
-  referenceMode: "strict_replication" | "inspired" = "strict_replication"
+  referenceTrace?: any,
+  referenceMode: "strict_replication" | "inspired" = "strict_replication",
+  prompt?: string,
+  style?: string,
+  durationSeconds?: number,
+  styleDNA?: any
 ): Promise<EDLResult> {
   const res = await fetch(`${API_BASE}/api/generate-edl`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ projectId, intentId, analysisId, referenceStyle, referenceMode }),
+    body: JSON.stringify({
+      projectId,
+      intentId,
+      analysisId,
+      referenceStyle,
+      referenceTrace,
+      referenceMode,
+      prompt,
+      style,
+      durationSeconds,
+      styleDNA,
+    }),
   });
 
-  return res.json();
+  return handleResponse<EDLResult>(res);
 }
 
 export interface UploadResult {
@@ -217,12 +337,22 @@ export async function uploadFileDirect(
   file: File,
   projectId: string,
   type: "footage" | "music" | "reference",
+  metadata?: {
+    duration: number;
+    width: number;
+    height: number;
+    fps?: number;
+    codec?: string;
+  },
   signal?: AbortSignal
 ): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("projectId", projectId);
   formData.append("type", type);
+  if (metadata) {
+    formData.append("metadata", JSON.stringify(metadata));
+  }
 
   const res = await fetch(`${API_BASE}/api/upload/direct`, {
     method: "POST",
@@ -230,7 +360,21 @@ export async function uploadFileDirect(
     signal,
   });
 
-  return res.json();
+  const rawText = await res.text();
+
+  if (!res.ok) {
+    console.error("[upload/direct failed]", {
+      status: res.status,
+      body: rawText,
+    });
+    throw new Error(rawText || `Upload failed with status ${res.status}`);
+  }
+
+  try {
+    return JSON.parse(rawText);
+  } catch {
+    throw new Error(`Upload returned invalid JSON: ${rawText}`);
+  }
 }
 
 /**
@@ -441,4 +585,109 @@ export async function pollExportStatus(
     signal,
   });
   return res.json();
+}
+
+export interface DirectorFeedbackResult {
+  success: boolean;
+  newEDL?: import("../server/types/edl").MonetEDL;
+  patchSummary?: string;
+  versionId?: string;
+  jobId?: string;
+  action?: string;
+  error?: string;
+}
+
+/**
+ * Interactive Director feedback loop (Phase 9B).
+ */
+export async function submitDirectorFeedback(
+  projectId: string,
+  feedback: string,
+  currentEDL?: import("../server/types/edl").MonetEDL,
+  keyframes?: import("../server/types/edl").PreviewFrame[],
+  intentId?: string,
+  analysisId?: string,
+  signal?: AbortSignal
+): Promise<DirectorFeedbackResult> {
+  const res = await fetch(`${API_BASE}/api/director/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ projectId, feedback, currentEDL, keyframes, intentId, analysisId }),
+    signal,
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as
+      | { error?: { message?: string } }
+      | null;
+    return {
+      success: false,
+      error: body?.error?.message ?? `Director feedback failed (${res.status})`,
+    };
+  }
+
+  try {
+    return (await res.json()) as DirectorFeedbackResult;
+  } catch (err: any) {
+    return {
+      success: false,
+      error: `Failed to parse response: ${err.message}`,
+    };
+  }
+}
+
+/**
+ * Poll Interactive Director render status.
+ */
+export async function pollDirectorRender(
+  jobId: string,
+  signal?: AbortSignal
+): Promise<ServerExportStatusResult> {
+  const res = await fetch(`${API_BASE}/api/director/render/${encodeURIComponent(jobId)}`, {
+    signal,
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as
+      | { error?: string | { message?: string } }
+      | null;
+    const errorMsg = typeof body?.error === "object" ? body.error.message : body?.error;
+    return {
+      jobId,
+      status: "error",
+      error: errorMsg ?? `Director render poll failed (${res.status})`,
+    };
+  }
+
+  try {
+    return (await res.json()) as ServerExportStatusResult;
+  } catch (err: any) {
+    return {
+      jobId,
+      status: "error",
+      error: `Failed to parse response: ${err.message}`,
+    };
+  }
+}
+
+/**
+ * Wrapper around any specialist API call.
+ * Gracefully handles HF rate limits by returning a `fallbackTriggered` flag
+ * instead of throwing — the renderer uses MediaPipe browser fallback in that case.
+ */
+export async function callSpecialistWithFallback<T>(
+  fetchFn: () => Promise<T>,
+): Promise<{ result?: T; upgradeCta?: any; usedFallback: boolean }> {
+  try {
+    const result = await fetchFn();
+    return { result, usedFallback: false };
+  } catch (err: any) {
+    if (err.fallbackTriggered) {
+      return {
+        upgradeCta: err.upgradeCta,
+        usedFallback: true,
+      };
+    }
+    throw err;
+  }
 }

@@ -17,30 +17,21 @@ import { getAIService, type AIService } from "../services/ai-service";
 import type { ReferenceStyle } from "../types/reference-style";
 import {
   REFERENCE_STYLE_JSON_SCHEMA,
-  isValidReferenceStyle,
   normalizeReferenceStyle,
 } from "../types/reference-style";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { withRetry } from "../lib/retry";
+import { loadPromptTemplate } from "../prompts";
+import { jsonResponse, apiError, ApiErrorCode } from "../lib/api-response";
 
 interface AnalyzeReferenceRequest {
   projectId: string;
   // Exactly one of fileId or youtubeUrl must be provided:
-  fileId?: string;     // R2 key from /api/upload/direct
+  fileId?: string; // R2 key from /api/upload/direct
   youtubeUrl?: string; // Public YouTube video URL
-  mimeType?: string;   // e.g. "video/mp4" — inferred if omitted
-}
-
-interface AnalyzeReferenceResponse {
-  success: boolean;
-  referenceStyleId?: string;
-  style?: ReferenceStyle;
-  error?: string;
+  mimeType?: string; // e.g. "video/mp4" — inferred if omitted
 }
 
 // In-memory cache: avoid re-analyzing the same reference file
-// Key: fileId, Value: { style, cachedAt }
 const referenceCache = new Map<
   string,
   { style: ReferenceStyle; cachedAt: number }
@@ -67,30 +58,36 @@ export async function handleAnalyzeReference(
   env: Env
 ): Promise<Response> {
   if (request.method === "OPTIONS") {
-    return corsResponse(null, 204);
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
   }
 
   let body: AnalyzeReferenceRequest;
   try {
     body = (await request.json()) as AnalyzeReferenceRequest;
   } catch {
-    return corsResponse({ success: false, error: "Invalid JSON body" }, 400);
+    return apiError(ApiErrorCode.InvalidRequest, "Invalid JSON body", 400);
   }
 
   if (!body.projectId || (!body.fileId && !body.youtubeUrl)) {
-    return corsResponse(
-      {
-        success: false,
-        error: "Missing required fields: projectId and one of (fileId, youtubeUrl)",
-      },
+    return apiError(
+      ApiErrorCode.InvalidRequest,
+      "Missing required fields: projectId and one of (fileId, youtubeUrl)",
       400
     );
   }
 
   // Validate YouTube URL if provided
   if (body.youtubeUrl && !isValidYouTubeUrl(body.youtubeUrl)) {
-    return corsResponse(
-      { success: false, error: "Invalid YouTube URL. Must be a youtube.com or youtu.be video URL." },
+    return apiError(
+      ApiErrorCode.InvalidRequest,
+      "Invalid YouTube URL. Must be a youtube.com or youtu.be video URL.",
       400
     );
   }
@@ -103,8 +100,8 @@ export async function handleAnalyzeReference(
   // Cache hit
   const cached = referenceCache.get(cacheKey);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-    console.log(`Reference analysis cache hit for: ${cacheKey}`);
-    return corsResponse({
+    console.info(`Reference analysis cache hit for: ${cacheKey}`);
+    return jsonResponse({
       success: true,
       referenceStyleId: `cached-${cacheKey}`,
       style: cached.style,
@@ -115,52 +112,105 @@ export async function handleAnalyzeReference(
   try {
     const ai = getAIService(env);
 
-    // Load the analysis prompt
+    // Load the analysis prompt (bundled)
     const analysisPrompt = loadPromptTemplate("analyze-reference.txt");
 
     let style: ReferenceStyle;
 
     if (body.youtubeUrl) {
       // Fast path: Gemini analyzes the YouTube video directly by URL.
-      // No download. No R2. No Files API. Just the URL + prompt.
       const canonicalUrl = canonicalizeYouTubeUrl(body.youtubeUrl);
-      console.log(`Analyzing YouTube reference directly: ${canonicalUrl}`);
-      style = await analyzeFromYouTubeUrl(canonicalUrl, analysisPrompt, ai);
-    } else if (env?.MONET_MEDIA && body.fileId) {
+      console.info(`Analyzing YouTube reference directly: ${canonicalUrl}`);
+      try {
+        style = await analyzeFromYouTubeUrl(canonicalUrl, analysisPrompt, ai);
+      } catch (ytError) {
+        console.warn(
+          `[analyze-reference] analyzeFromYouTubeUrl failed, falling back to text-context analysis:`,
+          ytError
+        );
+        style = await analyzeFromTextContext(
+          body.youtubeUrl,
+          analysisPrompt,
+          ai
+        );
+      }
+    } else if (env && "MONET_MEDIA" in env && env.MONET_MEDIA && body.fileId) {
       // Production path: fetch from R2, upload to Gemini Files API, analyze
-      const mimeType = body.mimeType ?? inferMimeType(body.fileId);
-      style = await analyzeFromR2(body.fileId, mimeType, analysisPrompt, ai, env);
+      let r2Key = body.fileId;
+      if (env.DB) {
+        try {
+          const mediaItem = await env.DB.prepare(
+            `SELECT r2_key FROM media_items WHERE id = ?`
+          )
+            .bind(body.fileId)
+            .first<{ r2_key: string }>();
+          if (mediaItem?.r2_key) {
+            r2Key = mediaItem.r2_key;
+            console.info(`[analyze-reference] Resolved fileId ${body.fileId} to R2 key: ${r2Key}`);
+          } else {
+            console.warn(`[analyze-reference] No media_item found in DB for fileId: ${body.fileId}`);
+          }
+        } catch (dbError) {
+          console.error(`[analyze-reference] DB error resolving fileId ${body.fileId}:`, dbError);
+        }
+      }
+
+      const mimeType = body.mimeType ?? inferMimeType(r2Key);
+      try {
+        style = await analyzeFromR2(
+          r2Key,
+          mimeType,
+          analysisPrompt,
+          ai,
+          env
+        );
+      } catch (r2Error) {
+        console.warn(
+          `[analyze-reference] analyzeFromR2 failed, falling back to text-context analysis:`,
+          r2Error
+        );
+        style = await analyzeFromTextContext(
+          body.fileId,
+          analysisPrompt,
+          ai
+        );
+      }
     } else {
       // Dev/no-R2 path: text-only analysis using fileId as context hint
-      style = await analyzeFromTextContext(body.fileId ?? "", analysisPrompt, ai);
-    }
-
-    // Validate output
-    if (!isValidReferenceStyle(style)) {
-      throw new Error(
-        "Gemini returned an invalid ReferenceStyle structure — check prompt schema alignment"
+      style = await analyzeFromTextContext(
+        body.fileId ?? "",
+        analysisPrompt,
+        ai
       );
     }
 
-    style = normalizeReferenceStyle(style);
+    // Validate and normalize output
+    const normalized = normalizeReferenceStyle(style);
+    if (!normalized) {
+      return apiError(
+        ApiErrorCode.AnalysisFailed,
+        "Gemini returned an invalid ReferenceStyle structure",
+        500
+      );
+    }
+    style = normalized;
+
+    // --- V0 APPROXIMATION: Build a reference trace from style ---
+    const trace = generateMockTrace(style, cacheKey);
 
     // Cache the result
     referenceCache.set(cacheKey, { style, cachedAt: Date.now() });
 
     // Store in D1 if available
     const referenceStyleId = env?.DB
-      ? await storeReferenceStyle(
-          env.DB,
-          body.projectId,
-          cacheKey,
-          style
-        )
+      ? await storeReferenceStyle(env.DB, body.projectId, cacheKey, style)
       : `ref-${Date.now()}`;
 
-    return corsResponse({
+    return jsonResponse({
       success: true,
       referenceStyleId,
       style,
+      trace,
     });
   } catch (error) {
     console.error("analyze-reference error:", {
@@ -169,14 +219,9 @@ export async function handleAnalyzeReference(
       error: error instanceof Error ? error.message : error,
     });
 
-    return corsResponse(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Reference analysis failed. Please try again.",
-      },
+    return apiError(
+      ApiErrorCode.AnalysisFailed,
+      error instanceof Error ? error.message : "Reference analysis failed",
       500
     );
   }
@@ -184,12 +229,6 @@ export async function handleAnalyzeReference(
 
 /**
  * YouTube URL path: Gemini analyzes the video directly from YouTube.
- *
- * Gemini natively supports YouTube URLs — no download, no Files API upload.
- * We pass the URL as a `fileData` inline part with mimeType "video/mp4".
- * This works for any public YouTube video.
- *
- * Typical Gemini analysis time for a YouTube video: 15-40 seconds.
  */
 async function analyzeFromYouTubeUrl(
   youtubeUrl: string,
@@ -213,7 +252,6 @@ async function analyzeFromYouTubeUrl(
 
 /**
  * Full production path: R2 → Gemini Files API → analysis
- * This is what makes the style replication actually work.
  */
 async function analyzeFromR2(
   fileId: string,
@@ -226,17 +264,42 @@ async function analyzeFromR2(
     return analyzeFromTextContext(fileId, analysisPrompt, ai);
   }
 
+  // Resolve real R2 key from media_items DB if possible
+  let r2Key = fileId;
+  if (env.DB) {
+    try {
+      const row = await env.DB.prepare(
+        "SELECT r2_key FROM media_items WHERE id = ?"
+      )
+        .bind(fileId)
+        .first<{ r2_key: string }>();
+      if (row?.r2_key) {
+        r2Key = row.r2_key;
+        console.info(`[analyze-reference] Resolved fileId ${fileId} to R2 key: ${r2Key}`);
+      } else {
+        console.warn(
+          `[analyze-reference] No DB row in media_items for fileId: ${fileId}. Will try fileId as key directly.`
+        );
+      }
+    } catch (err) {
+      console.warn(
+        `[analyze-reference] Failed to look up r2_key in DB for fileId: ${fileId}`,
+        err
+      );
+    }
+  }
+
   // Fetch bytes from R2
-  const r2Object = await env.MONET_MEDIA!.get(fileId);
+  const r2Object = await env.MONET_MEDIA!.get(r2Key);
   if (!r2Object) {
     throw new Error(
-      `Reference file not found in R2: ${fileId}. Was it uploaded successfully?`
+      `Reference file not found in R2: ${r2Key}. Was it uploaded successfully?`
     );
   }
 
   const bytes = new Uint8Array(await r2Object.arrayBuffer());
-  console.log(
-    `Fetched ${(bytes.length / 1024 / 1024).toFixed(1)}MB from R2 for ${fileId}`
+  console.info(
+    `Fetched ${(bytes.length / 1024 / 1024).toFixed(1)}MB from R2 for ${r2Key}`
   );
 
   // Upload to Gemini Files API
@@ -252,7 +315,7 @@ async function analyzeFromR2(
   );
 
   const expiresAt = "expiresAt" in uploaded ? uploaded.expiresAt : undefined;
-  console.log(
+  console.info(
     `Uploaded to Gemini Files API: ${uploaded.uri}${
       expiresAt ? ` (expires ${expiresAt})` : ""
     }`
@@ -272,7 +335,6 @@ async function analyzeFromR2(
 
 /**
  * Dev/fallback path: analyze by file name + metadata only.
- * Not as accurate but allows testing without real R2 video bytes.
  */
 async function analyzeFromTextContext(
   fileId: string,
@@ -330,20 +392,48 @@ async function storeReferenceStyle(
   const id = crypto.randomUUID();
 
   try {
+    // Ensure the project exists in the projects table first
     await db
       .prepare(
-        `INSERT INTO reference_styles (id, project_id, file_id, style_data, created_at)
-         VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT (project_id) DO UPDATE SET
-           file_id = excluded.file_id,
-           style_data = excluded.style_data,
-           created_at = excluded.created_at`
+        `INSERT INTO projects (id, name, created_at, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(id) DO NOTHING`
       )
-      .bind(id, projectId, fileId, JSON.stringify(style), Date.now())
+      .bind(projectId, "Untitled Project", Date.now(), Date.now())
       .run();
+
+    // Check if a reference style already exists for this project
+    const existing = await db
+      .prepare("SELECT id FROM reference_styles WHERE project_id = ?")
+      .bind(projectId)
+      .first<{ id: string }>();
+
+    if (existing) {
+      await db
+        .prepare(
+          `UPDATE reference_styles
+           SET file_id = ?, style_data = ?, created_at = ?
+           WHERE id = ?`
+        )
+        .bind(fileId, JSON.stringify(style), Date.now(), existing.id)
+        .run();
+      console.info(`[analyze-reference] Updated reference style for project: ${projectId}`);
+    } else {
+      await db
+        .prepare(
+          `INSERT INTO reference_styles (id, project_id, file_id, style_data, created_at)
+           VALUES (?, ?, ?, ?, ?)`
+        )
+        .bind(id, projectId, fileId, JSON.stringify(style), Date.now())
+        .run();
+      console.info(`[analyze-reference] Inserted new reference style for project: ${projectId}`);
+    }
   } catch (dbError) {
     // D1 table may not exist yet — non-fatal, we still return the style
-    console.warn("Could not store reference style in D1 (table may not exist yet):", dbError);
+    console.warn(
+      "Could not store reference style in D1 (table may not exist yet):",
+      dbError
+    );
   }
 
   return id;
@@ -372,7 +462,6 @@ function inferMimeType(fileId: string): string {
 
 /**
  * Validate that a URL is a public YouTube video URL.
- * Accepts: youtube.com/watch?v=, youtu.be/, youtube.com/shorts/
  */
 function isValidYouTubeUrl(url: string): boolean {
   try {
@@ -413,7 +502,6 @@ function extractYouTubeVideoId(url: string): string {
 
 /**
  * Return the canonical watch URL for a YouTube video.
- * Gemini expects https://www.youtube.com/watch?v=VIDEOID
  */
 function canonicalizeYouTubeUrl(url: string): string {
   const id = extractYouTubeVideoId(url);
@@ -422,26 +510,52 @@ function canonicalizeYouTubeUrl(url: string): string {
   return `https://www.youtube.com/watch?v=${id}`;
 }
 
-/**
- * Load prompt template from disk
- */
-function loadPromptTemplate(filename: string): string {
-  try {
-    const path = join(process.cwd(), "src", "server", "prompts", filename);
-    return readFileSync(path, "utf-8");
-  } catch {
-    throw new Error(`Prompt template not found: ${filename}`);
-  }
-}
+import type { ReferenceEditTrace, ReferenceEditEvent, ReferenceEditEventType } from "../director/reference-edit-trace";
 
-function corsResponse(data: unknown, status = 200): Response {
-  return new Response(data !== null ? JSON.stringify(data) : null, {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+function generateMockTrace(style: ReferenceStyle, sourceId: string): ReferenceEditTrace {
+  const durationSec = 15; // V0 hardcoded or derived
+  const avgShotDuration = style.rhythm.avgShotDuration || 1.0;
+  const numShots = Math.max(1, Math.floor(durationSec / avgShotDuration));
+  const shotDurations = Array.from({ length: numShots }, () => avgShotDuration);
+  const effectDensityPer10Sec = style.effects.effectsFrequency * 10;
+  const motionDensityPer10Sec = effectDensityPer10Sec * 0.8;
+  const events: ReferenceEditEvent[] = [];
+
+  for (let i = 0; i < numShots; i++) {
+    const timeSec = i * avgShotDuration;
+    events.push({
+      timeSec,
+      normalizedTime: timeSec / durationSec,
+      type: "cut",
+      intensity: 0.5,
+      beatAligned: style.rhythm.cutAlignment !== "loose",
+      visualRole: i === 0 ? "establishing" : i === numShots - 1 ? "reaction" : "action"
+    });
+
+    if (Math.random() < style.effects.effectsFrequency) {
+      const isFast = style.intentMapping.pacing.includes("fast");
+      const types: ReferenceEditEventType[] = isFast 
+        ? ["flash", "push_in", "speed_ramp", "shake", "color_pulse", "whip"]
+        : ["push_in", "hold"];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      events.push({
+        timeSec: timeSec + 0.1,
+        normalizedTime: (timeSec + 0.1) / durationSec,
+        type,
+        intensity: 0.7,
+      });
+    }
+  }
+
+  return {
+    sourceId,
+    durationSec,
+    avgShotDurationSec: avgShotDuration,
+    events,
+    shotDurations,
+    energyCurve: style.pacing.energyCurve || [0.5, 0.8, 1.0, 0.6],
+    effectDensityPer10Sec,
+    motionDensityPer10Sec
+  };
 }

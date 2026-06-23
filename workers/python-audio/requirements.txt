@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+numpy<2.1.0
+scipy
+librosa
+soundfile
+python-multipart

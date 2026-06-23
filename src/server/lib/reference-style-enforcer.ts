@@ -69,7 +69,7 @@ function enforceEffectsDensity(
       if (shot.effects && shot.effects.length > 0) return shot;
       return {
         ...shot,
-        effects: [{ type: "glow", intensity: clamp(intensity, 0.2, 0.8) }],
+        effects: [{ id: `effect-glow-${i}`, type: "glow", intensity: clamp(intensity, 0.2, 0.8) }],
       };
     }
     return {
@@ -134,9 +134,18 @@ export function enforceReferenceStyleOnEDL(
     style.effects.overallIntensity,
   );
 
-  const finalShots = edl.music?.beatGrid?.length
+  const processedShots = edl.music?.beatGrid?.length
     ? enforceBeatLock(withEffects, edl.music.beatGrid)
     : withEffects;
+
+  const finalShots = processedShots.map((shot) => ({
+    ...shot,
+    meta: {
+      ...shot.meta,
+      styleMode: mode,
+      styleTags: Array.from(new Set([...(shot.meta?.styleTags || []), "strict_reference"])),
+    },
+  }));
 
   return {
     ...edl,

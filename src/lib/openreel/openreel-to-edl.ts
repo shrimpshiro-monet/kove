@@ -131,21 +131,43 @@ function denormalizePosition(val: number): number {
   return (val - 0.5) * 2;
 }
 
+function getNumericParam(
+  params: Record<string, unknown> | undefined,
+  key: string,
+  defaultValue: number
+): number {
+  const value = params?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : defaultValue;
+}
+
 function mapOpenReelEffect(effect: any): MonetEffect | null {
-  const intensity = effect.params.intensity ?? effect.params.radius / 50 ?? 0.5;
+  const params = effect.params as Record<string, unknown> | undefined;
+
   switch (effect.type) {
-    case "blur":
-      return { type: "blur", intensity: (effect.params.radius - 10) / 35 };
-    case "glow":
-      return { type: "glow", intensity: effect.params.intensity / 2 };
-    case "brightness":
-      return { type: "brightness", intensity: effect.params.value / 100 + 0.5 };
-    case "contrast":
-      return { type: "contrast", intensity: effect.params.value / 100 + 0.5 };
-    case "saturation":
-      return { type: "saturation", intensity: effect.params.value / 100 + 0.5 };
-    case "motion-blur":
-      return { type: "shake", intensity: effect.params.amount };
+    case "blur": {
+      const radius = getNumericParam(params, "radius", 27.5);
+      return { id: effect.id, type: "blur", intensity: (radius - 10) / 35 };
+    }
+    case "glow": {
+      const intensity = getNumericParam(params, "intensity", 1);
+      return { id: effect.id, type: "glow", intensity: intensity / 2 };
+    }
+    case "brightness": {
+      const value = getNumericParam(params, "value", 0);
+      return { id: effect.id, type: "brightness", intensity: value / 100 + 0.5 };
+    }
+    case "contrast": {
+      const value = getNumericParam(params, "value", 0);
+      return { id: effect.id, type: "contrast", intensity: value / 100 + 0.5 };
+    }
+    case "saturation": {
+      const value = getNumericParam(params, "value", 0);
+      return { id: effect.id, type: "saturation", intensity: value / 100 + 0.5 };
+    }
+    case "motion-blur": {
+      const amount = getNumericParam(params, "amount", 0.5);
+      return { id: effect.id, type: "shake", intensity: amount };
+    }
     default:
       return null;
   }
@@ -210,6 +232,7 @@ export function convertOpenReelProjectToMonetEDL(
       duration: project.timeline.duration,
     },
     music: musicClip ? {
+      id: "music-main",
       sourceId: musicClip.mediaId,
       bpm: project.timeline.beatAnalysis?.bpm ?? 120,
       beatGrid: project.timeline.beatMarkers?.map(m => m.time) ?? [],

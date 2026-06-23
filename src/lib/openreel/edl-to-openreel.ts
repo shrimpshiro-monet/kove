@@ -36,13 +36,13 @@ interface OpenReelClip {
     id: string;
     type: string;
     enabled: boolean;
-    params: Record<string, number>;
+    params: Record<string, unknown>;
   }>;
   audioEffects: Array<{
     id: string;
     type: string;
     enabled: boolean;
-    params: Record<string, number>;
+    params: Record<string, unknown>;
   }>;
   transform: {
     position: { x: number; y: number };
@@ -121,10 +121,89 @@ interface OpenReelProject {
   };
 }
 
-function normalizeMonetPosition(value: number | undefined): number {
+const DEFAULT_TEXT_STYLE = {
+  fontFamily: "Inter",
+  fontSize: 48,
+  color: "#ffffff",
+  fontWeight: "bold",
+  textAlign: "center",
+  letterSpacing: 0,
+  lineHeight: 1.2,
+};
+
+const DEFAULT_TEXT_TRANSFORM = {
+  position: { x: 0.5, y: 0.5 },
+  scale: { x: 1, y: 1 },
+  rotation: 0,
+};
+
+function resolveKeyframeableNumber(
+  value: unknown,
+  defaultValue: number
+): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0] as { value?: unknown } | undefined;
+    if (typeof first?.value === "number" && Number.isFinite(first.value)) {
+      return first.value;
+    }
+  }
+
+  return defaultValue;
+}
+
+function resolveKeyframeablePoint(
+  value: unknown,
+  defaultValue: { x: number; y: number }
+): { x: number; y: number } {
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0] as { value?: unknown } | undefined;
+    return resolveKeyframeablePoint(first?.value, defaultValue);
+  }
+
+  if (typeof value === "object" && value !== null) {
+    const point = value as { x?: unknown; y?: unknown };
+    return {
+      x: typeof point.x === "number" && Number.isFinite(point.x) ? point.x : defaultValue.x,
+      y: typeof point.y === "number" && Number.isFinite(point.y) ? point.y : defaultValue.y,
+    };
+  }
+
+  return defaultValue;
+}
+
+function normalizeOpenReelPoint(point: { x: number; y: number }): { x: number; y: number } {
+  return {
+    x: normalizeMonetPosition(point.x),
+    y: normalizeMonetPosition(point.y),
+  };
+}
+
+function mapOverlayPosition(
+  offset: { x: number; y: number } | undefined
+): "top" | "center" | "bottom" {
+  if (!offset) return "center";
+  if (offset.y < -0.25) return "top";
+  if (offset.y > 0.25) return "bottom";
+  return "center";
+}
+
+function normalizeMonetPosition(value: any): number {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    // If it's the {x, y} object
+    return 0.5; // Default or extract x/y if we knew which one we wanted
+  }
+  if (Array.isArray(value)) return 0.5; // Keyframes not supported in this simple mapper
   if (typeof value !== "number") return 0.5;
   // Monet uses -1..1 while OpenReel defaults around 0.5 center.
   return Math.max(0, Math.min(1, 0.5 + value * 0.5));
+}
+
+function getMonetValue(value: unknown, defaultValue = 1): number {
+  return resolveKeyframeableNumber(value, defaultValue);
 }
 
 function mapEffect(effect: MonetEffect, index: number): OpenReelClip["effects"][number] {
@@ -272,33 +351,55 @@ export function convertMonetEDLToOpenReelProject(
   const videoTrackId = "video-1";
   const audioTrackId = "audio-1";
 
-  const videoClips: OpenReelClip[] = edl.shots.map((shot, index) => ({
-    id: shot.id,
-    mediaId: shot.source.clipId,
-    trackId: videoTrackId,
-    startTime: shot.timing.startTime,
-    duration: shot.timing.duration,
-    inPoint: shot.source.inPoint,
-    outPoint: shot.source.outPoint,
-    effects: (shot.effects ?? []).map((effect, fxIndex) => mapEffect(effect, fxIndex + index * 10)),
-    audioEffects: [],
-    transform: {
-      position: {
-        x: normalizeMonetPosition(shot.transform?.position?.x),
-        y: normalizeMonetPosition(shot.transform?.position?.y),
+  const videoClips: OpenReelClip[] = edl.shots.map((shot, index) => {
+    const clip: OpenReelClip = {
+      id: shot.id,
+      mediaId: shot.source.clipId,
+      trackId: videoTrackId,
+      startTime: shot.timing.startTime,
+      duration: shot.timing.duration,
+      inPoint: shot.source.inPoint,
+      outPoint: shot.source.outPoint,
+      effects: (shot.effects ?? []).map((effect, fxIndex) => mapEffect(effect, fxIndex + index * 10)),
+      audioEffects: [],
+      transform: {
+        position: normalizeOpenReelPoint(
+          resolveKeyframeablePoint(shot.transform?.position, { x: 0, y: 0 })
+        ),
+        scale: {
+          x: getMonetValue(shot.transform?.scale, 1),
+          y: getMonetValue(shot.transform?.scale, 1),
+        },
+        rotation: getMonetValue(shot.transform?.rotation, 0),
+        anchor: { x: 0.5, y: 0.5 },
+        opacity: getMonetValue(shot.transform?.opacity, 1),
       },
-      scale: {
-        x: shot.transform?.scale ?? 1,
-        y: shot.transform?.scale ?? 1,
-      },
-      rotation: shot.transform?.rotation ?? 0,
-      anchor: { x: 0.5, y: 0.5 },
-      opacity: 1,
-    },
-    volume: 1,
-    keyframes: [],
-    speed: shot.timing.speed,
-  }));
+      volume: 1,
+      keyframes: [],
+      speed: shot.timing.speed,
+    };
+
+    if (shot.compositing?.blendMode && shot.compositing.blendMode !== "normal") {
+      clip.effects.push({
+        id: `blend-${shot.id}`,
+        type: "blend",
+        enabled: true,
+        params: { mode: shot.compositing.blendMode },
+      });
+    }
+
+    if (shot.compositing?.maskId) {
+      const mask = edl.masks?.find(m => m.id === shot.compositing?.maskId);
+      if (mask && mask.maskUrl) {
+        // We'll pass the mask URL through as a specialized effect or metadata
+        // For this implementation, we'll assume the renderer can resolve maskId if provided
+        (clip as any).maskId = mask.id;
+        (clip as any).maskUrl = mask.maskUrl;
+      }
+    }
+
+    return clip;
+  });
 
   const transitions = edl.shots
     .map((shot, index) => {
@@ -327,17 +428,17 @@ export function convertMonetEDLToOpenReelProject(
     color: shot.beatLock ? "#22c55e" : "#60a5fa",
   }));
 
-  const subtitles = (edl.textOverlays ?? []).map((overlay) => ({
+  const subtitles: OpenReelProject["timeline"]["subtitles"] = (edl.textOverlays ?? []).map((overlay) => ({
     id: overlay.id,
     text: overlay.text,
     startTime: overlay.startTime,
     endTime: overlay.endTime,
     style: {
-      fontFamily: "Inter",
-      fontSize: overlay.style?.fontSize ?? 48,
-      color: overlay.style?.color ?? "#ffffff",
+      fontFamily: overlay.style?.fontFamily || "Inter",
+      fontSize: overlay.style?.fontSize || 48,
+      color: overlay.style?.color || "#ffffff",
       backgroundColor: "transparent",
-      position: "center" as const,
+      position: mapOverlayPosition(overlay.offset),
     },
   }));
 

@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS edls (
 
   -- Generation metadata
   generation_time_ms INTEGER,
-  model_used TEXT DEFAULT 'gemini-2.0-flash',
+  model_used TEXT DEFAULT 'gemini-2.5-flash',
 
   created_at INTEGER NOT NULL,
 
