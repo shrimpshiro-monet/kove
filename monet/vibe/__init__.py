@@ -1,1 +1,0 @@
-# monet/vibe package

@@ -1,1 +1,0 @@
-# monet/engines/opencut package
