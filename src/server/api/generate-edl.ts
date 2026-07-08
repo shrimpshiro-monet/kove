@@ -209,6 +209,49 @@ export async function handleGenerateEDL(
           }
         }
 
+        // Transition distribution enforcement
+        const climaxTs = (referenceStyle?.pacing?.climaxPosition ?? 0.5) * (v3Edl.timeline?.duration ?? 30);
+        const tb = referenceStyle?.effects?.transitionsBreakdown;
+        if (tb && v3Edl.shots?.length > 0) {
+          const targetCutPct = tb.cutPercentage ?? 0.8;
+          const targetCrossfadePct = tb.crossfadePercentage ?? 0.2;
+          const total = v3Edl.shots.length;
+          const targetCrossfades = Math.round(total * targetCrossfadePct);
+
+          // First pass: convert flash/dip_black/glitch to cut
+          for (const shot of v3Edl.shots) {
+            if (shot.transition && ['flash', 'dip_black', 'glitch', 'zoom_blur'].includes(shot.transition.type)) {
+              shot.transition = { type: 'cut', duration: 0 };
+            }
+          }
+
+          // Second pass: ensure we don't exceed target crossfades
+          let crossfadeCount = v3Edl.shots.filter((s: any) => s.transition?.type === 'crossfade').length;
+          if (crossfadeCount > targetCrossfades) {
+            for (const shot of v3Edl.shots) {
+              if (crossfadeCount <= targetCrossfades) break;
+              if (shot.transition?.type === 'crossfade') {
+                const shotStart = shot.timing?.startTime ?? 0;
+                if (shotStart < climaxTs - 1 || shotStart > climaxTs + 2) {
+                  shot.transition = { type: 'cut', duration: 0 };
+                  crossfadeCount--;
+                }
+              }
+            }
+          }
+
+          // Third pass: if we still have too many crossfades, convert remaining
+          while (crossfadeCount > targetCrossfades) {
+            const xfShot = v3Edl.shots.find((s: any) => s.transition?.type === 'crossfade');
+            if (xfShot) {
+              xfShot.transition = { type: 'cut', duration: 0 };
+              crossfadeCount--;
+            } else break;
+          }
+
+          console.log(`[generate-edl] Transition distribution (v3): ${v3Edl.shots.filter((s: any) => s.transition?.type === 'cut').length} cuts, ${v3Edl.shots.filter((s: any) => s.transition?.type === 'crossfade').length} crossfades out of ${total}`);
+        }
+
         // Score
         const musicForScore = analysis.music ?? { sourceId: "", duration: v3Edl.timeline?.duration ?? 30, bpm: 120, beatGrid: [] };
         const scores = scoreNewPipelineEDL(v3Edl as any, musicForScore as any);
@@ -528,6 +571,48 @@ export async function handleGenerateEDL(
         }
       }
       console.log(`[generate-edl] Section fidelity (legacy): pre ${preN}/${preFx}, post ${postN}/${postFx}`);
+
+      // Transition distribution enforcement
+      const tb = referenceStyle?.effects?.transitionsBreakdown;
+      if (tb && edl.shots?.length > 0) {
+        const targetCutPct = tb.cutPercentage ?? 0.8;
+        const targetCrossfadePct = tb.crossfadePercentage ?? 0.2;
+        const total = edl.shots.length;
+        const targetCrossfades = Math.round(total * targetCrossfadePct);
+
+        // First pass: convert flash/dip_black/glitch to cut
+        for (const shot of edl.shots) {
+          if (shot.transition && ['flash', 'dip_black', 'glitch', 'zoom_blur'].includes(shot.transition.type)) {
+            shot.transition = { type: 'cut', duration: 0 };
+          }
+        }
+
+        // Second pass: ensure we don't exceed target crossfades
+        let crossfadeCount = edl.shots.filter((s: any) => s.transition?.type === 'crossfade').length;
+        if (crossfadeCount > targetCrossfades) {
+          for (const shot of edl.shots) {
+            if (crossfadeCount <= targetCrossfades) break;
+            if (shot.transition?.type === 'crossfade') {
+              const shotStart = shot.timing?.startTime ?? 0;
+              if (shotStart < climaxTs - 1 || shotStart > climaxTs + 2) {
+                shot.transition = { type: 'cut', duration: 0 };
+                crossfadeCount--;
+              }
+            }
+          }
+        }
+
+        // Third pass: if we still have too many crossfades, convert remaining
+        while (crossfadeCount > targetCrossfades) {
+          const xfShot = edl.shots.find((s: any) => s.transition?.type === 'crossfade');
+          if (xfShot) {
+            xfShot.transition = { type: 'cut', duration: 0 };
+            crossfadeCount--;
+          } else break;
+        }
+
+        console.log(`[generate-edl] Transition distribution (legacy): ${edl.shots.filter((s: any) => s.transition?.type === 'cut').length} cuts, ${edl.shots.filter((s: any) => s.transition?.type === 'crossfade').length} crossfades out of ${total}`);
+      }
     }
 
     // Score
