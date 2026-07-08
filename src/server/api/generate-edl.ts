@@ -501,6 +501,35 @@ export async function handleGenerateEDL(
       }
     }
 
+    // Section fidelity enforcement for setup_to_montage (legacy path)
+    if (referenceStyle?.intentMapping?.structure === 'setup_to_montage' && edl.shots?.length > 0) {
+      const climaxPosition = referenceStyle.pacing?.climaxPosition ?? 0.5;
+      const timelineDuration = edl.timeline?.duration ?? 30;
+      const climaxTs = climaxPosition * timelineDuration;
+      let preFx = 0, postFx = 0, preN = 0, postN = 0;
+      for (const shot of edl.shots) {
+        const isPre = (shot.timing?.startTime ?? 0) < climaxTs;
+        if (isPre) {
+          preN++;
+          if (shot.effects && shot.effects.length > 1) {
+            const heavy = ['impact_flash', 'speed_ramp', 'color_pulse', 'context_shake'];
+            shot.effects = shot.effects.filter((e: any) => !heavy.includes(e.type)).slice(0, 1);
+          }
+          preFx += (shot.effects?.length ?? 0);
+        } else {
+          postN++;
+          if (shot.effects && shot.effects.length < 2) {
+            const hasSpeed = shot.effects?.some((e: any) => e.type === 'speed_ramp');
+            const hasFlash = shot.effects?.some((e: any) => e.type === 'impact_flash' || e.type === 'flash_white');
+            if (!hasSpeed) { shot.effects = shot.effects || []; shot.effects.push({ id: `fx_${shot.id}_sr`, type: 'speed_ramp', intensity: 0.6, params: { entrySpeed: 1, exitSpeed: 1, anchorSpeed: 0.5 } }); }
+            if (!hasFlash && Math.random() < 0.4) { shot.effects = shot.effects || []; shot.effects.push({ id: `fx_${shot.id}_fl`, type: 'impact_flash', intensity: 0.7, params: { peakBrightness: 0.9, flashFrameCount: 2 } }); }
+          }
+          postFx += (shot.effects?.length ?? 0);
+        }
+      }
+      console.log(`[generate-edl] Section fidelity (legacy): pre ${preN}/${preFx}, post ${postN}/${postFx}`);
+    }
+
     // Score
     const musicForScore = analysis.music ?? { sourceId: "", duration: edl.timeline?.duration ?? 30, bpm: 120, beatGrid: [] };
     const scores = scoreNewPipelineEDL(edl, musicForScore as any);
