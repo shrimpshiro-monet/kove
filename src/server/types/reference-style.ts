@@ -189,6 +189,19 @@ export interface ReferenceStyle {
     peakMotionTimestamp?: number;
   };
 
+  // === CLIMAX DETECTION (setup→montage transition) ===
+  climax?: {
+    timestamp: number;
+    confidence: number;
+    reason: string;
+    signals: {
+      motionJump: number;
+      cutAcceleration: number;
+      shotDurationDrop: number;
+      peakMotion?: number;
+    };
+  };
+
   // === MONET INTENT MAPPING ===
   // Concrete values to inject directly into EditIntent — no interpretation needed
   intentMapping: {

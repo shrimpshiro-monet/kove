@@ -115,6 +115,8 @@ export async function analyzeReference(
   let cutFrequency = { cutsPerSecond: 0, avgShotDuration: 0, variance: 0 };
   let totalDuration = 0;
   let opencvColorProfile: Record<string, unknown> = {};
+  let structuralAnalysis: ReturnType<typeof buildMotionProfile1s> | null = null;
+  let detectedTextOverlays: DetectedTextOverlay[] = [];
 
   // Scene detection
   try {
@@ -160,7 +162,6 @@ export async function analyzeReference(
       console.warn(`[reference-analysis] Energy analysis failed: ${(e as Error).message}`);
     }
 
-    let structuralAnalysis: ReturnType<typeof buildMotionProfile1s> | null = null;
     if (energyFrames.length > 0 && totalDuration > 0) {
       structuralAnalysis = buildMotionProfile1s(energyFrames, totalDuration, sceneResult);
     }
@@ -184,7 +185,7 @@ export async function analyzeReference(
       if (textOverlays.length > 0) {
         console.log(`[reference-analysis] Text overlays detected: ${textOverlays.length}`);
       }
-      style.textOverlays = textOverlays;
+      detectedTextOverlays = textOverlays;
     } catch (e) {
       console.warn(`[reference-analysis] Text detection failed: ${(e as Error).message}`);
     }
@@ -232,9 +233,20 @@ export async function analyzeReference(
   );
 
   style.colorProfile = opencvColorProfile;
+  if (detectedTextOverlays.length > 0) {
+    style.textOverlays = detectedTextOverlays;
+  }
 
   if (structuralAnalysis) {
     style.structuralAnalysis = structuralAnalysis;
+  }
+
+  if (structuralAnalysis && totalDuration > 0) {
+    const rhythmStruct = style.rhythm?.structure;
+    const climax = detectClimax(structuralAnalysis, rhythmStruct ?? null, totalDuration);
+    if (climax) {
+      style.climax = climax;
+    }
   }
 
   // Per-shot effect extraction from frame data
@@ -585,6 +597,83 @@ function buildMotionProfile1s(
     lateEnergy,
     energyVarianceRatio,
     peakMotionTimestamp,
+  };
+}
+
+function detectClimax(
+  structuralAnalysis: {
+    earlyEnergy: number;
+    lateEnergy: number;
+    energyVarianceRatio: number;
+    peakMotionTimestamp?: number;
+    motionEnergyProfile1s: number[];
+  },
+  rhythmStructure: {
+    firstHalfCutsPerSecond: number;
+    secondHalfCutsPerSecond: number;
+    firstHalfAvgShotDuration: number;
+    secondHalfAvgShotDuration: number;
+    accelerationRatio: number;
+  } | null,
+  totalDuration: number
+): {
+  timestamp: number;
+  confidence: number;
+  reason: string;
+  signals: {
+    motionJump: number;
+    cutAcceleration: number;
+    shotDurationDrop: number;
+    peakMotion?: number;
+  };
+} | null {
+  const motionJump = structuralAnalysis.earlyEnergy > 0
+    ? structuralAnalysis.lateEnergy / structuralAnalysis.earlyEnergy
+    : 1;
+  const cutAcceleration = rhythmStructure
+    ? rhythmStructure.secondHalfCutsPerSecond / (rhythmStructure.firstHalfCutsPerSecond + 1e-5)
+    : 1;
+  const shotDurationDrop = rhythmStructure
+    ? rhythmStructure.firstHalfAvgShotDuration / (rhythmStructure.secondHalfAvgShotDuration + 1e-5)
+    : 1;
+
+  const motionScore = Math.min(3, motionJump) / 3;
+  const cutScore = Math.min(3, cutAcceleration) / 3;
+  const durationScore = Math.min(3, shotDurationDrop) / 3;
+  const confidence = Math.min(1, (motionScore * 0.35 + cutScore * 0.35 + durationScore * 0.3));
+
+  let timestamp = totalDuration * 0.5;
+  let reason = "estimated from midpoint";
+
+  if (structuralAnalysis.peakMotionTimestamp !== undefined) {
+    timestamp = structuralAnalysis.peakMotionTimestamp;
+    reason = "peak motion timestamp";
+  } else if (structuralAnalysis.motionEnergyProfile1s.length > 0) {
+    const profile = structuralAnalysis.motionEnergyProfile1s;
+    const avg = profile.reduce((a, b) => a + b, 0) / profile.length;
+    for (let i = 1; i < profile.length; i++) {
+      if (profile[i] > avg * 1.3 && profile[i - 1] < avg) {
+        timestamp = i;
+        reason = `motion jump at ${i}s`;
+        break;
+      }
+    }
+  }
+
+  if (confidence < 0.2) {
+    reason += " (low confidence — signals weak)";
+  }
+
+  return {
+    timestamp,
+    confidence,
+    reason,
+    signals: {
+      motionJump,
+      cutAcceleration,
+      shotDurationDrop,
+      peakMotion: structuralAnalysis.peakMotionTimestamp,
+    },
   };
 }
 
