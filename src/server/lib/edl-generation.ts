@@ -272,6 +272,49 @@ Effects should build toward the climax point and peak there.
     edl = enhanceEDLWithStyleDirectives(edl, directives);
   }
 
+  // Section fidelity enforcement for setup_to_montage
+  if (referenceStyle?.intentMapping?.structure === 'setup_to_montage' && edl.shots?.length > 0) {
+    const climaxPosition = referenceStyle.pacing?.climaxPosition ?? 0.5;
+    const timelineDuration = edl.timeline?.duration ?? 30;
+    const climaxTs = climaxPosition * timelineDuration;
+
+    let preClimaxEffects = 0;
+    let postClimaxEffects = 0;
+    let preClimaxCount = 0;
+    let postClimaxCount = 0;
+
+    for (const shot of edl.shots) {
+      const shotStart = shot.timing?.startTime ?? 0;
+      const isPreClimax = shotStart < climaxTs;
+
+      if (isPreClimax) {
+        preClimaxCount++;
+        if (shot.effects && shot.effects.length > 1) {
+          const heavyTypes = ['impact_flash', 'speed_ramp', 'color_pulse', 'context_shake'];
+          shot.effects = shot.effects.filter((e: any) => !heavyTypes.includes(e.type)).slice(0, 1);
+        }
+        preClimaxEffects += (shot.effects?.length ?? 0);
+      } else {
+        postClimaxCount++;
+        if (shot.effects && shot.effects.length < 2) {
+          const hasSpeed = shot.effects?.some((e: any) => e.type === 'speed_ramp');
+          const hasFlash = shot.effects?.some((e: any) => e.type === 'impact_flash' || e.type === 'flash_white');
+          if (!hasSpeed) {
+            shot.effects = shot.effects || [];
+            shot.effects.push({ id: `fx_${shot.id}_sr`, type: 'speed_ramp', intensity: 0.6, params: { entrySpeed: 1, exitSpeed: 1, anchorSpeed: 0.5 } });
+          }
+          if (!hasFlash && Math.random() < 0.4) {
+            shot.effects = shot.effects || [];
+            shot.effects.push({ id: `fx_${shot.id}_fl`, type: 'impact_flash', intensity: 0.7, params: { peakBrightness: 0.9, flashFrameCount: 2 } });
+          }
+        }
+        postClimaxEffects += (shot.effects?.length ?? 0);
+      }
+    }
+
+    console.log(`[edl-generation] Section fidelity enforced: pre-climax ${preClimaxCount} shots/${preClimaxEffects} effects, post-climax ${postClimaxCount} shots/${postClimaxEffects} effects`);
+  }
+
   // Validate creative density
   try {
     const directives = referenceStyle
