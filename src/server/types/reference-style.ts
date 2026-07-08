@@ -17,6 +17,16 @@ export interface ReferenceStyle {
     beatsPerCut: number; // How many beats between cuts (1 = every beat)
     cutAlignment: "strict" | "loose" | "none"; // How tightly cuts follow music
     accentCuts: number[]; // Timestamps of deliberately emphasized cuts
+    structure?: {
+      firstHalfAvgShotDuration: number;
+      secondHalfAvgShotDuration: number;
+      firstHalfCutsPerSecond: number;
+      secondHalfCutsPerSecond: number;
+      shortestShotDuration: number;
+      longestShotDuration: number;
+      shotDurationVariance: number;
+      accelerationRatio: number;
+    };
   };
 
   // === PACING ARCHITECTURE ===

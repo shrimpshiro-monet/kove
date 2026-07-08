@@ -227,7 +227,8 @@ export async function analyzeReference(
     totalDuration,
     cutFrequency,
     motionEnergy,
-    llmStyle
+    llmStyle,
+    sceneResult?.shotDurations
   );
 
   style.colorProfile = opencvColorProfile;
@@ -276,12 +277,83 @@ export async function analyzeReference(
   return { style, totalDuration };
 }
 
+function buildRhythmStructure(
+  shotDurations: number[],
+  totalDuration: number
+): {
+  firstHalfAvgShotDuration: number;
+  secondHalfAvgShotDuration: number;
+  firstHalfCutsPerSecond: number;
+  secondHalfCutsPerSecond: number;
+  shortestShotDuration: number;
+  longestShotDuration: number;
+  shotDurationVariance: number;
+  accelerationRatio: number;
+} | null {
+  if (shotDurations.length < 2) return null;
+
+  const midpoint = totalDuration / 2;
+  let accumulated = 0;
+  const firstHalfDurations: number[] = [];
+  const secondHalfDurations: number[] = [];
+
+  for (const dur of shotDurations) {
+    if (accumulated + dur <= midpoint) {
+      firstHalfDurations.push(dur);
+    } else if (accumulated >= midpoint) {
+      secondHalfDurations.push(dur);
+    } else {
+      const firstPart = midpoint - accumulated;
+      const secondPart = dur - firstPart;
+      if (firstPart > 0.01) firstHalfDurations.push(firstPart);
+      if (secondPart > 0.01) secondHalfDurations.push(secondPart);
+    }
+    accumulated += dur;
+  }
+
+  const firstHalfAvg = firstHalfDurations.length > 0
+    ? firstHalfDurations.reduce((a, b) => a + b, 0) / firstHalfDurations.length
+    : totalDuration;
+  const secondHalfAvg = secondHalfDurations.length > 0
+    ? secondHalfDurations.reduce((a, b) => a + b, 0) / secondHalfDurations.length
+    : totalDuration;
+
+  const firstHalfDuration = Math.min(midpoint, totalDuration);
+  const secondHalfDuration = Math.max(0, totalDuration - midpoint);
+
+  const firstHalfCutsPerSecond = firstHalfDuration > 0
+    ? firstHalfDurations.length / firstHalfDuration
+    : 0;
+  const secondHalfCutsPerSecond = secondHalfDuration > 0
+    ? secondHalfDurations.length / secondHalfDuration
+    : 0;
+
+  const allDurations = shotDurations;
+  const shortestShotDuration = Math.min(...allDurations);
+  const longestShotDuration = Math.max(...allDurations);
+  const mean = allDurations.reduce((a, b) => a + b, 0) / allDurations.length;
+  const shotDurationVariance = allDurations.reduce((s, d) => s + (d - mean) ** 2, 0) / allDurations.length;
+  const accelerationRatio = firstHalfAvg / (secondHalfAvg + 1e-5);
+
+  return {
+    firstHalfAvgShotDuration: firstHalfAvg,
+    secondHalfAvgShotDuration: secondHalfAvg,
+    firstHalfCutsPerSecond,
+    secondHalfCutsPerSecond,
+    shortestShotDuration,
+    longestShotDuration,
+    shotDurationVariance,
+    accelerationRatio,
+  };
+}
+
 function buildReferenceStyle(
   referenceId: string,
   duration: number,
   cutFrequency: { cutsPerSecond: number; avgShotDuration: number; variance: number },
   motionEnergy: number[],
-  llmStyle: any
+  llmStyle: any,
+  shotDurations?: number[]
 ): any {
   const avgMotion = motionEnergy.length > 0
     ? motionEnergy.reduce((a: number, b: number) => a + b, 0) / motionEnergy.length
@@ -308,6 +380,13 @@ function buildReferenceStyle(
     cutAlignment: cutFrequency.cutsPerSecond > 2 ? "strict" : cutFrequency.cutsPerSecond > 1 ? "loose" : "none",
     cutsPerSecond: cutFrequency.cutsPerSecond,
   };
+
+  if (shotDurations && shotDurations.length > 0) {
+    const structure = buildRhythmStructure(shotDurations, duration);
+    if (structure) {
+      style.rhythm.structure = structure;
+    }
+  }
   style.intentMapping = {
     genre: "other",
     pacing: isFastPaced ? "fast" : cutFrequency.avgShotDuration < 2.0 ? "medium" : "slow",
