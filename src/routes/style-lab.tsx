@@ -473,6 +473,14 @@ function StyleLabPage() {
 
       const pacingInferred = style.intentMapping?.pacing !== undefined;
       l("BADGE", `pacing inferred: ${pacingInferred ? "PASS" : "WARN"}`, pacingInferred);
+
+      if (edl) {
+        const edlMaxEnd = edl.shots?.length
+          ? Math.max(...edl.shots.map((s: any) => (s.timing?.startTime ?? 0) + (s.timing?.duration ?? 0)))
+          : 0;
+        const durationOk = edlMaxEnd <= (edl.timeline?.duration ?? 0) + 0.1;
+        l("BADGE", `duration invariant: ${durationOk ? "PASS" : "FAIL"} (max ${edlMaxEnd.toFixed(1)}s vs ${edl.timeline?.duration ?? 0}s)`, durationOk);
+      }
     } catch (e: any) {
       l("ANALYZE", `Reference analysis FAILED: ${e.message}`, false);
       setRefStep("error");
@@ -526,7 +534,7 @@ function StyleLabPage() {
     l("GENERATE", `Generating EDL with ${selectedSegments.length} segments + reference-matched effects...`);
     let generatedEdl: any;
     try {
-      generatedEdl = await apiPost<any>("/api/generate-edl", {
+      const rawResponse = await apiPost<any>("/api/generate-edl", {
         projectId,
         intentId: intent.id || "lab-intent",
         analysisId: analysisResult.analysisId || "lab-analysis",
@@ -537,14 +545,45 @@ function StyleLabPage() {
         durationSeconds: intent.durationSeconds,
         selectedSegments,
       });
-      setEdl(generatedEdl);
-      l("GENERATE", `EDL generated: ${generatedEdl.shots?.length ?? 0} shots, ${(generatedEdl.timeline?.duration ?? 0).toFixed(1)}s`, true);
 
-      const shotsWithEffects = generatedEdl.shots?.filter((s: any) => s.effects?.length > 0).length ?? 0;
+      // Robust EDL extraction — try multiple response shapes
+      const edlCandidate = rawResponse?.edl ?? rawResponse?.result?.edl ?? rawResponse?.data?.edl ?? rawResponse;
+
+      if (!edlCandidate) {
+        l("GENERATE-ERROR", "No EDL object found in generate response", false);
+        l("GENERATE-RAW", `Response keys: ${Object.keys(rawResponse ?? {}).join(", ")}`);
+        setGenStep("error");
+        return;
+      }
+
+      const shotCount = edlCandidate.shots?.length ?? 0;
+      const duration = edlCandidate.timeline?.duration ?? 0;
+      const maxShotEnd = shotCount > 0
+        ? Math.max(...edlCandidate.shots.map((s: any) => (s.timing?.startTime ?? 0) + (s.timing?.duration ?? 0)))
+        : 0;
+
+      l("GENERATE-INSPECT", `Shots: ${shotCount}, Duration: ${duration.toFixed(1)}s, Max shot end: ${maxShotEnd.toFixed(1)}s`);
+
+      if (shotCount === 0) {
+        l("GENERATE-ERROR", `Empty EDL: 0 shots generated. Check server logs for planner inputs.`, false);
+        l("GENERATE-RAW", JSON.stringify(rawResponse, null, 2).slice(0, 2000));
+        setGenStep("error");
+        return;
+      }
+
+      if (maxShotEnd > duration + 0.1) {
+        l("GENERATE-WARN", `Duration invariant violated: shots extend to ${maxShotEnd.toFixed(1)}s but timeline is ${duration.toFixed(1)}s`, false);
+      }
+
+      generatedEdl = edlCandidate;
+      setEdl(edlCandidate);
+      l("GENERATE", `EDL generated: ${shotCount} shots, ${duration.toFixed(1)}s`, true);
+
+      const shotsWithEffects = edlCandidate.shots?.filter((s: any) => s.effects?.length > 0).length ?? 0;
       const effectTypes = new Set<string>();
-      generatedEdl.shots?.forEach((s: any) => s.effects?.forEach((e: any) => effectTypes.add(e.type)));
+      edlCandidate.shots?.forEach((s: any) => s.effects?.forEach((e: any) => effectTypes.add(e.type)));
 
-      l("EDL-INSPECT", `Shots with effects: ${shotsWithEffects}/${generatedEdl.shots?.length ?? 0}`);
+      l("EDL-INSPECT", `Shots with effects: ${shotsWithEffects}/${edlCandidate.shots?.length ?? 0}`);
       l("EDL-INSPECT", `Effect types in EDL: ${[...effectTypes].join(", ")}`);
       l("EDL-INSPECT", `color_grade: ${effectTypes.has("color_grade") ? "YES" : "NO"}`);
       l("EDL-INSPECT", `flash effects: ${effectTypes.has("flash_white") || effectTypes.has("impact_flash") ? "YES" : "NO"}`);
