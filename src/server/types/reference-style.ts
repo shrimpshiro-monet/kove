@@ -230,6 +230,8 @@ export interface ReferenceStyle {
     avgShotDuration: number; // seconds
     mood: string[];
     contentFocus: string[];
+    structure?: "setup_to_montage" | "uniform_montage" | "dialogue_drama" | "unknown";
+    energyArc?: "flat" | "build" | "climax_spike" | "decline";
   };
 }
 
@@ -434,6 +436,14 @@ export const REFERENCE_STYLE_JSON_SCHEMA = {
         avgShotDuration: { type: "number" },
         mood: { type: "array", items: { type: "string" } },
         contentFocus: { type: "array", items: { type: "string" } },
+        structure: {
+          type: "string",
+          enum: ["setup_to_montage", "uniform_montage", "dialogue_drama", "unknown"],
+        },
+        energyArc: {
+          type: "string",
+          enum: ["flat", "build", "climax_spike", "decline"],
+        },
       },
       required: [
         "genre",

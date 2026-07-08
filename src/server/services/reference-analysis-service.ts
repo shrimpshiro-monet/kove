@@ -399,9 +399,27 @@ function buildReferenceStyle(
       style.rhythm.structure = structure;
     }
   }
+  // Infer structure from rhythm split
+  let structureType: "setup_to_montage" | "uniform_montage" | "dialogue_drama" | "unknown" = "unknown";
+  let energyArc: "flat" | "build" | "climax_spike" | "decline" = "flat";
+
+  const hasVariance = cutFrequency.variance > 0.3;
+  const isFastPaced2 = cutFrequency.avgShotDuration < 1.2;
+  const isHighCuts = cutFrequency.cutsPerSecond > 0.8;
+
+  // Pacing inference — never leave undefined
+  let inferredPacing: "aggressive" | "fast" | "medium" | "slow" | "varied";
+  if (isFastPaced2 || isHighCuts) {
+    inferredPacing = cutFrequency.avgShotDuration < 0.5 ? "aggressive" : "fast";
+  } else if (cutFrequency.avgShotDuration < 2.0) {
+    inferredPacing = "medium";
+  } else {
+    inferredPacing = "slow";
+  }
+
   style.intentMapping = {
     genre: "other",
-    pacing: isFastPaced ? "fast" : cutFrequency.avgShotDuration < 2.0 ? "medium" : "slow",
+    pacing: inferredPacing,
     syncToBeat: cutFrequency.cutsPerSecond > 1,
     beatSyncStrength: Math.min(1, cutFrequency.cutsPerSecond / 3),
     colorTreatment: isHighEnergy ? "vibrant" : "raw",
@@ -409,8 +427,34 @@ function buildReferenceStyle(
     transitionStyle: cutFrequency.cutsPerSecond > 2 ? "aggressive" : cutFrequency.cutsPerSecond > 1 ? "dynamic" : "smooth",
     avgShotDuration: cutFrequency.avgShotDuration,
     mood: isHighEnergy ? ["energetic", "intense"] : ["calm", "cinematic"],
-    energy: isHighEnergy ? "high" : "medium",
+    contentFocus: [],
   };
+
+  // Post-hoc enhancement using structural data
+  if (style.rhythm?.structure) {
+    const s = style.rhythm.structure;
+    const highVariance = s.shotDurationVariance > 0.3;
+    const highAccel = s.accelerationRatio > 1.3;
+
+    if (highVariance && highAccel) {
+      structureType = "setup_to_montage";
+      energyArc = "climax_spike";
+    } else if (highAccel) {
+      structureType = "uniform_montage";
+      energyArc = "build";
+    } else if (!isFastPaced2 && !isHighCuts) {
+      structureType = "dialogue_drama";
+      energyArc = "flat";
+    }
+
+    style.intentMapping.structure = structureType;
+    style.intentMapping.energyArc = energyArc;
+
+    // Override pacing if structural data is stronger
+    if (s.secondHalfCutsPerSecond > s.firstHalfCutsPerSecond * 1.5) {
+      style.intentMapping.pacing = "varied";
+    }
+  }
   style.pacing = {
     climaxPosition: motionEnergy.length > 0 ? 0.65 : 0.5,
     energyCurve: motionEnergy.slice(0, 10),
