@@ -116,6 +116,33 @@ export async function generateEDL(params: {
 - Editor philosophy: "${rs.editingPhilosophy.summary.slice(0, 120)}"
 - Energy curve shape: ${rs.pacing.energyCurve.map((v) => v.toFixed(1)).join(",")}
 
+`;
+    // Add structure-aware section rules
+    const structure = rs.intentMapping?.structure;
+    const energyArc = rs.intentMapping?.energyArc;
+    const climaxTs = rs.pacing?.climaxPosition ?? 0.5;
+    if (structure === 'setup_to_montage') {
+      referenceConstraints += `
+## STRUCTURAL ARC: Setup → Montage (${strict ? 'STRICT' : 'soft'})
+The reference has a HYBRID structure with two distinct sections:
+- BEFORE climax (~${Math.round(climaxTs * 100)}% = ~${(climaxTs * (rs.duration || 30)).toFixed(1)}s): SLOW SETUP — dialogue, breathing, minimal effects. Shots should be LONGER, FEWER effects, mostly clean cuts. Effect density: 0-1 per shot.
+- AFTER climax: RAPID MONTAGE — high energy, fast cuts, heavy effects. Shots should be SHORTER, MORE effects, beat-locked. Effect density: 2-5 per shot.
+- AT climax: STRONGEST moment — peak effects, hardest cut, highest energy.
+- DO NOT apply heavy effects (impact_flash, speed_ramp, color_pulse) to shots before the climax timestamp.
+- Effect density MUST increase after the climax point.
+`;
+    } else if (structure === 'dialogue_drama') {
+      referenceConstraints += `
+## STRUCTURAL ARC: Dialogue Drama
+Minimal effects throughout. Clean cuts. Focus on performance and pacing.
+`;
+    } else if (energyArc === 'build' || energyArc === 'climax_spike') {
+      referenceConstraints += `
+## ENERGY ARC: ${energyArc}
+Effects should build toward the climax point and peak there.
+`;
+    }
+    referenceConstraints += `
 ## REFERENCE TRANSITIONS (match these ratios)
 - cut: ${Math.round(tb.cutPercentage * 100)}%
 - crossfade: ${Math.round(tb.crossfadePercentage * 100)}%
