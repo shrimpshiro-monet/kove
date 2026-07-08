@@ -187,6 +187,9 @@ export interface ReferenceStyle {
     lateEnergy: number;
     energyVarianceRatio: number;
     peakMotionTimestamp?: number;
+    motionSource?: string;
+    motionSampleCount?: number;
+    nonzeroMotionSampleCount?: number;
   };
 
   // === CLIMAX DETECTION (setup→montage transition) ===

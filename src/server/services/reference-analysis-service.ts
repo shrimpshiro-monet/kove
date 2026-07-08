@@ -634,6 +634,10 @@ function buildMotionProfile1s(
     peakMotionTimestamp = peakFrame.timestamp;
   }
 
+  // Diagnostic: check if motion data is real
+  const nonzeroSamples = energyFrames.filter(f => f.motion > 0).length;
+  const motionSource = nonzeroSamples > energyFrames.length * 0.1 ? 'energyFrames' : 'missing';
+
   return {
     motionEnergyProfile1s,
     shotMotionProfile,
@@ -641,6 +645,9 @@ function buildMotionProfile1s(
     lateEnergy,
     energyVarianceRatio,
     peakMotionTimestamp,
+    motionSource,
+    motionSampleCount: energyFrames.length,
+    nonzeroMotionSampleCount: nonzeroSamples,
   };
 }
 
@@ -651,6 +658,7 @@ function detectClimax(
     energyVarianceRatio: number;
     peakMotionTimestamp?: number;
     motionEnergyProfile1s: number[];
+    motionSource?: string;
   },
   rhythmStructure: {
     firstHalfCutsPerSecond: number;
@@ -671,6 +679,8 @@ function detectClimax(
     peakMotion?: number;
   };
 } | null {
+  const WARMUP_SECONDS = 2.0;
+
   const motionJump = structuralAnalysis.earlyEnergy > 0
     ? structuralAnalysis.lateEnergy / structuralAnalysis.earlyEnergy
     : 1;
@@ -687,15 +697,21 @@ function detectClimax(
   const confidence = Math.min(1, (motionScore * 0.35 + cutScore * 0.35 + durationScore * 0.3));
 
   let timestamp = totalDuration * 0.5;
-  let reason = "estimated from midpoint";
+  let reason = 'estimated from midpoint';
 
-  if (structuralAnalysis.peakMotionTimestamp !== undefined) {
-    timestamp = structuralAnalysis.peakMotionTimestamp;
-    reason = "peak motion timestamp";
+  // Only use peak motion if it's real (non-zero) and past warmup
+  const hasRealMotion = structuralAnalysis.motionSource !== 'missing'
+    && structuralAnalysis.peakMotionTimestamp !== undefined
+    && structuralAnalysis.peakMotionTimestamp > WARMUP_SECONDS;
+
+  if (hasRealMotion) {
+    timestamp = structuralAnalysis.peakMotionTimestamp!;
+    reason = 'peak motion timestamp';
   } else if (structuralAnalysis.motionEnergyProfile1s.length > 0) {
     const profile = structuralAnalysis.motionEnergyProfile1s;
     const avg = profile.reduce((a, b) => a + b, 0) / profile.length;
-    for (let i = 1; i < profile.length; i++) {
+    // Search for motion jump AFTER warmup window
+    for (let i = Math.ceil(WARMUP_SECONDS); i < profile.length; i++) {
       if (profile[i] > avg * 1.3 && profile[i - 1] < avg) {
         timestamp = i;
         reason = `motion jump at ${i}s`;
@@ -704,19 +720,34 @@ function detectClimax(
     }
   }
 
-  if (confidence < 0.2) {
-    reason += " (low confidence — signals weak)";
+  // Fallback: use rhythm-based detection if no motion data
+  if (reason === 'estimated from midpoint' && rhythmStructure) {
+    // Find where shot durations drop significantly
+    // Use the midpoint as a fallback but note it's rhythm-based
+    timestamp = totalDuration * 0.3; // Earlier default for setup_to_montage
+    reason = 'rhythm-based estimate (no reliable motion data)';
+  }
+
+  // Penalize confidence if climax is at boundary
+  let adjustedConfidence = confidence;
+  if (timestamp < WARMUP_SECONDS) {
+    adjustedConfidence *= 0.3; // Heavy penalty for boundary climax
+    reason += ' (low confidence — climax at boundary)';
+  }
+
+  if (adjustedConfidence < 0.2) {
+    reason += ' (low confidence)';
   }
 
   return {
     timestamp,
-    confidence,
+    confidence: adjustedConfidence,
     reason,
     signals: {
       motionJump,
       cutAcceleration,
       shotDurationDrop,
-      peakMotion: structuralAnalysis.peakMotionTimestamp,
+      peakMotion: hasRealMotion ? structuralAnalysis.peakMotionTimestamp : undefined,
     },
   };
 }
