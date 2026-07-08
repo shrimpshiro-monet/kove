@@ -13,6 +13,7 @@ interface DetectedSegment {
   startTime: number;
   duration: number;
   endTime: number;
+  thumbnail?: string;
 }
 
 interface FootageSceneData {
@@ -23,6 +24,7 @@ interface FootageSceneData {
   shotCount: number;
   segments: DetectedSegment[];
   selectedIndices: number[];
+  thumbnails?: Array<{ timestamp: number; thumbnail: string }>;
 }
 
 const API = "";
@@ -141,23 +143,26 @@ function SegmentTimeline({ footage, fileIndex, onToggle }: { footage: FootageSce
         </span>
       </div>
 
-      <div className="flex gap-0.5 mb-2">
-        {footage.segments.map((seg, i) => {
-          const pct = (seg.duration / footage.totalDuration) * 100;
-          const sel = selectedSet.has(i);
-          return (
-            <div
-              key={i}
-              onClick={() => onToggle(fileIndex, i)}
-              className={`h-6 cursor-pointer rounded-sm transition-colors ${
-                sel ? "bg-orange-600 hover:bg-orange-500" : "bg-neutral-700 hover:bg-neutral-600"
-              }`}
-              style={{ width: `${Math.max(pct, 0.5)}%` }}
-              title={`Scene ${i}: ${seg.startTime.toFixed(1)}s - ${seg.endTime.toFixed(1)}s (${seg.duration.toFixed(1)}s)${sel ? " [SELECTED]" : ""}`}
-            />
-          );
-        })}
-      </div>
+      {footage.segments.some(s => s.thumbnail) && (
+        <div className="flex gap-0.5 mb-2 overflow-x-auto">
+          {footage.segments.map((seg, i) => {
+            const pct = (seg.duration / footage.totalDuration) * 100;
+            const sel = selectedSet.has(i);
+            return (
+              <div key={i} className="relative shrink-0 cursor-pointer group" style={{ width: `${Math.max(pct, 2)}%`, minWidth: '24px' }} onClick={() => onToggle(fileIndex, i)}>
+                {seg.thumbnail ? (
+                  <img src={seg.thumbnail} alt={`Scene ${i}`} className={`w-full h-8 object-cover rounded-sm border ${sel ? 'border-orange-500' : 'border-neutral-700'}`} />
+                ) : (
+                  <div className={`w-full h-8 rounded-sm ${sel ? 'bg-orange-600' : 'bg-neutral-700'}`} />
+                )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[8px] text-white bg-black/60 px-1 rounded">{i}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="max-h-32 overflow-y-auto">
         <table className="w-full text-xs">
@@ -303,6 +308,17 @@ function StyleLabPage() {
           duration: s.duration,
           endTime: s.end_time,
         }));
+
+        // Map thumbnails to segments
+        const thumbnails = result.thumbnails ?? [];
+        for (const seg of segments) {
+          const midTime = (seg.startTime + seg.endTime) / 2;
+          const closest = thumbnails.reduce((best: any, t: any) => {
+            const dist = Math.abs(t.timestamp - midTime);
+            return dist < Math.abs(best.timestamp - midTime) ? t : best;
+          }, { timestamp: -999, thumbnail: '' });
+          if (closest.thumbnail) seg.thumbnail = closest.thumbnail;
+        }
 
         const allSelected = segments.map((_: any, idx: number) => idx);
         newScenes.push({
