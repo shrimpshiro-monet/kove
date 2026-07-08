@@ -125,6 +125,60 @@ export interface ReferenceStyle {
     intensity: number;
   }[];
 
+  // === PER-SHOT ANALYSIS (extracted from FFmpeg frame data) ===
+  effectVocabulary?: Array<{
+    shotIndex: number;
+    startTime: number;
+    duration: number;
+    effects: Array<{
+      type: string;
+      intensity: number;
+      timing: "start" | "middle" | "end" | "throughout";
+      params?: Record<string, number>;
+    }>;
+    transition?: { type: string; duration: number };
+  }>;
+  colorGrades?: Array<{
+    timestamp: number;
+    saturation: number;
+    brightness: number;
+    contrast: number;
+    temperature: number;
+  }>;
+  velocityRamps?: Array<{
+    shotIndex: number;
+    startTime: number;
+    duration: number;
+    entrySpeed: number;
+    anchorSpeed: number;
+    exitSpeed: number;
+    anchorPosition: number;
+    easing: string;
+  }>;
+  flashFrames?: Array<{
+    timestamp: number;
+    type: "white" | "black";
+    brightness: number;
+    precedingShotIndex: number;
+    followingShotIndex: number;
+  }>;
+
+  // === STRUCTURAL ANALYSIS (1s resolution motion profile) ===
+  structuralAnalysis?: {
+    motionEnergyProfile1s: number[];
+    shotMotionProfile: Array<{
+      shotIndex: number;
+      startTime: number;
+      duration: number;
+      meanMotion: number;
+      maxMotion: number;
+    }>;
+    earlyEnergy: number;
+    lateEnergy: number;
+    energyVarianceRatio: number;
+    peakMotionTimestamp?: number;
+  };
+
   // === MONET INTENT MAPPING ===
   // Concrete values to inject directly into EditIntent — no interpretation needed
   intentMapping: {

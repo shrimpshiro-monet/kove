@@ -160,6 +160,11 @@ export async function analyzeReference(
       console.warn(`[reference-analysis] Energy analysis failed: ${(e as Error).message}`);
     }
 
+    let structuralAnalysis: ReturnType<typeof buildMotionProfile1s> | null = null;
+    if (energyFrames.length > 0 && totalDuration > 0) {
+      structuralAnalysis = buildMotionProfile1s(energyFrames, totalDuration, sceneResult);
+    }
+
     try {
       frames = await extractFramesFromBuffer(buffer, mimeType, 24);
       console.log(`[reference-analysis] Extracted ${frames.length} frames for LLM vision`);
@@ -226,6 +231,10 @@ export async function analyzeReference(
   );
 
   style.colorProfile = opencvColorProfile;
+
+  if (structuralAnalysis) {
+    style.structuralAnalysis = structuralAnalysis;
+  }
 
   // Per-shot effect extraction from frame data
   if (energyFrames.length > 0 && totalDuration > 0) {
@@ -406,6 +415,97 @@ function buildTraceFromScenes(
       startTime: i * segmentDuration,
       duration: segmentDuration,
     })),
+  };
+}
+
+function buildMotionProfile1s(
+  energyFrames: FrameEnergy[],
+  totalDuration: number,
+  sceneResult: SceneDetectionResult | null
+): {
+  motionEnergyProfile1s: number[];
+  shotMotionProfile: Array<{
+    shotIndex: number;
+    startTime: number;
+    duration: number;
+    meanMotion: number;
+    maxMotion: number;
+  }>;
+  earlyEnergy: number;
+  lateEnergy: number;
+  energyVarianceRatio: number;
+  peakMotionTimestamp?: number;
+} {
+  const bucketCount = Math.max(1, Math.ceil(totalDuration));
+  const motionEnergyProfile1s: number[] = new Array(bucketCount).fill(0);
+  const bucketCounts: number[] = new Array(bucketCount).fill(0);
+
+  for (const frame of energyFrames) {
+    const bucket = Math.min(bucketCount - 1, Math.floor(frame.timestamp));
+    motionEnergyProfile1s[bucket] += frame.motion;
+    bucketCounts[bucket]++;
+  }
+
+  for (let i = 0; i < bucketCount; i++) {
+    if (bucketCounts[i] > 0) {
+      motionEnergyProfile1s[i] = motionEnergyProfile1s[i] / bucketCounts[i];
+    }
+  }
+
+  const shotMotionProfile: Array<{
+    shotIndex: number;
+    startTime: number;
+    duration: number;
+    meanMotion: number;
+    maxMotion: number;
+  }> = [];
+
+  if (sceneResult && sceneResult.shotDurations.length > 0) {
+    let accumulated = 0;
+    for (let i = 0; i < sceneResult.shotDurations.length; i++) {
+      const dur = sceneResult.shotDurations[i];
+      const shotStart = accumulated;
+      const shotEnd = accumulated + dur;
+      const shotFrames = energyFrames.filter(
+        f => f.timestamp >= shotStart && f.timestamp < shotEnd
+      );
+      const motions = shotFrames.map(f => f.motion);
+      shotMotionProfile.push({
+        shotIndex: i,
+        startTime: shotStart,
+        duration: dur,
+        meanMotion: motions.length > 0 ? motions.reduce((a, b) => a + b, 0) / motions.length : 0,
+        maxMotion: motions.length > 0 ? Math.max(...motions) : 0,
+      });
+      accumulated += dur;
+    }
+  }
+
+  const midpoint = totalDuration / 2;
+  const earlyFrames = energyFrames.filter(f => f.timestamp < midpoint);
+  const lateFrames = energyFrames.filter(f => f.timestamp >= midpoint);
+  const earlyEnergy = earlyFrames.length > 0
+    ? earlyFrames.reduce((s, f) => s + f.combined, 0) / earlyFrames.length
+    : 0;
+  const lateEnergy = lateFrames.length > 0
+    ? lateFrames.reduce((s, f) => s + f.combined, 0) / lateFrames.length
+    : 0;
+  const energyVarianceRatio = earlyEnergy > 0 ? lateEnergy / earlyEnergy : 1;
+
+  let peakMotionTimestamp: number | undefined;
+  if (energyFrames.length > 0) {
+    const peakFrame = energyFrames.reduce((max, f) =>
+      f.motion > max.motion ? f : max, energyFrames[0]);
+    peakMotionTimestamp = peakFrame.timestamp;
+  }
+
+  return {
+    motionEnergyProfile1s,
+    shotMotionProfile,
+    earlyEnergy,
+    lateEnergy,
+    energyVarianceRatio,
+    peakMotionTimestamp,
   };
 }
 
