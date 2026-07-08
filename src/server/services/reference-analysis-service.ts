@@ -13,6 +13,7 @@ import { extractColorGrades } from "../lib/reference-color-extractor";
 import { extractVelocityRamps } from "../lib/reference-velocity-extractor";
 import { detectFlashFrames } from "../lib/flash-frame-detector";
 import { extractTextOverlays, type DetectedTextOverlay } from "../lib/text-overlay-extractor";
+import { runPythonVelocityAnalysis, type StructuralMotionResult } from "../lib/python-velocity-bridge";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import * as fs from "node:fs/promises";
@@ -117,6 +118,7 @@ export async function analyzeReference(
   let opencvColorProfile: Record<string, unknown> = {};
   let structuralAnalysis: ReturnType<typeof buildMotionProfile1s> | null = null;
   let detectedTextOverlays: DetectedTextOverlay[] = [];
+  let pythonData: StructuralMotionResult | null = null;
 
   // Scene detection
   try {
@@ -153,6 +155,14 @@ export async function analyzeReference(
       totalDuration = parseFloat(durStr.trim()) || 0;
     }
 
+    // Run Python deep analysis for real motion data
+    try {
+      pythonData = await runPythonVelocityAnalysis(tmpPath);
+      console.log(`[reference-analysis] Python velocity: ${pythonData.motionSampleCount} samples, ${pythonData.nonzeroMotionSampleCount} nonzero, source=${pythonData.motionSource}`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Python velocity failed: ${(e as Error).message}`);
+    }
+
     try {
       const energyResult = await analyzeVideoEnergy(tmpPath);
       motionEnergy = energyResult.energyCurve;
@@ -162,7 +172,19 @@ export async function analyzeReference(
       console.warn(`[reference-analysis] Energy analysis failed: ${(e as Error).message}`);
     }
 
-    if (energyFrames.length > 0 && totalDuration > 0) {
+    if (pythonData && pythonData.motionSampleCount > 0) {
+      structuralAnalysis = {
+        motionEnergyProfile1s: pythonData.motionEnergyProfile1s,
+        shotMotionProfile: pythonData.shotMotionProfile,
+        earlyEnergy: pythonData.earlyEnergy,
+        lateEnergy: pythonData.lateEnergy,
+        energyVarianceRatio: pythonData.energyVarianceRatio,
+        peakMotionTimestamp: pythonData.peakMotionTimestamp,
+        motionSource: pythonData.motionSource,
+        motionSampleCount: pythonData.motionSampleCount,
+        nonzeroMotionSampleCount: pythonData.nonzeroMotionSampleCount,
+      };
+    } else if (energyFrames.length > 0 && totalDuration > 0) {
       structuralAnalysis = buildMotionProfile1s(energyFrames, totalDuration, sceneResult);
     }
 
@@ -235,6 +257,11 @@ export async function analyzeReference(
   style.colorProfile = opencvColorProfile;
   if (detectedTextOverlays.length > 0) {
     style.textOverlays = detectedTextOverlays;
+  }
+
+  // Use Python palette if available (overrides LLM palette)
+  if (pythonData && pythonData.dominantPalette.length > 0) {
+    style.dominantPalette = normalizeDominantPalette(pythonData.dominantPalette);
   }
 
   if (structuralAnalysis) {
@@ -570,6 +597,9 @@ function buildMotionProfile1s(
   lateEnergy: number;
   energyVarianceRatio: number;
   peakMotionTimestamp?: number;
+  motionSource: string;
+  motionSampleCount: number;
+  nonzeroMotionSampleCount: number;
 } {
   const bucketCount = Math.max(1, Math.ceil(totalDuration));
   const motionEnergyProfile1s: number[] = new Array(bucketCount).fill(0);
