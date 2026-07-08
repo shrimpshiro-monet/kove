@@ -192,6 +192,23 @@ export async function handleGenerateEDL(
           prompt,
         });
 
+        // Duration invariant: clamp shots to timeline duration
+        const v3TimelineDuration = v3Edl.timeline?.duration ?? 30;
+        if (v3Edl.shots && v3Edl.shots.length > 0) {
+          const maxEnd = Math.max(...v3Edl.shots.map((s: any) => (s.timing?.startTime ?? 0) + (s.timing?.duration ?? 0)));
+          if (maxEnd > v3TimelineDuration + 0.01) {
+            console.log(`[generate-edl] Duration invariant: clamping ${maxEnd.toFixed(2)}s to ${v3TimelineDuration}s`);
+            v3Edl.shots = v3Edl.shots.filter((s: any) => (s.timing?.startTime ?? 0) < v3TimelineDuration);
+            const lastShot = v3Edl.shots[v3Edl.shots.length - 1];
+            if (lastShot) {
+              const shotEnd = (lastShot.timing?.startTime ?? 0) + (lastShot.timing?.duration ?? 0);
+              if (shotEnd > v3TimelineDuration) {
+                lastShot.timing.duration = v3TimelineDuration - (lastShot.timing?.startTime ?? 0);
+              }
+            }
+          }
+        }
+
         // Score
         const musicForScore = analysis.music ?? { sourceId: "", duration: v3Edl.timeline?.duration ?? 30, bpm: 120, beatGrid: [] };
         const scores = scoreNewPipelineEDL(v3Edl as any, musicForScore as any);
@@ -462,6 +479,25 @@ export async function handleGenerateEDL(
         }));
       } catch (e) {
         console.warn("[generate-edl] Reference style enhancement failed:", (e as Error).message);
+      }
+    }
+
+    // Duration invariant: clamp shots to timeline duration
+    const timelineDuration = edl.timeline?.duration ?? 30;
+    if (edl.shots && edl.shots.length > 0) {
+      const maxEnd = Math.max(...edl.shots.map((s: any) => (s.timing?.startTime ?? 0) + (s.timing?.duration ?? 0)));
+      if (maxEnd > timelineDuration + 0.01) {
+        console.log(`[generate-edl] Duration invariant: clamping ${maxEnd.toFixed(2)}s to ${timelineDuration}s`);
+        // Trim shots that extend past timeline
+        edl.shots = edl.shots.filter((s: any) => (s.timing?.startTime ?? 0) < timelineDuration);
+        // Trim last shot if it extends past
+        const lastShot = edl.shots[edl.shots.length - 1];
+        if (lastShot) {
+          const shotEnd = (lastShot.timing?.startTime ?? 0) + (lastShot.timing?.duration ?? 0);
+          if (shotEnd > timelineDuration) {
+            lastShot.timing.duration = timelineDuration - (lastShot.timing?.startTime ?? 0);
+          }
+        }
       }
     }
 
