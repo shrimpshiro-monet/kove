@@ -318,6 +318,9 @@ export async function analyzeReference(
   const ext = mimeType.includes("quicktime") ? ".mov" : ".mp4";
   const tmpPath = path.join(tmpDir, `input${ext}`);
 
+  // Extract resolution and frame rate from reference (declared before try for scope)
+  let refWidth = 1920, refHeight = 1080, refFps = 30;
+
   try {
     await fs.writeFile(tmpPath, Buffer.from(buffer));
 
@@ -332,7 +335,6 @@ export async function analyzeReference(
     }
 
     // Extract resolution and frame rate from reference
-    let refWidth = 1920, refHeight = 1080, refFps = 30;
     try {
       const { stdout: streamInfo } = await execFileAsync("ffprobe", [
         "-v", "error",
