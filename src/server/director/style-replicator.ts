@@ -114,6 +114,55 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
 
   const musicId = analysis.music?.musicId ?? analysis.music?.id ?? "music_default";
 
+  // Generate text overlays from reference text overlay trace
+  const textOverlayTrace = (ref as any).textOverlayTrace ?? [];
+  const refDuration = (ref as any).duration ?? targetDuration;
+  const textOverlays = textOverlayTrace.map((trace: any, idx: number) => {
+    // Scale timestamps from reference duration to target duration
+    const timeScale = refDuration > 0 ? targetDuration / refDuration : 1;
+    const startTime = Math.max(0, (trace.startTime ?? 0) * timeScale);
+    const endTime = Math.min(targetDuration, (trace.endTime ?? trace.startTime + 1) * timeScale);
+
+    // Map position to offset (-1..1 normalized)
+    const bbox = trace.bbox ?? { x: 0.3, y: 0.4, w: 0.4, h: 0.1 };
+    const offsetX = (bbox.x + bbox.w / 2) * 2 - 1; // Map 0-1 to -1..1
+    const offsetY = (bbox.y + bbox.h / 2) * 2 - 1;
+
+    // Map animation type
+    const animMap: Record<string, "pop" | "fade" | "slide" | "glitch"> = {
+      pop_scale: "pop",
+      fade_in: "fade",
+      slide_up: "slide",
+      typewriter: "pop",
+      static_caption: "fade",
+    };
+    const inType = animMap[trace.animation] ?? "fade";
+
+    // Map alignment from position
+    const alignment = trace.position === "center" ? "center" : trace.position === "upper_third" ? "center" : "center";
+
+    return {
+      id: `text_${String(idx + 1).padStart(3, "0")}`,
+      text: trace.text ?? "",
+      startTime,
+      endTime,
+      offset: { x: Math.round(offsetX * 100) / 100, y: Math.round(offsetY * 100) / 100 },
+      style: {
+        fontSize: trace.fontVibe === "bold_sans" ? 48 : 36,
+        color: "#FFFFFF",
+        weight: trace.fontVibe === "bold_sans" ? "bold" : "normal",
+        shadow: true,
+        alignment,
+      },
+      animation: {
+        inType,
+        outType: "fade",
+        duration: 0.3,
+        easing: "ease-out" as const,
+      },
+    };
+  });
+
   return {
     version: "1.0.0",
     metadata: {
@@ -133,6 +182,7 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
       ? { id: musicId, sourceId: musicId, volume: 0.85, fadeIn: 0.3, fadeOut: 0.5, bpm: analysis.music.bpm ?? rhythmMap?.bpm ?? 120, beatGrid: beats }
       : undefined,
     shots,
+    textOverlays: textOverlays.length > 0 ? textOverlays : undefined,
     globalEffects: { colorGrade: mapColorGrade(ref.visualStyle?.colorGrade ?? "cinematic") },
   };
 }

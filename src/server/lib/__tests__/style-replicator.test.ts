@@ -173,4 +173,53 @@ describe("replicateStyle", () => {
     const newTotal = newDurations.reduce((a, b) => a + b, 0);
     expect(Math.abs(origTotal - newTotal)).toBeLessThan(1.0);
   });
+
+  it("generates text overlays from reference textOverlayTrace", () => {
+    const ref = makeRef();
+    (ref as any).duration = 15;
+    (ref as any).textOverlayTrace = [
+      {
+        startTime: 1.0, endTime: 4.0, text: "LOCKED IN",
+        bbox: { x: 0.2, y: 0.35, w: 0.6, h: 0.12 },
+        position: "center", animation: "pop_scale", fontVibe: "bold_sans", confidence: 0.85,
+      },
+      {
+        startTime: 8.0, endTime: 12.0, text: "GAME TIME",
+        bbox: { x: 0.1, y: 0.7, w: 0.8, h: 0.1 },
+        position: "lower_third", animation: "slide_up", fontVibe: "bold_sans", confidence: 0.78,
+      },
+    ];
+
+    const edl = replicateStyle({
+      referenceStyle: ref, analysis: makeAnalysis(), sourcePlan: makeSourcePlan(),
+      targetDuration: 20,
+      rhythmMap: { bpm: 140, beats: makeBeats(), onsets: [], drop_candidates: [], downbeats: [] },
+      fps: 30, createdAt: 0,
+    });
+
+    expect(edl.textOverlays).toBeDefined();
+    expect(edl.textOverlays!.length).toBe(2);
+
+    // Timestamps should be scaled (reference 15s → target 20s, scale = 1.33x)
+    const overlay1 = edl.textOverlays![0];
+    expect(overlay1.text).toBe("LOCKED IN");
+    expect(overlay1.startTime).toBeCloseTo(1.0 * (20 / 15), 1);
+    expect(overlay1.endTime).toBeCloseTo(4.0 * (20 / 15), 1);
+    expect(overlay1.style?.shadow).toBe(true);
+    expect(overlay1.animation?.inType).toBe("pop");
+
+    const overlay2 = edl.textOverlays![1];
+    expect(overlay2.text).toBe("GAME TIME");
+    expect(overlay2.animation?.inType).toBe("slide");
+  });
+
+  it("does not generate text overlays when reference has none", () => {
+    const edl = replicateStyle({
+      referenceStyle: makeRef(), analysis: makeAnalysis(), sourcePlan: makeSourcePlan(),
+      targetDuration: 20,
+      rhythmMap: { bpm: 140, beats: makeBeats(), onsets: [], drop_candidates: [], downbeats: [] },
+      fps: 30, createdAt: 0,
+    });
+    expect(edl.textOverlays).toBeUndefined();
+  });
 });

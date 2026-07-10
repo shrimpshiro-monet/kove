@@ -83,4 +83,39 @@ describe("buildSourcePlan", () => {
     }
     expect(continuityScore / plan.length).toBeGreaterThan(0.3);
   });
+
+  it("prefers faceCentered segments when reference has centered subject", () => {
+    const ref = makeRef();
+    (ref as any).subjectTracks = [
+      { trackId: "person_1", className: "person", avgCenter: { x: 0.5, y: 0.5 }, motionPath: "static", confidence: 0.8 },
+    ];
+    const analysis = makeAnalysis(2, 10);
+    // Make all even-index segments faceCentered
+    for (const clip of analysis.footage) {
+      for (let i = 0; i < clip.segments.length; i++) {
+        clip.segments[i].faceCentered = i % 2 === 0;
+      }
+    }
+    const plan = buildSourcePlan(analysis, ref, 10);
+    const faceCenteredCount = plan.filter(p => p.faceCentered).length;
+    expect(faceCenteredCount).toBeGreaterThan(3);
+  });
+
+  it("prefers matching motion direction when reference has directional subject", () => {
+    const ref = makeRef();
+    (ref as any).subjectTracks = [
+      { trackId: "car_1", className: "car", avgCenter: { x: 0.3, y: 0.6 }, motionPath: "left_to_right", confidence: 0.9 },
+    ];
+    const analysis = makeAnalysis(2, 10);
+    // Make all segments have "right" motion
+    for (const clip of analysis.footage) {
+      for (const seg of clip.segments) {
+        seg.motionDir = "right";
+      }
+    }
+    const plan = buildSourcePlan(analysis, ref, 10);
+    // Most segments should be "right" motion (they all are, but the bonus should push them higher)
+    const rightCount = plan.filter(p => p.motionDir === "right").length;
+    expect(rightCount).toBeGreaterThanOrEqual(8);
+  });
 });

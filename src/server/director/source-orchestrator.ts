@@ -25,6 +25,14 @@ interface CandidateSegment {
   hasVelocityRamp: boolean;
 }
 
+interface SubjectTrack {
+  trackId: string;
+  className: string;
+  avgCenter: { x: number; y: number };
+  motionPath: string;
+  confidence: number;
+}
+
 /**
  * Calculate max shots per clip. Strict 40% cap when multiple clips exist.
  * Relaxed when only 1 clip available (must fill all shots from it).
@@ -35,12 +43,45 @@ function getMaxPerClip(shotCount: number, clipCount: number): number {
 }
 
 /**
+ * Score how well a candidate segment matches the reference's subject positioning.
+ * Returns 0-3 bonus points.
+ */
+function scoreSubjectMatch(
+  cand: CandidateSegment,
+  subjectTracks: SubjectTrack[],
+  slotProgress: number,
+): number {
+  if (subjectTracks.length === 0) return 0;
+
+  let bonus = 0;
+
+  for (const track of subjectTracks) {
+    // Check if this track is active at this normalized timeline position
+    const trackActive = slotProgress >= 0 && slotProgress <= 1;
+    if (!trackActive) continue;
+
+    // Hero subject match: if reference has a centered subject, prefer faceCentered segments
+    if (track.className === "person" && track.avgCenter.x > 0.3 && track.avgCenter.x < 0.7) {
+      if (cand.faceCentered) bonus += 1.5;
+    }
+
+    // Motion path match: if reference subject moves left-to-right, prefer segments with same motion
+    if (track.motionPath === "left_to_right" && cand.motionDir === "right") bonus += 1;
+    if (track.motionPath === "right_to_left" && cand.motionDir === "left") bonus += 1;
+    if (track.motionPath === "static" && cand.motionDir === "none") bonus += 0.5;
+  }
+
+  return Math.min(3, bonus);
+}
+
+/**
  * Build a source plan — which clip segment goes in each shot slot.
  * Deterministic: no Math.random. Uses score ranking + position-based diversity.
+ * Subject-track-aware: prefers segments matching reference subject positioning.
  */
 export function buildSourcePlan(
   analysis: { footage: Array<{ clipId: string; duration: number; segments: any[] }> },
-  _referenceStyle: ReferenceStyle,
+  referenceStyle: ReferenceStyle,
   shotCount: number,
 ): SourcePlan[] {
   const allSegments: CandidateSegment[] = [];
@@ -72,12 +113,16 @@ export function buildSourcePlan(
   const windowSize = 3;
   const plan: SourcePlan[] = [];
 
+  // Extract subject tracks from reference style
+  const subjectTracks: SubjectTrack[] = (referenceStyle as any).subjectTracks ?? [];
+
   // Pre-sort by score (deterministic)
   const sorted = [...allSegments].sort((a, b) => b.score - a.score || a.segmentIndex - b.segmentIndex);
 
   for (let slot = 0; slot < shotCount; slot++) {
     let bestCandidate: CandidateSegment | null = null;
     let bestScore = -Infinity;
+    const slotProgress = shotCount > 0 ? slot / shotCount : 0;
 
     for (const cand of sorted) {
       if ((clipUsage[cand.clipId] ?? 0) >= maxPerClip) continue;
@@ -95,6 +140,9 @@ export function buildSourcePlan(
           candidateScore += 2;
         }
       }
+
+      // Subject track matching bonus
+      candidateScore += scoreSubjectMatch(cand, subjectTracks, slotProgress);
 
       if (cand.faceCentered) candidateScore += 1;
       if (cand.hasVelocityRamp && slot >= shotCount * 0.5) candidateScore += 1.5;
