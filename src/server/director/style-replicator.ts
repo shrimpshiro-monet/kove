@@ -1,4 +1,4 @@
-import type { MonetEDL, Shot, Effect, EffectType, TransitionType, ColorGradePreset } from "../types/edl";
+import type { MonetEDL, Shot, Effect, TransitionType, ColorGradePreset } from "../types/edl";
 import type { ReferenceStyle } from "../types/reference-style";
 import { loadPromptTemplate } from "../prompts";
 
@@ -201,7 +201,7 @@ function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: 
 
   if (isPreClimax && !isDrop) {
     if (slot.energyLevel > 0.5) {
-      effects.push({ id: `fx_${slot.startTime.toFixed(2)}_push`, type: "push_in" as EffectType, intensity: 0.3, params: { startScale: 1.0, endScale: 1.05 } });
+      effects.push({ id: `fx_${slot.startTime.toFixed(2)}_push`, type: "push_in", intensity: 0.3, params: { startScale: 1.0, endScale: 1.05 } });
     }
     return effects;
   }

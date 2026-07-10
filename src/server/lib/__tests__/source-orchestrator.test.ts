@@ -26,10 +26,19 @@ function makeAnalysis(clipCount: number, segmentsPerClip: number) {
 
 function makeRef(): ReferenceStyle {
   return {
+    version: "1.0",
     rhythm: { avgShotDuration: 1.5, shotDurationVariance: 0.3, beatsPerCut: 1, cutAlignment: "strict", accentCuts: [] },
     shotLanguage: { closeupRatio: 0.4, wideRatio: 0.2, motionPreference: "moving", subjectFocus: ["action"], sequencePatterns: [] },
     pacing: { type: "fast", energyCurve: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.7, 0.5, 0.3], intensityBuilds: true, climaxPosition: 0.65, breathingMoments: [] },
     effects: { overallIntensity: 0.6, effectsFrequency: 0.5, commonEffects: ["push_in"], transitionsBreakdown: { cutPercentage: 0.8, crossfadePercentage: 0.2, otherPercentage: 0 } },
+    visualStyle: { colorGrade: "cinematic", colorTemperature: "warm", contrastLevel: "medium", saturationLevel: "natural", vignettePresent: false, grainPresent: false },
+    emotionalArc: { openingMood: "building", peakMood: "intense", closingMood: "reflective", emotionalContour: "build-and-release" },
+    editingPhilosophy: { summary: "Fast cuts", rhythmContract: "beat-locked", restraintLevel: "moderate", signatureMove: "push_in" },
+    intentMapping: { genre: "sports_highlight", pacing: "fast", syncToBeat: true, beatSyncStrength: 0.8, colorTreatment: "vibrant", effectsIntensity: 0.6, transitionStyle: "dynamic", avgShotDuration: 1.5, mood: ["energetic"], contentFocus: ["action"] },
+    composition: { avgLayerCount: 1, maskingFrequency: 0, depthOrder: "subject_on_top", commonBlendModes: ["normal"] },
+    pillarScores: { brutalistImpact: 0.5, tensionPivot: 0.3, vocalFlowSync: 0.1, legacyMontage: 0.1 },
+    textStyle: { pacing: "snappy", positioning: "center", fontVibe: "bold_sans", animationStyle: "pop_in" },
+    effectTriggers: [],
   } as ReferenceStyle;
 }
 

@@ -1,39 +1,40 @@
 // Prompt registry for Monet AI Director
 // Aligned with GEMINI.md mandates: no filesystem access in Workers.
 
-// Vite handles ?raw to bundle these text files at build time.
-import analyzeFootagePrompt from "./analyze-footage.txt?raw";
-import analyzeMusicPrompt from "./analyze-music.txt?raw";
-import analyzeReferencePrompt from "./analyze-reference.txt?raw";
-import decodeIntentPrompt from "./decode-intent.txt?raw";
-import generateCompositionPrompt from "./generate-composition.txt?raw";
-import generateEdlPromptV3 from "./generate-edl-v3.txt?raw";
-import refineEdlPrompt from "./refine-edl.txt?raw";
-import generatePatchPrompt from "./generate-patch.txt?raw";
-import styleVocabularyPrompt from "./style-vocabulary.txt?raw";
-import critiqueEdlPrompt from "./critique-edl.txt?raw";
-import compileStylePrompt from "./compile-style.txt?raw";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const PROMPTS = {
-  "analyze-footage.txt": analyzeFootagePrompt,
-  "analyze-music.txt": analyzeMusicPrompt,
-  "analyze-reference.txt": analyzeReferencePrompt,
-  "decode-intent.txt": decodeIntentPrompt,
-  "generate-composition.txt": generateCompositionPrompt,
-  "generate-edl-v3.txt": generateEdlPromptV3,
-  "refine-edl.txt": refineEdlPrompt,
-  "generate-patch.txt": generatePatchPrompt,
-  "style-vocabulary.txt": styleVocabularyPrompt,
-  "critique-edl.txt": critiqueEdlPrompt,
-  "compile-style.txt": compileStylePrompt,
-} as const;
+const __filename = fileURLToPath(import.meta.url);
+const PROMPT_DIR = path.dirname(__filename);
 
-export type PromptName = keyof typeof PROMPTS;
+const PROMPT_FILES = [
+  "analyze-footage.txt",
+  "analyze-music.txt",
+  "analyze-reference.txt",
+  "decode-intent.txt",
+  "generate-composition.txt",
+  "generate-edl-v3.txt",
+  "refine-edl.txt",
+  "generate-patch.txt",
+  "style-vocabulary.txt",
+  "critique-edl.txt",
+  "compile-style.txt",
+  "humanize-skeleton.txt",
+] as const;
+
+export type PromptName = (typeof PROMPT_FILES)[number];
+
+const cache: Record<string, string> = {};
 
 /**
- * Load a prompt template from the bundled registry.
- * No filesystem access, Worker-compliant.
+ * Load a prompt template from disk.
+ * Caches after first read for performance.
  */
 export function loadPromptTemplate(filename: PromptName): string {
-  return PROMPTS[filename];
+  if (cache[filename]) return cache[filename];
+  const filePath = path.join(PROMPT_DIR, filename);
+  const content = fs.readFileSync(filePath, "utf-8");
+  cache[filename] = content;
+  return content;
 }

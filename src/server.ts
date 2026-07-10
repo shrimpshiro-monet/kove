@@ -21,9 +21,12 @@ import { handleRenderPreview, handleRenderStatus } from "./server/api/render-pre
 import { handleGeminiThinkEffects } from "./server/api/gemini-think-effects";
 import { handleStyleCompile } from "./server/api/style-compile";
 import { handleExportMP4 } from "./server/api/export-mp4";
+import { handleDetectScenes } from "./server/api/detect-scenes";
+import { handleDeepAnalysis } from "./server/api/deep-analysis";
 import { handleSpecialistIsolate } from "./server/api/specialist-isolate";
 import { handleSpecialistDepth } from "./server/api/specialist-depth";
 import { handleSpecialistSlowmo } from "./server/api/specialist-slowmo";
+import { handleReplicateStyle } from "./server/api/replicate-style";
 import { getDevEnv } from "./server/lib/dev-env";
 import { runSandboxTestsJSON } from "./server/lib/test-engines-sandbox";
 import { getAIService } from "./server/services/ai-service";
@@ -308,7 +311,7 @@ Guidelines:
     }
 
     console.log("[api/engines-edit] Requesting content generation from Gemini...");
-    const aiResponse = await ai.generateContentJSON({
+    const aiResponse = await ai.generateContentJSON<string>({
       prompt: aiPrompt,
       systemInstruction,
       temperature: 0.2,
@@ -428,6 +431,165 @@ Guidelines:
   }
 }
 
+import { parseAIJson } from "./lib/parse-ai-json";
+
+// ------------------------------------------------------------------
+// VIBE REFINE (inline — background job + polling)
+// ------------------------------------------------------------------
+
+import crypto from "node:crypto";
+
+interface RefineJob {
+  jobId: string;
+  status: "queued" | "analyzing" | "generating" | "complete" | "failed";
+  progress: number;
+  message: string;
+  startTime: number;
+  result?: { edl: unknown };
+  error?: string;
+}
+
+const refineJobs = new Map<string, RefineJob>();
+
+async function handleVibeRefine(request: Request): Promise<Response> {
+  try {
+    const body = await request.json() as Record<string, unknown>;
+    const { currentEdl, prompt, scopeClipIds } = body as {
+      currentEdl?: Record<string, any>;
+      prompt?: string;
+      scopeClipIds?: string[];
+    };
+
+    if (!currentEdl || !prompt) {
+      return apiError("INVALID_REQUEST", "currentEdl and prompt are required", 400);
+    }
+
+    const jobId = crypto.randomUUID();
+    const job: RefineJob = {
+      jobId,
+      status: "queued",
+      progress: 0,
+      message: "Queued",
+      startTime: Date.now(),
+    };
+    refineJobs.set(jobId, job);
+
+    // Run refinement inline (no Python dependency — use AI service directly)
+    (async () => {
+      try {
+        job.status = "analyzing";
+        job.progress = 10;
+        job.message = "Analyzing current edit...";
+
+        const env = getDevEnv({}) as Env;
+        const ai = getAIService(env);
+
+        job.progress = 30;
+        job.message = "Generating refined EDL...";
+
+        const refinementPrompt = `You are a video editing AI. Refine this EDL based on the user's feedback.
+
+Current EDL:
+${JSON.stringify(currentEdl, null, 2)}
+
+User feedback: "${prompt}"
+
+${scopeClipIds?.length ? `Scope: only modify clips ${scopeClipIds.join(", ")}` : "Scope: entire timeline"}
+
+CRITICAL RULES — VIOLATION = INVALID OUTPUT:
+1. You MUST preserve ALL "clipId" values in shots[].source.clipId exactly as they appear above. NEVER invent new IDs.
+2. You MUST preserve ALL keys in assets.media exactly as they appear above. NEVER create new asset entries.
+3. You MUST preserve ALL clip "id" values exactly as they appear above.
+4. You MAY modify: timing (startTime, duration, speed), effects, transitions, globalEffects, meta.
+5. You MUST NOT modify: clipIds, asset keys, asset paths, clip.mediaId.
+6. If unsure whether an ID should change, DO NOT change it.
+
+Return ONLY valid JSON. No markdown fences. No commentary. No text outside the JSON object.`;
+
+        const result = await ai.generateContentJSON({
+          prompt: refinementPrompt,
+          temperature: 0.3,
+        });
+
+        // Parse and validate the refined EDL
+        const refined = parseAIJson<Record<string, any>>(result);
+        if (!refined) {
+          throw new Error("AI returned invalid JSON for refined EDL");
+        }
+
+        // Post-validation: ensure original clip IDs are preserved
+        const originalClipIds = new Set(
+          (currentEdl.shots ?? []).map((s: any) => s.source?.clipId).filter(Boolean)
+        );
+        const refinedClipIds = new Set(
+          (refined.shots ?? []).map((s: any) => s.source?.clipId).filter(Boolean)
+        );
+        const originalAssetKeys = new Set(Object.keys(currentEdl.assets?.media ?? {}));
+        const refinedAssetKeys = new Set(Object.keys(refined.assets?.media ?? {}));
+
+        // Check for hallucinated clip IDs
+        for (const id of refinedClipIds) {
+          if (!originalClipIds.has(id)) {
+            console.warn(`[vibe-refine] AI hallucinated clipId "${id}" — remapping to first original clipId`);
+            const firstOriginal = [...originalClipIds][0];
+            if (firstOriginal) {
+              for (const shot of refined.shots ?? []) {
+                if (shot.source?.clipId === id) shot.source.clipId = firstOriginal;
+              }
+            }
+          }
+        }
+
+        // Check for hallucinated asset keys
+        for (const key of refinedAssetKeys) {
+          if (!originalAssetKeys.has(key)) {
+            console.warn(`[vibe-refine] AI hallucinated asset key "${key}" — removing`);
+            delete refined.assets.media[key];
+          }
+        }
+
+        // Restore missing asset keys from original
+        for (const key of originalAssetKeys) {
+          if (!refinedAssetKeys.has(key)) {
+            refined.assets.media[key] = currentEdl.assets.media[key];
+          }
+        }
+
+        job.status = "complete";
+        job.progress = 100;
+        job.message = "Refinement complete";
+        job.result = { edl: refined };
+      } catch (err: any) {
+        job.status = "failed";
+        job.message = err.message || "Refinement failed";
+        job.error = err.message;
+      }
+    })();
+
+    return jsonResponse({ jobId, status: "queued" });
+  } catch (err: any) {
+    return apiError("REFINE_ERROR", err.message || "Failed to start refinement", 500);
+  }
+}
+
+function handleVibeRefineStatus(request: Request): Response {
+  const url = new URL(request.url);
+  const jobId = url.pathname.split("/api/vibe-refine/status/")[1];
+  if (!jobId) return apiError("MISSING_JOB_ID", "Missing jobId", 400);
+
+  const job = refineJobs.get(jobId);
+  if (!job) return apiError("NOT_FOUND", "Job not found", 404);
+
+  return jsonResponse({
+    jobId: job.jobId,
+    status: job.status,
+    progress: job.progress,
+    message: job.message,
+    ...(job.result ? { result: job.result } : {}),
+    ...(job.error ? { error: job.error } : {}),
+  });
+}
+
 // ------------------------------------------------------------------
 // ROUTE REGISTRY
 // ------------------------------------------------------------------
@@ -485,6 +647,10 @@ const apiRoutes: ApiRoute[] = [
   // Server-side FFmpeg export
   { method: "POST", path: "/api/export-mp4", handler: handleExportMP4 },
 
+  { method: "POST", path: "/api/detect-scenes", handler: handleDetectScenes },
+
+  { method: "POST", path: "/api/deep-analysis", handler: handleDeepAnalysis },
+
   // Specialist AI engines
   { method: "POST", path: "/api/specialist/isolate", handler: handleSpecialistIsolate },
   { method: "POST", path: "/api/specialist/depth", handler: handleSpecialistDepth },
@@ -529,6 +695,13 @@ const apiRoutes: ApiRoute[] = [
   // Export queue
   { method: "POST", path: "/api/export", handler: handleQueueExport },
   { method: "GET", path: "/api/export", handler: handleGetExportStatus },
+
+  // Vibe Refine
+  { method: "POST", path: "/api/vibe-refine", handler: handleVibeRefine },
+  { method: "GET", path: /^\/api\/vibe-refine\/status\//, handler: handleVibeRefineStatus },
+
+  // Style Replication
+  { method: "POST", path: "/api/replicate-style", handler: handleReplicateStyle },
 ];
 
 // ------------------------------------------------------------------
