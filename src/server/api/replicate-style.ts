@@ -64,10 +64,8 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
     let bestSimilarity = null;
 
     for (let attempt = 0; attempt < MAX_SIMILARITY_ATTEMPTS; attempt++) {
-      const attemptSourcePlan = rotateSourcePlan(sourcePlan, attempt);
-
       let edl = replicateStyle({
-        referenceStyle, analysis, sourcePlan: attemptSourcePlan, targetDuration, rhythmMap, fps: 30, createdAt: Date.now(), attemptIndex: attempt,
+        referenceStyle, analysis, sourcePlan, targetDuration, rhythmMap, fps: 30, createdAt: Date.now(), attemptIndex: attempt,
       });
 
       edl = await humanizeSkeleton(edl, referenceStyle, ai);
@@ -106,10 +104,4 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
     console.error("[replicate-style] Error:", error);
     return apiError(ApiErrorCode.EDLGenerationFailed, error.message || "Style replication failed", 500);
   }
-}
-
-function rotateSourcePlan<T>(plan: T[], attemptIndex: number): T[] {
-  if (attemptIndex === 0 || plan.length === 0) return plan;
-  const offset = attemptIndex % plan.length;
-  return [...plan.slice(offset), ...plan.slice(0, offset)];
 }

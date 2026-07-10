@@ -342,5 +342,5 @@ export async function humanizeSkeleton(
     console.warn("[humanizer] AI humanization failed:", (e as Error).message);
   }
 
-  return applyDeterministicHumanization(edl, referenceStyle);
+  return applyDeterministicHumanization(cloned, referenceStyle);
 }
