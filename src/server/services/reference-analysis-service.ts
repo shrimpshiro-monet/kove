@@ -693,6 +693,51 @@ export async function analyzeReference(
     }
   }
 
+  // ─── PERCEPTION PLUGINS (Tier 1) ───
+  // PaddleOCR text overlays, YOLO subject tracking, scene boundaries, signal stats
+
+  let textOverlayTrace: any[] = [];
+  let subjectTracks: any[] = [];
+  let sceneBoundaryTrace: any[] = [];
+  let colorSignalStats: any = null;
+
+  try {
+    const { runPerceptionPlugins } = await import("../lib/perception-client");
+    const perception = await runPerceptionPlugins(tmpPath);
+    textOverlayTrace = perception.textOverlays;
+    subjectTracks = perception.subjectTracks;
+    sceneBoundaryTrace = perception.sceneBoundaries;
+    colorSignalStats = perception.colorSignalStats;
+    console.log(`[reference-analysis] Perception: ${textOverlayTrace.length} text, ${subjectTracks.length} subjects, ${sceneBoundaryTrace.length} scenes`);
+  } catch (e) {
+    console.warn(`[reference-analysis] Perception plugins failed: ${(e as Error).message}`);
+  }
+
+  // Store perception data in style
+  if (textOverlayTrace.length > 0) {
+    (style as any).textOverlayTrace = textOverlayTrace;
+  }
+  if (subjectTracks.length > 0) {
+    (style as any).subjectTracks = subjectTracks;
+  }
+  if (sceneBoundaryTrace.length > 0) {
+    (style as any).sceneBoundaryTrace = sceneBoundaryTrace;
+  }
+  if (colorSignalStats) {
+    (style as any).colorSignalStats = colorSignalStats;
+    // Override color metrics with signalstats data (more reliable)
+    if (colorSignalStats.avgSaturation !== undefined) {
+      style.visualStyle = {
+        ...style.visualStyle,
+        saturationLevel: colorSignalStats.avgSaturation > 0.6 ? "saturated" : colorSignalStats.avgSaturation > 0.3 ? "natural" : "desaturated",
+        _colorMetrics: {
+          ...((style.visualStyle as any)?._colorMetrics ?? {}),
+          signalStats: colorSignalStats,
+        },
+      };
+    }
+  }
+
   // Store reference video technical specs
   style.referenceSpecs = {
     width: refWidth,
