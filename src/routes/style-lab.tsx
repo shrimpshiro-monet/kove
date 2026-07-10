@@ -236,6 +236,8 @@ function StyleLabPage() {
   const [replicateEdl, setReplicateEdl] = useState<any>(null);
   const [replicateSimilarity, setReplicateSimilarity] = useState<any>(null);
   const [replicateScores, setReplicateScores] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewStep, setPreviewStep] = useState<StepStatus>("idle");
 
   const projectIdRef = useRef(`lab-${Date.now()}`);
   const footageIdsRef = useRef<string[]>([]);
@@ -815,6 +817,43 @@ function StyleLabPage() {
     l("DONE", "Style replication complete.", true);
   };
 
+  const renderPreview = async () => {
+    if (!replicateEdl) return;
+    setPreviewStep("running");
+    setPreviewUrl(null);
+    const projectId = projectIdRef.current;
+
+    l("RENDER", "Starting preview render...");
+    try {
+      const result = await apiPost<any>("/api/render-preview", { edl: replicateEdl, projectId });
+      const jobId = result.jobId;
+      l("RENDER", `Render job: ${jobId}`, true);
+
+      // Poll for completion
+      for (let i = 0; i < 60; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const status = await apiPost<any>(`/api/render-status/${jobId}`, {});
+        if (status.status === "done" && status.downloadUrl) {
+          setPreviewUrl(`${API}${status.downloadUrl}`);
+          l("RENDER", "Preview rendered!", true);
+          setPreviewStep("done");
+          return;
+        }
+        if (status.status === "error") {
+          l("RENDER", `Render failed: ${status.error}`, false);
+          setPreviewStep("error");
+          return;
+        }
+        if (i % 5 === 0) l("RENDER", `Rendering... (${i * 2}s)`);
+      }
+      l("RENDER", "Render timed out after 120s", false);
+      setPreviewStep("error");
+    } catch (e: any) {
+      l("RENDER", `Render failed: ${e.message}`, false);
+      setPreviewStep("error");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200">
       <header className="border-b border-neutral-800 px-6 py-4">
@@ -1010,6 +1049,24 @@ function StyleLabPage() {
               <JsonBlock label="Full ReferenceStyle JSON" data={refStyle} />
               <JsonBlock label="Full Generated EDL JSON" data={replicateEdl} />
               {replicateScores && <JsonBlock label="EDL Scores" data={replicateScores} />}
+
+              {/* Render Preview */}
+              <div className="mt-3">
+                <button onClick={renderPreview}
+                  disabled={previewStep === "running"}
+                  className="px-4 py-2 rounded bg-green-700 text-white text-xs font-semibold hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                  {previewStep === "running" ? "Rendering..." : "Render Preview"}
+                </button>
+              </div>
+              {previewUrl && (
+                <div className="mt-3">
+                  <video src={previewUrl} controls className="w-full max-h-96 rounded border border-neutral-800" />
+                  <a href={previewUrl} download={`replicated-${Date.now()}.mp4`}
+                    className="inline-block mt-2 px-3 py-1 rounded bg-green-800 text-white text-xs hover:bg-green-700">
+                    Download Preview
+                  </a>
+                </div>
+              )}
             </div>
           )}
         </section>
