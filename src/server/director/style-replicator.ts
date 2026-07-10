@@ -68,6 +68,20 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
       motionDir: "none", semanticTags: [], faceCentered: false, hasVelocityRamp: false, score: 0.5,
     };
 
+    // Check if reference had a velocity ramp at this normalized position
+    const normalizedTime = targetDuration > 0 ? slot.startTime / targetDuration : 0;
+    const hasRefVelocityRamp = (ref as any)?.velocityRamps?.some((vr: any) =>
+      Math.abs((vr.startTime / ((ref as any).duration ?? targetDuration)) - normalizedTime) < 0.1
+    ) ?? false;
+
+    // Check if reference had a flash frame near this position
+    const hasRefFlash = (ref as any)?.flashFrames?.some((ff: any) =>
+      Math.abs(ff.timestamp - slot.startTime) < 0.3
+    ) ?? false;
+
+    // Get color metrics for this shot's position in timeline
+    const colorMetrics = (ref.visualStyle as any)?._colorMetrics;
+
     return {
       id: `shot_${String(i + 1).padStart(3, "0")}`,
       source: {
@@ -86,7 +100,7 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
         speed: 1.0,
         beatLocked: ref.rhythm.cutAlignment !== "none",
       },
-      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration),
+      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration, { hasRefVelocityRamp, hasRefFlash, colorMetrics, sourceHasVelocityRamp: source.hasVelocityRamp }),
       transition: selectTransition(slot, ref, i, slots.length),
       beatLock: beats.length > 0 && slot.beatIndex >= 0
         ? { beatIndex: slot.beatIndex, lockMode: "start" as const }
@@ -191,7 +205,7 @@ function fillTimeline(slots: TimingSlot[], targetDuration: number): TimingSlot[]
   return filled;
 }
 
-function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number): Effect[] {
+function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number, refData?: { hasRefVelocityRamp: boolean; hasRefFlash: boolean; colorMetrics?: any; sourceHasVelocityRamp?: boolean }): Effect[] {
   const effects: Effect[] = [];
   const climaxTs = ref.pacing.climaxPosition * targetDuration;
   const shotEnd = slot.startTime + slot.duration;
@@ -209,13 +223,15 @@ function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: 
   const shouldHaveEffect = isDrop || isHero || slot.energyLevel > 0.6 || slot.sectionRole === "peak";
   if (!shouldHaveEffect && Math.floor(slot.startTime * 10) % Math.max(1, Math.round(1 / Math.max(0.1, ref.effects.effectsFrequency))) !== 0) return effects;
 
-  if (isDrop) {
+  // Flash from reference detection
+  if (refData?.hasRefFlash || isDrop) {
     effects.push({ id: `fx_${slot.startTime.toFixed(2)}_flash`, type: "impact_flash", intensity: 0.8, startTime: 0, duration: 0.08, params: { peakBrightness: 0.9, flashFrameCount: 2 } });
   }
   if (isHero) {
     effects.push({ id: `fx_${slot.startTime.toFixed(2)}_push`, type: "push_in", intensity: 0.5, params: { startScale: 1.0, endScale: 1.1 } });
   }
-  if (ref.effects.commonEffects.includes("speed_ramp") && slot.energyLevel > 0.6) {
+  // Speed ramp from reference detection or source flag
+  if ((refData?.hasRefVelocityRamp || refData?.sourceHasVelocityRamp || ref.effects.commonEffects.includes("speed_ramp")) && slot.energyLevel > 0.5) {
     effects.push({ id: `fx_${slot.startTime.toFixed(2)}_ramp`, type: "speed_ramp", intensity: 0.6, params: { entrySpeed: 1.0, anchorSpeed: 0.45, exitSpeed: 1.0, anchorAt: 0.5 } });
   }
   if (ref.effects.commonEffects.includes("context_shake") && slot.energyLevel > 0.7) {
@@ -223,6 +239,14 @@ function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: 
   }
   if (slot.sectionRole === "peak" && ref.effects.commonEffects.includes("color_pulse")) {
     effects.push({ id: `fx_${slot.startTime.toFixed(2)}_color`, type: "color_pulse", intensity: 0.4, startTime: 0, duration: 0.3, params: { saturation: 1.3, brightness: 1.1 } });
+  }
+
+  // Color grade intensity from real metrics
+  if (refData?.colorMetrics && slot.sectionRole === "peak") {
+    const satBoost = refData.colorMetrics.avgSaturation > 0.6 ? 0.2 : 0;
+    if (satBoost > 0 && !effects.some(e => e.type === "color_pulse")) {
+      effects.push({ id: `fx_${slot.startTime.toFixed(2)}_sat`, type: "color_pulse", intensity: satBoost, startTime: 0, duration: 0.5, params: { saturation: 1 + satBoost, brightness: 1.0 } });
+    }
   }
 
   return effects.slice(0, 2);
