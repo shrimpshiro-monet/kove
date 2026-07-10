@@ -14,6 +14,10 @@ import { extractVelocityRamps } from "../lib/reference-velocity-extractor";
 import { detectFlashFrames } from "../lib/flash-frame-detector";
 import { extractTextOverlays, type DetectedTextOverlay } from "../lib/text-overlay-extractor";
 import { runPythonVelocityAnalysis, type StructuralMotionResult } from "../lib/python-velocity-bridge";
+import { buildRealTrace } from "../lib/real-trace-builder";
+import { detectTransitions, aggregateTransitions } from "../director/transition-detector";
+import { classifyCameraMotion } from "../director/camera-motion";
+import { analyzeSemanticSequences } from "../director/semantic-sequence";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import * as fs from "node:fs/promises";
@@ -21,6 +25,70 @@ import * as path from "node:path";
 import * as os from "node:os";
 
 const execFileAsync = promisify(execFile);
+
+async function runRhythm(mediaPath: string) {
+  const scriptDir = path.resolve(process.cwd(), "workers/python-ai/workers");
+  const venvBeat = path.resolve(process.cwd(), "workers/python-ai/.venv-beat/bin/python3");
+  try {
+    const { stdout } = await execFileAsync(
+      venvBeat,
+      [
+        "-c",
+        `import json,sys;sys.path.insert(0,'${scriptDir}');from beat_engine import analyze_rhythm;print(json.dumps(analyze_rhythm(sys.argv[1])))`,
+        mediaPath,
+      ],
+      { timeout: 120_000, maxBuffer: 50 * 1024 * 1024 },
+    );
+    return JSON.parse(stdout.trim());
+  } catch (err) {
+    console.error(`[rhythm] analysis failed: ${(err as Error).message}`);
+    return {
+      bpm: 120, beats: [], downbeats: [], onsets: [],
+      drop_candidates: [], source: "error", duration: 0,
+      beat_sync_available: false,
+    };
+  }
+}
+
+export async function runPerceptionPro(videoPath: string) {
+  const scriptDir = path.resolve(process.cwd(), "workers/python-ai/workers");
+  const venvPro = path.resolve(process.cwd(), "workers/python-ai/.venv/bin/python3");
+  try {
+    const { stdout } = await execFileAsync(
+      venvPro,
+      [
+        "-c",
+        `import json,sys;sys.path.insert(0,'${scriptDir}');from perception_pro import run;print(json.dumps(run(sys.argv[1])))`,
+        videoPath,
+      ],
+      { timeout: 180_000, maxBuffer: 80 * 1024 * 1024 },
+    );
+    return JSON.parse(stdout.trim());
+  } catch (err) {
+    console.error(`[perception-pro] failed: ${(err as Error).message}`);
+    return { shots: [], velocity: [], backends: { shots: "error", flow: "error" } };
+  }
+}
+
+function attachPerceptionToShots(ref: any, proShots: any[]) {
+  if (!proShots?.length) return;
+  const vocab = ref.effectVocabulary ?? [];
+  for (const entry of vocab) {
+    const t = entry.startTime ?? entry.time ?? 0;
+    const match = proShots.reduce((best: any, s: any) => {
+      const d = Math.abs(s.start_time - t);
+      return d < best.d ? { d, s } : best;
+    }, { d: Infinity, s: null }).s;
+    if (match) {
+      entry.semantic = match.semantic;
+      entry.motionDir = match.motionDir;
+      entry.faceCentered = match.faceCentered;
+      entry.hasVelocityRamp = match.hasVelocityRamp;
+      entry.motion = match.motion;
+    }
+  }
+  ref.perceptionShots = proShots;
+}
 
 function normalizeDominantPalette(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
@@ -55,41 +123,149 @@ async function detectTextOverlays(videoPath: string, fps: number): Promise<Detec
 }
 
 const REFERENCE_SYSTEM =
-  "You analyze a reference video to extract editing STYLE for stylistic mimicry. " +
-  "Return ONLY valid JSON matching the ReferenceStyle schema. " +
-  "Focus on: color palette, grading style, pacing, detected effects, mood. " +
-  "Set confidence based on how well you can determine style from the frames.";
+  "You are a master film editor and cinematographer. You analyze a reference video to extract its complete editing DNA — the philosophy, timing, visual decisions, and emotional architecture. " +
+  "Think like a film professor dissecting an edit. Think like an editor who has to replicate this style on entirely different footage. " +
+  "Return ONLY valid JSON matching the provided schema. " +
+  "Focus on: rhythm, pacing, shot language, visual style, effects, transitions, emotional arc, and editing philosophy. " +
+  "Be precise — these values drive a real AI video editor.";
 
 const REF_STYLE_SCHEMA = {
   type: "object",
   properties: {
-    referenceId: { type: "string" },
-    duration: { type: "number" },
-    cutFrequency: { type: "number" },
-    avgShotDurationSeconds: { type: "number" },
-    cutDurationsVariance: { type: "number" },
-    dominantPalette: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 8 },
-    gradingStyle: {
-      type: "string",
-      enum: ["flat", "cinematic", "high-contrast", "desaturated", "vibrant", "teal-orange", "monochrome", "other"],
+    rhythm: {
+      type: "object",
+      properties: {
+        avgShotDuration: { type: "number" },
+        shotDurationVariance: { type: "number" },
+        beatsPerCut: { type: "number" },
+        cutAlignment: { type: "string", enum: ["strict", "loose", "none"] },
+        accentCuts: { type: "array", items: { type: "number" } },
+      },
+      required: ["avgShotDuration", "shotDurationVariance", "beatsPerCut", "cutAlignment", "accentCuts"],
     },
-    motionEnergyProfile: { type: "array", items: { type: "number" }, minItems: 1 },
-    detectedEffects: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          type: { type: "string", enum: ["zoom", "shake", "glow", "glitch", "slow-motion", "speed-ramp", "transition", "overlay", "other"] },
-          intensity: { type: "number" },
-          timestampRange: { type: "array", items: { type: "number" } },
+    pacing: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["aggressive", "fast", "medium", "slow", "varied"] },
+        energyCurve: { type: "array", items: { type: "number" }, minItems: 10, maxItems: 10 },
+        intensityBuilds: { type: "boolean" },
+        climaxPosition: { type: "number" },
+        breathingMoments: { type: "array", items: { type: "number" } },
+      },
+      required: ["type", "energyCurve", "intensityBuilds", "climaxPosition", "breathingMoments"],
+    },
+    shotLanguage: {
+      type: "object",
+      properties: {
+        closeupRatio: { type: "number" },
+        wideRatio: { type: "number" },
+        motionPreference: { type: "string", enum: ["static", "moving", "mixed"] },
+        subjectFocus: { type: "array", items: { type: "string" } },
+        sequencePatterns: { type: "array", items: { type: "string" } },
+      },
+      required: ["closeupRatio", "wideRatio", "motionPreference", "subjectFocus", "sequencePatterns"],
+    },
+    visualStyle: {
+      type: "object",
+      properties: {
+        colorGrade: { type: "string", enum: ["cinematic", "vibrant", "vintage", "monochrome", "anime", "raw"] },
+        colorTemperature: { type: "string", enum: ["warm", "cool", "neutral"] },
+        contrastLevel: { type: "string", enum: ["low", "medium", "high"] },
+        saturationLevel: { type: "string", enum: ["desaturated", "natural", "saturated", "hyper-saturated"] },
+        vignettePresent: { type: "boolean" },
+        grainPresent: { type: "boolean" },
+      },
+      required: ["colorGrade", "colorTemperature", "contrastLevel", "saturationLevel", "vignettePresent", "grainPresent"],
+    },
+    effects: {
+      type: "object",
+      properties: {
+        overallIntensity: { type: "number" },
+        effectsFrequency: { type: "number" },
+        commonEffects: { type: "array", items: { type: "string" } },
+        transitionsBreakdown: {
+          type: "object",
+          properties: {
+            cutPercentage: { type: "number" },
+            crossfadePercentage: { type: "number" },
+            otherPercentage: { type: "number" },
+          },
+          required: ["cutPercentage", "crossfadePercentage", "otherPercentage"],
         },
       },
+      required: ["overallIntensity", "effectsFrequency", "commonEffects", "transitionsBreakdown"],
     },
-    pacing: { type: "string", enum: ["slow", "medium", "fast", "frantic"] },
+    emotionalArc: {
+      type: "object",
+      properties: {
+        openingMood: { type: "string" },
+        peakMood: { type: "string" },
+        closingMood: { type: "string" },
+        emotionalContour: { type: "string" },
+      },
+      required: ["openingMood", "peakMood", "closingMood", "emotionalContour"],
+    },
+    editingPhilosophy: {
+      type: "object",
+      properties: {
+        summary: { type: "string" },
+        rhythmContract: { type: "string" },
+        restraintLevel: { type: "string", enum: ["minimal", "moderate", "heavy"] },
+        signatureMove: { type: "string" },
+      },
+      required: ["summary", "rhythmContract", "restraintLevel", "signatureMove"],
+    },
+    composition: {
+      type: "object",
+      properties: {
+        avgLayerCount: { type: "number" },
+        maskingFrequency: { type: "number" },
+        depthOrder: { type: "string", enum: ["subject_on_top", "text_behind_subject", "mixed"] },
+        commonBlendModes: { type: "array", items: { type: "string" } },
+      },
+      required: ["avgLayerCount", "maskingFrequency", "depthOrder", "commonBlendModes"],
+    },
+    textStyle: {
+      type: "object",
+      properties: {
+        pacing: { type: "string", enum: ["snappy", "lingering", "none"] },
+        positioning: { type: "string", enum: ["center", "dynamic", "lower_third"] },
+        fontVibe: { type: "string" },
+        animationStyle: { type: "string" },
+      },
+      required: ["pacing", "positioning", "fontVibe", "animationStyle"],
+    },
+    pillarScores: {
+      type: "object",
+      properties: {
+        brutalistImpact: { type: "number" },
+        tensionPivot: { type: "number" },
+        vocalFlowSync: { type: "number" },
+        legacyMontage: { type: "number" },
+      },
+      required: ["brutalistImpact", "tensionPivot", "vocalFlowSync", "legacyMontage"],
+    },
+    intentMapping: {
+      type: "object",
+      properties: {
+        genre: { type: "string", enum: ["anime_amv", "sports_highlight", "wedding", "cinematic_trailer", "fan_edit", "music_video", "promo", "vlog", "other"] },
+        pacing: { type: "string", enum: ["aggressive", "fast", "medium", "slow", "varied"] },
+        syncToBeat: { type: "boolean" },
+        beatSyncStrength: { type: "number" },
+        colorTreatment: { type: "string" },
+        effectsIntensity: { type: "number" },
+        transitionStyle: { type: "string", enum: ["cut", "smooth", "dynamic", "aggressive", "mixed"] },
+        avgShotDuration: { type: "number" },
+        mood: { type: "array", items: { type: "string" } },
+        contentFocus: { type: "array", items: { type: "string" } },
+      },
+      required: ["genre", "pacing", "syncToBeat", "beatSyncStrength", "colorTreatment", "effectsIntensity", "transitionStyle", "avgShotDuration", "mood", "contentFocus"],
+    },
+    dominantPalette: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 8 },
     styleDescription: { type: "string" },
     confidence: { type: "number" },
   },
-  required: ["referenceId", "duration", "cutFrequency", "avgShotDurationSeconds", "pacing", "styleDescription"],
+  required: ["rhythm", "pacing", "shotLanguage", "visualStyle", "effects", "emotionalArc", "editingPhilosophy", "composition", "textStyle", "pillarScores", "intentMapping", "styleDescription"],
 };
 
 export interface ReferenceAnalysisResult {
@@ -211,32 +387,82 @@ export async function analyzeReference(
     } catch (e) {
       console.warn(`[reference-analysis] Text detection failed: ${(e as Error).message}`);
     }
+
+    // Rhythm + perception analysis — run in parallel (before temp dir cleanup)
+    var rhythmData: any = null;
+    var proData: any = null;
+    try {
+      [rhythmData, proData] = await Promise.all([
+        runRhythm(tmpPath),
+        runPerceptionPro(tmpPath),
+      ]);
+      console.log(`[reference-analysis] Rhythm: bpm=${rhythmData.bpm}, source=${rhythmData.source}, beats=${rhythmData.beats.length}, onsets=${rhythmData.onsets.length}`);
+      console.log(`[perception-pro] shots=${proData.shots.length} flow=${proData.backends.flow}`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Rhythm/perception failed: ${(e as Error).message}`);
+    }
+
+    // Build rich reference trace (needs sceneResult and energyFrames)
+    var richTrace: any = null;
+    if (sceneResult && energyFrames.length > 0 && totalDuration > 0) {
+      try {
+        const avgBrightness = energyFrames.reduce((a: number, f: any) => a + (f.brightness ?? 0), 0) / energyFrames.length;
+        const avgMotionVal = motionEnergy.reduce((a: number, b: number) => a + b, 0) / Math.max(1, motionEnergy.length);
+        const energyResult = {
+          frames: energyFrames,
+          energyCurve: motionEnergy,
+          avgBrightness,
+          avgMotion: avgMotionVal,
+          peakMoment: 0,
+          peakIntensity: 0,
+          climaxPosition: structuralAnalysis?.peakMotionTimestamp ?? 0.5,
+          breathingMoments: [],
+          totalDuration,
+        };
+        richTrace = buildRealTrace(sceneResult, energyResult as any, null, referenceFileId);
+        console.log(`[reference-analysis] Rich trace: ${richTrace.events.length} events, ${richTrace.shotDurations.length} shots`);
+      } catch (e) {
+        console.warn(`[reference-analysis] Rich trace build failed: ${(e as Error).message}`);
+      }
+    }
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 
-  // LLM visual analysis
+  // LLM visual analysis — uses the full analyze-reference prompt
   let llmStyle: any = null;
   try {
+    const { loadPromptTemplate } = await import("../prompts");
+    const analysisPrompt = loadPromptTemplate("analyze-reference.txt");
+
+    const enrichedPrompt =
+      `${analysisPrompt}\n\n` +
+      `=== DETERMINISTIC DATA (from FFmpeg analysis) ===\n` +
+      `Reference video: ${referenceFileId}\n` +
+      `Duration: ${totalDuration.toFixed(1)}s\n` +
+      `Detected cut frequency: ${cutFrequency.cutsPerSecond.toFixed(2)} cuts/sec\n` +
+      `Avg shot duration: ${cutFrequency.avgShotDuration.toFixed(2)}s\n` +
+      `Cut duration variance: ${cutFrequency.variance.toFixed(4)}\n` +
+      `Motion energy profile (10 buckets): [${motionEnergy.map(v => v.toFixed(2)).join(", ")}]\n` +
+      `Shot count: ${sceneResult?.scenes.length ?? "unknown"}\n` +
+      (rhythmData ? `BPM: ${rhythmData.bpm}, beat sync: ${rhythmData.beat_sync_available}\n` : "") +
+      `\nUse the deterministic data above to cross-check your visual analysis. ` +
+      `Where the visual analysis and deterministic data conflict, trust the deterministic data for timing/rhythm ` +
+      `but use your visual analysis for style/aesthetics/effects.\n` +
+      `\nReturn ONLY valid JSON matching the schema.`;
+
     const result = await ai.run("analyze-reference", {
       systemPrompt: REFERENCE_SYSTEM,
-      prompt:
-        `Reference video file: ${referenceFileId}\n` +
-        `Duration: ${totalDuration.toFixed(1)}s\n` +
-        `Detected cut frequency: ${cutFrequency.cutsPerSecond.toFixed(2)} cuts/sec\n` +
-        `Avg shot duration: ${cutFrequency.avgShotDuration.toFixed(2)}s\n` +
-        `Cut duration variance: ${cutFrequency.variance.toFixed(4)}\n` +
-        `Motion energy profile: [${motionEnergy.map(v => v.toFixed(2)).join(", ")}]\n\n` +
-        `Analyze the visual style from the frames above. Describe palette, grading, pacing, effects you observe.`,
-      images: frames.slice(0, 4),
+      prompt: enrichedPrompt,
+      images: frames.slice(0, 8),
       schema: undefined,
       schemaJSON: REF_STYLE_SCHEMA as Record<string, unknown>,
-      maxTokens: 3072,
+      maxTokens: 8192,
     });
 
     if (result.schemaValid) {
       llmStyle = result.data;
-      console.log("[reference-analysis] LLM vision analysis succeeded");
+      console.log("[reference-analysis] LLM vision analysis succeeded with full prompt");
     } else {
       console.warn("[reference-analysis] LLM returned invalid schema, using deterministic fallback");
     }
@@ -251,7 +477,8 @@ export async function analyzeReference(
     cutFrequency,
     motionEnergy,
     llmStyle,
-    sceneResult?.shotDurations
+    sceneResult?.shotDurations,
+    detectedTextOverlays,
   );
 
   style.colorProfile = opencvColorProfile;
@@ -266,6 +493,80 @@ export async function analyzeReference(
 
   if (structuralAnalysis) {
     style.structuralAnalysis = structuralAnalysis;
+  }
+
+  // Apply rhythm/perception/trace results (collected before temp dir cleanup)
+  if (rhythmData) {
+    rhythmData.beat_sync_available = (rhythmData.beats?.length ?? 0) > 0;
+    style.rhythmMap = rhythmData;
+  }
+  if (proData) {
+    attachPerceptionToShots(style, proData.shots);
+  }
+  if (richTrace) {
+    (style as any).referenceTrace = richTrace;
+  }
+
+  // ─── COMPREHENSIVE REFERENCE REVERSE-ENGINEERING ───
+  // Extract transition types, camera motion, and semantic sequences
+
+  // Transition detection from frame differences at cut points
+  if (sceneResult && sceneResult.scenes.length > 1 && tmpPath) {
+    try {
+      const shotBoundaries = sceneResult.scenes.slice(1).map(s => s.timestamp);
+      const transitionDetections = await detectTransitions(tmpPath, shotBoundaries);
+      const transitionBreakdown = aggregateTransitions(transitionDetections);
+      style.effects.transitionsBreakdown = {
+        cutPercentage: transitionBreakdown.cutPercentage,
+        crossfadePercentage: transitionBreakdown.crossfadePercentage + transitionBreakdown.whipPanPercentage,
+        otherPercentage: transitionBreakdown.otherPercentage,
+      };
+      (style as any).transitionDetections = transitionDetections;
+      console.log(`[reference-analysis] Transitions: ${transitionDetections.length} detected, cut=${(transitionBreakdown.cutPercentage * 100).toFixed(0)}%, crossfade=${((transitionBreakdown.crossfadePercentage + transitionBreakdown.whipPanPercentage) * 100).toFixed(0)}%`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Transition detection failed: ${(e as Error).message}`);
+    }
+  }
+
+  // Camera motion classification from optical flow
+  if (proData?.shots?.length > 0 && proData.velocity?.length > 0) {
+    try {
+      const cameraMotion = classifyCameraMotion(proData.shots, proData.velocity);
+      style.shotLanguage.motionPreference = cameraMotion.overall === "static" ? "static"
+        : cameraMotion.overall === "handheld" || cameraMotion.overall === "steadicam" ? "moving"
+        : "mixed";
+      (style as any).cameraMotion = cameraMotion;
+      console.log(`[reference-analysis] Camera motion: ${cameraMotion.overall}, avg=${cameraMotion.avgMagnitude.toFixed(2)}, pan=${(cameraMotion.breakdown.panRatio * 100).toFixed(0)}%`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Camera motion classification failed: ${(e as Error).message}`);
+    }
+  }
+
+  // Semantic sequence analysis from CLIP tags
+  if (proData?.shots?.length > 0) {
+    try {
+      const semanticSeq = analyzeSemanticSequences(proData.shots);
+      style.editingPhilosophy.rhythmContract = `Narrative: ${semanticSeq.narrativeArc}, subject continuity: ${(semanticSeq.subjectContinuity * 100).toFixed(0)}%`;
+      (style as any).semanticSequences = semanticSeq;
+      console.log(`[reference-analysis] Semantic sequences: ${semanticSeq.patterns.length} patterns, arc=${semanticSeq.narrativeArc}, continuity=${(semanticSeq.subjectContinuity * 100).toFixed(0)}%`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Semantic sequence analysis failed: ${(e as Error).message}`);
+    }
+  }
+
+  // Shot language from perception data
+  if (proData?.shots?.length > 0) {
+    const shots = proData.shots;
+    const closeupShots = shots.filter((s: any) =>
+      s.semantic?.some((t: string) => ["close-up face reaction", "product close-up", "emotional facial expression"].includes(t))
+    ).length;
+    const wideShots = shots.filter((s: any) =>
+      s.semantic?.some((t: string) => ["crowd or audience", "outdoor city street", "nature or landscape"].includes(t))
+    ).length;
+    style.shotLanguage.closeupRatio = closeupShots / shots.length;
+    style.shotLanguage.wideRatio = wideShots / shots.length;
+    style.shotLanguage.subjectFocus = [...new Set(shots.flatMap((s: any) => s.semantic ?? []))].slice(0, 5);
+    console.log(`[reference-analysis] Shot language: closeup=${(style.shotLanguage.closeupRatio * 100).toFixed(0)}%, wide=${(style.shotLanguage.wideRatio * 100).toFixed(0)}%`);
   }
 
   if (structuralAnalysis && totalDuration > 0) {
@@ -310,6 +611,18 @@ export async function analyzeReference(
       console.log(`[reference-analysis] Flash frames: ${style.flashFrames.length} detected`);
     } catch (e) {
       console.warn(`[reference-analysis] Flash frame detection failed: ${(e as Error).message}`);
+    }
+
+    // Extract pacing distribution for humanizer
+    if (sceneResult && sceneResult.shotDurations.length > 0) {
+      try {
+        const { extractPacingDistribution } = await import("../director/humanizer");
+        const pacingDist = extractPacingDistribution(sceneResult.shotDurations);
+        (style as any).pacingDistribution = pacingDist;
+        console.log(`[reference-analysis] Pacing distribution: mean=${pacingDist.mean.toFixed(2)}s, std=${pacingDist.std.toFixed(2)}s, skew=${pacingDist.skew.toFixed(2)}`);
+      } catch (e) {
+        console.warn(`[reference-analysis] Pacing distribution extraction failed: ${(e as Error).message}`);
+      }
     }
   }
 
@@ -392,7 +705,8 @@ function buildReferenceStyle(
   cutFrequency: { cutsPerSecond: number; avgShotDuration: number; variance: number },
   motionEnergy: number[],
   llmStyle: any,
-  shotDurations?: number[]
+  shotDurations?: number[],
+  textOverlays?: DetectedTextOverlay[],
 ): any {
   const avgMotion = motionEnergy.length > 0
     ? motionEnergy.reduce((a: number, b: number) => a + b, 0) / motionEnergy.length
@@ -400,24 +714,36 @@ function buildReferenceStyle(
   const isHighEnergy = avgMotion > 0.5 || cutFrequency.cutsPerSecond > 1.5;
   const isFastPaced = cutFrequency.avgShotDuration < 1.0;
 
+  // Start with LLM's visual analysis (the full schema now)
+  // Then overlay deterministic data for timing/rhythm (ground truth)
   const style: any = {
     referenceId,
     duration,
-    cutFrequency: cutFrequency.cutsPerSecond,
-    avgShotDurationSeconds: cutFrequency.avgShotDuration,
-    cutDurationsVariance: cutFrequency.variance,
-    motionEnergyProfile: motionEnergy,
-    detectedEffects: llmStyle?.detectedEffects ?? [],
+    // LLM fields — pass through directly when available
+    rhythm: llmStyle?.rhythm ?? {},
+    pacing: llmStyle?.pacing ?? {},
+    shotLanguage: llmStyle?.shotLanguage ?? {},
+    visualStyle: llmStyle?.visualStyle ?? {},
+    effects: llmStyle?.effects ?? {},
+    emotionalArc: llmStyle?.emotionalArc ?? {},
+    editingPhilosophy: llmStyle?.editingPhilosophy ?? {},
+    composition: llmStyle?.composition ?? {},
+    textStyle: llmStyle?.textStyle ?? {},
+    pillarScores: llmStyle?.pillarScores ?? { brutalistImpact: 0.3, tensionPivot: 0.3, vocalFlowSync: 0.2, legacyMontage: 0.2 },
+    intentMapping: llmStyle?.intentMapping ?? {},
     dominantPalette: normalizeDominantPalette(llmStyle?.dominantPalette),
-    gradingStyle: llmStyle?.gradingStyle ?? "other",
     styleDescription: llmStyle?.styleDescription ?? "Analysis based on FFmpeg scene detection and energy analysis",
     confidence: llmStyle?.confidence ?? (cutFrequency.cutsPerSecond > 0 ? 0.6 : 0.2),
   };
 
+  // Override rhythm with FFmpeg ground truth (more reliable than LLM for timing)
   style.rhythm = {
+    ...style.rhythm,
     avgShotDuration: cutFrequency.avgShotDuration,
-    cutAlignment: cutFrequency.cutsPerSecond > 2 ? "strict" : cutFrequency.cutsPerSecond > 1 ? "loose" : "none",
-    cutsPerSecond: cutFrequency.cutsPerSecond,
+    shotDurationVariance: cutFrequency.variance,
+    beatsPerCut: style.rhythm?.beatsPerCut ?? (cutFrequency.cutsPerSecond > 0 ? 1 : 2),
+    cutAlignment: style.rhythm?.cutAlignment ?? (cutFrequency.cutsPerSecond > 2 ? "strict" : cutFrequency.cutsPerSecond > 1 ? "loose" : "none"),
+    accentCuts: style.rhythm?.accentCuts ?? [],
   };
 
   if (shotDurations && shotDurations.length > 0) {
@@ -426,6 +752,7 @@ function buildReferenceStyle(
       style.rhythm.structure = structure;
     }
   }
+
   // Infer structure from rhythm split
   let structureType: "setup_to_montage" | "uniform_montage" | "dialogue_drama" | "unknown" = "unknown";
   let energyArc: "flat" | "build" | "climax_spike" | "decline" = "flat";
@@ -434,28 +761,16 @@ function buildReferenceStyle(
   const isFastPaced2 = cutFrequency.avgShotDuration < 1.2;
   const isHighCuts = cutFrequency.cutsPerSecond > 0.8;
 
-  // Pacing inference — never leave undefined
-  let inferredPacing: "aggressive" | "fast" | "medium" | "slow" | "varied";
-  if (isFastPaced2 || isHighCuts) {
-    inferredPacing = cutFrequency.avgShotDuration < 0.5 ? "aggressive" : "fast";
-  } else if (cutFrequency.avgShotDuration < 2.0) {
-    inferredPacing = "medium";
-  } else {
-    inferredPacing = "slow";
+  // Override intentMapping with deterministic data where LLM is weak
+  if (!style.intentMapping.genre || style.intentMapping.genre === "other") {
+    style.intentMapping.genre = "other";
   }
-
-  style.intentMapping = {
-    genre: "other",
-    pacing: inferredPacing,
-    syncToBeat: cutFrequency.cutsPerSecond > 1,
-    beatSyncStrength: Math.min(1, cutFrequency.cutsPerSecond / 3),
-    colorTreatment: isHighEnergy ? "vibrant" : "raw",
-    effectsIntensity: isHighEnergy ? 0.6 : 0.3,
-    transitionStyle: cutFrequency.cutsPerSecond > 2 ? "aggressive" : cutFrequency.cutsPerSecond > 1 ? "dynamic" : "smooth",
-    avgShotDuration: cutFrequency.avgShotDuration,
-    mood: isHighEnergy ? ["energetic", "intense"] : ["calm", "cinematic"],
-    contentFocus: [],
-  };
+  style.intentMapping.pacing = style.intentMapping.pacing ?? (isFastPaced2 ? "fast" : cutFrequency.avgShotDuration < 2.0 ? "medium" : "slow");
+  style.intentMapping.syncToBeat = style.intentMapping.syncToBeat ?? (cutFrequency.cutsPerSecond > 1);
+  style.intentMapping.beatSyncStrength = style.intentMapping.beatSyncStrength ?? Math.min(1, cutFrequency.cutsPerSecond / 3);
+  style.intentMapping.avgShotDuration = cutFrequency.avgShotDuration;
+  style.intentMapping.mood = style.intentMapping.mood ?? (isHighEnergy ? ["energetic", "intense"] : ["calm", "cinematic"]);
+  style.intentMapping.contentFocus = style.intentMapping.contentFocus ?? [];
 
   // Post-hoc enhancement using structural data
   if (style.rhythm?.structure) {
@@ -477,41 +792,72 @@ function buildReferenceStyle(
     style.intentMapping.structure = structureType;
     style.intentMapping.energyArc = energyArc;
 
-    // Override pacing if structural data is stronger
     if (s.secondHalfCutsPerSecond > s.firstHalfCutsPerSecond * 1.5) {
       style.intentMapping.pacing = "varied";
     }
   }
+
+  // Override pacing with FFmpeg energy curve (ground truth)
   style.pacing = {
-    climaxPosition: motionEnergy.length > 0 ? 0.65 : 0.5,
+    ...style.pacing,
+    climaxPosition: style.pacing?.climaxPosition ?? (motionEnergy.length > 0 ? 0.65 : 0.5),
     energyCurve: motionEnergy.slice(0, 10),
+    type: style.pacing?.type ?? (isFastPaced2 ? "fast" : "medium"),
+    intensityBuilds: style.pacing?.intensityBuilds ?? isHighEnergy,
+    breathingMoments: style.pacing?.breathingMoments ?? [],
   };
+
+  // Override effects with deterministic data
   style.effects = {
-    transitionsBreakdown: {
+    ...style.effects,
+    transitionsBreakdown: style.effects?.transitionsBreakdown ?? {
       cutPercentage: cutFrequency.cutsPerSecond > 1 ? 0.8 : 0.5,
       crossfadePercentage: cutFrequency.cutsPerSecond > 1 ? 0.2 : 0.5,
+      otherPercentage: 0,
     },
-    effectsFrequency: style.detectedEffects?.length > 0 ? 0.5 : (isHighEnergy ? 0.4 : 0.2),
+    effectsFrequency: style.effects?.effectsFrequency ?? (isHighEnergy ? 0.4 : 0.2),
+    commonEffects: style.effects?.commonEffects ?? (isHighEnergy ? ["push_in", "impact_flash", "speed_ramp"] : ["push_in"]),
+    overallIntensity: style.effects?.overallIntensity ?? (isHighEnergy ? 0.6 : 0.3),
   };
+
+  // Override shotLanguage with deterministic data
   style.shotLanguage = {
-    subjectFocus: isFastPaced ? ["action", "movement"] : ["subject", "environment"],
-    cameraMotion: isHighEnergy ? "dynamic" : "static",
-    composition: "standard",
+    ...style.shotLanguage,
+    subjectFocus: style.shotLanguage?.subjectFocus ?? (isFastPaced ? ["action", "movement"] : ["subject", "environment"]),
+    motionPreference: style.shotLanguage?.motionPreference ?? (isHighEnergy ? "moving" : "static"),
+    closeupRatio: style.shotLanguage?.closeupRatio ?? 0.3,
+    wideRatio: style.shotLanguage?.wideRatio ?? 0.2,
+    sequencePatterns: style.shotLanguage?.sequencePatterns ?? [],
   };
-  style.editingPhilosophy = {
-    summary: isFastPaced
-      ? "Fast-paced editing with rapid cuts, emphasizing energy and movement"
-      : isHighEnergy
-      ? "Dynamic editing with moderate cuts, balancing energy and narrative"
-      : "Measured editing with deliberate pacing, emphasizing story and atmosphere",
-    cutRhythm: isFastPaced ? "rapid" : "measured",
-    effectDensity: isHighEnergy ? "high" : "moderate",
+
+  // Override editingPhilosophy if LLM didn't provide meaningful data
+  if (!style.editingPhilosophy?.summary || style.editingPhilosophy.summary.length < 10) {
+    style.editingPhilosophy = {
+      summary: isFastPaced
+        ? "Fast-paced editing with rapid cuts, emphasizing energy and movement"
+        : isHighEnergy
+        ? "Dynamic editing with moderate cuts, balancing energy and narrative"
+        : "Measured editing with deliberate pacing, emphasizing story and atmosphere",
+      rhythmContract: cutFrequency.cutsPerSecond > 1 ? "beat-locked" : "visual rhythm",
+      restraintLevel: isHighEnergy ? "moderate" : "minimal",
+      signatureMove: isHighEnergy ? "impact_flash on drops" : "push_in on hero shots",
+    };
+  }
+
+  // Use LLM's composition if available, otherwise sensible defaults
+  style.composition = {
+    avgLayerCount: style.composition?.avgLayerCount ?? 1,
+    maskingFrequency: style.composition?.maskingFrequency ?? 0,
+    depthOrder: style.composition?.depthOrder ?? "subject_on_top",
+    commonBlendModes: style.composition?.commonBlendModes ?? ["normal"],
   };
-  style.pillarScores = {
-    brutalistImpact: isHighEnergy ? 0.7 : 0.3,
-    tensionPivot: cutFrequency.variance > 0.5 ? 0.6 : 0.3,
-    vocalFlowSync: 0.4,
-    legacyMontage: isFastPaced ? 0.6 : 0.3,
+
+  // Use LLM's textStyle if available
+  style.textStyle = {
+    pacing: style.textStyle?.pacing ?? ((textOverlays?.length ?? 0) > 0 ? "snappy" : "none"),
+    positioning: style.textStyle?.positioning ?? "center",
+    fontVibe: style.textStyle?.fontVibe ?? "bold_sans",
+    animationStyle: style.textStyle?.animationStyle ?? "pop_in",
   };
 
   return style;
