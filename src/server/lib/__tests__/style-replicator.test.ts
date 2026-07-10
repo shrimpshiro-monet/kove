@@ -222,4 +222,54 @@ describe("replicateStyle", () => {
     });
     expect(edl.textOverlays).toBeUndefined();
   });
+
+  it("uses strict beat-locking when audioVisualSync.cutOnBeatRatio > 0.7", () => {
+    const ref = makeRef();
+    (ref as any).audioVisualSync = { cutOnBeatRatio: 0.85, syncConfidence: 0.9 };
+    ref.rhythm.cutAlignment = "loose"; // Would normally be loose
+
+    const edl = replicateStyle({
+      referenceStyle: ref, analysis: makeAnalysis(), sourcePlan: makeSourcePlan(),
+      targetDuration: 20,
+      rhythmMap: { bpm: 140, beats: makeBeats(), onsets: [], drop_candidates: [], downbeats: [] },
+      fps: 30, createdAt: 0,
+    });
+
+    // Should have beat-locked shots because cutOnBeatRatio > 0.7
+    const beatLockedShots = edl.shots.filter(s => s.timing.beatLocked);
+    expect(beatLockedShots.length).toBeGreaterThan(0);
+  });
+
+  it("snaps cuts to scene boundaries when available", () => {
+    const ref = makeRef();
+    // Add scene boundaries at specific positions (scaled to 20s target)
+    (ref as any).duration = 15;
+    (ref as any).sceneBoundaryTrace = [
+      { timestamp: 2.0, confidence: 0.9 },
+      { timestamp: 4.5, confidence: 0.85 },
+      { timestamp: 7.0, confidence: 0.8 },
+      { timestamp: 10.0, confidence: 0.9 },
+      { timestamp: 13.0, confidence: 0.7 },
+    ];
+
+    const edl = replicateStyle({
+      referenceStyle: ref, analysis: makeAnalysis(), sourcePlan: makeSourcePlan(),
+      targetDuration: 20,
+      rhythmMap: { bpm: 140, beats: makeBeats(), onsets: [], drop_candidates: [], downbeats: [] },
+      fps: 30, createdAt: 0,
+    });
+
+    // Some shots should start near mapped boundary positions
+    const scaledBoundaries = [2.0 * (20/15), 4.5 * (20/15), 7.0 * (20/15), 10.0 * (20/15), 13.0 * (20/15)];
+    let snappedCount = 0;
+    for (const shot of edl.shots) {
+      for (const bt of scaledBoundaries) {
+        if (Math.abs(shot.timing.startTime - bt) < 0.5) {
+          snappedCount++;
+          break;
+        }
+      }
+    }
+    expect(snappedCount).toBeGreaterThanOrEqual(2);
+  });
 });

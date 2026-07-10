@@ -699,6 +699,7 @@ export async function analyzeReference(
   let textOverlayTrace: any[] = [];
   let subjectTracks: any[] = [];
   let sceneBoundaryTrace: any[] = [];
+  let audioVisualSync: any = null;
   let colorSignalStats: any = null;
 
   try {
@@ -707,6 +708,7 @@ export async function analyzeReference(
     textOverlayTrace = perception.textOverlays;
     subjectTracks = perception.subjectTracks;
     sceneBoundaryTrace = perception.sceneBoundaries;
+    audioVisualSync = perception.audioVisualSync;
     colorSignalStats = perception.colorSignalStats;
     console.log(`[reference-analysis] Perception: ${textOverlayTrace.length} text, ${subjectTracks.length} subjects, ${sceneBoundaryTrace.length} scenes`);
   } catch (e) {
@@ -722,6 +724,9 @@ export async function analyzeReference(
   }
   if (sceneBoundaryTrace.length > 0) {
     (style as any).sceneBoundaryTrace = sceneBoundaryTrace;
+  }
+  if (audioVisualSync) {
+    (style as any).audioVisualSync = audioVisualSync;
   }
   if (colorSignalStats) {
     (style as any).colorSignalStats = colorSignalStats;

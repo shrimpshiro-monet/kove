@@ -56,9 +56,56 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
   const climaxTs = ref.pacing.climaxPosition * targetDuration;
   const beats = rhythmMap?.beats ?? [];
 
+  // Use audio-visual sync data to control beat-locking strictness
+  const avSync = (ref as any).audioVisualSync;
+  const strictBeatLock = avSync?.cutOnBeatRatio > 0.7 || ref.rhythm.cutAlignment === "strict";
+  const syncConfidence = avSync?.syncConfidence ?? 0.5;
+
+  // Use scene boundary trace to refine cut positions
+  const sceneBoundaries: Array<{ timestamp: number; confidence: number }> = (ref as any).sceneBoundaryTrace ?? [];
+  const refDuration = (ref as any).duration ?? targetDuration;
+  const timeScale = refDuration > 0 ? targetDuration / refDuration : 1;
+
   const targetShotCount = Math.max(3, Math.round(targetDuration / avgShotDur));
   let slots = planTimingSlots(targetDuration, targetShotCount, ref, beats, climaxTs, rhythmMap?.drop_candidates ?? []);
   slots = fillTimeline(slots, targetDuration);
+
+  // Refine cut positions using scene boundary data from reference
+  if (sceneBoundaries.length > 0 && sceneBoundaries.length >= targetShotCount * 0.5) {
+    // Map reference scene boundaries to target timeline
+    const mappedBoundaries = sceneBoundaries
+      .map(b => ({ time: b.timestamp * timeScale, confidence: b.confidence }))
+      .filter(b => b.time > 0 && b.time < targetDuration)
+      .sort((a, b) => a.time - b.time);
+
+    // Snap slot start times to nearest high-confidence scene boundary
+    for (const slot of slots) {
+      if (slot.sectionRole === "hook") continue; // Don't move the opening shot
+
+      let bestBoundary = null;
+      let bestDist = Infinity;
+      for (const boundary of mappedBoundaries) {
+        const dist = Math.abs(boundary.time - slot.startTime);
+        if (dist < bestDist && boundary.confidence > 0.6) {
+          bestDist = dist;
+          bestBoundary = boundary;
+        }
+      }
+
+      // Only snap if within 30% of shot duration
+      if (bestBoundary && bestDist < slot.duration * 0.3) {
+        slot.startTime = bestBoundary.time;
+      }
+    }
+
+    // Re-sort and reflow after snapping
+    slots.sort((a, b) => a.startTime - b.startTime);
+    let t = 0;
+    for (const slot of slots) {
+      slot.startTime = t;
+      t += slot.duration;
+    }
+  }
 
   const availableSources = sourcePlan.slice(0, slots.length);
 
@@ -81,6 +128,17 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
 
     // Get color metrics for this shot's position in timeline
     const colorMetrics = (ref.visualStyle as any)?._colorMetrics;
+    const signalStats = (ref as any).colorSignalStats;
+
+    // Check if reference had a color change at this position (from signalstats curve)
+    const hasColorShift = signalStats?.saturationCurve?.length > 0
+      ? (() => {
+          const curveIdx = Math.floor(normalizedTime * signalStats.saturationCurve.length);
+          const nextIdx = Math.min(curveIdx + 1, signalStats.saturationCurve.length - 1);
+          const satDelta = Math.abs((signalStats.saturationCurve[nextIdx] ?? 0.5) - (signalStats.saturationCurve[curveIdx] ?? 0.5));
+          return satDelta > 0.15;
+        })()
+      : false;
 
     return {
       id: `shot_${String(i + 1).padStart(3, "0")}`,
@@ -98,9 +156,9 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
         startTime: slot.startTime,
         duration: slot.duration,
         speed: 1.0,
-        beatLocked: ref.rhythm.cutAlignment !== "none",
+        beatLocked: strictBeatLock,
       },
-      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration, { hasRefVelocityRamp, hasRefFlash, colorMetrics, sourceHasVelocityRamp: source.hasVelocityRamp }),
+      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration, { hasRefVelocityRamp, hasRefFlash, colorMetrics, sourceHasVelocityRamp: source.hasVelocityRamp, hasColorShift }),
       transition: selectTransition(slot, ref, i, slots.length),
       beatLock: beats.length > 0 && slot.beatIndex >= 0
         ? { beatIndex: slot.beatIndex, lockMode: "start" as const }
@@ -116,7 +174,6 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
 
   // Generate text overlays from reference text overlay trace
   const textOverlayTrace = (ref as any).textOverlayTrace ?? [];
-  const refDuration = (ref as any).duration ?? targetDuration;
   const textOverlays = textOverlayTrace.map((trace: any, idx: number) => {
     // Scale timestamps from reference duration to target duration
     const timeScale = refDuration > 0 ? targetDuration / refDuration : 1;
@@ -255,7 +312,7 @@ function fillTimeline(slots: TimingSlot[], targetDuration: number): TimingSlot[]
   return filled;
 }
 
-function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number, refData?: { hasRefVelocityRamp: boolean; hasRefFlash: boolean; colorMetrics?: any; sourceHasVelocityRamp?: boolean }): Effect[] {
+function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number, refData?: { hasRefVelocityRamp: boolean; hasRefFlash: boolean; colorMetrics?: any; sourceHasVelocityRamp?: boolean; hasColorShift?: boolean }): Effect[] {
   const effects: Effect[] = [];
   const climaxTs = ref.pacing.climaxPosition * targetDuration;
   const shotEnd = slot.startTime + slot.duration;
@@ -289,6 +346,11 @@ function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: 
   }
   if (slot.sectionRole === "peak" && ref.effects.commonEffects.includes("color_pulse")) {
     effects.push({ id: `fx_${slot.startTime.toFixed(2)}_color`, type: "color_pulse", intensity: 0.4, startTime: 0, duration: 0.3, params: { saturation: 1.3, brightness: 1.1 } });
+  }
+
+  // Color grade pulse from signalstats color shift detection
+  if (refData?.hasColorShift && !effects.some(e => e.type === "color_pulse")) {
+    effects.push({ id: `fx_${slot.startTime.toFixed(2)}_csig`, type: "color_pulse", intensity: 0.3, startTime: 0, duration: 0.4, params: { saturation: 1.15, brightness: 1.05 } });
   }
 
   // Color grade intensity from real metrics
