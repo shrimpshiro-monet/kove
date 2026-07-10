@@ -77,6 +77,9 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
 
       const similarity = effectiveTrace ? compareReferenceTraceToEDL(effectiveTrace, edl) : null;
       console.log(`[replicate-style] Attempt ${attempt + 1}: similarity=${similarity?.overall?.toFixed(3) ?? "N/A"}`);
+      if (effectiveTrace) {
+        console.log(`[replicate-style] Trace: shotDurations=${effectiveTrace.shotDurations?.length ?? 0}, events=${effectiveTrace.events?.length ?? 0}, avgShot=${effectiveTrace.avgShotDurationSec?.toFixed(3)}`);
+      }
 
       if (!bestEdl || (similarity && (!bestSimilarity || similarity.overall > bestSimilarity.overall))) {
         bestEdl = edl;
