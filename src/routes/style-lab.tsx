@@ -231,6 +231,12 @@ function StyleLabPage() {
   const [exportUrl, setExportUrl] = useState<string | null>(null);
   const [exportSize, setExportSize] = useState<number | null>(null);
 
+  // Replicate-style state
+  const [replicateStep, setReplicateStep] = useState<StepStatus>("idle");
+  const [replicateEdl, setReplicateEdl] = useState<any>(null);
+  const [replicateSimilarity, setReplicateSimilarity] = useState<any>(null);
+  const [replicateScores, setReplicateScores] = useState<any>(null);
+
   const projectIdRef = useRef(`lab-${Date.now()}`);
   const footageIdsRef = useRef<string[]>([]);
 
@@ -666,6 +672,149 @@ function StyleLabPage() {
     l("DONE", "Full pipeline complete.", true);
   };
 
+  const runReplicateStyle = async () => {
+    if (!refFile || footageScenes.length === 0) {
+      l("ERROR", "Need reference video + footage", false);
+      return;
+    }
+
+    setLogs([]);
+    setRefStyle(null);
+    setReplicateEdl(null);
+    setReplicateSimilarity(null);
+    setReplicateScores(null);
+    setReplicateStep("running");
+    const projectId = projectIdRef.current;
+
+    // Step 1: Upload reference
+    l("UPLOAD", "Uploading reference video...");
+    let refFileId: string;
+    try {
+      refFileId = await uploadFile(refFile, projectId, "reference");
+      l("UPLOAD", `Reference uploaded: ${refFileId}`, true);
+    } catch (e: any) {
+      l("UPLOAD", `Upload failed: ${e.message}`, false);
+      setReplicateStep("error");
+      return;
+    }
+
+    // Step 2: Analyze reference
+    l("ANALYZE", "Analyzing reference (scene detection + energy + LLM + perception plugins)...");
+    let style: any;
+    try {
+      const result = await apiPost<any>("/api/analyze-reference", { projectId, referenceFileId: refFileId });
+      style = result.style;
+      setRefStyle(style);
+      l("ANALYZE", `Reference analyzed. Confidence: ${style.confidence}`, true);
+
+      // Show perception results
+      if (style.textOverlayTrace?.length > 0) {
+        l("PERCEPTION", `Text overlays: ${style.textOverlayTrace.length} detected`, true);
+        for (const t of style.textOverlayTrace.slice(0, 3)) {
+          l("PERCEPTION", `  "${t.text}" @ ${t.startTime.toFixed(1)}-${t.endTime.toFixed(1)}s [${t.animation}]`);
+        }
+      }
+      if (style.subjectTracks?.length > 0) {
+        l("PERCEPTION", `Subject tracks: ${style.subjectTracks.length} subjects`, true);
+        for (const s of style.subjectTracks.slice(0, 3)) {
+          l("PERCEPTION", `  ${s.className} [${s.motionPath}] @ (${s.avgCenter.x.toFixed(2)}, ${s.avgCenter.y.toFixed(2)})`);
+        }
+      }
+      if (style.sceneBoundaryTrace?.length > 0) {
+        l("PERCEPTION", `Scene boundaries: ${style.sceneBoundaryTrace.length} detected`, true);
+      }
+      if (style.audioVisualSync) {
+        l("PERCEPTION", `Audio sync: cutOnBeat=${(style.audioVisualSync.cutOnBeatRatio * 100).toFixed(0)}%, confidence=${style.audioVisualSync.syncConfidence.toFixed(2)}`, true);
+      }
+      if (style.colorSignalStats) {
+        l("PERCEPTION", `Color stats: sat=${style.colorSignalStats.avgSaturation.toFixed(3)}, luma=${style.colorSignalStats.avgLuma.toFixed(3)}, flashes=${style.colorSignalStats.flashCount}`, true);
+      }
+    } catch (e: any) {
+      l("ANALYZE", `Reference analysis FAILED: ${e.message}`, false);
+      setReplicateStep("error");
+      return;
+    }
+
+    // Step 3: Upload footage
+    l("UPLOAD", "Uploading raw footage...");
+    const footageIds: string[] = [];
+    for (const fs of footageScenes) {
+      footageIds.push(fs.fileId);
+    }
+
+    // Step 4: Upload music if provided
+    let musicId: string | undefined;
+    if (musicFile) {
+      l("UPLOAD", "Uploading music...");
+      try {
+        musicId = await uploadFile(musicFile, projectId, "music");
+        l("UPLOAD", `Music uploaded: ${musicId}`, true);
+      } catch (e: any) {
+        l("UPLOAD", `Music upload failed: ${e.message}`, false);
+      }
+    }
+
+    // Step 5: Analyze footage
+    l("ANALYZE", `Analyzing ${footageIds.length} footage files...`);
+    let analysisResult: any;
+    try {
+      analysisResult = await apiPost<any>("/api/analyze", { projectId, footageIds, musicId });
+      l("ANALYZE", `Footage analysis complete`, true);
+    } catch (e: any) {
+      l("ANALYZE", `Footage analysis FAILED: ${e.message}`, false);
+      setReplicateStep("error");
+      return;
+    }
+
+    // Step 6: Run style replication
+    l("REPLICATE", "Running deterministic style replication...");
+    let result: any;
+    try {
+      result = await apiPost<any>("/api/replicate-style", {
+        projectId,
+        referenceFileId: refFileId,
+        analysisId: analysisResult.analysisId || "lab-analysis",
+        analysisData: analysisResult.result || analysisResult,
+        referenceStyle: style,
+        referenceMode: "strict_replication",
+        targetDuration: analysisResult.result?.music?.duration ?? style.duration ?? 30,
+      });
+
+      setReplicateEdl(result.edl);
+      setReplicateSimilarity(result.similarity);
+      setReplicateScores(result.scores);
+
+      const shotCount = result.edl?.shots?.length ?? 0;
+      const duration = result.edl?.timeline?.duration ?? 0;
+      const textOverlays = result.edl?.textOverlays?.length ?? 0;
+      const similarity = result.similarity?.overall;
+
+      l("REPLICATE", `EDL generated: ${shotCount} shots, ${duration.toFixed(1)}s, ${textOverlays} text overlays`, true);
+      if (similarity !== undefined) {
+        l("REPLICATE", `Similarity to reference: ${(similarity * 100).toFixed(1)}%`, similarity >= 0.5);
+      }
+      l("REPLICATE", `Generation mode: ${result.generationMode}, Humanized: ${result.humanized}`, true);
+
+      // Show what was extracted
+      const effectTypes = new Set<string>();
+      result.edl?.shots?.forEach((s: any) => s.effects?.forEach((e: any) => effectTypes.add(e.type)));
+      l("REPLICATE", `Effects in EDL: ${[...effectTypes].join(", ")}`);
+
+      if (result.edl?.textOverlays?.length > 0) {
+        l("REPLICATE", `Text overlays generated:`);
+        for (const t of result.edl.textOverlays.slice(0, 3)) {
+          l("REPLICATE", `  "${t.text}" @ ${t.startTime.toFixed(1)}-${t.endTime.toFixed(1)}s [${t.animation?.inType}]`);
+        }
+      }
+    } catch (e: any) {
+      l("REPLICATE", `Style replication FAILED: ${e.message}`, false);
+      setReplicateStep("error");
+      return;
+    }
+    setReplicateStep("done");
+    l("DONE", "Style replication complete.", true);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200">
       <header className="border-b border-neutral-800 px-6 py-4">
@@ -724,11 +873,18 @@ function StyleLabPage() {
 
         {/* Run Pipeline */}
         <section>
-          <button onClick={runPipeline}
-            disabled={footageScenes.length === 0 || sceneStep === "running" || genStep === "running" || expStep === "running"}
-            className="px-5 py-2.5 rounded bg-orange-600 text-white text-sm font-semibold hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            {genStep === "running" || expStep === "running" ? "Running..." : "Run Full Pipeline"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button onClick={runPipeline}
+              disabled={footageScenes.length === 0 || sceneStep === "running" || genStep === "running" || expStep === "running" || replicateStep === "running"}
+              className="px-5 py-2.5 rounded bg-orange-600 text-white text-sm font-semibold hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              {genStep === "running" || expStep === "running" ? "Running..." : "Run Full Pipeline"}
+            </button>
+            <button onClick={runReplicateStyle}
+              disabled={footageScenes.length === 0 || replicateStep === "running" || genStep === "running"}
+              className="px-5 py-2.5 rounded bg-purple-600 text-white text-sm font-semibold hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              {replicateStep === "running" ? "Replicating..." : "Replicate Style"}
+            </button>
+          </div>
           {footageScenes.length > 0 && (
             <span className="ml-3 text-xs text-neutral-500">
               {getSelectedSegmentData().length} segments selected
@@ -767,6 +923,93 @@ function StyleLabPage() {
                 Download MP4 ({exportSize ? `${(exportSize / 1024 / 1024).toFixed(1)}MB` : "?"})
               </a>
               <video src={exportUrl} controls className="mt-3 w-full max-h-96 rounded border border-neutral-800" />
+            </div>
+          )}
+        </section>
+
+        {/* Style Replication Results */}
+        <section>
+          <StepHeader label="Style Replication" status={replicateStep} />
+          {replicateEdl && (
+            <div className="space-y-3">
+              {/* Similarity Score */}
+              {replicateSimilarity && (
+                <div className="rounded border border-purple-800 bg-purple-950 p-4">
+                  <div className="text-2xl font-bold text-purple-400 mb-2">
+                    Similarity: {((replicateSimilarity.overall ?? 0) * 100).toFixed(1)}%
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {Object.entries(replicateSimilarity).filter(([k]) => k !== "overall" && k !== "failures").map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span className="text-neutral-400">{k}</span>
+                        <span className="text-neutral-200">{typeof v === "number" ? (v * 100).toFixed(1) + "%" : String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {replicateSimilarity.failures?.length > 0 && (
+                    <div className="mt-2 text-xs text-red-400">
+                      {replicateSimilarity.failures.map((f: string, i: number) => <div key={i}>- {f}</div>)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* EDL Summary */}
+              <div className="rounded border border-neutral-800 bg-neutral-900 p-4">
+                <div className="text-sm font-semibold text-neutral-300 mb-2">Generated EDL</div>
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div><span className="text-neutral-500">Shots:</span> <span className="text-neutral-200">{replicateEdl.shots?.length ?? 0}</span></div>
+                  <div><span className="text-neutral-500">Duration:</span> <span className="text-neutral-200">{replicateEdl.timeline?.duration?.toFixed(1)}s</span></div>
+                  <div><span className="text-neutral-500">Text Overlays:</span> <span className="text-neutral-200">{replicateEdl.textOverlays?.length ?? 0}</span></div>
+                  <div><span className="text-neutral-500">Color Grade:</span> <span className="text-neutral-200">{replicateEdl.globalEffects?.colorGrade}</span></div>
+                  <div><span className="text-neutral-500">Mode:</span> <span className="text-neutral-200">{replicateEdl.metadata?.aiModel}</span></div>
+                  <div><span className="text-neutral-500">Humanized:</span> <span className="text-neutral-200">yes</span></div>
+                </div>
+
+                {/* Effect breakdown */}
+                {replicateEdl.shots?.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-xs text-neutral-500 mb-1">Effects per shot:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {replicateEdl.shots.map((s: any, i: number) => {
+                        const fxCount = s.effects?.length ?? 0;
+                        const color = fxCount === 0 ? "bg-neutral-700" : fxCount === 1 ? "bg-yellow-700" : "bg-orange-600";
+                        return (
+                          <div key={i} className={`w-4 h-4 rounded-sm ${color} cursor-pointer group relative`}
+                            title={`Shot ${i + 1}: ${fxCount} effects${s.effects?.map((e: any) => ` ${e.type}`).join("") || ""}`}>
+                            <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] text-neutral-400 opacity-0 group-hover:opacity-100 whitespace-nowrap">{fxCount}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-3 mt-1 text-[10px] text-neutral-500">
+                      <span><span className="inline-block w-2 h-2 bg-neutral-700 rounded-sm mr-1" />No effects</span>
+                      <span><span className="inline-block w-2 h-2 bg-yellow-700 rounded-sm mr-1" />1 effect</span>
+                      <span><span className="inline-block w-2 h-2 bg-orange-600 rounded-sm mr-1" />2+ effects</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Text Overlays */}
+              {replicateEdl.textOverlays?.length > 0 && (
+                <div className="rounded border border-neutral-800 bg-neutral-900 p-4">
+                  <div className="text-sm font-semibold text-neutral-300 mb-2">Text Overlays</div>
+                  {replicateEdl.textOverlays.map((t: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 text-xs mb-1">
+                      <span className="text-purple-400 font-mono">{t.startTime.toFixed(1)}s-{t.endTime.toFixed(1)}s</span>
+                      <span className="text-neutral-200 font-semibold">"{t.text}"</span>
+                      <span className="text-neutral-500">[{t.animation?.inType}]</span>
+                      <span className="text-neutral-500">pos: ({t.offset?.x}, {t.offset?.y})</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Copyable JSON */}
+              <JsonBlock label="Full ReferenceStyle JSON" data={refStyle} />
+              <JsonBlock label="Full Generated EDL JSON" data={replicateEdl} />
+              {replicateScores && <JsonBlock label="EDL Scores" data={replicateScores} />}
             </div>
           )}
         </section>
