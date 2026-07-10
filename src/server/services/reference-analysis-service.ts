@@ -482,8 +482,50 @@ export async function analyzeReference(
   );
 
   style.colorProfile = opencvColorProfile;
+
+  // Wire OpenCV color data into visualStyle (real RGB/HSV values)
+  if (opencvColorProfile && typeof opencvColorProfile.avgSaturation === "number") {
+    const sat = opencvColorProfile.avgSaturation;
+    const bright = opencvColorProfile.avgBrightness;
+    const contrast = opencvColorProfile.avgContrast;
+    const temp = opencvColorProfile.avgTemperature;
+
+    style.visualStyle = {
+      ...style.visualStyle,
+      saturationLevel: sat > 0.7 ? "hyper-saturated" : sat > 0.5 ? "saturated" : sat > 0.3 ? "natural" : "desaturated",
+      contrastLevel: contrast > 0.65 ? "high" : contrast > 0.4 ? "medium" : "low",
+      colorTemperature: temp > 0.1 ? "warm" : temp < -0.1 ? "cool" : "neutral",
+      vignettePresent: style.visualStyle?.vignettePresent ?? false,
+      grainPresent: style.visualStyle?.grainPresent ?? false,
+      // Store actual numeric values for the deterministic engine
+      _colorMetrics: {
+        avgSaturation: sat,
+        avgBrightness: bright,
+        avgContrast: contrast,
+        avgTemperature: temp,
+        saturationRange: opencvColorProfile.saturationRange,
+        brightnessRange: opencvColorProfile.brightnessRange,
+      },
+    };
+  }
   if (detectedTextOverlays.length > 0) {
     style.textOverlays = detectedTextOverlays;
+
+    // Wire text overlay data into textStyle
+    const avgFontSize = detectedTextOverlays.reduce((s, t) => s + (t.style?.fontSize ?? 24), 0) / detectedTextOverlays.length;
+    const hasAnimation = detectedTextOverlays.some(t => t.animation);
+    const positions = detectedTextOverlays.map(t => t.position);
+    const dominantPosition = positions.sort((a, b) =>
+      positions.filter(v => v === b).length - positions.filter(v => v === a).length
+    )[0] ?? "center";
+
+    style.textStyle = {
+      ...style.textStyle,
+      pacing: detectedTextOverlays.length > 3 ? "snappy" : detectedTextOverlays.length > 0 ? "lingering" : "none",
+      positioning: dominantPosition,
+      fontVibe: avgFontSize > 36 ? "bold_display" : avgFontSize > 24 ? "bold_sans" : "clean_sans",
+      animationStyle: hasAnimation ? (detectedTextOverlays[0]?.animation?.inType ?? "pop") : "pop_in",
+    };
   }
 
   // Use Python palette if available (overrides LLM palette)
