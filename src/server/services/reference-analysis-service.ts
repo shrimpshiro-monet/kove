@@ -331,6 +331,31 @@ export async function analyzeReference(
       totalDuration = parseFloat(durStr.trim()) || 0;
     }
 
+    // Extract resolution and frame rate from reference
+    let refWidth = 1920, refHeight = 1080, refFps = 30;
+    try {
+      const { stdout: streamInfo } = await execFileAsync("ffprobe", [
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height,r_frame_rate",
+        "-of", "json",
+        tmpPath,
+      ], { timeout: 15_000 });
+      const streamData = JSON.parse(streamInfo);
+      const stream = streamData.streams?.[0];
+      if (stream) {
+        refWidth = stream.width ?? 1920;
+        refHeight = stream.height ?? 1080;
+        if (stream.r_frame_rate) {
+          const [num, den] = stream.r_frame_rate.split("/").map(Number);
+          if (den > 0) refFps = Math.round(num / den);
+        }
+      }
+      console.log(`[reference-analysis] Video: ${refWidth}x${refHeight} @ ${refFps}fps`);
+    } catch (e) {
+      console.warn(`[reference-analysis] Stream info extraction failed: ${(e as Error).message}`);
+    }
+
     // Run Python deep analysis for real motion data
     try {
       pythonData = await runPythonVelocityAnalysis(tmpPath);
@@ -667,6 +692,14 @@ export async function analyzeReference(
       }
     }
   }
+
+  // Store reference video technical specs
+  style.referenceSpecs = {
+    width: refWidth,
+    height: refHeight,
+    fps: refFps,
+    duration: totalDuration,
+  };
 
   return { style, totalDuration };
 }
