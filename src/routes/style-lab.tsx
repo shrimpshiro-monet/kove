@@ -711,23 +711,23 @@ function StyleLabPage() {
       if (style.textOverlayTrace?.length > 0) {
         l("PERCEPTION", `Text overlays: ${style.textOverlayTrace.length} detected`, true);
         for (const t of style.textOverlayTrace.slice(0, 3)) {
-          l("PERCEPTION", `  "${t.text}" @ ${t.startTime.toFixed(1)}-${t.endTime.toFixed(1)}s [${t.animation}]`);
+          l("PERCEPTION", `  "${t.text}" @ ${(t.startTime ?? 0).toFixed(1)}-${(t.endTime ?? 0).toFixed(1)}s [${t.animation}]`);
         }
       }
       if (style.subjectTracks?.length > 0) {
         l("PERCEPTION", `Subject tracks: ${style.subjectTracks.length} subjects`, true);
         for (const s of style.subjectTracks.slice(0, 3)) {
-          l("PERCEPTION", `  ${s.className} [${s.motionPath}] @ (${s.avgCenter.x.toFixed(2)}, ${s.avgCenter.y.toFixed(2)})`);
+          l("PERCEPTION", `  ${s.className} [${s.motionPath}] @ (${(s.avgCenter?.x ?? 0).toFixed(2)}, ${(s.avgCenter?.y ?? 0).toFixed(2)})`);
         }
       }
       if (style.sceneBoundaryTrace?.length > 0) {
         l("PERCEPTION", `Scene boundaries: ${style.sceneBoundaryTrace.length} detected`, true);
       }
       if (style.audioVisualSync) {
-        l("PERCEPTION", `Audio sync: cutOnBeat=${(style.audioVisualSync.cutOnBeatRatio * 100).toFixed(0)}%, confidence=${style.audioVisualSync.syncConfidence.toFixed(2)}`, true);
+        l("PERCEPTION", `Audio sync: cutOnBeat=${((style.audioVisualSync.cutOnBeatRatio ?? 0) * 100).toFixed(0)}%, confidence=${(style.audioVisualSync.syncConfidence ?? 0).toFixed(2)}`, true);
       }
       if (style.colorSignalStats) {
-        l("PERCEPTION", `Color stats: sat=${style.colorSignalStats.avgSaturation.toFixed(3)}, luma=${style.colorSignalStats.avgLuma.toFixed(3)}, flashes=${style.colorSignalStats.flashCount}`, true);
+        l("PERCEPTION", `Color stats: sat=${(style.colorSignalStats.avgSaturation ?? 0).toFixed(3)}, luma=${(style.colorSignalStats.avgLuma ?? 0).toFixed(3)}, flashes=${style.colorSignalStats.flashCount ?? 0}`, true);
       }
     } catch (e: any) {
       l("ANALYZE", `Reference analysis FAILED: ${e.message}`, false);
@@ -803,7 +803,7 @@ function StyleLabPage() {
       if (result.edl?.textOverlays?.length > 0) {
         l("REPLICATE", `Text overlays generated:`);
         for (const t of result.edl.textOverlays.slice(0, 3)) {
-          l("REPLICATE", `  "${t.text}" @ ${t.startTime.toFixed(1)}-${t.endTime.toFixed(1)}s [${t.animation?.inType}]`);
+          l("REPLICATE", `  "${t.text}" @ ${(t.startTime ?? 0).toFixed(1)}-${(t.endTime ?? 0).toFixed(1)}s [${t.animation?.inType}]`);
         }
       }
     } catch (e: any) {
