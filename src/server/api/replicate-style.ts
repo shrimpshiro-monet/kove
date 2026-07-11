@@ -71,7 +71,10 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
       edl = await humanizeSkeleton(edl, referenceStyle, ai);
 
       edl = enforceReferenceStyleOnEDL(edl, referenceStyle, referenceMode);
-      edl = injectReferenceColorGrades(edl, referenceStyle);
+      // Only inject color grades if reference actually uses effects
+      if ((referenceStyle.effects?.effectsFrequency ?? 0.5) > 0.05) {
+        edl = injectReferenceColorGrades(edl, referenceStyle);
+      }
       edl = enforceMotionContinuity(edl);
       edl = ensureBeatLocksForMusic(edl, rhythmMap, { maxDriftMs: 70, strict: referenceMode === "strict_replication" });
 

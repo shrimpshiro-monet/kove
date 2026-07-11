@@ -158,7 +158,7 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
         speed: 1.0,
         beatLocked: strictBeatLock,
       },
-      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration, { hasRefVelocityRamp, hasRefFlash, colorMetrics, sourceHasVelocityRamp: source.hasVelocityRamp, hasColorShift }),
+      effects: selectEffectsForShot(slot, ref, rhythmMap, i, slots.length, targetDuration, { hasRefVelocityRamp, hasRefFlash, colorMetrics, sourceHasVelocityRamp: source.hasVelocityRamp, hasColorShift, effectsFrequency: ref.effects.effectsFrequency }),
       transition: selectTransition(slot, ref, i, slots.length),
       beatLock: beats.length > 0 && slot.beatIndex >= 0
         ? { beatIndex: slot.beatIndex, lockMode: "start" as const }
@@ -312,13 +312,17 @@ function fillTimeline(slots: TimingSlot[], targetDuration: number): TimingSlot[]
   return filled;
 }
 
-function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number, refData?: { hasRefVelocityRamp: boolean; hasRefFlash: boolean; colorMetrics?: any; sourceHasVelocityRamp?: boolean; hasColorShift?: boolean }): Effect[] {
+function selectEffectsForShot(slot: TimingSlot, ref: ReferenceStyle, rhythmMap: any, _shotIndex: number, _totalShots: number, targetDuration: number, refData?: { hasRefVelocityRamp: boolean; hasRefFlash: boolean; colorMetrics?: any; sourceHasVelocityRamp?: boolean; hasColorShift?: boolean; effectsFrequency?: number }): Effect[] {
   const effects: Effect[] = [];
   const climaxTs = ref.pacing.climaxPosition * targetDuration;
   const shotEnd = slot.startTime + slot.duration;
   const isPreClimax = shotEnd <= climaxTs;
   const isDrop = slot.sectionRole === "drop" || (rhythmMap?.drop_candidates ?? []).some((d: number) => Math.abs(d - slot.startTime) < 0.2);
   const isHero = slot.sectionRole === "peak" || isDrop;
+
+  // If reference has no effects, don't add any
+  const effectsFreq = refData?.effectsFrequency ?? ref.effects.effectsFrequency ?? 0.5;
+  if (effectsFreq <= 0.05) return effects;
 
   if (isPreClimax && !isDrop) {
     if (slot.energyLevel > 0.5) {

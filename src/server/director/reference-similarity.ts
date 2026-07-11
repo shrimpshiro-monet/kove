@@ -233,56 +233,38 @@ function calculateCurveSimilarity(a: number[], b: number[]): number {
  */
 function calculatePacingSimilarity(referenceDurations: number[], edlDurations: number[]): number {
   if (referenceDurations.length === 0 || edlDurations.length === 0) {
-    console.log(`[pacing] Empty input: ref=${referenceDurations.length}, edl=${edlDurations.length}`);
     return 0.5;
   }
 
-  // Log actual distributions for debugging
+  // Compare using mean + standard deviation + distribution shape
   const refAvg = referenceDurations.reduce((a, b) => a + b, 0) / referenceDurations.length;
   const edlAvg = edlDurations.reduce((a, b) => a + b, 0) / edlDurations.length;
-  console.log(`[pacing] ref: n=${referenceDurations.length}, avg=${refAvg.toFixed(3)}, range=[${Math.min(...referenceDurations).toFixed(3)}, ${Math.max(...referenceDurations).toFixed(3)}]`);
-  console.log(`[pacing] edl: n=${edlDurations.length}, avg=${edlAvg.toFixed(3)}, range=[${Math.min(...edlDurations).toFixed(3)}, ${Math.max(...edlDurations).toFixed(3)}]`);
 
-  // Create histograms of shot durations (buckets: 0-0.5s, 0.5-1s, 1-2s, 2-4s, 4s+)
-  const buckets = [0, 0.5, 1, 2, 4, Infinity];
-  const refHist = makeHistogram(referenceDurations, buckets);
-  const edlHist = makeHistogram(edlDurations, buckets);
+  const refVar = referenceDurations.reduce((s, d) => s + (d - refAvg) ** 2, 0) / referenceDurations.length;
+  const edlVar = edlDurations.reduce((s, d) => s + (d - edlAvg) ** 2, 0) / edlDurations.length;
+  const refStd = Math.sqrt(refVar);
+  const edlStd = Math.sqrt(edlVar);
 
-  console.log(`[pacing] refHist: [${refHist.map(v => v.toFixed(3)).join(", ")}]`);
-  console.log(`[pacing] edlHist: [${edlHist.map(v => v.toFixed(3)).join(", ")}]`);
+  // Mean similarity (0-1, 1 = identical)
+  const avgDiff = Math.abs(refAvg - edlAvg);
+  const avgSimilarity = Math.max(0, 1 - avgDiff / Math.max(0.1, refAvg));
 
-  // Jensen-Shannon divergence
-  const m = refHist.map((r, i) => (r + edlHist[i]) / 2);
-  const jsd = 0.5 * (klDivergence(refHist, m) + klDivergence(edlHist, m));
+  // Std similarity (how similar the spread is)
+  const stdDiff = Math.abs(refStd - edlStd);
+  const stdSimilarity = Math.max(0, 1 - stdDiff / Math.max(0.1, refStd));
 
-  console.log(`[pacing] JSD=${jsd.toFixed(4)}, similarity=${Math.max(0, 1 - Math.sqrt(jsd)).toFixed(4)}`);
+  // Distribution shape: compare percentile ranks
+  const refSorted = [...referenceDurations].sort((a, b) => a - b);
+  const edlSorted = [...edlDurations].sort((a, b) => a - b);
+  const getPercentile = (sorted: number[], p: number) => sorted[Math.min(Math.floor(p * sorted.length), sorted.length - 1)];
 
-  // Convert divergence to similarity (0 = identical, 1 = completely different)
-  return Math.max(0, 1 - Math.sqrt(jsd));
-}
+  const p25Diff = Math.abs(getPercentile(refSorted, 0.25) - getPercentile(edlSorted, 0.25));
+  const p50Diff = Math.abs(getPercentile(refSorted, 0.50) - getPercentile(edlSorted, 0.50));
+  const p75Diff = Math.abs(getPercentile(refSorted, 0.75) - getPercentile(edlSorted, 0.75));
+  const percentileSimilarity = Math.max(0, 1 - (p25Diff + p50Diff + p75Diff) / (3 * Math.max(0.1, refAvg)));
 
-function makeHistogram(values: number[], buckets: number[]): number[] {
-  const hist = new Array(buckets.length - 1).fill(0);
-  for (const v of values) {
-    for (let i = 0; i < buckets.length - 1; i++) {
-      if (v >= buckets[i] && v < buckets[i + 1]) {
-        hist[i]++;
-        break;
-      }
-    }
-  }
-  const total = values.length || 1;
-  return hist.map(h => h / total);
-}
-
-function klDivergence(p: number[], q: number[]): number {
-  let kl = 0;
-  for (let i = 0; i < p.length; i++) {
-    if (p[i] > 0 && q[i] > 0) {
-      kl += p[i] * Math.log(p[i] / q[i]);
-    }
-  }
-  return Math.max(0, kl);
+  // Weighted combination
+  return avgSimilarity * 0.40 + stdSimilarity * 0.25 + percentileSimilarity * 0.35;
 }
 
 function resampleCurve(curve: number[], targetLength: number): number[] {
