@@ -107,6 +107,56 @@ export function replicateStyle(input: ReplicateStyleInput): MonetEDL {
     }
   }
 
+  // Apply smooth constraints (from auto-editor's minClip/minCut logic)
+  // Prevents jarring micro-cuts and ensures minimum clip durations
+  const minClipDuration = 0.3; // Minimum clip duration in seconds
+  for (const slot of slots) {
+    if (slot.duration < minClipDuration) {
+      slot.duration = minClipDuration;
+    }
+  }
+  // Re-reflow after smoothing, then ensure we don't exceed target
+  let tSmooth = 0;
+  for (const slot of slots) {
+    slot.startTime = tSmooth;
+    tSmooth += slot.duration;
+  }
+  // If smoothing pushed us past target, scale down proportionally
+  if (tSmooth > targetDuration && slots.length > 0) {
+    const scale = targetDuration / tSmooth;
+    let tReflow = 0;
+    for (const slot of slots) {
+      slot.duration = Math.max(0.25, slot.duration * scale);
+      slot.startTime = tReflow;
+      tReflow += slot.duration;
+    }
+  }
+
+  // Re-snap to beats after smoothing (smooth may have shifted start times)
+  if (beats.length > 0) {
+    const beatInterval = getBeatInterval(beats, ref.rhythm.avgShotDuration > 0 ? 60 / ref.rhythm.avgShotDuration : 120);
+    for (const slot of slots) {
+      // Find nearest beat regardless of previous beatIndex
+      let bestBeat = 0;
+      let bestDist = Infinity;
+      for (let b = 0; b < beats.length; b++) {
+        const dist = Math.abs(beats[b] - slot.startTime);
+        if (dist < bestDist) { bestDist = dist; bestBeat = b; }
+      }
+      // Snap if within tolerance
+      if (bestDist < beatInterval * 0.5) {
+        slot.startTime = beats[bestBeat];
+        slot.beatIndex = bestBeat;
+      }
+    }
+    // Final reflow
+    let tFinal = 0;
+    for (const slot of slots) {
+      slot.startTime = tFinal;
+      tFinal += slot.duration;
+    }
+  }
+
   const availableSources = sourcePlan.slice(0, slots.length);
 
   const shots: Shot[] = slots.map((slot, i) => {

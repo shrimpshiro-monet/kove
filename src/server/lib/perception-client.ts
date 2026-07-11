@@ -1,12 +1,15 @@
 /**
  * Perception Plugins Client
  *
- * TypeScript interfaces and subprocess callers for Tier 1 perception upgrades:
+ * TypeScript interfaces and subprocess callers for perception upgrades:
  * - PaddleOCR text overlay detection
  * - YOLO + ByteTrack subject tracking
  * - PySceneDetect scene boundary validation
  * - librosa audio-visual sync analysis
  * - FFmpeg signalstats color/flash detection
+ * - Silence detection (from auto-editor algorithms)
+ * - Motion scoring (from auto-editor algorithms)
+ * - Audio normalization (from auto-editor algorithms)
  *
  * All Python scripts are called via execFileAsync (subprocess), not HTTP.
  * Follows the existing pattern from reference-analysis-service.ts.
@@ -147,6 +150,70 @@ export async function analyzeSignalStats(videoPath: string): Promise<ColorSignal
   return await runPythonScript("signal_stats_analyzer", "analyze_signal_stats", videoPath, 60_000);
 }
 
+// ─── Silence Detection (from auto-editor) ────────────────────────
+
+export interface SilenceSegment {
+  start: number;
+  end: number;
+  duration: number;
+}
+
+export interface SilenceAnalysis {
+  silenceSegments: SilenceSegment[];
+  speechSegments: SilenceSegment[];
+  silenceRatio: number;
+  totalSilenceDuration: number;
+  totalDuration: number;
+  silenceCount: number;
+  speechCount: number;
+}
+
+export async function detectSilence(videoPath: string): Promise<SilenceAnalysis | null> {
+  return await runPythonScript("silence_detector", "detect_silence", videoPath, 120_000);
+}
+
+// ─── Motion Scoring (from auto-editor) ───────────────────────────
+
+export interface MotionSegment {
+  start: number;
+  end: number;
+  duration: number;
+  avgMotion: number;
+  maxMotion: number;
+  motionLevel: "motionless" | "low" | "medium" | "high";
+  isMotionless: boolean;
+}
+
+export interface MotionAnalysis {
+  segments: MotionSegment[];
+  totalDuration: number;
+  avgMotion: number;
+  motionlessRatio: number;
+  motionlessCount: number;
+}
+
+export async function scoreMotion(videoPath: string): Promise<MotionAnalysis | null> {
+  return await runPythonScript("motion_scorer", "score_motion", videoPath, 120_000);
+}
+
+// ─── Audio Normalization (from auto-editor) ──────────────────────
+
+export interface NormalizationAnalysis {
+  inputLoudness: number;
+  inputTruePeak: number;
+  inputLRA: number;
+  targetLoudness: number;
+  gainDb: number;
+  gainLinear: number;
+  needsNormalization: boolean;
+  totalDuration: number;
+  normalizationType: string;
+}
+
+export async function normalizeAudio(videoPath: string): Promise<NormalizationAnalysis | null> {
+  return await runPythonScript("audio_normalizer", "normalize_audio", videoPath, 60_000);
+}
+
 // ─── Batch Perception Analysis ────────────────────────────────────
 
 export interface PerceptionResult {
@@ -155,20 +222,26 @@ export interface PerceptionResult {
   sceneBoundaries: SceneBoundaryTrace[];
   audioVisualSync: AudioVisualSync | null;
   colorSignalStats: ColorSignalStats | null;
+  silenceAnalysis: SilenceAnalysis | null;
+  motionAnalysis: MotionAnalysis | null;
+  normalization: NormalizationAnalysis | null;
 }
 
 export async function runPerceptionPlugins(videoPath: string): Promise<PerceptionResult> {
-  console.log("[perception] Running Tier 1 plugins...");
+  console.log("[perception] Running perception plugins...");
 
-  const [textOverlays, subjectTracks, sceneBoundaries, audioVisualSync, colorSignalStats] = await Promise.all([
+  const [textOverlays, subjectTracks, sceneBoundaries, audioVisualSync, colorSignalStats, silenceAnalysis, motionAnalysis, normalization] = await Promise.all([
     detectTextOverlays(videoPath).catch(() => []),
     trackSubjects(videoPath).catch(() => []),
     detectSceneBoundaries(videoPath).catch(() => []),
     analyzeAudioVisualSync(videoPath).catch(() => null),
     analyzeSignalStats(videoPath).catch(() => null),
+    detectSilence(videoPath).catch(() => null),
+    scoreMotion(videoPath).catch(() => null),
+    normalizeAudio(videoPath).catch(() => null),
   ]);
 
-  console.log(`[perception] Results: ${textOverlays.length} text overlays, ${subjectTracks.length} subject tracks, ${sceneBoundaries.length} scene boundaries`);
+  console.log(`[perception] Results: ${textOverlays.length} text, ${subjectTracks.length} subjects, ${sceneBoundaries.length} scenes, silence=${silenceAnalysis?.silenceRatio?.toFixed(2) ?? "N/A"}, motion=${motionAnalysis?.avgMotion?.toFixed(3) ?? "N/A"}`);
 
-  return { textOverlays, subjectTracks, sceneBoundaries, audioVisualSync, colorSignalStats };
+  return { textOverlays, subjectTracks, sceneBoundaries, audioVisualSync, colorSignalStats, silenceAnalysis, motionAnalysis, normalization };
 }

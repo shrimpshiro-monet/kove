@@ -75,6 +75,36 @@ function scoreSubjectMatch(
 }
 
 /**
+ * Score how well a candidate segment matches the reference's silence/motion profile.
+ * Returns 0-2 bonus points.
+ */
+function scoreSilenceMotionMatch(
+  cand: CandidateSegment,
+  silenceAnalysis: any,
+  motionAnalysis: any,
+): number {
+  let bonus = 0;
+
+  // If reference has silence analysis, prefer segments that are NOT silent
+  if (silenceAnalysis?.silenceRatio > 0.3) {
+    // Reference has significant silence — our segments should have speech/activity
+    // Since we can't know if a specific segment is silent without analyzing it,
+    // we give a small bonus to segments with higher motion (proxy for activity)
+    if (cand.score > 0.7) bonus += 0.5;
+  }
+
+  // If reference has motion analysis, match motion levels
+  if (motionAnalysis?.segments?.length > 0) {
+    const avgRefMotion = motionAnalysis.avgMotion ?? 0.5;
+    // High-motion reference → prefer high-motion segments
+    if (avgRefMotion > 0.3 && cand.score > 0.7) bonus += 1;
+    // Low-motion reference → any segment is fine (no penalty)
+  }
+
+  return Math.min(2, bonus);
+}
+
+/**
  * Build a source plan — which clip segment goes in each shot slot.
  * Deterministic: no Math.random. Uses score ranking + position-based diversity.
  * Subject-track-aware: prefers segments matching reference subject positioning.
@@ -113,8 +143,10 @@ export function buildSourcePlan(
   const windowSize = 3;
   const plan: SourcePlan[] = [];
 
-  // Extract subject tracks from reference style
+  // Extract subject tracks, silence analysis, and motion analysis from reference style
   const subjectTracks: SubjectTrack[] = (referenceStyle as any).subjectTracks ?? [];
+  const silenceAnalysis = (referenceStyle as any).silenceAnalysis ?? null;
+  const motionAnalysis = (referenceStyle as any).motionAnalysis ?? null;
 
   // Pre-sort by score (deterministic)
   const sorted = [...allSegments].sort((a, b) => b.score - a.score || a.segmentIndex - b.segmentIndex);
@@ -143,6 +175,9 @@ export function buildSourcePlan(
 
       // Subject track matching bonus
       candidateScore += scoreSubjectMatch(cand, subjectTracks, slotProgress);
+
+      // Silence/motion matching bonus
+      candidateScore += scoreSilenceMotionMatch(cand, silenceAnalysis, motionAnalysis);
 
       if (cand.faceCentered) candidateScore += 1;
       if (cand.hasVelocityRamp && slot >= shotCount * 0.5) candidateScore += 1.5;

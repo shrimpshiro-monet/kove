@@ -703,6 +703,9 @@ export async function analyzeReference(
   let sceneBoundaryTrace: any[] = [];
   let audioVisualSync: any = null;
   let colorSignalStats: any = null;
+  let silenceAnalysis: any = null;
+  let motionAnalysis: any = null;
+  let normalization: any = null;
 
   try {
     const { runPerceptionPlugins } = await import("../lib/perception-client");
@@ -712,6 +715,9 @@ export async function analyzeReference(
     sceneBoundaryTrace = perception.sceneBoundaries;
     audioVisualSync = perception.audioVisualSync;
     colorSignalStats = perception.colorSignalStats;
+    silenceAnalysis = perception.silenceAnalysis;
+    motionAnalysis = perception.motionAnalysis;
+    normalization = perception.normalization;
     console.log(`[reference-analysis] Perception: ${textOverlayTrace.length} text, ${subjectTracks.length} subjects, ${sceneBoundaryTrace.length} scenes`);
   } catch (e) {
     console.warn(`[reference-analysis] Perception plugins failed: ${(e as Error).message}`);
@@ -743,6 +749,15 @@ export async function analyzeReference(
         },
       };
     }
+  }
+  if (silenceAnalysis) {
+    (style as any).silenceAnalysis = silenceAnalysis;
+  }
+  if (motionAnalysis) {
+    (style as any).motionAnalysis = motionAnalysis;
+  }
+  if (normalization) {
+    (style as any).normalization = normalization;
   }
 
   // Store reference video technical specs
