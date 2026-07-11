@@ -81,12 +81,14 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
     let candidates = generateCandidates(baseInput, grammar, MAX_CANDIDATES);
     console.log(`[replicate-style] Generated ${candidates.length} candidates`);
 
-    // Humanize each candidate
-    for (const candidate of candidates) {
-      candidate.edl = await humanizeSkeleton(candidate.edl, referenceStyle, ai);
-      candidate.edl = enforceReferenceStyleOnEDL(candidate.edl, referenceStyle, referenceMode);
-      candidate.edl = enforceMotionContinuity(candidate.edl);
-      candidate.edl = ensureBeatLocksForMusic(candidate.edl, rhythmMap, { maxDriftMs: 70, strict: referenceMode === "strict_replication" });
+    // Humanize only top 2 candidates (save Gemini calls), enforce all
+    for (let i = 0; i < candidates.length; i++) {
+      if (i < 2) {
+        candidates[i].edl = await humanizeSkeleton(candidates[i].edl, referenceStyle, ai);
+      }
+      candidates[i].edl = enforceReferenceStyleOnEDL(candidates[i].edl, referenceStyle, referenceMode);
+      candidates[i].edl = enforceMotionContinuity(candidates[i].edl);
+      candidates[i].edl = ensureBeatLocksForMusic(candidates[i].edl, rhythmMap, { maxDriftMs: 70, strict: referenceMode === "strict_replication" });
     }
 
     // ══════════════════════════════════════════════════════════════
