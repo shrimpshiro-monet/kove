@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import {
-  Clip,
-  MonetEffectBlock,
-  Project,
-} from "@monet/core";
+  type Clip,
+  type EffectBlock as MonetEffectBlock,
+} from "@monet/edl";
+import type { Project } from "../../../stores/project-store";
 import { EffectParamControl } from "./EffectParamControl";
 import {
   createDefaultEffect,
@@ -37,7 +37,7 @@ export function EffectInspector({
 
     const clipMap = new Map<string, ClipLookup>();
 
-    for (const track of project.timeline.tracks) {
+    for (const track of project.edl.timeline.tracks) {
       for (const clip of track.clips) {
         clipMap.set(clip.id, {
           clip,

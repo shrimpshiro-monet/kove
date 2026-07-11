@@ -1,0 +1,4011 @@
+{
+  "name": "new-york",
+  "source": "./reference-edits-2/new york living the moment.MP4",
+  "duration": 19.366667,
+  "resolution": {
+    "width": 1024,
+    "height": 576
+  },
+  "fps": 30.0,
+  "totalShots": 36,
+  "avgShotDuration": 0.5379629722222222,
+  "cutRate": 1.8588639955445097,
+  "shots": [
+    {
+      "index": 0,
+      "start": 0,
+      "end": 0.1,
+      "duration": 0.1,
+      "motion_magnitude": 0,
+      "camera_motion": "static",
+      "subject_motion": "standing",
+      "energy": 0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3325861572325802,
+      "effects": [
+        "wipe",
+        "blur"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 6,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "bottom_right",
+        "hasShadow": false,
+        "avgBrightness": 84.16755294799805
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 0,
+        "description": "A close-up of a pedestrian signal showing a 'don't walk' hand symbol.",
+        "actions": [
+          "signaling"
+        ],
+        "subjects": [
+          "pedestrian signal"
+        ],
+        "emotion": "tension",
+        "event_type": "setup",
+        "narrative_role": "establishing",
+        "importance": 4,
+        "time": 0
+      }
+    },
+    {
+      "index": 1,
+      "start": 0.1,
+      "end": 0.266667,
+      "duration": 0.16666699999999998,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.2870970138734504,
+      "effects": [
+        "wipe",
+        "blur"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 1,
+        "description": "A green traffic sign indicating directions to Broadway and 5th Avenue.",
+        "actions": [
+          "navigating"
+        ],
+        "subjects": [
+          "street sign"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 3,
+        "time": 0.1
+      }
+    },
+    {
+      "index": 2,
+      "start": 0.266667,
+      "end": 0.4,
+      "duration": 0.13333300000000003,
+      "motion_magnitude": 0.5581467032432557,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.5581467032432557,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3596258496028468,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 2,
+        "description": "A brief glimpse of an information display board.",
+        "actions": [
+          "displaying"
+        ],
+        "subjects": [
+          "digital screen"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 0.266667
+      }
+    },
+    {
+      "index": 3,
+      "start": 0.4,
+      "end": 0.566667,
+      "duration": 0.166667,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.273233638928634,
+      "effects": [
+        "blur",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 3,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 100.1883544921875
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 3,
+        "description": "A close-up shot of a digital subway arrival timer.",
+        "actions": [
+          "updating"
+        ],
+        "subjects": [
+          "digital sign"
+        ],
+        "emotion": "anticipation",
+        "event_type": "setup",
+        "narrative_role": "building",
+        "importance": 4,
+        "time": 0.4
+      }
+    },
+    {
+      "index": 4,
+      "start": 0.566667,
+      "end": 0.666667,
+      "duration": 0.09999999999999998,
+      "motion_magnitude": 0.09651736418406169,
+      "camera_motion": "static",
+      "subject_motion": "standing",
+      "energy": 0.09651736418406169,
+      "shotType": "close",
+      "shotTypeConfidence": 0.31647818100553143,
+      "effects": [
+        "blur",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 4,
+        "description": "A quick transition to a screen showing transit route information.",
+        "actions": [
+          "displaying"
+        ],
+        "subjects": [
+          "digital screen"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 0.566667
+      }
+    },
+    {
+      "index": 5,
+      "start": 0.666667,
+      "end": 0.833333,
+      "duration": 0.16666599999999998,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2961476490701258,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [
+        "blur"
+      ],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 5,
+        "description": "Another rapid cut showing a different transit display.",
+        "actions": [
+          "displaying"
+        ],
+        "subjects": [
+          "digital screen"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 0.666667
+      }
+    },
+    {
+      "index": 6,
+      "start": 0.833333,
+      "end": 1.033333,
+      "duration": 0.20000000000000007,
+      "motion_magnitude": 0.8383628527323406,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.8383628527323406,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.35769917029054654,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 6,
+        "description": "A brief look at a walking path or street intersection marker.",
+        "actions": [
+          "navigating"
+        ],
+        "subjects": [
+          "street sign"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 0.833333
+      }
+    },
+    {
+      "index": 7,
+      "start": 1.033333,
+      "end": 1.533333,
+      "duration": 0.5,
+      "motion_magnitude": 0.6024308967590333,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.6024308967590333,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.281502685473652,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 7,
+        "description": "A pedestrian signal changing to the walking figure icon.",
+        "actions": [
+          "changing"
+        ],
+        "subjects": [
+          "pedestrian signal"
+        ],
+        "emotion": "excitement",
+        "event_type": "action",
+        "narrative_role": "climax",
+        "importance": 8,
+        "time": 1.033333
+      }
+    },
+    {
+      "index": 8,
+      "start": 1.533333,
+      "end": 1.933333,
+      "duration": 0.3999999999999999,
+      "motion_magnitude": 0.33711284796396895,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.33711284796396895,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3573727381342678,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 8,
+        "description": "The green traffic light is shown, signaled by the turn instruction signage.",
+        "actions": [
+          "signaling"
+        ],
+        "subjects": [
+          "traffic light",
+          "sign"
+        ],
+        "emotion": "excitement",
+        "event_type": "action",
+        "narrative_role": "climax",
+        "importance": 7,
+        "time": 1.533333
+      }
+    },
+    {
+      "index": 9,
+      "start": 1.933333,
+      "end": 2.433333,
+      "duration": 0.5000000000000002,
+      "motion_magnitude": 0.5863065973917644,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5863065973917644,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.30033708295374967,
+      "effects": [
+        "blur",
+        "vignette",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 9,
+        "description": "A close-up of the walking pedestrian sign, allowing movement in the city.",
+        "actions": [
+          "walking"
+        ],
+        "subjects": [
+          "pedestrian signal"
+        ],
+        "emotion": "celebration",
+        "event_type": "celebration",
+        "narrative_role": "resolution",
+        "importance": 6,
+        "time": 1.933333
+      }
+    },
+    {
+      "index": 10,
+      "start": 2.433333,
+      "end": 2.7,
+      "duration": 0.266667,
+      "motion_magnitude": 0.3453825228744083,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3453825228744083,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.328182617383556,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 10,
+        "time": 2.433333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 11,
+      "start": 2.7,
+      "end": 3.133333,
+      "duration": 0.43333299999999975,
+      "motion_magnitude": 0.2435767368475596,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.2435767368475596,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4617533641836758,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 9,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 106.65840742323134
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 11,
+        "time": 2.7,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 12,
+      "start": 3.133333,
+      "end": 3.866667,
+      "duration": 0.7333340000000002,
+      "motion_magnitude": 0.47501364208403085,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.47501364208403085,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.36898307298168437,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "speed_up",
+      "semanticEvent": {
+        "shotIndex": 12,
+        "time": 3.133333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 13,
+      "start": 3.866667,
+      "end": 4.366667,
+      "duration": 0.49999999999999956,
+      "motion_magnitude": 0.3519413216908773,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3519413216908773,
+      "shotType": "close",
+      "shotTypeConfidence": 0.28400941865183227,
+      "effects": [
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 103.97057444254557
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 13,
+        "time": 3.866667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 14,
+      "start": 4.366667,
+      "end": 4.566667,
+      "duration": 0.20000000000000018,
+      "motion_magnitude": 0.5544236103693644,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.5544236103693644,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2974005285436802,
+      "effects": [
+        "wipe",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 114.41541468302408
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 14,
+        "time": 4.366667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 15,
+      "start": 4.566667,
+      "end": 5.266667,
+      "duration": 0.7000000000000002,
+      "motion_magnitude": 0.22700868050257367,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.22700868050257367,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4914534426297607,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 15,
+        "time": 4.566667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 16,
+      "start": 5.266667,
+      "end": 5.766667,
+      "duration": 0.5,
+      "motion_magnitude": 0.40737430810928343,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.40737430810928343,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.30016109768839844,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 13,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_left",
+        "hasShadow": true,
+        "avgBrightness": 105.14674377441406
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 16,
+        "time": 5.266667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 17,
+      "start": 5.766667,
+      "end": 5.833333,
+      "duration": 0.06666599999999967,
+      "motion_magnitude": 0.6737083435058594,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.6737083435058594,
+      "shotType": "close",
+      "shotTypeConfidence": 0.33705938346606573,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 17,
+        "time": 5.766667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 18,
+      "start": 5.833333,
+      "end": 5.966667,
+      "duration": 0.1333340000000005,
+      "motion_magnitude": 0.89239927927653,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.89239927927653,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.29180246945158633,
+      "effects": [
+        "blur",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 18,
+        "time": 5.833333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 19,
+      "start": 5.966667,
+      "end": 6.133333,
+      "duration": 0.1666660000000002,
+      "motion_magnitude": 0.6473012129465738,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.6473012129465738,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.2758436258042571,
+      "effects": [
+        "blur",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 11,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 127.18871307373047
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 19,
+        "time": 5.966667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 20,
+      "start": 6.133333,
+      "end": 6.666667,
+      "duration": 0.533334,
+      "motion_magnitude": 0.5062076358000438,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5062076358000438,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4702208373143599,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 10,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 119.66557159423829
+      },
+      "avgSpeed": 1.5,
+      "speedType": "fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 20,
+        "time": 6.133333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 21,
+      "start": 6.666667,
+      "end": 7.0,
+      "duration": 0.33333299999999966,
+      "motion_magnitude": 0.3064006075263023,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3064006075263023,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.27295128487857173,
+      "effects": [
+        "blur",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 3,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 100.20292154947917
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 21,
+        "time": 6.666667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 22,
+      "start": 7.0,
+      "end": 7.3,
+      "duration": 0.2999999999999998,
+      "motion_magnitude": 0.34022960066795355,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.34022960066795355,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.2910262906641103,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 22,
+        "time": 7.0,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 23,
+      "start": 7.3,
+      "end": 8.1,
+      "duration": 0.7999999999999998,
+      "motion_magnitude": 0.20795351046103017,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.20795351046103017,
+      "shotType": "medium",
+      "shotTypeConfidence": 0.2601754057837484,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [
+        "blur"
+      ],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 74.31133219401042
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 23,
+        "time": 7.3,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 24,
+      "start": 8.1,
+      "end": 9.5,
+      "duration": 1.4000000000000004,
+      "motion_magnitude": 0.122866088019477,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.122866088019477,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.2746440903706434,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 110.80264587402344
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 24,
+        "time": 8.1,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 25,
+      "start": 9.5,
+      "end": 10.9,
+      "duration": 1.4000000000000004,
+      "motion_magnitude": 0.29469745238622025,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.29469745238622025,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3187898860272754,
+      "effects": [
+        "glitch"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_left",
+        "hasShadow": false,
+        "avgBrightness": 114.37465260823568
+      },
+      "avgSpeed": 1.5,
+      "speedType": "fast",
+      "hasRamp": true,
+      "rampType": "slow_down",
+      "semanticEvent": {
+        "shotIndex": 25,
+        "time": 9.5,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 26,
+      "start": 10.9,
+      "end": 12.3,
+      "duration": 1.4000000000000004,
+      "motion_magnitude": 0.5474504619174534,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5474504619174534,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.32862305321700297,
+      "effects": [
+        "glitch",
+        "watermark"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 9,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 95.05592685275607
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "speed_up",
+      "semanticEvent": {
+        "shotIndex": 26,
+        "time": 10.9,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 27,
+      "start": 12.3,
+      "end": 12.666667,
+      "duration": 0.36666699999999963,
+      "motion_magnitude": 0.49624912738800053,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.49624912738800053,
+      "shotType": "medium",
+      "shotTypeConfidence": 0.29784294078174384,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 13,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 61.171349452092095
+      },
+      "avgSpeed": 1.5,
+      "speedType": "fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 27,
+        "time": 12.3,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 28,
+      "start": 12.666667,
+      "end": 13.033333,
+      "duration": 0.3666660000000004,
+      "motion_magnitude": 0.3791770815849304,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3791770815849304,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.329179019206627,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 4,
+      "textProperties": {
+        "dominantColor": "mixed",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "bottom_right",
+        "hasShadow": false,
+        "avgBrightness": 85.69736671447754
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 28,
+        "time": 12.666667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 29,
+      "start": 13.033333,
+      "end": 13.733333,
+      "duration": 0.6999999999999993,
+      "motion_magnitude": 0.5007147789001465,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5007147789001465,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.28643748893957444,
+      "effects": [
+        "wipe"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 14,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 91.93697275434222
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "slow_down",
+      "semanticEvent": {
+        "shotIndex": 29,
+        "time": 13.033333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 30,
+      "start": 13.733333,
+      "end": 15.133333,
+      "duration": 1.4000000000000004,
+      "motion_magnitude": 0.1927000255811782,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.1927000255811782,
+      "shotType": "close",
+      "shotTypeConfidence": 0.32768237941236233,
+      "effects": [
+        "glitch",
+        "blur"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 30,
+        "time": 13.733333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 31,
+      "start": 15.133333,
+      "end": 16.566667,
+      "duration": 1.4333339999999986,
+      "motion_magnitude": 0.22018129939124695,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.22018129939124695,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.5143958428547792,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "medium",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 88.11009724934895
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 31,
+        "time": 15.133333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 32,
+      "start": 16.566667,
+      "end": 17.966667,
+      "duration": 1.4000000000000021,
+      "motion_magnitude": 0.1402566963718051,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.1402566963718051,
+      "shotType": "medium",
+      "shotTypeConfidence": 0.3155162359404531,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "regular",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 136.192746480306
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": true,
+      "rampType": "slow_down",
+      "semanticEvent": {
+        "shotIndex": 32,
+        "time": 16.566667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 33,
+      "start": 17.966667,
+      "end": 18.266667,
+      "duration": 0.3000000000000007,
+      "motion_magnitude": 0.3783640027046204,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3783640027046204,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.2657852789956237,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "large",
+        "dominantWeight": "regular",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 143.66580505371093
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 33,
+        "time": 17.966667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 34,
+      "start": 18.266667,
+      "end": 18.7,
+      "duration": 0.4333329999999975,
+      "motion_magnitude": 0.27051875114440926,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.27051875114440926,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.42980953246683484,
+      "effects": [
+        "blur",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 6,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "regular",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 153.71887715657553
+      },
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 34,
+        "time": 18.266667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 35,
+      "start": 18.7,
+      "end": 19.366667,
+      "duration": 0.6666670000000003,
+      "motion_magnitude": 0.3637455304463705,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.3637455304463705,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.2707998780445083,
+      "effects": [
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 7,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 104.50916072300502
+      },
+      "avgSpeed": 1.5,
+      "speedType": "fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 35,
+        "time": 18.7,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    }
+  ],
+  "motionStats": {
+    "avg_magnitude": 0.35952137256739236,
+    "peak_magnitude": 1.0,
+    "peak_time": 0.2,
+    "variance": 0.11453080026666933,
+    "high_motion_segments": [
+      {
+        "start": 0.2,
+        "end": 0.3,
+        "duration": 0.09999999999999998
+      },
+      {
+        "start": 0.4,
+        "end": 0.6,
+        "duration": 0.19999999999999996
+      },
+      {
+        "start": 0.7,
+        "end": 1.2,
+        "duration": 0.5
+      },
+      {
+        "start": 1.5,
+        "end": 1.7,
+        "duration": 0.19999999999999996
+      },
+      {
+        "start": 2.0,
+        "end": 2.2,
+        "duration": 0.20000000000000018
+      },
+      {
+        "start": 2.5,
+        "end": 2.6,
+        "duration": 0.10000000000000009
+      },
+      {
+        "start": 2.8,
+        "end": 2.9,
+        "duration": 0.10000000000000009
+      },
+      {
+        "start": 3.2,
+        "end": 3.3,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 4.0,
+        "end": 4.1,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 4.5,
+        "end": 4.6,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 4.7,
+        "end": 4.8,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 5.4,
+        "end": 5.5,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 5.8,
+        "end": 6.0,
+        "duration": 0.20000000000000018
+      },
+      {
+        "start": 6.1,
+        "end": 6.4,
+        "duration": 0.3000000000000007
+      },
+      {
+        "start": 6.8,
+        "end": 6.9,
+        "duration": 0.10000000000000053
+      },
+      {
+        "start": 7.1,
+        "end": 7.2,
+        "duration": 0.10000000000000053
+      },
+      {
+        "start": 7.4,
+        "end": 7.5,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 8.2,
+        "end": 8.3,
+        "duration": 0.10000000000000142
+      },
+      {
+        "start": 9.6,
+        "end": 9.7,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 11.0,
+        "end": 11.1,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 11.8,
+        "end": 12.5,
+        "duration": 0.6999999999999993
+      },
+      {
+        "start": 12.8,
+        "end": 12.9,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 13.1,
+        "end": 13.2,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 13.8,
+        "end": 13.9,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 15.2,
+        "end": 15.3,
+        "duration": 0.10000000000000142
+      },
+      {
+        "start": 16.7,
+        "end": 16.8,
+        "duration": 0.10000000000000142
+      },
+      {
+        "start": 18.1,
+        "end": 18.2,
+        "duration": 0.09999999999999787
+      },
+      {
+        "start": 18.4,
+        "end": 18.5,
+        "duration": 0.10000000000000142
+      },
+      {
+        "start": 18.8,
+        "end": 18.9,
+        "duration": 0.09999999999999787
+      }
+    ],
+    "motion_curve": [
+      {
+        "time": 0.2,
+        "magnitude": 1.0,
+        "raw_diff": 59.190731048583984
+      },
+      {
+        "time": 0.3,
+        "magnitude": 0.11629340648651124,
+        "raw_diff": 3.488802194595337
+      },
+      {
+        "time": 0.4,
+        "magnitude": 1.0,
+        "raw_diff": 46.50192642211914
+      },
+      {
+        "time": 0.5,
+        "magnitude": 1.0,
+        "raw_diff": 67.06343841552734
+      },
+      {
+        "time": 0.6,
+        "magnitude": 0.09651736418406169,
+        "raw_diff": 2.8955209255218506
+      },
+      {
+        "time": 0.7,
+        "magnitude": 1.0,
+        "raw_diff": 48.048282623291016
+      },
+      {
+        "time": 0.8,
+        "magnitude": 1.0,
+        "raw_diff": 66.11119842529297
+      },
+      {
+        "time": 0.9,
+        "magnitude": 1.0,
+        "raw_diff": 78.62177276611328
+      },
+      {
+        "time": 1.0,
+        "magnitude": 0.676725705464681,
+        "raw_diff": 20.30177116394043
+      },
+      {
+        "time": 1.1,
+        "magnitude": 1.0,
+        "raw_diff": 62.432708740234375
+      },
+      {
+        "time": 1.2,
+        "magnitude": 0.49334894816080727,
+        "raw_diff": 14.800468444824219
+      },
+      {
+        "time": 1.3,
+        "magnitude": 0.48635762532552085,
+        "raw_diff": 14.590728759765625
+      },
+      {
+        "time": 1.4,
+        "magnitude": 0.4931649208068848,
+        "raw_diff": 14.794947624206543
+      },
+      {
+        "time": 1.5,
+        "magnitude": 0.5392829895019531,
+        "raw_diff": 16.178489685058594
+      },
+      {
+        "time": 1.6,
+        "magnitude": 1.0,
+        "raw_diff": 74.10681915283203
+      },
+      {
+        "time": 1.7,
+        "magnitude": 0.13634201685587566,
+        "raw_diff": 4.0902605056762695
+      },
+      {
+        "time": 1.8,
+        "magnitude": 0.1062291701634725,
+        "raw_diff": 3.186875104904175
+      },
+      {
+        "time": 1.9,
+        "magnitude": 0.1058802048365275,
+        "raw_diff": 3.176406145095825
+      },
+      {
+        "time": 2.0,
+        "magnitude": 1.0,
+        "raw_diff": 71.1370849609375
+      },
+      {
+        "time": 2.1,
+        "magnitude": 0.5729288101196289,
+        "raw_diff": 17.187864303588867
+      },
+      {
+        "time": 2.2,
+        "magnitude": 0.4910798708597819,
+        "raw_diff": 14.732396125793457
+      },
+      {
+        "time": 2.3,
+        "magnitude": 0.4149392445882161,
+        "raw_diff": 12.448177337646484
+      },
+      {
+        "time": 2.4,
+        "magnitude": 0.45258506139119464,
+        "raw_diff": 13.57755184173584
+      },
+      {
+        "time": 2.5,
+        "magnitude": 1.0,
+        "raw_diff": 58.1657829284668
+      },
+      {
+        "time": 2.6,
+        "magnitude": 0.017668402194976805,
+        "raw_diff": 0.5300520658493042
+      },
+      {
+        "time": 2.7,
+        "magnitude": 0.018479166428248088,
+        "raw_diff": 0.5543749928474426
+      },
+      {
+        "time": 2.8,
+        "magnitude": 1.0,
+        "raw_diff": 61.02531433105469
+      },
+      {
+        "time": 2.9,
+        "magnitude": 0.07178125381469727,
+        "raw_diff": 2.153437614440918
+      },
+      {
+        "time": 3.0,
+        "magnitude": 0.06997222105662028,
+        "raw_diff": 2.0991666316986084
+      },
+      {
+        "time": 3.1,
+        "magnitude": 0.05765104293823242,
+        "raw_diff": 1.7295312881469727
+      },
+      {
+        "time": 3.2,
+        "magnitude": 1.0,
+        "raw_diff": 73.8328628540039
+      },
+      {
+        "time": 3.3,
+        "magnitude": 0.2963923454284668,
+        "raw_diff": 8.891770362854004
+      },
+      {
+        "time": 3.4,
+        "magnitude": 0.3238159815470378,
+        "raw_diff": 9.714479446411133
+      },
+      {
+        "time": 3.5,
+        "magnitude": 0.38296006520589193,
+        "raw_diff": 11.488801956176758
+      },
+      {
+        "time": 3.6,
+        "magnitude": 0.42773958841959636,
+        "raw_diff": 12.83218765258789
+      },
+      {
+        "time": 3.7,
+        "magnitude": 0.4411163330078125,
+        "raw_diff": 13.233489990234375
+      },
+      {
+        "time": 3.8,
+        "magnitude": 0.4530711809794108,
+        "raw_diff": 13.592135429382324
+      },
+      {
+        "time": 3.9,
+        "magnitude": 0.4550434112548828,
+        "raw_diff": 13.651302337646484
+      },
+      {
+        "time": 4.0,
+        "magnitude": 1.0,
+        "raw_diff": 69.02229309082031
+      },
+      {
+        "time": 4.1,
+        "magnitude": 0.10188194115956624,
+        "raw_diff": 3.0564582347869873
+      },
+      {
+        "time": 4.2,
+        "magnitude": 0.10001389185587566,
+        "raw_diff": 3.0004167556762695
+      },
+      {
+        "time": 4.3,
+        "magnitude": 0.10276736418406168,
+        "raw_diff": 3.0830209255218506
+      },
+      {
+        "time": 4.4,
+        "magnitude": 0.10884722073872884,
+        "raw_diff": 3.2654166221618652
+      },
+      {
+        "time": 4.5,
+        "magnitude": 1.0,
+        "raw_diff": 70.03213500976562
+      },
+      {
+        "time": 4.6,
+        "magnitude": 0.30577430725097654,
+        "raw_diff": 9.173229217529297
+      },
+      {
+        "time": 4.7,
+        "magnitude": 1.0,
+        "raw_diff": 61.510887145996094
+      },
+      {
+        "time": 4.8,
+        "magnitude": 0.05162152846654256,
+        "raw_diff": 1.5486458539962769
+      },
+      {
+        "time": 4.9,
+        "magnitude": 0.05840277671813965,
+        "raw_diff": 1.7520833015441895
+      },
+      {
+        "time": 5.0,
+        "magnitude": 0.058364582061767575,
+        "raw_diff": 1.7509374618530273
+      },
+      {
+        "time": 5.1,
+        "magnitude": 0.058565970261891684,
+        "raw_diff": 1.7569791078567505
+      },
+      {
+        "time": 5.2,
+        "magnitude": 0.05633159875869751,
+        "raw_diff": 1.6899479627609253
+      },
+      {
+        "time": 5.3,
+        "magnitude": 0.05277777910232544,
+        "raw_diff": 1.5833333730697632
+      },
+      {
+        "time": 5.4,
+        "magnitude": 1.0,
+        "raw_diff": 62.5478630065918
+      },
+      {
+        "time": 5.5,
+        "magnitude": 0.20729166666666668,
+        "raw_diff": 6.21875
+      },
+      {
+        "time": 5.6,
+        "magnitude": 0.2683454831441244,
+        "raw_diff": 8.05036449432373
+      },
+      {
+        "time": 5.7,
+        "magnitude": 0.5084566116333008,
+        "raw_diff": 15.253698348999023
+      },
+      {
+        "time": 5.8,
+        "magnitude": 0.6737083435058594,
+        "raw_diff": 20.21125030517578
+      },
+      {
+        "time": 5.9,
+        "magnitude": 0.89239927927653,
+        "raw_diff": 26.7719783782959
+      },
+      {
+        "time": 6.0,
+        "magnitude": 0.48627951939900715,
+        "raw_diff": 14.588385581970215
+      },
+      {
+        "time": 6.1,
+        "magnitude": 0.8083229064941406,
+        "raw_diff": 24.24968719482422
+      },
+      {
+        "time": 6.2,
+        "magnitude": 1.0,
+        "raw_diff": 45.594581604003906
+      },
+      {
+        "time": 6.3,
+        "magnitude": 1.0,
+        "raw_diff": 38.90812683105469
+      },
+      {
+        "time": 6.4,
+        "magnitude": 0.4987360954284668,
+        "raw_diff": 14.962082862854004
+      },
+      {
+        "time": 6.5,
+        "magnitude": 0.009953125317891439,
+        "raw_diff": 0.29859375953674316
+      },
+      {
+        "time": 6.6,
+        "magnitude": 0.022348958253860473,
+        "raw_diff": 0.6704687476158142
+      },
+      {
+        "time": 6.7,
+        "magnitude": 0.02459548513094584,
+        "raw_diff": 0.7378645539283752
+      },
+      {
+        "time": 6.8,
+        "magnitude": 1.0,
+        "raw_diff": 72.52135467529297
+      },
+      {
+        "time": 6.9,
+        "magnitude": 0.10002257029215494,
+        "raw_diff": 3.0006771087646484
+      },
+      {
+        "time": 7.0,
+        "magnitude": 0.10098437468210857,
+        "raw_diff": 3.029531240463257
+      },
+      {
+        "time": 7.1,
+        "magnitude": 1.0,
+        "raw_diff": 69.91223907470703
+      },
+      {
+        "time": 7.2,
+        "magnitude": 0.12148610750834148,
+        "raw_diff": 3.644583225250244
+      },
+      {
+        "time": 7.3,
+        "magnitude": 0.13844792048136392,
+        "raw_diff": 4.153437614440918
+      },
+      {
+        "time": 7.4,
+        "magnitude": 1.0,
+        "raw_diff": 53.15458297729492
+      },
+      {
+        "time": 7.5,
+        "magnitude": 0.11313541730244954,
+        "raw_diff": 3.3940625190734863
+      },
+      {
+        "time": 7.6,
+        "magnitude": 0.09334548314412434,
+        "raw_diff": 2.8003644943237305
+      },
+      {
+        "time": 7.7,
+        "magnitude": 0.09899826049804687,
+        "raw_diff": 2.9699478149414062
+      },
+      {
+        "time": 7.8,
+        "magnitude": 0.11232465108235677,
+        "raw_diff": 3.369739532470703
+      },
+      {
+        "time": 7.9,
+        "magnitude": 0.10184028148651122,
+        "raw_diff": 3.055208444595337
+      },
+      {
+        "time": 8.0,
+        "magnitude": 0.11749131679534912,
+        "raw_diff": 3.5247395038604736
+      },
+      {
+        "time": 8.1,
+        "magnitude": 0.09599826335906983,
+        "raw_diff": 2.8799479007720947
+      },
+      {
+        "time": 8.2,
+        "magnitude": 1.0,
+        "raw_diff": 58.13005065917969
+      },
+      {
+        "time": 8.3,
+        "magnitude": 0.05248090426127116,
+        "raw_diff": 1.5744271278381348
+      },
+      {
+        "time": 8.4,
+        "magnitude": 0.06069965362548828,
+        "raw_diff": 1.8209896087646484
+      },
+      {
+        "time": 8.5,
+        "magnitude": 0.06224131981531779,
+        "raw_diff": 1.8672395944595337
+      },
+      {
+        "time": 8.6,
+        "magnitude": 0.12291493415832519,
+        "raw_diff": 3.687448024749756
+      },
+      {
+        "time": 8.7,
+        "magnitude": 0.05905381838480631,
+        "raw_diff": 1.7716145515441895
+      },
+      {
+        "time": 8.8,
+        "magnitude": 0.04814062515894572,
+        "raw_diff": 1.4442187547683716
+      },
+      {
+        "time": 8.9,
+        "magnitude": 0.055447916189829506,
+        "raw_diff": 1.6634374856948853
+      },
+      {
+        "time": 9.0,
+        "magnitude": 0.04991666475931803,
+        "raw_diff": 1.497499942779541
+      },
+      {
+        "time": 9.1,
+        "magnitude": 0.04285937547683716,
+        "raw_diff": 1.2857812643051147
+      },
+      {
+        "time": 9.2,
+        "magnitude": 0.05914583206176758,
+        "raw_diff": 1.7743749618530273
+      },
+      {
+        "time": 9.3,
+        "magnitude": 0.04650520881017049,
+        "raw_diff": 1.3951562643051147
+      },
+      {
+        "time": 9.4,
+        "magnitude": 0.04880902767181396,
+        "raw_diff": 1.464270830154419
+      },
+      {
+        "time": 9.5,
+        "magnitude": 0.03877777655919393,
+        "raw_diff": 1.1633332967758179
+      },
+      {
+        "time": 9.6,
+        "magnitude": 1.0,
+        "raw_diff": 63.469635009765625
+      },
+      {
+        "time": 9.7,
+        "magnitude": 0.38326387405395507,
+        "raw_diff": 11.497916221618652
+      },
+      {
+        "time": 9.8,
+        "magnitude": 0.3977465311686198,
+        "raw_diff": 11.932395935058594
+      },
+      {
+        "time": 9.9,
+        "magnitude": 0.39946006139119467,
+        "raw_diff": 11.98380184173584
+      },
+      {
+        "time": 10.0,
+        "magnitude": 0.3745364507039388,
+        "raw_diff": 11.236093521118164
+      },
+      {
+        "time": 10.1,
+        "magnitude": 0.32884375254313153,
+        "raw_diff": 9.865312576293945
+      },
+      {
+        "time": 10.2,
+        "magnitude": 0.27298091252644857,
+        "raw_diff": 8.189427375793457
+      },
+      {
+        "time": 10.3,
+        "magnitude": 0.2285434087117513,
+        "raw_diff": 6.856302261352539
+      },
+      {
+        "time": 10.4,
+        "magnitude": 0.20232985814412435,
+        "raw_diff": 6.0698957443237305
+      },
+      {
+        "time": 10.5,
+        "magnitude": 0.17978124618530272,
+        "raw_diff": 5.393437385559082
+      },
+      {
+        "time": 10.6,
+        "magnitude": 0.15376909573872885,
+        "raw_diff": 4.613072872161865
+      },
+      {
+        "time": 10.7,
+        "magnitude": 0.12442360719045004,
+        "raw_diff": 3.732708215713501
+      },
+      {
+        "time": 10.8,
+        "magnitude": 0.1574305534362793,
+        "raw_diff": 4.722916603088379
+      },
+      {
+        "time": 10.9,
+        "magnitude": 0.17857465744018555,
+        "raw_diff": 5.357239723205566
+      },
+      {
+        "time": 11.0,
+        "magnitude": 1.0,
+        "raw_diff": 62.2009391784668
+      },
+      {
+        "time": 11.1,
+        "magnitude": 0.433756955464681,
+        "raw_diff": 13.01270866394043
+      },
+      {
+        "time": 11.2,
+        "magnitude": 0.43474480311075847,
+        "raw_diff": 13.042344093322754
+      },
+      {
+        "time": 11.3,
+        "magnitude": 0.4752829869588216,
+        "raw_diff": 14.258489608764648
+      },
+      {
+        "time": 11.4,
+        "magnitude": 0.5052343686421712,
+        "raw_diff": 15.157031059265137
+      },
+      {
+        "time": 11.5,
+        "magnitude": 0.5075260480244954,
+        "raw_diff": 15.225781440734863
+      },
+      {
+        "time": 11.6,
+        "magnitude": 0.5367933909098307,
+        "raw_diff": 16.103801727294922
+      },
+      {
+        "time": 11.7,
+        "magnitude": 0.5274757067362468,
+        "raw_diff": 15.824271202087402
+      },
+      {
+        "time": 11.8,
+        "magnitude": 0.5655330022176107,
+        "raw_diff": 16.96599006652832
+      },
+      {
+        "time": 11.9,
+        "magnitude": 0.5683663050333659,
+        "raw_diff": 17.050989151000977
+      },
+      {
+        "time": 12.0,
+        "magnitude": 0.5976475397745769,
+        "raw_diff": 17.929426193237305
+      },
+      {
+        "time": 12.1,
+        "magnitude": 0.6204600652058919,
+        "raw_diff": 18.613801956176758
+      },
+      {
+        "time": 12.2,
+        "magnitude": 0.6344982782999674,
+        "raw_diff": 19.034948348999023
+      },
+      {
+        "time": 12.3,
+        "magnitude": 0.6258628209431966,
+        "raw_diff": 18.7758846282959
+      },
+      {
+        "time": 12.4,
+        "magnitude": 1.0,
+        "raw_diff": 73.39859008789062
+      },
+      {
+        "time": 12.5,
+        "magnitude": 0.15335243542989094,
+        "raw_diff": 4.6005730628967285
+      },
+      {
+        "time": 12.6,
+        "magnitude": 0.20578125317891438,
+        "raw_diff": 6.173437595367432
+      },
+      {
+        "time": 12.7,
+        "magnitude": 0.3443593660990397,
+        "raw_diff": 10.330780982971191
+      },
+      {
+        "time": 12.8,
+        "magnitude": 1.0,
+        "raw_diff": 78.92265319824219
+      },
+      {
+        "time": 12.9,
+        "magnitude": 0.0786753495534261,
+        "raw_diff": 2.360260486602783
+      },
+      {
+        "time": 13.0,
+        "magnitude": 0.09367361068725585,
+        "raw_diff": 2.810208320617676
+      },
+      {
+        "time": 13.1,
+        "magnitude": 1.0,
+        "raw_diff": 67.1098403930664
+      },
+      {
+        "time": 13.2,
+        "magnitude": 0.4303333282470703,
+        "raw_diff": 12.90999984741211
+      },
+      {
+        "time": 13.3,
+        "magnitude": 0.4444583257039388,
+        "raw_diff": 13.333749771118164
+      },
+      {
+        "time": 13.4,
+        "magnitude": 0.43519442876180015,
+        "raw_diff": 13.055832862854004
+      },
+      {
+        "time": 13.5,
+        "magnitude": 0.4010746637980143,
+        "raw_diff": 12.03223991394043
+      },
+      {
+        "time": 13.6,
+        "magnitude": 0.394015630086263,
+        "raw_diff": 11.82046890258789
+      },
+      {
+        "time": 13.7,
+        "magnitude": 0.3999270757039388,
+        "raw_diff": 11.997812271118164
+      },
+      {
+        "time": 13.8,
+        "magnitude": 1.0,
+        "raw_diff": 67.9718246459961
+      },
+      {
+        "time": 13.9,
+        "magnitude": 0.12899305820465087,
+        "raw_diff": 3.8697917461395264
+      },
+      {
+        "time": 14.0,
+        "magnitude": 0.12615451018015544,
+        "raw_diff": 3.784635305404663
+      },
+      {
+        "time": 14.1,
+        "magnitude": 0.12429166634877523,
+        "raw_diff": 3.728749990463257
+      },
+      {
+        "time": 14.2,
+        "magnitude": 0.13081250190734864,
+        "raw_diff": 3.924375057220459
+      },
+      {
+        "time": 14.3,
+        "magnitude": 0.13103125095367432,
+        "raw_diff": 3.9309375286102295
+      },
+      {
+        "time": 14.4,
+        "magnitude": 0.13712499936421713,
+        "raw_diff": 4.113749980926514
+      },
+      {
+        "time": 14.5,
+        "magnitude": 0.13312673568725586,
+        "raw_diff": 3.993802070617676
+      },
+      {
+        "time": 14.6,
+        "magnitude": 0.13594096501668293,
+        "raw_diff": 4.078228950500488
+      },
+      {
+        "time": 14.7,
+        "magnitude": 0.13217535018920898,
+        "raw_diff": 3.9652605056762695
+      },
+      {
+        "time": 14.8,
+        "magnitude": 0.12670660018920898,
+        "raw_diff": 3.8011980056762695
+      },
+      {
+        "time": 14.9,
+        "magnitude": 0.1293541669845581,
+        "raw_diff": 3.880625009536743
+      },
+      {
+        "time": 15.0,
+        "magnitude": 0.1385225772857666,
+        "raw_diff": 4.155677318572998
+      },
+      {
+        "time": 15.1,
+        "magnitude": 0.12356597582499186,
+        "raw_diff": 3.706979274749756
+      },
+      {
+        "time": 15.2,
+        "magnitude": 1.0,
+        "raw_diff": 55.00520706176758
+      },
+      {
+        "time": 15.3,
+        "magnitude": 0.16350000699361164,
+        "raw_diff": 4.90500020980835
+      },
+      {
+        "time": 15.4,
+        "magnitude": 0.162644100189209,
+        "raw_diff": 4.8793230056762695
+      },
+      {
+        "time": 15.5,
+        "magnitude": 0.1605798562367757,
+        "raw_diff": 4.8173956871032715
+      },
+      {
+        "time": 15.6,
+        "magnitude": 0.1621961752573649,
+        "raw_diff": 4.865885257720947
+      },
+      {
+        "time": 15.7,
+        "magnitude": 0.15987499554951987,
+        "raw_diff": 4.796249866485596
+      },
+      {
+        "time": 15.8,
+        "magnitude": 0.16120313008626302,
+        "raw_diff": 4.836093902587891
+      },
+      {
+        "time": 15.9,
+        "magnitude": 0.1585677146911621,
+        "raw_diff": 4.757031440734863
+      },
+      {
+        "time": 16.0,
+        "magnitude": 0.15966145197550455,
+        "raw_diff": 4.789843559265137
+      },
+      {
+        "time": 16.1,
+        "magnitude": 0.1589756965637207,
+        "raw_diff": 4.769270896911621
+      },
+      {
+        "time": 16.2,
+        "magnitude": 0.1604600747426351,
+        "raw_diff": 4.813802242279053
+      },
+      {
+        "time": 16.3,
+        "magnitude": 0.15894964536031086,
+        "raw_diff": 4.768489360809326
+      },
+      {
+        "time": 16.4,
+        "magnitude": 0.15853819847106934,
+        "raw_diff": 4.75614595413208
+      },
+      {
+        "time": 16.5,
+        "magnitude": 0.15738714536031087,
+        "raw_diff": 4.721614360809326
+      },
+      {
+        "time": 16.6,
+        "magnitude": 0.15992013613382974,
+        "raw_diff": 4.797604084014893
+      },
+      {
+        "time": 16.7,
+        "magnitude": 1.0,
+        "raw_diff": 71.93510437011719
+      },
+      {
+        "time": 16.8,
+        "magnitude": 0.08194618225097657,
+        "raw_diff": 2.458385467529297
+      },
+      {
+        "time": 16.9,
+        "magnitude": 0.12108854452768962,
+        "raw_diff": 3.6326563358306885
+      },
+      {
+        "time": 17.0,
+        "magnitude": 0.12384895483652751,
+        "raw_diff": 3.715468645095825
+      },
+      {
+        "time": 17.1,
+        "magnitude": 0.08422048886617024,
+        "raw_diff": 2.5266146659851074
+      },
+      {
+        "time": 17.2,
+        "magnitude": 0.08497048219045003,
+        "raw_diff": 2.549114465713501
+      },
+      {
+        "time": 17.3,
+        "magnitude": 0.04844097296396891,
+        "raw_diff": 1.4532291889190674
+      },
+      {
+        "time": 17.4,
+        "magnitude": 0.04139409859975179,
+        "raw_diff": 1.2418229579925537
+      },
+      {
+        "time": 17.5,
+        "magnitude": 0.04602257013320923,
+        "raw_diff": 1.3806771039962769
+      },
+      {
+        "time": 17.6,
+        "magnitude": 0.03936284780502319,
+        "raw_diff": 1.1808854341506958
+      },
+      {
+        "time": 17.7,
+        "magnitude": 0.041744792461395265,
+        "raw_diff": 1.252343773841858
+      },
+      {
+        "time": 17.8,
+        "magnitude": 0.044899304707845054,
+        "raw_diff": 1.3469791412353516
+      },
+      {
+        "time": 17.9,
+        "magnitude": 0.045734373728434245,
+        "raw_diff": 1.3720312118530273
+      },
+      {
+        "time": 18.0,
+        "magnitude": 0.03968576192855835,
+        "raw_diff": 1.1905728578567505
+      },
+      {
+        "time": 18.1,
+        "magnitude": 1.0,
+        "raw_diff": 40.793800354003906
+      },
+      {
+        "time": 18.2,
+        "magnitude": 0.09540624618530273,
+        "raw_diff": 2.862187385559082
+      },
+      {
+        "time": 18.3,
+        "magnitude": 0.11887500286102295,
+        "raw_diff": 3.5662500858306885
+      },
+      {
+        "time": 18.4,
+        "magnitude": 1.0,
+        "raw_diff": 33.99250030517578
+      },
+      {
+        "time": 18.5,
+        "magnitude": 0.07256076335906983,
+        "raw_diff": 2.1768229007720947
+      },
+      {
+        "time": 18.6,
+        "magnitude": 0.0860277811686198,
+        "raw_diff": 2.5808334350585938
+      },
+      {
+        "time": 18.7,
+        "magnitude": 0.07513020833333334,
+        "raw_diff": 2.25390625
+      },
+      {
+        "time": 18.8,
+        "magnitude": 1.0,
+        "raw_diff": 36.21114730834961
+      },
+      {
+        "time": 18.9,
+        "magnitude": 0.2957430521647135,
+        "raw_diff": 8.872291564941406
+      },
+      {
+        "time": 19.0,
+        "magnitude": 0.29855381647745766,
+        "raw_diff": 8.95661449432373
+      },
+      {
+        "time": 19.1,
+        "magnitude": 0.2944392204284668,
+        "raw_diff": 8.833176612854004
+      },
+      {
+        "time": 19.2,
+        "magnitude": 0.2897881825764974,
+        "raw_diff": 8.693645477294922
+      },
+      {
+        "time": 19.3,
+        "magnitude": 0.29256423314412433,
+        "raw_diff": 8.77692699432373
+      },
+      {
+        "time": 19.4,
+        "magnitude": 0.2949861208597819,
+        "raw_diff": 8.849583625793457
+      }
+    ]
+  },
+  "colorProfile": {
+    "dominant_palette": [],
+    "contrast": 0,
+    "black_point": 0,
+    "white_point": 255,
+    "saturation_mean": 50,
+    "luminance_mean": 128,
+    "color_temperature": "neutral",
+    "grade": "normal",
+    "skin_tone": {
+      "presence": 0,
+      "is_present": false
+    }
+  },
+  "shotTypes": {
+    "totalShots": 36,
+    "distribution": {
+      "extreme_close": 0.4444444444444444,
+      "close": 0.19444444444444445,
+      "wide": 0.2777777777777778,
+      "medium": 0.08333333333333333
+    },
+    "counts": {
+      "extreme_close": 16,
+      "close": 7,
+      "wide": 10,
+      "medium": 3
+    },
+    "dominantType": "extreme_close",
+    "variedFraming": true
+  },
+  "effects": {
+    "totalEffects": 43,
+    "effectsPerShot": 1.1944444444444444,
+    "transitions": {
+      "wipe": 4,
+      "blur": 2,
+      "glitch": 3
+    },
+    "visualEffects": {
+      "blur": 20,
+      "vignette": 2,
+      "glow": 4
+    },
+    "overlays": {
+      "watermark": 8
+    },
+    "mostCommonEffect": "blur",
+    "effectVariety": 6
+  },
+  "text": {
+    "shotsWithText": 21,
+    "totalTextRegions": 225,
+    "textFrequency": 0.5833333333333334,
+    "dominantColor": "yellow",
+    "dominantSize": "small",
+    "dominantPlacement": "center_right",
+    "hasText": true
+  },
+  "speed": {
+    "avgSpeed": 1.1736111111111112,
+    "speedDistribution": {
+      "normal": 0.5277777777777778,
+      "very_fast": 0.16666666666666666,
+      "slow": 0.19444444444444445,
+      "fast": 0.1111111111111111
+    },
+    "shotsWithRamps": 5,
+    "rampRatio": 0.1388888888888889,
+    "hasSlowMotion": false,
+    "hasFastMotion": true,
+    "hasRamps": true,
+    "dominantSpeed": "normal"
+  },
+  "semanticEvents": {
+    "totalEvents": 36,
+    "eventTypes": {
+      "setup": 0.05555555555555555,
+      "transition": 0.1388888888888889,
+      "action": 0.7777777777777778,
+      "celebration": 0.027777777777777776
+    },
+    "emotions": {
+      "tension": 0.027777777777777776,
+      "calm": 0.1388888888888889,
+      "anticipation": 0.027777777777777776,
+      "excitement": 0.05555555555555555,
+      "celebration": 0.027777777777777776,
+      "neutral": 0.7222222222222222
+    },
+    "narrativeArc": {
+      "establishing": 0.027777777777777776,
+      "building": 0.8888888888888888,
+      "climax": 0.05555555555555555,
+      "resolution": 0.027777777777777776
+    },
+    "avgImportance": 4.722222222222222,
+    "dominantEventType": "action",
+    "dominantEmotion": "neutral",
+    "climaxPosition": 7
+  },
+  "audioAnalysis": {
+    "tempo_bpm": 143.6,
+    "beats": [
+      {
+        "time": 0.301859410430839,
+        "energy": 0.1199966504628499,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.2399933009256998
+      },
+      {
+        "time": 0.4876190476190476,
+        "energy": 0.17822753112481843,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.35645506224963686
+      },
+      {
+        "time": 0.5804988662131519,
+        "energy": 0.16132292325880176,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.32264584651760353
+      },
+      {
+        "time": 0.6965986394557823,
+        "energy": 0.15661522330104083,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.31323044660208166
+      },
+      {
+        "time": 0.8591383219954648,
+        "energy": 0.1276247485090554,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.2552494970181108
+      },
+      {
+        "time": 1.0448979591836736,
+        "energy": 0.13029367355395896,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.2605873471079179
+      },
+      {
+        "time": 1.207437641723356,
+        "energy": 0.1278017156036282,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.2556034312072564
+      },
+      {
+        "time": 1.4164172335600906,
+        "energy": 0.1704959025368933,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3409918050737866
+      },
+      {
+        "time": 1.555736961451247,
+        "energy": 0.24936467552754304,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4987293510550861
+      },
+      {
+        "time": 1.6486167800453515,
+        "energy": 0.2367116657263569,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4734233314527138
+      },
+      {
+        "time": 1.7647165532879818,
+        "energy": 0.2514746232665306,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.5029492465330612
+      },
+      {
+        "time": 1.9272562358276644,
+        "energy": 0.20912020304821902,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.41824040609643803
+      },
+      {
+        "time": 2.043356009070295,
+        "energy": 0.20178134185624955,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4035626837124991
+      },
+      {
+        "time": 2.1130158730158732,
+        "energy": 0.20494355520007526,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4098871104001505
+      },
+      {
+        "time": 2.182675736961451,
+        "energy": 0.21701893618732052,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.43403787237464103
+      },
+      {
+        "time": 2.2523356009070294,
+        "energy": 0.2138342952703657,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4276685905407314
+      },
+      {
+        "time": 2.391655328798186,
+        "energy": 0.19453929344586507,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.38907858689173014
+      },
+      {
+        "time": 2.48453514739229,
+        "energy": 0.1985776208880462,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3971552417760924
+      },
+      {
+        "time": 2.6238548752834467,
+        "energy": 0.19301976432955648,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.38603952865911295
+      },
+      {
+        "time": 2.7631746031746034,
+        "energy": 0.18537473832857643,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.37074947665715285
+      },
+      {
+        "time": 2.8792743764172335,
+        "energy": 0.1976978354679171,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3953956709358342
+      },
+      {
+        "time": 2.972154195011338,
+        "energy": 0.2211510020208867,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4423020040417734
+      },
+      {
+        "time": 3.0418140589569163,
+        "energy": 0.22113424735530798,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.44226849471061597
+      },
+      {
+        "time": 3.1811337868480725,
+        "energy": 0.22557969253149385,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4511593850629877
+      },
+      {
+        "time": 3.250793650793651,
+        "energy": 0.19793773201464734,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3958754640292947
+      },
+      {
+        "time": 3.3436734693877552,
+        "energy": 0.1912471395949879,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3824942791899758
+      },
+      {
+        "time": 3.400204,
+        "type": "silence_start",
+        "source": "silence",
+        "strength": 0.5
+      },
+      {
+        "time": 3.4597732426303853,
+        "energy": 0.17914681218227277,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.35829362436454554
+      },
+      {
+        "time": 3.5294331065759637,
+        "energy": 0.18511159919817988,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.37022319839635975
+      },
+      {
+        "time": 3.6687528344671203,
+        "energy": 0.21453719041979788,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.42907438083959576
+      },
+      {
+        "time": 3.7616326530612243,
+        "energy": 0.21301610110679803,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.42603220221359606
+      },
+      {
+        "time": 3.8545124716553287,
+        "energy": 0.20843594543258828,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.41687189086517656
+      },
+      {
+        "time": 4.017052154195011,
+        "energy": 0.17144603326348165,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3428920665269633
+      },
+      {
+        "time": 4.2260317460317465,
+        "energy": 0.20374644398506306,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4074928879701261
+      },
+      {
+        "time": 4.295691609977324,
+        "energy": 0.22329212764438833,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.44658425528877665
+      },
+      {
+        "time": 4.365351473922902,
+        "energy": 0.24249252904731866,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4849850580946373
+      },
+      {
+        "time": 4.481451247165533,
+        "energy": 0.2332899765746694,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4665799531493388
+      },
+      {
+        "time": 4.597551020408163,
+        "energy": 0.2354452896355119,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4708905792710238
+      },
+      {
+        "time": 4.667210884353741,
+        "energy": 0.21278568960503685,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.4255713792100737
+      },
+      {
+        "time": 4.760090702947846,
+        "energy": 0.17519806042054084,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3503961208410817
+      },
+      {
+        "time": 4.88898,
+        "type": "silence_end",
+        "source": "silence",
+        "strength": 0.5
+      },
+      {
+        "time": 19.297914,
+        "type": "silence_start",
+        "source": "silence",
+        "strength": 0.5
+      },
+      {
+        "time": 19.390068,
+        "type": "silence_end",
+        "source": "silence",
+        "strength": 0.5
+      }
+    ],
+    "beat_count": 43,
+    "avg_beat_interval": 0.4178272980501393
+  },
+  "grammarRules": {
+    "pacing": {
+      "avgDuration": 0.5379629722222222,
+      "minDuration": 0.06666599999999967,
+      "maxDuration": 1.4333339999999986,
+      "stdDev": 0.43270281381782166,
+      "fastCutsCount": 21,
+      "slowCutsCount": 0
+    },
+    "motion": {
+      "avgMagnitude": 0.35952137256739236,
+      "peakMagnitude": 1.0,
+      "hasHighMotion": "True",
+      "motionVariety": 29
+    },
+    "rhythm": {
+      "tempo": 143.6,
+      "cutsOnBeat": 39.473684210526315,
+      "avgBeatsBetweenCuts": 1.135135135135135,
+      "isBeatDriven": false
+    },
+    "color": {
+      "grade": "normal",
+      "temperature": "neutral",
+      "saturationLevel": "medium",
+      "contrastLevel": "low",
+      "hasSkinTone": false
+    },
+    "cameraLanguage": {
+      "dominantMotion": "handheld",
+      "motionVariety": 2,
+      "staticRatio": 0.3055555555555556,
+      "dynamicRatio": 0.6944444444444444
+    },
+    "subjectLanguage": {
+      "dominantMotion": "running",
+      "motionVariety": 2,
+      "actionRatio": 0.9444444444444444
+    },
+    "shotTypes": {
+      "distribution": {
+        "extreme_close": 0.4444444444444444,
+        "close": 0.19444444444444445,
+        "wide": 0.2777777777777778,
+        "medium": 0.08333333333333333
+      },
+      "dominantType": "extreme_close",
+      "variedFraming": true,
+      "closeUpRatio": 0.6388888888888888,
+      "wideRatio": 0.2777777777777778
+    },
+    "effects": {
+      "totalEffects": 43,
+      "effectsPerShot": 1.1944444444444444,
+      "transitions": {
+        "wipe": 4,
+        "blur": 2,
+        "glitch": 3
+      },
+      "visualEffects": {
+        "blur": 20,
+        "vignette": 2,
+        "glow": 4
+      },
+      "overlays": {
+        "watermark": 8
+      },
+      "mostCommonEffect": "blur",
+      "effectVariety": 6,
+      "hasTransitions": true,
+      "hasVisualEffects": true,
+      "hasOverlays": true
+    },
+    "text": {
+      "hasText": true,
+      "textFrequency": 0.5833333333333334,
+      "shotsWithText": 21,
+      "dominantColor": "yellow",
+      "dominantSize": "small",
+      "dominantPlacement": "center_right"
+    },
+    "speed": {
+      "avgSpeed": 1.1736111111111112,
+      "dominantSpeed": "normal",
+      "hasSlowMotion": false,
+      "hasFastMotion": true,
+      "hasRamps": true,
+      "rampRatio": 0.1388888888888889,
+      "speedDistribution": {
+        "normal": 0.5277777777777778,
+        "very_fast": 0.16666666666666666,
+        "slow": 0.19444444444444445,
+        "fast": 0.1111111111111111
+      }
+    },
+    "semantic": {
+      "totalEvents": 36,
+      "eventTypes": {
+        "setup": 0.05555555555555555,
+        "transition": 0.1388888888888889,
+        "action": 0.7777777777777778,
+        "celebration": 0.027777777777777776
+      },
+      "emotions": {
+        "tension": 0.027777777777777776,
+        "calm": 0.1388888888888889,
+        "anticipation": 0.027777777777777776,
+        "excitement": 0.05555555555555555,
+        "celebration": 0.027777777777777776,
+        "neutral": 0.7222222222222222
+      },
+      "narrativeArc": {
+        "establishing": 0.027777777777777776,
+        "building": 0.8888888888888888,
+        "climax": 0.05555555555555555,
+        "resolution": 0.027777777777777776
+      },
+      "avgImportance": 4.722222222222222,
+      "dominantEventType": "action",
+      "dominantEmotion": "neutral",
+      "climaxPosition": 7,
+      "hasNarrativeArc": true
+    },
+    "styleSummary": {
+      "isBeatDriven": false,
+      "isHighEnergy": "True",
+      "isDesaturated": false,
+      "isDark": false,
+      "pacingType": "fast"
+    }
+  },
+  "energyCurve": [
+    {
+      "time": 0.2,
+      "energy": 1.0
+    },
+    {
+      "time": 0.3,
+      "energy": 0.11629340648651124
+    },
+    {
+      "time": 0.4,
+      "energy": 1.0
+    },
+    {
+      "time": 0.5,
+      "energy": 1.0
+    },
+    {
+      "time": 0.6,
+      "energy": 0.09651736418406169
+    },
+    {
+      "time": 0.7,
+      "energy": 1.0
+    },
+    {
+      "time": 0.8,
+      "energy": 1.0
+    },
+    {
+      "time": 0.9,
+      "energy": 1.0
+    },
+    {
+      "time": 1.0,
+      "energy": 0.676725705464681
+    },
+    {
+      "time": 1.1,
+      "energy": 1.0
+    },
+    {
+      "time": 1.2,
+      "energy": 0.49334894816080727
+    },
+    {
+      "time": 1.3,
+      "energy": 0.48635762532552085
+    },
+    {
+      "time": 1.4,
+      "energy": 0.4931649208068848
+    },
+    {
+      "time": 1.5,
+      "energy": 0.5392829895019531
+    },
+    {
+      "time": 1.6,
+      "energy": 1.0
+    },
+    {
+      "time": 1.7,
+      "energy": 0.13634201685587566
+    },
+    {
+      "time": 1.8,
+      "energy": 0.1062291701634725
+    },
+    {
+      "time": 1.9,
+      "energy": 0.1058802048365275
+    },
+    {
+      "time": 2.0,
+      "energy": 1.0
+    },
+    {
+      "time": 2.1,
+      "energy": 0.5729288101196289
+    },
+    {
+      "time": 2.2,
+      "energy": 0.4910798708597819
+    },
+    {
+      "time": 2.3,
+      "energy": 0.4149392445882161
+    },
+    {
+      "time": 2.4,
+      "energy": 0.45258506139119464
+    },
+    {
+      "time": 2.5,
+      "energy": 1.0
+    },
+    {
+      "time": 2.6,
+      "energy": 0.017668402194976805
+    },
+    {
+      "time": 2.7,
+      "energy": 0.018479166428248088
+    },
+    {
+      "time": 2.8,
+      "energy": 1.0
+    },
+    {
+      "time": 2.9,
+      "energy": 0.07178125381469727
+    },
+    {
+      "time": 3.0,
+      "energy": 0.06997222105662028
+    },
+    {
+      "time": 3.1,
+      "energy": 0.05765104293823242
+    },
+    {
+      "time": 3.2,
+      "energy": 1.0
+    },
+    {
+      "time": 3.3,
+      "energy": 0.2963923454284668
+    },
+    {
+      "time": 3.4,
+      "energy": 0.3238159815470378
+    },
+    {
+      "time": 3.5,
+      "energy": 0.38296006520589193
+    },
+    {
+      "time": 3.6,
+      "energy": 0.42773958841959636
+    },
+    {
+      "time": 3.7,
+      "energy": 0.4411163330078125
+    },
+    {
+      "time": 3.8,
+      "energy": 0.4530711809794108
+    },
+    {
+      "time": 3.9,
+      "energy": 0.4550434112548828
+    },
+    {
+      "time": 4.0,
+      "energy": 1.0
+    },
+    {
+      "time": 4.1,
+      "energy": 0.10188194115956624
+    },
+    {
+      "time": 4.2,
+      "energy": 0.10001389185587566
+    },
+    {
+      "time": 4.3,
+      "energy": 0.10276736418406168
+    },
+    {
+      "time": 4.4,
+      "energy": 0.10884722073872884
+    },
+    {
+      "time": 4.5,
+      "energy": 1.0
+    },
+    {
+      "time": 4.6,
+      "energy": 0.30577430725097654
+    },
+    {
+      "time": 4.7,
+      "energy": 1.0
+    },
+    {
+      "time": 4.8,
+      "energy": 0.05162152846654256
+    },
+    {
+      "time": 4.9,
+      "energy": 0.05840277671813965
+    },
+    {
+      "time": 5.0,
+      "energy": 0.058364582061767575
+    },
+    {
+      "time": 5.1,
+      "energy": 0.058565970261891684
+    },
+    {
+      "time": 5.2,
+      "energy": 0.05633159875869751
+    },
+    {
+      "time": 5.3,
+      "energy": 0.05277777910232544
+    },
+    {
+      "time": 5.4,
+      "energy": 1.0
+    },
+    {
+      "time": 5.5,
+      "energy": 0.20729166666666668
+    },
+    {
+      "time": 5.6,
+      "energy": 0.2683454831441244
+    },
+    {
+      "time": 5.7,
+      "energy": 0.5084566116333008
+    },
+    {
+      "time": 5.8,
+      "energy": 0.6737083435058594
+    },
+    {
+      "time": 5.9,
+      "energy": 0.89239927927653
+    },
+    {
+      "time": 6.0,
+      "energy": 0.48627951939900715
+    },
+    {
+      "time": 6.1,
+      "energy": 0.8083229064941406
+    },
+    {
+      "time": 6.2,
+      "energy": 1.0
+    },
+    {
+      "time": 6.3,
+      "energy": 1.0
+    },
+    {
+      "time": 6.4,
+      "energy": 0.4987360954284668
+    },
+    {
+      "time": 6.5,
+      "energy": 0.009953125317891439
+    },
+    {
+      "time": 6.6,
+      "energy": 0.022348958253860473
+    },
+    {
+      "time": 6.7,
+      "energy": 0.02459548513094584
+    },
+    {
+      "time": 6.8,
+      "energy": 1.0
+    },
+    {
+      "time": 6.9,
+      "energy": 0.10002257029215494
+    },
+    {
+      "time": 7.0,
+      "energy": 0.10098437468210857
+    },
+    {
+      "time": 7.1,
+      "energy": 1.0
+    },
+    {
+      "time": 7.2,
+      "energy": 0.12148610750834148
+    },
+    {
+      "time": 7.3,
+      "energy": 0.13844792048136392
+    },
+    {
+      "time": 7.4,
+      "energy": 1.0
+    },
+    {
+      "time": 7.5,
+      "energy": 0.11313541730244954
+    },
+    {
+      "time": 7.6,
+      "energy": 0.09334548314412434
+    },
+    {
+      "time": 7.7,
+      "energy": 0.09899826049804687
+    },
+    {
+      "time": 7.8,
+      "energy": 0.11232465108235677
+    },
+    {
+      "time": 7.9,
+      "energy": 0.10184028148651122
+    },
+    {
+      "time": 8.0,
+      "energy": 0.11749131679534912
+    },
+    {
+      "time": 8.1,
+      "energy": 0.09599826335906983
+    },
+    {
+      "time": 8.2,
+      "energy": 1.0
+    },
+    {
+      "time": 8.3,
+      "energy": 0.05248090426127116
+    },
+    {
+      "time": 8.4,
+      "energy": 0.06069965362548828
+    },
+    {
+      "time": 8.5,
+      "energy": 0.06224131981531779
+    },
+    {
+      "time": 8.6,
+      "energy": 0.12291493415832519
+    },
+    {
+      "time": 8.7,
+      "energy": 0.05905381838480631
+    },
+    {
+      "time": 8.8,
+      "energy": 0.04814062515894572
+    },
+    {
+      "time": 8.9,
+      "energy": 0.055447916189829506
+    },
+    {
+      "time": 9.0,
+      "energy": 0.04991666475931803
+    },
+    {
+      "time": 9.1,
+      "energy": 0.04285937547683716
+    },
+    {
+      "time": 9.2,
+      "energy": 0.05914583206176758
+    },
+    {
+      "time": 9.3,
+      "energy": 0.04650520881017049
+    },
+    {
+      "time": 9.4,
+      "energy": 0.04880902767181396
+    },
+    {
+      "time": 9.5,
+      "energy": 0.03877777655919393
+    },
+    {
+      "time": 9.6,
+      "energy": 1.0
+    },
+    {
+      "time": 9.7,
+      "energy": 0.38326387405395507
+    },
+    {
+      "time": 9.8,
+      "energy": 0.3977465311686198
+    },
+    {
+      "time": 9.9,
+      "energy": 0.39946006139119467
+    },
+    {
+      "time": 10.0,
+      "energy": 0.3745364507039388
+    },
+    {
+      "time": 10.1,
+      "energy": 0.32884375254313153
+    },
+    {
+      "time": 10.2,
+      "energy": 0.27298091252644857
+    },
+    {
+      "time": 10.3,
+      "energy": 0.2285434087117513
+    },
+    {
+      "time": 10.4,
+      "energy": 0.20232985814412435
+    },
+    {
+      "time": 10.5,
+      "energy": 0.17978124618530272
+    },
+    {
+      "time": 10.6,
+      "energy": 0.15376909573872885
+    },
+    {
+      "time": 10.7,
+      "energy": 0.12442360719045004
+    },
+    {
+      "time": 10.8,
+      "energy": 0.1574305534362793
+    },
+    {
+      "time": 10.9,
+      "energy": 0.17857465744018555
+    },
+    {
+      "time": 11.0,
+      "energy": 1.0
+    },
+    {
+      "time": 11.1,
+      "energy": 0.433756955464681
+    },
+    {
+      "time": 11.2,
+      "energy": 0.43474480311075847
+    },
+    {
+      "time": 11.3,
+      "energy": 0.4752829869588216
+    },
+    {
+      "time": 11.4,
+      "energy": 0.5052343686421712
+    },
+    {
+      "time": 11.5,
+      "energy": 0.5075260480244954
+    },
+    {
+      "time": 11.6,
+      "energy": 0.5367933909098307
+    },
+    {
+      "time": 11.7,
+      "energy": 0.5274757067362468
+    },
+    {
+      "time": 11.8,
+      "energy": 0.5655330022176107
+    },
+    {
+      "time": 11.9,
+      "energy": 0.5683663050333659
+    },
+    {
+      "time": 12.0,
+      "energy": 0.5976475397745769
+    },
+    {
+      "time": 12.1,
+      "energy": 0.6204600652058919
+    },
+    {
+      "time": 12.2,
+      "energy": 0.6344982782999674
+    },
+    {
+      "time": 12.3,
+      "energy": 0.6258628209431966
+    },
+    {
+      "time": 12.4,
+      "energy": 1.0
+    },
+    {
+      "time": 12.5,
+      "energy": 0.15335243542989094
+    },
+    {
+      "time": 12.6,
+      "energy": 0.20578125317891438
+    },
+    {
+      "time": 12.7,
+      "energy": 0.3443593660990397
+    },
+    {
+      "time": 12.8,
+      "energy": 1.0
+    },
+    {
+      "time": 12.9,
+      "energy": 0.0786753495534261
+    },
+    {
+      "time": 13.0,
+      "energy": 0.09367361068725585
+    },
+    {
+      "time": 13.1,
+      "energy": 1.0
+    },
+    {
+      "time": 13.2,
+      "energy": 0.4303333282470703
+    },
+    {
+      "time": 13.3,
+      "energy": 0.4444583257039388
+    },
+    {
+      "time": 13.4,
+      "energy": 0.43519442876180015
+    },
+    {
+      "time": 13.5,
+      "energy": 0.4010746637980143
+    },
+    {
+      "time": 13.6,
+      "energy": 0.394015630086263
+    },
+    {
+      "time": 13.7,
+      "energy": 0.3999270757039388
+    },
+    {
+      "time": 13.8,
+      "energy": 1.0
+    },
+    {
+      "time": 13.9,
+      "energy": 0.12899305820465087
+    },
+    {
+      "time": 14.0,
+      "energy": 0.12615451018015544
+    },
+    {
+      "time": 14.1,
+      "energy": 0.12429166634877523
+    },
+    {
+      "time": 14.2,
+      "energy": 0.13081250190734864
+    },
+    {
+      "time": 14.3,
+      "energy": 0.13103125095367432
+    },
+    {
+      "time": 14.4,
+      "energy": 0.13712499936421713
+    },
+    {
+      "time": 14.5,
+      "energy": 0.13312673568725586
+    },
+    {
+      "time": 14.6,
+      "energy": 0.13594096501668293
+    },
+    {
+      "time": 14.7,
+      "energy": 0.13217535018920898
+    },
+    {
+      "time": 14.8,
+      "energy": 0.12670660018920898
+    },
+    {
+      "time": 14.9,
+      "energy": 0.1293541669845581
+    },
+    {
+      "time": 15.0,
+      "energy": 0.1385225772857666
+    },
+    {
+      "time": 15.1,
+      "energy": 0.12356597582499186
+    },
+    {
+      "time": 15.2,
+      "energy": 1.0
+    },
+    {
+      "time": 15.3,
+      "energy": 0.16350000699361164
+    },
+    {
+      "time": 15.4,
+      "energy": 0.162644100189209
+    },
+    {
+      "time": 15.5,
+      "energy": 0.1605798562367757
+    },
+    {
+      "time": 15.6,
+      "energy": 0.1621961752573649
+    },
+    {
+      "time": 15.7,
+      "energy": 0.15987499554951987
+    },
+    {
+      "time": 15.8,
+      "energy": 0.16120313008626302
+    },
+    {
+      "time": 15.9,
+      "energy": 0.1585677146911621
+    },
+    {
+      "time": 16.0,
+      "energy": 0.15966145197550455
+    },
+    {
+      "time": 16.1,
+      "energy": 0.1589756965637207
+    },
+    {
+      "time": 16.2,
+      "energy": 0.1604600747426351
+    },
+    {
+      "time": 16.3,
+      "energy": 0.15894964536031086
+    },
+    {
+      "time": 16.4,
+      "energy": 0.15853819847106934
+    },
+    {
+      "time": 16.5,
+      "energy": 0.15738714536031087
+    },
+    {
+      "time": 16.6,
+      "energy": 0.15992013613382974
+    },
+    {
+      "time": 16.7,
+      "energy": 1.0
+    },
+    {
+      "time": 16.8,
+      "energy": 0.08194618225097657
+    },
+    {
+      "time": 16.9,
+      "energy": 0.12108854452768962
+    },
+    {
+      "time": 17.0,
+      "energy": 0.12384895483652751
+    },
+    {
+      "time": 17.1,
+      "energy": 0.08422048886617024
+    },
+    {
+      "time": 17.2,
+      "energy": 0.08497048219045003
+    },
+    {
+      "time": 17.3,
+      "energy": 0.04844097296396891
+    },
+    {
+      "time": 17.4,
+      "energy": 0.04139409859975179
+    },
+    {
+      "time": 17.5,
+      "energy": 0.04602257013320923
+    },
+    {
+      "time": 17.6,
+      "energy": 0.03936284780502319
+    },
+    {
+      "time": 17.7,
+      "energy": 0.041744792461395265
+    },
+    {
+      "time": 17.8,
+      "energy": 0.044899304707845054
+    },
+    {
+      "time": 17.9,
+      "energy": 0.045734373728434245
+    },
+    {
+      "time": 18.0,
+      "energy": 0.03968576192855835
+    },
+    {
+      "time": 18.1,
+      "energy": 1.0
+    },
+    {
+      "time": 18.2,
+      "energy": 0.09540624618530273
+    },
+    {
+      "time": 18.3,
+      "energy": 0.11887500286102295
+    },
+    {
+      "time": 18.4,
+      "energy": 1.0
+    },
+    {
+      "time": 18.5,
+      "energy": 0.07256076335906983
+    },
+    {
+      "time": 18.6,
+      "energy": 0.0860277811686198
+    },
+    {
+      "time": 18.7,
+      "energy": 0.07513020833333334
+    },
+    {
+      "time": 18.8,
+      "energy": 1.0
+    },
+    {
+      "time": 18.9,
+      "energy": 0.2957430521647135
+    },
+    {
+      "time": 19.0,
+      "energy": 0.29855381647745766
+    },
+    {
+      "time": 19.1,
+      "energy": 0.2944392204284668
+    },
+    {
+      "time": 19.2,
+      "energy": 0.2897881825764974
+    },
+    {
+      "time": 19.3,
+      "energy": 0.29256423314412433
+    },
+    {
+      "time": 19.4,
+      "energy": 0.2949861208597819
+    }
+  ]
+}

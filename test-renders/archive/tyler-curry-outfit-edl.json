@@ -1,0 +1,1309 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "title": "Tyler The Creator Style × Steph Curry × Outfit",
+    "createdAt": 1782708633415,
+    "aiModel": "reference-matcher",
+    "prompt": "Tyler The Creator vibrant warm style applied to Steph Curry highlights",
+    "intentId": "test-tyler",
+    "analysisId": "test-tyler"
+  },
+  "timeline": {
+    "duration": 30,
+    "fps": 30,
+    "resolution": {
+      "width": 1920,
+      "height": 720
+    }
+  },
+  "shots": [
+    {
+      "id": "shot-0",
+      "source": {
+        "inPoint": 0,
+        "outPoint": 0.39000000000000096
+      },
+      "timing": {
+        "startTime": 0,
+        "duration": 0.3000000000000007,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-0-flash",
+          "type": "flash",
+          "intensity": 0.5
+        },
+        {
+          "id": "fx-0-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "beatLock": {
+        "beatIndex": 0,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-1",
+      "source": {
+        "inPoint": 0.7282789100000018,
+        "outPoint": 1.5082789099999991
+      },
+      "timing": {
+        "startTime": 0.3000000000000007,
+        "duration": 0.5999999999999979
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 1,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-2",
+      "source": {
+        "inPoint": 2.1848367299999967,
+        "outPoint": 2.9648367299999987
+      },
+      "timing": {
+        "startTime": 0.8999999999999986,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 3,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-3",
+      "source": {
+        "inPoint": 3.64139455,
+        "outPoint": 4.421394550000001
+      },
+      "timing": {
+        "startTime": 1.5,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-3-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 5,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-4",
+      "source": {
+        "inPoint": 5.097952370000003,
+        "outPoint": 5.877952370000001
+      },
+      "timing": {
+        "startTime": 2.1000000000000014,
+        "duration": 0.5999999999999979
+      },
+      "effects": [
+        {
+          "id": "fx-4-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 7,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-5",
+      "source": {
+        "inPoint": 6.5545101899999985,
+        "outPoint": 7.3345101900000005
+      },
+      "timing": {
+        "startTime": 2.6999999999999993,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 9,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-6",
+      "source": {
+        "inPoint": 8.01106801,
+        "outPoint": 8.791068009999998
+      },
+      "timing": {
+        "startTime": 3.3000000000000007,
+        "duration": 0.5999999999999979
+      },
+      "effects": [
+        {
+          "id": "fx-6-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 11,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-7",
+      "source": {
+        "inPoint": 9.467625829999996,
+        "outPoint": 10.247625829999997
+      },
+      "timing": {
+        "startTime": 3.8999999999999986,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 13,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-8",
+      "source": {
+        "inPoint": 10.924183649999998,
+        "outPoint": 11.70418365
+      },
+      "timing": {
+        "startTime": 4.5,
+        "duration": 0.6000000000000014,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-8-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 15,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-9",
+      "source": {
+        "inPoint": 12.380741470000002,
+        "outPoint": 13.16074147
+      },
+      "timing": {
+        "startTime": 5.100000000000001,
+        "duration": 0.5999999999999979
+      },
+      "effects": [
+        {
+          "id": "fx-9-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 17,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-10",
+      "source": {
+        "inPoint": 13.837299289999997,
+        "outPoint": 14.617299289999998
+      },
+      "timing": {
+        "startTime": 5.699999999999999,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 19,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-11",
+      "source": {
+        "inPoint": 15.29385711,
+        "outPoint": 16.073857109999995
+      },
+      "timing": {
+        "startTime": 6.300000000000001,
+        "duration": 0.5999999999999979
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 21,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-12",
+      "source": {
+        "inPoint": 16.750414929999994,
+        "outPoint": 17.530414929999996
+      },
+      "timing": {
+        "startTime": 6.899999999999999,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-12-flash",
+          "type": "flash",
+          "intensity": 0.5
+        },
+        {
+          "id": "fx-12-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 23,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-13",
+      "source": {
+        "inPoint": 18.20697275,
+        "outPoint": 18.98697275
+      },
+      "timing": {
+        "startTime": 7.5,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 25,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-14",
+      "source": {
+        "inPoint": 19.663530570000002,
+        "outPoint": 20.44353057
+      },
+      "timing": {
+        "startTime": 8.100000000000001,
+        "duration": 0.5999999999999979
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 27,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-15",
+      "source": {
+        "inPoint": 21.120088389999996,
+        "outPoint": 21.900088389999997
+      },
+      "timing": {
+        "startTime": 8.7,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-15-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 29,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-16",
+      "source": {
+        "inPoint": 22.576646209999996,
+        "outPoint": 23.356646209999997
+      },
+      "timing": {
+        "startTime": 9.3,
+        "duration": 0.6000000000000014,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-16-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 31,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-17",
+      "source": {
+        "inPoint": 24.033204030000004,
+        "outPoint": 24.813204030000005
+      },
+      "timing": {
+        "startTime": 9.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 33,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-18",
+      "source": {
+        "inPoint": 25.489761850000008,
+        "outPoint": 26.269761850000002
+      },
+      "timing": {
+        "startTime": 10.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "effects": [
+        {
+          "id": "fx-18-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 35,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-19",
+      "source": {
+        "inPoint": 26.946319669999994,
+        "outPoint": 27.726319669999995
+      },
+      "timing": {
+        "startTime": 11.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 37,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-20",
+      "source": {
+        "inPoint": 28.402877489999995,
+        "outPoint": 29.182877489999996
+      },
+      "timing": {
+        "startTime": 11.7,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-20-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 39,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-21",
+      "source": {
+        "inPoint": 29.85943531,
+        "outPoint": 30.63943531
+      },
+      "timing": {
+        "startTime": 12.3,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-21-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 41,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-22",
+      "source": {
+        "inPoint": 31.315993130000003,
+        "outPoint": 32.095993130000004
+      },
+      "timing": {
+        "startTime": 12.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 43,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-23",
+      "source": {
+        "inPoint": 32.77255095,
+        "outPoint": 33.55255095
+      },
+      "timing": {
+        "startTime": 13.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 45,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-24",
+      "source": {
+        "inPoint": 34.22910876999999,
+        "outPoint": 35.00910876999999
+      },
+      "timing": {
+        "startTime": 14.099999999999998,
+        "duration": 0.6000000000000014,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-24-flash",
+          "type": "flash",
+          "intensity": 0.5
+        },
+        {
+          "id": "fx-24-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 47,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-25",
+      "source": {
+        "inPoint": 35.68566659,
+        "outPoint": 36.46566659
+      },
+      "timing": {
+        "startTime": 14.7,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 49,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-26",
+      "source": {
+        "inPoint": 37.14222441,
+        "outPoint": 37.92222441
+      },
+      "timing": {
+        "startTime": 15.3,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 51,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-27",
+      "source": {
+        "inPoint": 38.59878223,
+        "outPoint": 39.37878223
+      },
+      "timing": {
+        "startTime": 15.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-27-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 53,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-28",
+      "source": {
+        "inPoint": 40.055340050000005,
+        "outPoint": 40.83534005
+      },
+      "timing": {
+        "startTime": 16.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "effects": [
+        {
+          "id": "fx-28-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 55,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-29",
+      "source": {
+        "inPoint": 41.51189786999999,
+        "outPoint": 42.29189786999999
+      },
+      "timing": {
+        "startTime": 17.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 57,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-30",
+      "source": {
+        "inPoint": 42.96845568999999,
+        "outPoint": 43.74845568999999
+      },
+      "timing": {
+        "startTime": 17.7,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-30-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 59,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-31",
+      "source": {
+        "inPoint": 44.42501350999999,
+        "outPoint": 45.20501350999999
+      },
+      "timing": {
+        "startTime": 18.3,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 61,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-32",
+      "source": {
+        "inPoint": 45.88157133000001,
+        "outPoint": 46.66157133000001
+      },
+      "timing": {
+        "startTime": 18.900000000000002,
+        "duration": 0.6000000000000014,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-32-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 63,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-33",
+      "source": {
+        "inPoint": 47.33812915000001,
+        "outPoint": 48.11812915
+      },
+      "timing": {
+        "startTime": 19.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "effects": [
+        {
+          "id": "fx-33-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 65,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-34",
+      "source": {
+        "inPoint": 48.794686969999994,
+        "outPoint": 49.574686969999995
+      },
+      "timing": {
+        "startTime": 20.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 67,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-35",
+      "source": {
+        "inPoint": 50.251244789999994,
+        "outPoint": 51.031244789999995
+      },
+      "timing": {
+        "startTime": 20.7,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 69,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-36",
+      "source": {
+        "inPoint": 51.70780261,
+        "outPoint": 52.48780261
+      },
+      "timing": {
+        "startTime": 21.3,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-36-flash",
+          "type": "flash",
+          "intensity": 0.5
+        },
+        {
+          "id": "fx-36-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 71,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-37",
+      "source": {
+        "inPoint": 53.16436043,
+        "outPoint": 53.94436043
+      },
+      "timing": {
+        "startTime": 21.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 73,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-38",
+      "source": {
+        "inPoint": 54.62091825,
+        "outPoint": 55.40091825
+      },
+      "timing": {
+        "startTime": 22.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 75,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-39",
+      "source": {
+        "inPoint": 56.07747606999999,
+        "outPoint": 56.85747606999999
+      },
+      "timing": {
+        "startTime": 23.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-39-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 77,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-40",
+      "source": {
+        "inPoint": 57.53403388999999,
+        "outPoint": 58.31403388999999
+      },
+      "timing": {
+        "startTime": 23.7,
+        "duration": 0.6000000000000014,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-40-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 79,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-41",
+      "source": {
+        "inPoint": 58.99059171,
+        "outPoint": 59.77059171
+      },
+      "timing": {
+        "startTime": 24.3,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 81,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-42",
+      "source": {
+        "inPoint": 60.44714953,
+        "outPoint": 61.22714953
+      },
+      "timing": {
+        "startTime": 24.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-42-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 83,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-43",
+      "source": {
+        "inPoint": 61.903707350000005,
+        "outPoint": 62.68370735
+      },
+      "timing": {
+        "startTime": 25.500000000000004,
+        "duration": 0.5999999999999943
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 85,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-44",
+      "source": {
+        "inPoint": 63.360265169999984,
+        "outPoint": 64.14026516999999
+      },
+      "timing": {
+        "startTime": 26.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-44-flash",
+          "type": "flash",
+          "intensity": 0.5
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 87,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-45",
+      "source": {
+        "inPoint": 64.81682298999999,
+        "outPoint": 65.59682298999999
+      },
+      "timing": {
+        "startTime": 26.7,
+        "duration": 0.6000000000000014
+      },
+      "effects": [
+        {
+          "id": "fx-45-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 89,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-46",
+      "source": {
+        "inPoint": 66.27338080999999,
+        "outPoint": 67.05338081
+      },
+      "timing": {
+        "startTime": 27.3,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 91,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-47",
+      "source": {
+        "inPoint": 67.72993862999999,
+        "outPoint": 68.50993863
+      },
+      "timing": {
+        "startTime": 27.900000000000002,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 93,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-48",
+      "source": {
+        "inPoint": 69.18649644999999,
+        "outPoint": 69.96649644999998
+      },
+      "timing": {
+        "startTime": 28.500000000000004,
+        "duration": 0.5999999999999943,
+        "speedRamp": {
+          "startSpeed": 0.7,
+          "endSpeed": 1.3
+        }
+      },
+      "effects": [
+        {
+          "id": "fx-48-flash",
+          "type": "flash",
+          "intensity": 0.5
+        },
+        {
+          "id": "fx-48-shake",
+          "type": "shake",
+          "intensity": 0.4
+        }
+      ],
+      "transition": {
+        "type": "flash",
+        "duration": 0.1
+      },
+      "beatLock": {
+        "beatIndex": 95,
+        "lockMode": "start"
+      }
+    },
+    {
+      "id": "shot-49",
+      "source": {
+        "inPoint": 70.64305427,
+        "outPoint": 71.42305427
+      },
+      "timing": {
+        "startTime": 29.099999999999998,
+        "duration": 0.6000000000000014
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0
+      },
+      "beatLock": {
+        "beatIndex": 97,
+        "lockMode": "start"
+      }
+    }
+  ],
+  "music": {
+    "id": "music-1",
+    "sourceId": "music",
+    "beatGrid": [
+      23.026,
+      23.326,
+      23.626,
+      23.926,
+      24.226,
+      24.526,
+      24.826,
+      25.126,
+      25.426,
+      25.726,
+      26.026,
+      26.326,
+      26.626,
+      26.926,
+      27.226,
+      27.526,
+      27.826,
+      28.126,
+      28.426,
+      28.726,
+      29.026,
+      29.326,
+      29.626,
+      29.926,
+      30.226,
+      30.526,
+      30.826,
+      31.126,
+      31.426,
+      31.726,
+      32.026,
+      32.326,
+      32.626,
+      32.926,
+      33.226,
+      33.526,
+      33.826,
+      34.126,
+      34.426,
+      34.726,
+      35.026,
+      35.326,
+      35.626,
+      35.926,
+      36.226,
+      36.526,
+      36.826,
+      37.126,
+      37.426,
+      37.726,
+      38.026,
+      38.326,
+      38.626,
+      38.926,
+      39.226,
+      39.526,
+      39.826,
+      40.126,
+      40.426,
+      40.726,
+      41.026,
+      41.326,
+      41.626,
+      41.926,
+      42.226,
+      42.526,
+      42.826,
+      43.126,
+      43.426,
+      43.726,
+      44.026,
+      44.326,
+      44.626,
+      44.926,
+      45.226,
+      45.526,
+      45.826,
+      46.126,
+      46.426,
+      46.726,
+      47.026,
+      47.326,
+      47.626,
+      47.926,
+      48.226,
+      48.526,
+      48.826,
+      49.126,
+      49.426,
+      49.726,
+      50.026,
+      50.326,
+      50.626,
+      50.926,
+      51.226,
+      51.526,
+      51.826,
+      52.126,
+      52.426,
+      52.726,
+      53.026
+    ],
+    "bpm": 200,
+    "volume": 1,
+    "inPoint": 23,
+    "outPoint": 53.1
+  },
+  "globalEffects": {
+    "colorGrade": "vibrant_warm"
+  }
+}

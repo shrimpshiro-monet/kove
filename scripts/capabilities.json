@@ -1,0 +1,715 @@
+{
+  "generatedAt": "2026-07-03T06:06:28.057Z",
+  "capabilities": [
+    {
+      "id": "audio-mixing",
+      "category": "audio",
+      "status": "beta",
+      "description": "Beta audio: audio-mixing",
+      "triggerPhrases": [
+        "audio-mixing"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "beat-sync",
+      "category": "audio",
+      "status": "alpha",
+      "description": "Sync clip edits to audio beats — cut on beats, ramp speed, or trigger effects.",
+      "triggerPhrases": [
+        "sync to beat",
+        "match the beat",
+        "cut on beat",
+        "beat sync"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "ducking",
+      "category": "audio",
+      "status": "alpha",
+      "description": "Auto-duck music volume when voice/dialogue is present.",
+      "triggerPhrases": [
+        "duck the music",
+        "lower music under voice",
+        "audio ducking"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "audio-fade",
+      "category": "audio",
+      "status": "alpha",
+      "description": "Fade audio in or out over a specified duration.",
+      "triggerPhrases": [
+        "fade in",
+        "fade out",
+        "fade the audio"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "sfx-synthesis",
+      "category": "audio",
+      "status": "beta",
+      "description": "Beta audio: sfx-synthesis",
+      "triggerPhrases": [
+        "sfx-synthesis"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "volume",
+      "category": "audio",
+      "status": "alpha",
+      "description": "Set clip audio volume (0.0 = silent, 1.0 = normal).",
+      "triggerPhrases": [
+        "volume",
+        "make it louder",
+        "make it quieter",
+        "mute this"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "crop",
+      "category": "camera",
+      "status": "alpha",
+      "description": "Crop a clip to a specific region.",
+      "triggerPhrases": [
+        "crop",
+        "crop this",
+        "cut the edges"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "multi-track",
+      "category": "composition",
+      "status": "alpha",
+      "description": "Multi-track timeline with video, audio, text, and effects tracks.",
+      "triggerPhrases": [
+        "add track",
+        "new track",
+        "multi-track"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "beat-cut",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Hard cut at a beat boundary. Used when shots should align with music beats.",
+      "triggerPhrases": [
+        "cut on the beat",
+        "match the beat",
+        "sync to the rhythm"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "delete-clip",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Remove a clip from the timeline. Leaves a gap.",
+      "triggerPhrases": [
+        "delete this clip",
+        "remove this clip",
+        "get rid of this"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "freeze-frame",
+      "category": "edit",
+      "status": "beta",
+      "description": "Beta edit: freeze-frame",
+      "triggerPhrases": [
+        "freeze-frame"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "move-clip",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Move a clip to a different position on the timeline.",
+      "triggerPhrases": [
+        "move this clip",
+        "reorder this clip",
+        "put this clip earlier"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "posterize-time",
+      "category": "edit",
+      "status": "beta",
+      "description": "Beta edit: posterize-time",
+      "triggerPhrases": [
+        "posterize-time"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "speed-ramp",
+      "category": "edit",
+      "status": "beta",
+      "description": "Beta edit: speed-ramp",
+      "triggerPhrases": [
+        "speed-ramp"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "speed-static",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Set a clip's playback speed to a fixed value (0.25x to 4x).",
+      "triggerPhrases": [
+        "slow this down",
+        "speed this up",
+        "half speed",
+        "double speed",
+        "slow motion"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "split-clip",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Split a clip into two separate clips at a specific time point.",
+      "triggerPhrases": [
+        "split this clip",
+        "cut here",
+        "cut this clip in half",
+        "divide this clip"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "trim-clip",
+      "category": "edit",
+      "status": "alpha",
+      "description": "Trim a clip from its start or end edge to shorten or lengthen it.",
+      "triggerPhrases": [
+        "trim this clip",
+        "shorten this clip",
+        "cut the beginning",
+        "cut the end"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "undo-redo",
+      "category": "edit",
+      "status": "beta",
+      "description": "Beta edit: undo-redo",
+      "triggerPhrases": [
+        "undo-redo"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "background-blur",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: background-blur",
+      "triggerPhrases": [
+        "background-blur"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "camera-blur",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: camera-blur",
+      "triggerPhrases": [
+        "camera-blur"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "chromatic-burst",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: chromatic-burst",
+      "triggerPhrases": [
+        "chromatic-burst"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "color-grade",
+      "category": "effects",
+      "status": "alpha",
+      "description": "Apply color grading — adjust saturation, contrast, brightness, temperature, tint, shadows, midtones, highlights.",
+      "triggerPhrases": [
+        "color grade",
+        "adjust colors",
+        "make it warmer",
+        "desaturate",
+        "more contrast"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "color-pulse",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: color-pulse",
+      "triggerPhrases": [
+        "color-pulse"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "directional-blur",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: directional-blur",
+      "triggerPhrases": [
+        "directional-blur"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "echo",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: echo",
+      "triggerPhrases": [
+        "echo"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "flash",
+      "category": "effects",
+      "status": "alpha",
+      "description": "Impact flash — white frame overlay with opacity fade-out.",
+      "triggerPhrases": [
+        "flash",
+        "white flash",
+        "impact flash",
+        "flash frame"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "gaussian-blur",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: gaussian-blur",
+      "triggerPhrases": [
+        "gaussian-blur"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "gl-transition-effect",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: gl-transition-effect",
+      "triggerPhrases": [
+        "gl-transition-effect"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "interlace-flicker",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: interlace-flicker",
+      "triggerPhrases": [
+        "interlace-flicker"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "invert-color",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: invert-color",
+      "triggerPhrases": [
+        "invert-color"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "parallax-3d",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: parallax-3d",
+      "triggerPhrases": [
+        "parallax-3d"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "player-glow",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: player-glow",
+      "triggerPhrases": [
+        "player-glow"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "pull-out",
+      "category": "effects",
+      "status": "alpha",
+      "description": "Slow zoom-out Ken Burns effect. Scale decreases from ~1.15 to 1.0.",
+      "triggerPhrases": [
+        "zoom out",
+        "pull out",
+        "ken burns out",
+        "widen"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "push-in",
+      "category": "effects",
+      "status": "alpha",
+      "description": "Slow zoom-in Ken Burns effect. Scale increases from 1.0 to ~1.2.",
+      "triggerPhrases": [
+        "zoom in",
+        "push in",
+        "ken burns in",
+        "get closer"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "shake",
+      "category": "effects",
+      "status": "alpha",
+      "description": "Impact camera shake. 18Hz procedural jitter with exponential decay.",
+      "triggerPhrases": [
+        "shake",
+        "camera shake",
+        "impact shake",
+        "make it hit harder"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "sharpen",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: sharpen",
+      "triggerPhrases": [
+        "sharpen"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "speed-ramp-effect",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: speed-ramp-effect",
+      "triggerPhrases": [
+        "speed-ramp-effect"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "unsharp-mask",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: unsharp-mask",
+      "triggerPhrases": [
+        "unsharp-mask"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "vignette-punch",
+      "category": "effects",
+      "status": "beta",
+      "description": "Beta effect: vignette-punch",
+      "triggerPhrases": [
+        "vignette-punch"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "whip-pan",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "whip-pan transition between two clips.",
+      "triggerPhrases": [
+        "whip-pan",
+        "whip-pan transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "kinetic-caption",
+      "category": "overlays",
+      "status": "beta",
+      "description": "Beta overlay: kinetic-caption",
+      "triggerPhrases": [
+        "kinetic-caption"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "lower-third",
+      "category": "overlays",
+      "status": "beta",
+      "description": "Beta overlay: lower-third",
+      "triggerPhrases": [
+        "lower-third"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "subtitle-auto",
+      "category": "overlays",
+      "status": "beta",
+      "description": "Beta overlay: subtitle-auto",
+      "triggerPhrases": [
+        "subtitle-auto"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "text-overlay",
+      "category": "overlays",
+      "status": "alpha",
+      "description": "Add text overlay with font, size, color, position, and animation.",
+      "triggerPhrases": [
+        "add text",
+        "text overlay",
+        "title",
+        "put text on screen"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "title-card",
+      "category": "overlays",
+      "status": "beta",
+      "description": "Beta overlay: title-card",
+      "triggerPhrases": [
+        "title-card"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "barn-doors",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "barn-doors transition between two clips.",
+      "triggerPhrases": [
+        "barn-doors",
+        "barn-doors transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "blur",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "blur transition between two clips.",
+      "triggerPhrases": [
+        "blur",
+        "blur transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "crossfade",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "crossfade transition between two clips.",
+      "triggerPhrases": [
+        "crossfade",
+        "crossfade transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "dip-to-black",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "dip-to-black transition between two clips.",
+      "triggerPhrases": [
+        "dip-to-black",
+        "dip-to-black transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "dissolve",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "dissolve transition between two clips.",
+      "triggerPhrases": [
+        "dissolve",
+        "dissolve transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "film-burn",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "film-burn transition between two clips.",
+      "triggerPhrases": [
+        "film-burn",
+        "film-burn transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "flash-transition",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "flash-transition transition between two clips.",
+      "triggerPhrases": [
+        "flash-transition",
+        "flash-transition transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "gl-transition-experimental",
+      "category": "transitions",
+      "status": "beta",
+      "description": "Experimental GL shader transitions (cube, mosaic, ripple, swirl, dreamy, etc).",
+      "triggerPhrases": [
+        "cube transition",
+        "mosaic transition",
+        "ripple transition"
+      ],
+      "isLegacy": true
+    },
+    {
+      "id": "glitch",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "glitch transition between two clips.",
+      "triggerPhrases": [
+        "glitch",
+        "glitch transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "gradient-wipe",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "gradient-wipe transition between two clips.",
+      "triggerPhrases": [
+        "gradient-wipe",
+        "gradient-wipe transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "iris",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "iris transition between two clips.",
+      "triggerPhrases": [
+        "iris",
+        "iris transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "linear-wipe",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "linear-wipe transition between two clips.",
+      "triggerPhrases": [
+        "linear-wipe",
+        "linear-wipe transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "morph",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "morph transition between two clips.",
+      "triggerPhrases": [
+        "morph",
+        "morph transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "pinwheel",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "pinwheel transition between two clips.",
+      "triggerPhrases": [
+        "pinwheel",
+        "pinwheel transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "pixelate",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "pixelate transition between two clips.",
+      "triggerPhrases": [
+        "pixelate",
+        "pixelate transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "radial-wipe",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "radial-wipe transition between two clips.",
+      "triggerPhrases": [
+        "radial-wipe",
+        "radial-wipe transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "slide",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "slide transition between two clips.",
+      "triggerPhrases": [
+        "slide",
+        "slide transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "spin",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "spin transition between two clips.",
+      "triggerPhrases": [
+        "spin",
+        "spin transition"
+      ],
+      "isLegacy": false
+    },
+    {
+      "id": "zoom-blur",
+      "category": "transitions",
+      "status": "alpha",
+      "description": "zoom-blur transition between two clips.",
+      "triggerPhrases": [
+        "zoom-blur",
+        "zoom-blur transition"
+      ],
+      "isLegacy": false
+    }
+  ]
+}

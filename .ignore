@@ -1,0 +1,14 @@
+# Block specific environment files
+.env*
+
+# Block a specific directory
+/secrets/**
+
+# Block all private keys and certificates
+*.key
+*.crt
+*.pem
+
+# Block common dependency and build folders
+**/node_modules/**
+**/dist/**

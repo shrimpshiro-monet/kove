@@ -39,6 +39,8 @@ export interface EditIntent {
   technical: { syncToBeat: boolean; beatSyncStrength?: number; avgShotDuration?: number; transitionStyle: "cut" | "smooth" | "dynamic" | "aggressive" | "mixed"; colorTreatment: "vibrant" | "cinematic" | "vintage" | "raw" | "anime" | "monochrome"; effectsIntensity: number };
   contentPreferences: { focusOn?: string[]; avoid?: string[]; characters?: CharacterFocus[] };
   constraints?: { mustInclude?: SegmentRef[]; mustAvoid?: string[]; maxComplexity?: "simple" | "medium" | "complex" };
+  tempoMode?: "beat_locked" | "beat_anticipated" | "narrative" | "cinematic" | "chill_vlog" | "reference_mirror";
+  forbidBeatSync?: boolean;
 }
 
 export interface MotionTrackKeyframe {
@@ -151,11 +153,17 @@ export interface Shot {
   id: string;
   name?: string;
   zIndex?: number;
+  meta?: Record<string, unknown>;
 
   source: {
     clipId: string; // Media item ID
     inPoint: number; // Trim start (seconds into source)
     outPoint: number; // Trim end
+    motionDir?: string; // "left"|"right"|"up"|"down"|"none"
+    hasVelocityRamp?: boolean; // Perception-detected velocity U-curve
+    semantic?: string[]; // Semantic tags from perception
+    faceCentered?: boolean; // Face detection flag
+    motion?: number; // Motion energy 0-1
   };
 
   timing: {
@@ -167,7 +175,12 @@ export interface Shot {
       endSpeed: number;
       easing: EasingType;
     };
+    beatLocked?: boolean; // Set by onset-aware beat snapping
   };
+
+  sectionRole?: string; // e.g. "setup_start", "montage_peak"
+  isHero?: boolean; // True for hero/section-start shots
+  holdForImpact?: boolean; // Preserve intentional duration outlier
 
   transform?: {
     position?: Keyframeable<{ x: number; y: number }>; // -1 to 1 (normalized)
@@ -224,6 +237,11 @@ export type EffectType =
   | "saturation"
   | "glow"
   | "shake"
+  | "impact_flash"
+  | "speed_ramp"
+  | "context_shake"
+  | "push_in"
+  | "color_pulse"
   | "zoom_pulse"
   | "zoomPulse"
   | "zoom-pulse"
@@ -306,17 +324,61 @@ export type EffectType =
   | "strobeLight"
   | "strobe-light";
 
-// Transition types (MVP subset)
-export type TransitionType = "cut" | "crossfade" | "whip-pan" | "zoom-blur" | "glitch";
+export type TransitionType =
+  | "cut"
+  | "crossfade"
+  | "dissolve"
+  | "whip-pan"
+  | "whip_pan"
+  | "zoom-blur"
+  | "glitch"
+  | "flash"
+  | "dip_black"
+  | "slide"
+  | "radial_wipe"
+  | "clock_wipe"
+  | "linear_wipe"
+  | "gradient_wipe"
+  | "barn_doors"
+  | "morph"
+  | "iris"
+  | "pinwheel"
+  | "film_burn"
+  | "spin"
+  | "blur"
+  | "pixelate"
+  | "flash_frame"
+  | "flash_white"
+  | "morph_cut"
+  | "push"
+  | "cube"
+  | "ripple"
+  | "swirl"
+  | "dreamy"
+  | "wind"
+  | "mosaic"
+  | "radial"
+  | "doorway"
+  | "heart"
+  | "kaleidoscope";
 
-// Color grading presets
 export type ColorGradePreset =
-  | "cinematic" // Teal & orange, low saturation
-  | "vibrant" // High saturation, punchy
-  | "vintage" // Faded, warm tones
-  | "monochrome" // Black & white
-  | "anime" // High contrast, saturated primaries
-  | "raw"; // No grading
+  | "cinematic"
+  | "vibrant"
+  | "vintage"
+  | "monochrome"
+  | "anime"
+  | "raw"
+  | "cool_desaturated"
+  | "warm_dark"
+  | "vivid_red"
+  | "neutral_desaturated"
+  | "bright_warm"
+  | "vibrant_warm"
+  | "hyper_neon"
+  | "cool_dark"
+  | "warm_cinematic"
+  | "desaturated_natural";
 
 /**
  * Complete edit timeline
@@ -357,6 +419,9 @@ export interface MonetEDL {
   motionTracks?: MotionTrack[];
   planarTracks?: PlanarTrack[];
   textOverlays?: TextOverlay[];
+
+  /** Global edit intensity 0-1. Scales all effects, color, motion, transitions. */
+  intensity?: number;
 
   globalEffects?: {
     colorGrade?: ColorGradePreset;

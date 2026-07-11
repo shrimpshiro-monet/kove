@@ -13,7 +13,7 @@ export async function handleSpecialistDepth(
   env: Env,
 ): Promise<Response> {
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as { videoUrl?: string; modelSize?: "small" | "base" | "large" };
     const userTier = (request.headers.get("X-User-Tier") ?? "free").toLowerCase();
 
     if (!body.videoUrl) {

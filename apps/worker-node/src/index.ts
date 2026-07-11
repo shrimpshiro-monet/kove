@@ -3,7 +3,6 @@ import "dotenv/config";
 import "./queues/render-preview.worker";
 import "./queues/render-final.worker";
 import "./queues/enhance-edl.worker";
-import "./queues/generate-edl.worker";
 
 process.on("SIGINT", () => {
   console.log("[worker-node] SIGINT received");

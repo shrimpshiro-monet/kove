@@ -173,6 +173,18 @@ export interface ReferenceStyle {
     followingShotIndex: number;
   }>;
 
+  // === RHYTHM MAP (beat engine output for onset-aware cutting) ===
+  rhythmMap?: {
+    bpm: number;
+    beats: number[];
+    downbeats: number[];
+    onsets: { time: number; strength: number; band: string }[];
+    drop_candidates: number[];
+    source: string;
+    duration: number;
+    beat_sync_available: boolean;
+  };
+
   // === STRUCTURAL ANALYSIS (1s resolution motion profile) ===
   structuralAnalysis?: {
     motionEnergyProfile1s: number[];

@@ -22,7 +22,7 @@ export class ReplicateClient {
   private apiKey: string;
 
   constructor(env: Env) {
-    this.apiKey = (env as any).REPLICATE_API_TOKEN || "";
+    this.apiKey = env.REPLICATE_API_TOKEN || "";
     if (!this.apiKey) {
       throw new Error("REPLICATE_API_TOKEN not configured");
     }
@@ -80,8 +80,8 @@ export class ReplicateClient {
     r2Key: string,
     contentType: string,
   ): Promise<string> {
-    const r2Bucket = (env as any).MONET_MEDIA;
-    const r2PublicBase = (env as any).R2_PUBLIC_BASE || "";
+    const r2Bucket = env.MONET_MEDIA;
+    const r2PublicBase = env.R2_PUBLIC_BASE || "";
 
     if (!r2Bucket) {
       console.warn("[replicate-client] no R2 configured, using source URL");

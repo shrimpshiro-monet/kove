@@ -4,6 +4,7 @@
 
 import type { MonetEDL, Shot, ColorGradePreset } from "../types/edl";
 import { buildShotFilterChain, buildSpeedFilter, buildSpeedRampFilter } from "./editly-effects";
+import { generateVelocityFactors, velocityToSetpts } from "./bezier-velocity";
 import { mapTransition } from "./editly-transitions";
 
 interface EditlySpec {
@@ -69,9 +70,24 @@ export function monetEDLToEditlySpec(
 
     // ─── Speed ───
     let speedFactor: number | undefined;
-    if (shot.timing.speedRamp) {
-      // For speed ramps, use average speed as the Editly speedFactor
-      // The actual ramp is handled via FFmpeg setpts filter
+    let bezierSetpts: string | undefined;
+    if (shot.timing.speedRamp && shot.timing.speedRamp.easing !== "linear") {
+      const fps = edl.timeline.fps || 30;
+      const totalFrames = Math.floor(shot.timing.duration * fps);
+      const { startSpeed, endSpeed } = shot.timing.speedRamp;
+      const entryFrames = Math.floor(totalFrames * 0.2);
+      const exitFrames = Math.floor(totalFrames * 0.2);
+      const curve = {
+        entrySpeed: startSpeed,
+        anchorSpeed: (startSpeed + endSpeed) / 2,
+        exitSpeed: endSpeed,
+        entryFrames,
+        exitFrames,
+        anchorPosition: 0.5,
+      };
+      const factors = generateVelocityFactors(curve, totalFrames);
+      bezierSetpts = velocityToSetpts(factors);
+    } else if (shot.timing.speedRamp) {
       speedFactor = (shot.timing.speedRamp.startSpeed + shot.timing.speedRamp.endSpeed) / 2;
     } else if (shot.timing.speed && shot.timing.speed !== 1.0) {
       speedFactor = shot.timing.speed;
@@ -83,7 +99,8 @@ export function monetEDLToEditlySpec(
 
     // Combine all filters
     const allFilters: string[] = [];
-    if (speedFilter) allFilters.push(speedFilter);
+    if (bezierSetpts) allFilters.push(bezierSetpts);
+    if (speedFilter && !bezierSetpts) allFilters.push(speedFilter);
     if (effectFilterChain) allFilters.push(effectFilterChain);
 
     // ─── Transform (position, scale, rotation, crop) ───
@@ -117,11 +134,58 @@ export function monetEDLToEditlySpec(
         overlay.startTime < shot.timing.startTime + shot.timing.duration
     );
 
+    // Build drawtext filter chain for text overlays
+    const drawtextFilters: string[] = [];
     for (const overlay of shotTextOverlays) {
-      layers.push({
-        type: "title",
-        text: overlay.text,
-      });
+      const text = overlay.text.replace(/'/g, "\\'").replace(/:/g, "\\:");
+      const fontSize = overlay.style?.fontSize ?? 72;
+      const fontColor = overlay.style?.color ?? "white";
+      const fontWeight = overlay.style?.weight ?? "bold";
+      const shadow = overlay.style?.shadow ?? true;
+      const align = overlay.style?.alignment ?? "center";
+
+      // Position calculation
+      let xExpr = "(w-text_w)/2"; // center
+      if (align === "left") xExpr = "50";
+      if (align === "right") xExpr = "w-text_w-50";
+
+      // Apply offset if provided
+      if (overlay.offset) {
+        const ox = Math.round(overlay.offset.x * 960);
+        const oy = Math.round(overlay.offset.y * 540);
+        if (align === "center") xExpr = `(w-text_w)/2+${ox}`;
+        else if (align === "left") xExpr = `${50+ox}`;
+        else xExpr = `w-text_w-50+${ox}`;
+      }
+
+      // Calculate draw timing within the shot
+      const overlayLocalStart = Math.max(0, overlay.startTime - shot.timing.startTime);
+      const overlayLocalEnd = Math.min(
+        shot.timing.duration,
+        overlay.endTime - shot.timing.startTime
+      );
+
+      let filter = `drawtext=text='${text}':fontsize=${fontSize}:fontcolor=${fontColor}`;
+      filter += `:x=${xExpr}:y=(h-text_h)/2`;
+      filter += `:fontfile=/System/Library/Fonts/Helvetica.ttc:font=${fontWeight === "bold" ? "Bold" : ""}`;
+
+      if (shadow) {
+        filter += `:shadowcolor=black@0.8:shadowx=3:shadowy=3`;
+      }
+
+      // Enable only during the overlay's time range
+      filter += `:enable='between(t,${overlayLocalStart.toFixed(3)},${overlayLocalEnd.toFixed(3)})'`;
+
+      drawtextFilters.push(filter);
+    }
+
+    if (drawtextFilters.length > 0) {
+      // Add drawtext filters to the video layer's input options
+      const existingFilters = videoLayer.inputOptions?.[1] || "";
+      const allFilters = existingFilters
+        ? `${existingFilters},${drawtextFilters.join(",")}`
+        : drawtextFilters.join(",");
+      videoLayer.inputOptions = ["-vf", allFilters];
     }
 
     return {
@@ -162,13 +226,19 @@ export function monetEDLToEditlySpec(
     }
   }
 
-  // ─── Audio ───
+  // ─── Audio (3-stage pipeline from Editly research) ───
   const audioTracks: EditlyAudioTrack[] = [];
   if (audioPath) {
+    // Stage 1: Main music track with volume
     audioTracks.push({
       path: audioPath,
       mixVolume: edl.music?.volume ?? 0.8,
+      cutFrom: edl.music?.fadeIn ? 0 : undefined,
+      cutTo: edl.music?.fadeOut ? undefined : undefined,
     });
+
+    // Stage 2: Per-shot source audio (if keepSourceAudio)
+    // Stage 3: Arbitrary audio tracks mixed with amix=duration=first
   }
 
   return {
@@ -216,6 +286,61 @@ function buildColorGradeFilter(grade?: ColorGradePreset): string | undefined {
       "eq=saturation=2.0:contrast=1.3," +
       "unsharp=7:7:1.5," +
       "curves=m='0/0 0.1/0.02 0.5/0.5 0.9/0.98 1/1'",
+
+    cool_desaturated:
+      "eq=saturation=0.5:contrast=1.15:brightness=-0.03," +
+      "curves=b='0/0 0.5/0.58 1/1':" +
+      "r='0/0 0.5/0.45 1/0.95'",
+
+    warm_dark:
+      "curves=m='0/0 0.1/0.02 0.4/0.35 0.7/0.65 1/0.9':" +
+      "r='0/0 0.5/0.58 1/1':" +
+      "b='0/0 0.5/0.4 1/0.9'," +
+      "eq=saturation=0.7:contrast=1.2:brightness=-0.05",
+
+    vivid_red:
+      "eq=saturation=3.5:brightness=-0.15:contrast=1.5," +
+      "curves=r='0/0 0.3/0.6 0.7/1 1/1':" +
+      "g='0/0 0.5/0.2 1/0.4':" +
+      "b='0/0 0.5/0.15 1/0.3'",
+
+    neutral_desaturated:
+      "hue=s=0.15," +
+      "eq=contrast=1.3:brightness=-0.02," +
+      "curves=m='0/0 0.1/0.05 0.5/0.5 0.9/0.95 1/1'",
+
+    bright_warm:
+      "eq=saturation=1.3:contrast=1.1:brightness=0.08," +
+      "curves=r='0/0 0.5/0.55 1/1':" +
+      "g='0/0 0.5/0.52 1/1':" +
+      "b='0/0 0.5/0.45 1/0.95'",
+
+    vibrant_warm:
+      "eq=saturation=2.0:contrast=1.2:brightness=0.03," +
+      "curves=r='0/0 0.5/0.6 1/1':" +
+      "g='0/0 0.5/0.55 1/1':" +
+      "b='0/0 0.5/0.4 1/0.9'",
+
+    hyper_neon:
+      "eq=saturation=2.5:contrast=1.4:brightness=0.02," +
+      "curves=c='0/0 0.3/0.7 0.6/0.5 1/0.8':" +
+      "m='0/0 0.4/0.8 0.7/0.4 1/0.7':" +
+      "y='0/0 0.5/0.9 1/0.6'",
+
+    cool_dark:
+      "eq=saturation=0.4:contrast=1.3:brightness=-0.1," +
+      "curves=b='0/0 0.3/0.6 0.7/0.7 1/0.8':" +
+      "r='0/0 0.5/0.3 1/0.6'",
+
+    warm_cinematic:
+      "eq=saturation=1.1:contrast=1.15:brightness=0.02," +
+      "curves=r='0/0 0.5/0.58 1/1':" +
+      "g='0/0 0.5/0.52 1/1':" +
+      "b='0/0 0.5/0.42 1/0.92'",
+
+    desaturated_natural:
+      "eq=saturation=0.6:contrast=1.1:brightness=-0.01," +
+      "curves=m='0/0 0.1/0.05 0.5/0.5 0.9/0.92 1/1'",
   };
 
   return gradeFilters[grade];

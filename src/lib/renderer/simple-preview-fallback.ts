@@ -40,11 +40,11 @@ export function drawSimplePreviewFallback(
 
   const timelineDuration = Math.max(
     edl.timeline.duration || 0,
-    ...edl.shots.map(getShotEnd),
+    ...(edl.shots ?? []).map(getShotEnd),
     1
   );
 
-  const activeShot = edl.shots.find(
+  const activeShot = (edl.shots ?? []).find(
     (shot) => currentTime >= shot.timing.startTime && currentTime <= getShotEnd(shot)
   );
 
@@ -76,8 +76,8 @@ export function drawSimplePreviewFallback(
   ctx.fillStyle = "rgba(255,255,255,0.08)";
   ctx.fillRect(timelineX, timelineY, timelineW, timelineH);
 
-  for (let i = 0; i < edl.shots.length; i++) {
-    const shot = edl.shots[i];
+  for (let i = 0; i < (edl.shots ?? []).length; i++) {
+    const shot = (edl.shots ?? [])[i];
     const startRatio = clamp(shot.timing.startTime / timelineDuration, 0, 1);
     const endRatio = clamp(getShotEnd(shot) / timelineDuration, 0, 1);
     const x = timelineX + startRatio * timelineW;
@@ -135,7 +135,7 @@ export function drawSimplePreviewFallback(
   ctx.font = "500 13px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(
-    `${edl.shots.length} shot${edl.shots.length === 1 ? "" : "s"} · ${formatTime(timelineDuration)}`,
+    `${(edl.shots ?? []).length} shot${(edl.shots ?? []).length === 1 ? "" : "s"} · ${formatTime(timelineDuration)}`,
     width / 2,
     timelineY + timelineH + 40
   );

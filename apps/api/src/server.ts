@@ -13,6 +13,9 @@ import { registerUploadDirectRoutes } from "./api/upload-direct";
 import { registerBlenderRenderRoute } from "./api/blender-render";
 import { registerVibeRenderRoute } from "./api/vibe-render";
 import { registerNativeExecutorRoutes } from "./api/native-executor";
+import { registerVibeGenerateRoute } from "./api/vibe-generate";
+import { registerVibeRefineRoute } from "./api/vibe-refine";
+import { registerDetectRoutes } from "./api/detect-routes";
 
 async function start(): Promise<void> {
   const app = fastify({
@@ -48,6 +51,9 @@ async function start(): Promise<void> {
   await registerBlenderRenderRoute(app);
   await registerVibeRenderRoute(app);
   await registerNativeExecutorRoutes(app);
+  await registerVibeGenerateRoute(app);
+  await registerVibeRefineRoute(app);
+  await registerDetectRoutes(app);
 
   app.get("/health", async () => ({
     status: "ok"

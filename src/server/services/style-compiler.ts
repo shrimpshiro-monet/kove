@@ -43,7 +43,9 @@ export async function compileStyle(
         const style = JSON.parse(cached) as StyleDNA;
         return { style, cached: true, source: "exact" };
       }
-    } catch {}
+    } catch (e) {
+      console.warn("[style-compiler] cache read failed:", e);
+    }
   }
 
   const matched = findStyleByTrigger(userPrompt);

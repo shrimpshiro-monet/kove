@@ -1,4 +1,4 @@
-import type { Clip, EffectBlock, MonetEDL, Track } from "@monet/edl/src/schemas";
+import type { Clip, EffectBlock, ProjectEDL as MonetEDL, Track } from "@monet/edl/src/schemas";
 import type {
   ActionResult,
   CompiledTimelineGraph,

@@ -1,4 +1,4 @@
-import { MonetEDL, Clip } from "@monet/edl/src/schemas";
+import { ProjectEDL as MonetEDL, Clip } from "@monet/edl/src/schemas";
 
 export function mapClips(edl: MonetEDL): Map<string, Clip> {
   const map = new Map<string, Clip>();

@@ -40,7 +40,7 @@ export class HuggingFaceClient {
   private apiKey: string | undefined;
 
   constructor(env: Env) {
-    this.apiKey = (env as any).HUGGINGFACE_API_KEY;
+    this.apiKey = env.HUGGINGFACE_API_KEY;
   }
 
   async runInference(req: HFRequest): Promise<HFResult> {

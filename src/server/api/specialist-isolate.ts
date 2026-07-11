@@ -13,7 +13,11 @@ export async function handleSpecialistIsolate(
   env: Env,
 ): Promise<Response> {
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as {
+      videoUrl?: string;
+      promptType?: "point" | "box" | "auto";
+      promptCoords?: number[];
+    };
     const userTier = (request.headers.get("X-User-Tier") ?? "free").toLowerCase();
 
     if (!body.videoUrl) {

@@ -19,7 +19,8 @@ function ensureDir(): boolean {
       mkdirSync(DEV_DIR, { recursive: true });
     }
     return true;
-  } catch {
+  } catch (e) {
+    console.warn("[studio-cache] ensureDir failed:", e);
     return false;
   }
 }
@@ -33,8 +34,8 @@ export function putLocalStudioSnapshot(snapshot: LocalStudioSnapshot): void {
 
   try {
     writeFileSync(snapshotPath(snapshot.projectId), JSON.stringify(snapshot));
-  } catch {
-    // Best effort only.
+  } catch (e) {
+    console.warn("[studio-cache] write failed:", e);
   }
 }
 
@@ -44,7 +45,8 @@ export function getLocalStudioSnapshot(projectId: string): LocalStudioSnapshot |
 
   try {
     return JSON.parse(readFileSync(path, "utf8")) as LocalStudioSnapshot;
-  } catch {
+  } catch (e) {
+    console.warn("[studio-cache] read failed:", e);
     return null;
   }
 }

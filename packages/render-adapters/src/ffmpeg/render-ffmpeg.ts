@@ -1,5 +1,5 @@
 import { execa } from "execa";
-import type { MonetEDL } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 import { compileEDLEffectsToFFmpeg } from "./filter-compiler";
 
 export interface RenderFFmpegInput {

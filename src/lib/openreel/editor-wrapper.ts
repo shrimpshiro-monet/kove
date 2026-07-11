@@ -1,107 +1,78 @@
-import type { MonetEDL } from "@/server/types/edl";
+import type { ProjectEDL as MonetEDL } from "@monet/edl";
 import type { TranscriptWord } from "@/server/api/transcribe";
-import {
-  shouldUseOpenReelEditing,
-  stabilizeMonetEDLWithOpenReel,
-} from "@/lib/openreel/monet-bridge";
 
-export class OpenReelWordEditWrapper {
+/**
+ * Stub replacement for the deleted openreel editor-wrapper.
+ * Applies word-level transcript edits to MonetEDL by cutting time ranges.
+ */
+export const openReelWordEditWrapper = {
   applyDeletedWordIndices(
-    baselineEDL: MonetEDL,
-    words: TranscriptWord[],
-    deletedWordIndices: Set<number>
+    edl: MonetEDL,
+    transcript: TranscriptWord[],
+    deletedIndices: number[]
   ): MonetEDL {
-    if (deletedWordIndices.size === 0) {
-      return baselineEDL;
-    }
+    if (!deletedIndices.length) return edl;
 
-    const cuts = Array.from(deletedWordIndices)
-      .map((index) => words[index])
-      .filter((word): word is TranscriptWord => !!word)
-      .sort((a, b) => b.start_ms - a.start_ms);
+    const deletedRanges = deletedIndices
+      .map((i) => transcript[i])
+      .filter(Boolean)
+      .map((w) => ({ start: w.start_ms / 1000, end: w.end_ms / 1000 }))
+      .sort((a, b) => a.start - b.start);
 
-    let result = baselineEDL;
-    for (const cut of cuts) {
-      result = this.cutRange(result, cut.start_ms, cut.end_ms);
-    }
+    if (!deletedRanges.length) return edl;
 
-    return this.finalize(result);
-  }
+    const updated = structuredClone(edl);
 
-  private cutRange(edl: MonetEDL, startMs: number, endMs: number): MonetEDL {
-    const startSec = startMs / 1000;
-    const endSec = endMs / 1000;
-    const removedDuration = Math.max(0, endSec - startSec);
+    for (const track of updated.timeline.tracks) {
+      if (track.type !== "video") continue;
 
-    if (removedDuration === 0) {
-      return edl;
-    }
+      const newClips = [];
+      for (const clip of track.clips) {
+        let cursor = clip.startTime;
+        const clipEnd = clip.startTime + clip.duration;
+        let remaining = clip.duration;
 
-    const updatedShots = edl.shots
-      .map((shot) => {
-        const shotStart = shot.timing.startTime;
-        const shotEnd = shotStart + shot.timing.duration;
+        for (const range of deletedRanges) {
+          const delStart = Math.max(range.start, cursor);
+          const delEnd = Math.min(range.end, clipEnd);
 
-        if (shotEnd <= startSec) {
-          return shot;
+          if (delStart < delEnd && delStart < clipEnd && delEnd > cursor) {
+            const beforeDur = delStart - cursor;
+            if (beforeDur > 0.02) {
+              newClips.push({
+                ...structuredClone(clip),
+                id: `${clip.id}-w${newClips.length}`,
+                startTime: cursor,
+                duration: beforeDur,
+              });
+            }
+            cursor = delEnd;
+            remaining -= beforeDur + (delEnd - delStart);
+          }
         }
 
-        if (shotStart >= endSec) {
-          return {
-            ...shot,
-            timing: {
-              ...shot.timing,
-              startTime: shotStart - removedDuration,
-            },
-          };
+        if (cursor < clipEnd && clipEnd - cursor > 0.02) {
+          newClips.push({
+            ...structuredClone(clip),
+            id: `${clip.id}-w${newClips.length}`,
+            startTime: cursor,
+            duration: clipEnd - cursor,
+          });
         }
+      }
 
-        const overlapStart = Math.max(shotStart, startSec);
-        const overlapEnd = Math.min(shotEnd, endSec);
-        const overlapDuration = overlapEnd - overlapStart;
-        const newDuration = shot.timing.duration - overlapDuration;
-
-        if (newDuration <= 0.05) {
-          return null;
-        }
-
-        const newInPoint =
-          overlapStart > shotStart
-            ? shot.source.inPoint + (overlapStart - shotStart)
-            : shot.source.inPoint;
-
-        return {
-          ...shot,
-          source: {
-            ...shot.source,
-            inPoint: newInPoint,
-            outPoint: newInPoint + newDuration,
-          },
-          timing: {
-            ...shot.timing,
-            startTime: shotStart < startSec ? shotStart : startSec,
-            duration: newDuration,
-          },
-        };
-      })
-      .filter(Boolean) as MonetEDL["shots"];
-
-    return {
-      ...edl,
-      shots: updatedShots,
-      timeline: {
-        ...edl.timeline,
-        duration: Math.max(0, edl.timeline.duration - removedDuration),
-      },
-    };
-  }
-
-  private finalize(edl: MonetEDL): MonetEDL {
-    if (!shouldUseOpenReelEditing()) {
-      return edl;
+      track.clips = newClips;
     }
-    return stabilizeMonetEDLWithOpenReel(edl);
-  }
-}
 
-export const openReelWordEditWrapper = new OpenReelWordEditWrapper();
+    let maxEnd = 0;
+    for (const track of updated.timeline.tracks) {
+      for (const clip of track.clips) {
+        const end = clip.startTime + clip.duration;
+        if (end > maxEnd) maxEnd = end;
+      }
+    }
+    updated.timeline.duration = maxEnd;
+
+    return updated;
+  },
+};

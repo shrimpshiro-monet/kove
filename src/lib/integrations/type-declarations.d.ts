@@ -1,3 +1,18 @@
+declare module "editly" {
+  interface EditlySpec {
+    width: number;
+    height: number;
+    fps: number;
+    outPath: string;
+    clips: any[];
+    audioTracks?: any[];
+    defaults?: { transition?: any };
+    outputOptions?: string[];
+  }
+  function editly(spec: EditlySpec): Promise<void>;
+  export default editly;
+}
+
 declare module "gsap" {
   export const gsap: {
     parseEase: (ease: string) => (t: number) => number;

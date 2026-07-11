@@ -67,7 +67,7 @@ Generate the EDLPatch operations now.
   }
 
   const patch = await ai.generateContentJSON<EDLPatch>({
-    prompt: promptParts,
+    prompt: promptParts as unknown as string,
     temperature: 0.1, // Even lower for maximum precision
     schema: {
       type: "object",

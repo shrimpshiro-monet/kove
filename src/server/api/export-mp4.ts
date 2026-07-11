@@ -1,5 +1,6 @@
 import type { Env } from "../types/env";
 import { FFmpegRenderer } from "../services/ffmpeg-renderer";
+import { assessQuality } from "../lib/vmaf-quality-gate";
 import * as fs from "node:fs/promises";
 
 export async function handleExportMP4(
@@ -54,6 +55,14 @@ export async function handleExportMP4(
 
     try {
       const result = await renderer.render({ edl, mediaUrls });
+
+      const quality = await assessQuality(result.filePath);
+      if (!quality.pass) {
+        console.warn("[export-mp4] Quality gate WARNING:", quality.details);
+      } else {
+        console.log("[export-mp4] Quality gate PASSED:", quality.details);
+      }
+
       const fileBuffer = await fs.readFile(result.filePath);
 
       renderer.cleanup().catch(() => {});
@@ -67,6 +76,9 @@ export async function handleExportMP4(
           "Content-Length": String(result.size),
           "Content-Disposition": `attachment; filename="monet-edit-${Date.now()}.mp4"`,
           "X-Render-Duration": String(result.duration),
+          "X-Quality-Pass": String(quality.pass),
+          "X-Quality-SSIM": quality.ssim !== null ? quality.ssim.toFixed(4) : "n/a",
+          "X-Quality-PSNR": quality.psnr !== null ? quality.psnr.toFixed(2) : "n/a",
         },
       });
     } catch (err: any) {

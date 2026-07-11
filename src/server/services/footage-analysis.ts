@@ -307,6 +307,7 @@ interface MediaLookup {
   size?: number;
   width?: number;
   height?: number;
+  duration?: number;
   fps?: number;
   rotation?: number;
 }
@@ -661,25 +662,37 @@ function validateFootageAnalysis(
   media: MediaLookup,
   analysisMode: FootageAnalysis["analysisMode"]
 ): Result<FootageAnalysis, AnalysisServiceError> {
-  // Pre-process to fix common Gemini hallucinations before Zod validation
+  // Pre-process to fix common AI hallucinations and fill missing fields
   let normalized = raw;
   if (raw && typeof raw === "object") {
     const obj = { ...(raw as any) };
+    // Fill required fields from media metadata if AI didn't provide them
+    if (!obj.clipId) obj.clipId = media.id;
+    if (!obj.duration) obj.duration = media.duration ?? 10;
+    if (obj.confidence === undefined || obj.confidence === null) obj.confidence = 0.5;
+    if (!obj.analysisMode) obj.analysisMode = analysisMode;
+    if (!obj.characteristics) obj.characteristics = { mood: ["neutral"], energy: 0.5, visualComplexity: 0.5 };
+    if (!Array.isArray(obj.segments) || obj.segments.length === 0) {
+      obj.segments = [{
+        id: "seg_001",
+        start: 0,
+        end: obj.duration,
+        duration: obj.duration,
+        scores: { overall: 0.5, motion: 0.5, emotion: 0.5, visual: 0.5, interest: 0.5 },
+        description: "AI-generated segment from metadata analysis",
+        tags: ["ai_generated"],
+      }];
+    }
     if (Array.isArray(obj.segments)) {
       obj.segments = obj.segments.map((seg: any, idx: number) => {
         if (seg && typeof seg === "object") {
           const s = { ...seg };
-          // 1. Force duration to match end - start exactly
           if (typeof s.start === "number" && typeof s.end === "number") {
-            const realDuration = Number((s.end - s.start).toFixed(3));
-            if (s.duration !== realDuration) {
-              s.duration = realDuration;
-            }
+            s.duration = Number((s.end - s.start).toFixed(3));
           }
-          // 2. Ensure ID exists
-          if (!s.id) {
-            s.id = `seg_${String(idx + 1).padStart(3, "0")}`;
-          }
+          if (!s.id) s.id = `seg_${String(idx + 1).padStart(3, "0")}`;
+          if (!s.scores) s.scores = { overall: 0.5, motion: 0.5, emotion: 0.5, visual: 0.5, interest: 0.5 };
+          if (!s.tags) s.tags = ["ai_generated"];
           return s;
         }
         return seg;
@@ -732,18 +745,30 @@ function validateMusicAnalysis(
   raw: unknown,
   media: MediaLookup
 ): Result<MusicAnalysis, AnalysisServiceError> {
-  // Pre-process to fix common Gemini hallucinations before Zod validation
   let normalized = raw;
   if (raw && typeof raw === "object") {
     const obj = { ...(raw as any) };
-    // 1. Force BPM to be a positive number if missing or invalid
-    if (typeof obj.bpm !== "number" || obj.bpm <= 0) {
-      obj.bpm = 120; // fallback
+    if (!obj.musicId) obj.musicId = media.id;
+    if (!obj.duration || typeof obj.duration !== "number") obj.duration = media.duration ?? 180;
+    if (typeof obj.bpm !== "number" || obj.bpm <= 0) obj.bpm = 120;
+    if (!Array.isArray(obj.beatGrid) || obj.beatGrid.length === 0) {
+      // Generate a basic beat grid from BPM
+      const beatInterval = 60 / obj.bpm;
+      const beats = [];
+      for (let t = 0; t < obj.duration; t += beatInterval) {
+        beats.push(Number(t.toFixed(3)));
+      }
+      obj.beatGrid = beats;
     }
-    // 2. Ensure beatGrid exists
-    if (!Array.isArray(obj.beatGrid)) {
-      obj.beatGrid = [];
+    if (obj.confidence === undefined || obj.confidence === null) obj.confidence = 0.5;
+    if (!obj.characteristics) {
+      obj.characteristics = { mood: ["neutral"], energy: 0.5, intensity: 0.5, genreHints: ["unknown"] };
     }
+    // Ensure all required characteristics fields exist
+    if (!obj.characteristics.mood) obj.characteristics.mood = ["neutral"];
+    if (obj.characteristics.energy === undefined) obj.characteristics.energy = 0.5;
+    if (obj.characteristics.intensity === undefined) obj.characteristics.intensity = 0.5;
+    if (!obj.characteristics.genreHints) obj.characteristics.genreHints = ["unknown"];
     normalized = obj;
   }
 

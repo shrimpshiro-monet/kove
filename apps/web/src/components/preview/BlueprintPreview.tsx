@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { Project } from "@monet/openreel-adapter";
+import type { Project } from "../../stores/project-store";
 
 export interface BlueprintPreviewProps {
   project: Project;
@@ -61,7 +61,7 @@ function getTrackColorClassName(trackType: string): string {
 function collectBlocks(project: Project): BlueprintBlock[] {
   const blocks: BlueprintBlock[] = [];
 
-  for (const track of project.timeline.tracks) {
+  for (const track of project.edl.timeline.tracks) {
     for (const clip of track.clips) {
       blocks.push({
         clipId: clip.id,
@@ -87,7 +87,7 @@ export function BlueprintPreview({
   onSelectClip,
 }: BlueprintPreviewProps): React.JSX.Element {
   const blocks = useMemo(() => collectBlocks(project), [project]);
-  const duration = Math.max(0.001, project.timeline.duration || 1);
+  const duration = Math.max(0.001, project.edl.timeline.duration || 1);
 
   return (
     <section className="flex h-full flex-col gap-3 rounded border bg-background p-4">
@@ -105,7 +105,7 @@ export function BlueprintPreview({
       </header>
 
       <div className="flex flex-col gap-2 overflow-y-auto">
-        {project.timeline.tracks.map((track: any) => {
+        {project.edl.timeline.tracks.map((track: any) => {
           const trackBlocks = blocks.filter((block) => block.trackId === track.id);
 
           return (

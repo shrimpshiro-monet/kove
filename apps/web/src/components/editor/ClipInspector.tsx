@@ -172,6 +172,61 @@ export function ClipInspector({ selectedClipId, onClose }: ClipInspectorProps) {
           </span>
         </div>
 
+        {/* AI Analysis Panel */}
+        {selectedClip.meta?.semanticEvent ? (
+          <div className="border rounded bg-muted/20 p-2 mt-1">
+            <span className="font-semibold text-primary block mb-1">AI Analysis</span>
+            <div className="flex flex-col gap-1 text-[10px]">
+              {selectedClip.meta.shotType && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shot Type:</span>
+                  <span className="capitalize">{selectedClip.meta.shotType}</span>
+                </div>
+              )}
+              {selectedClip.meta.cameraMotion && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Camera Motion:</span>
+                  <span className="capitalize">{selectedClip.meta.cameraMotion}</span>
+                </div>
+              )}
+              {selectedClip.meta.semanticEvent.description && (
+                <div className="mt-1">
+                  <span className="text-muted-foreground">Description:</span>
+                  <p className="mt-0.5 italic">{selectedClip.meta.semanticEvent.description}</p>
+                </div>
+              )}
+              {selectedClip.meta.semanticEvent.emotion && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Emotion:</span>
+                  <span className="capitalize">{selectedClip.meta.semanticEvent.emotion}</span>
+                </div>
+              )}
+              {selectedClip.meta.semanticEvent.event_type && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Event Type:</span>
+                  <span className="capitalize">{selectedClip.meta.semanticEvent.event_type}</span>
+                </div>
+              )}
+              {selectedClip.meta.semanticEvent.narrative_role && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Narrative Role:</span>
+                  <span className="capitalize font-medium">{selectedClip.meta.semanticEvent.narrative_role}</span>
+                </div>
+              )}
+              {selectedClip.meta.semanticEvent.importance != null && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Importance:</span>
+                  <span>{selectedClip.meta.semanticEvent.importance}/10</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="border rounded bg-muted/10 p-2 mt-1 text-[10px] text-muted-foreground italic">
+            No AI analysis — manually added
+          </div>
+        )}
+
         {/* Start Time */}
         <label className="flex flex-col gap-1 mt-1">
           <span className="text-muted-foreground">Start Time (seconds)</span>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Type, Loader2, StickyNote } from "lucide-react";
+import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Type, Loader2, StickyNote, Upload } from "lucide-react";
 import { UpgradePrompt, type UpgradeCta } from "@/components/chat/UpgradePrompt";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,11 +11,12 @@ import { ThinkingPanel, type ThinkingStage } from "@/components/chat/ThinkingPan
 import { BlueprintPreview } from "@/components/chat/BlueprintPreview";
 import { VideoPreview } from "@/components/chat/VideoPreview";
 import { TextTimeline } from "@/components/chat/TextTimeline";
-import { decodeIntent, analyzeMedia, generateEDL, uploadFileDirect, refineEDL, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, generateCompositionOverlay, persistStudioProject, submitDirectorFeedback, pollDirectorRender, compileStyle } from "@/lib/api-client";
+import { uploadFileDirect, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, generateCompositionOverlay, persistStudioProject, submitDirectorFeedback, pollDirectorRender } from "@/lib/api-client";
+import { runGenerationPipeline, refineProject, exportProject, type PipelineStage } from "../../apps/web/src/lib/kove-generation-pipeline";
 import type { ReferenceStyle } from "@/server/types/reference-style";
 import type { TimelineAnnotation } from "@/server/types/annotation";
 import { type ExportProgress } from "@/lib/export-engine";
-import type { MonetEDL, Shot } from "@monet/edl";
+import type { MonetEDL, Shot } from "@/server/types/edl";
 import type { TranscriptResult } from "@/server/api/transcribe";
 import { addDemoTrackedTextOverlay } from "@/lib/openreel/motion-tracking";
 import { addAutoFaceTrack } from "@/lib/openreel/face-tracking";
@@ -75,14 +76,7 @@ function ChatPage() {
   const { threads, hydrated, createThread, deleteThread, updateThread } = useChatThreads();
   const [draft, setDraft] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [mediaUrls, setMediaUrls] = useState<Map<string, string>>(new Map());
   const [thinkingStage, setThinkingStage] = useState<ThinkingStage>("idle");
-  const [thinkingData, setThinkingData] = useState<ThinkingData>({});
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentEDL, setCurrentEDL] = useState<MonetEDL | null>(null);
-  const [currentEdlId, setCurrentEdlId] = useState<string | null>(null);
-  const [currentIntentId, setCurrentIntentId] = useState<string | null>(null);
-  const [currentAnalysisId, setCurrentAnalysisId] = useState<string | null>(null);
   const [refineFeedback, setRefineFeedback] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   /** Time-anchored annotations added by pausing the preview */
@@ -90,36 +84,123 @@ function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatFileInputRef = useRef<HTMLInputElement>(null);
   /** Track reference file ids already analyzed so type-toggle reruns analysis */
   const analyzedRefIds = useRef<Set<string>>(new Set());
 
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
   const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showTextTimeline, setShowTextTimeline] = useState(false);
-  // Playback time sync between VideoPreview and TextTimeline word highlighting
   const [previewTimeMs, setPreviewTimeMs] = useState(0);
   const [seekToMs, setSeekToMs] = useState<number | undefined>(undefined);
-  const [referenceStyle, setReferenceStyle] = useState<ReferenceStyle | null>(null);
-  const [referenceTrace, setReferenceTrace] = useState<any | null>(null);
   const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
   const [isAutoTrackingFace, setIsAutoTrackingFace] = useState(false);
   const [compositionHtml, setCompositionHtml] = useState<string | null>(null);
-  const [currentIntent, setCurrentIntent] = useState<unknown>(null);
   const [directorJobId, setDirectorJobId] = useState<string | null>(null);
-  const [engineRouting, setEngineRouting] = useState<any | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
 
-  useEffect(() => {
-    if (!currentEDL) {
-      setEngineRouting(null);
-      return;
+  // --- Zustand canonical state (MUST be before derived state) ---
+  const currentEDL = useProjectStore((s) => s.generation.edl) as any as MonetEDL | null;
+  const currentEdlId = useProjectStore((s) => s.generation.edlId) ?? null;
+  const currentIntentId = useProjectStore((s) => s.prompt.intentId) ?? null;
+  const currentAnalysisId = useProjectStore((s) => s.analysis.analysisId) ?? null;
+  const generationStatus = useProjectStore((s) => s.generation.status);
+  const isGenerating = generationStatus === "generating";
+  const editIntensity = useProjectStore((s) => s.prompt.intensity) ?? 0.5;
+  const tempoMode = useProjectStore((s) => s.prompt.tempoMode) ?? "beat_anticipated";
+  const referenceStyle = useProjectStore((s) => {
+    const edl = s.generation.edl as any;
+    return edl?.referenceStyle ?? (s.project?.settings as any)?.monet?.referenceStyle ?? null;
+  });
+  const currentIntent = useProjectStore((s) => s.prompt.intent);
+  const directorMessages = useProjectStore((s) => s.director.messages);
+  const setPrompt = useProjectStore((s) => s.setPrompt);
+  const setGeneration = useProjectStore((s) => s.setGeneration);
+  const setAnalysis = useProjectStore((s) => s.setAnalysis);
+  const setAssets = useProjectStore((s) => s.setAssets);
+  const setTruth = useProjectStore((s) => s.setTruth);
+
+  // --- Derived state ---
+  const generationScores = useProjectStore((s) => s.generation.scores);
+  const generationFallback = useProjectStore((s) => s.generation.fallbackUsed);
+  const thinkingData = useMemo(() => ({
+    edlShots: currentEDL?.shots?.length ?? 0,
+    scores: generationScores,
+    usedFallback: generationFallback,
+    edl: currentEDL,
+    error: generationStatus === "failed" ? "Generation failed" : undefined,
+    intentConfidence: (currentIntent as any)?.confidence,
+  }), [currentEDL, generationScores, generationFallback, generationStatus, currentIntent]);
+
+  // Derive mediaUrls from Zustand assets + EDL
+  const mediaUrls = useMemo(() => {
+    const urls = new Map<string, string>();
+    const assets = useProjectStore.getState().assets;
+
+    // Map all assets from Zustand store (authoritative source)
+    for (const f of assets.footage) {
+      if (f.r2FileId) {
+        urls.set(f.r2FileId, `/api/media/${f.r2FileId}`);
+        // Also map the asset ID (may differ from r2FileId)
+        if (f.id !== f.r2FileId) urls.set(f.id, `/api/media/${f.r2FileId}`);
+      }
     }
+    if (assets.music?.r2FileId) {
+      urls.set(assets.music.r2FileId, `/api/media/${assets.music.r2FileId}`);
+      if (assets.music.id !== assets.music.r2FileId) urls.set(assets.music.id, `/api/media/${assets.music.r2FileId}`);
+    }
+    if (assets.reference?.r2FileId) {
+      urls.set(assets.reference.r2FileId, `/api/media/${assets.reference.r2FileId}`);
+    }
+
+    // Also build mapping from local UploadedFile IDs → R2 IDs
+    for (const uf of uploadedFiles) {
+      if (uf.r2FileId) {
+        urls.set(uf.id, `/api/media/${uf.r2FileId}`);
+        urls.set(`dev-${uf.file.name}`, `/api/media/${uf.r2FileId}`);
+      } else if (uf.preview) {
+        // Not yet uploaded — use blob URL as temporary fallback
+        urls.set(uf.id, uf.preview);
+      }
+    }
+
+    // Map EDL shots — ensure every clipId resolves to a URL
+    if (currentEDL) {
+      for (const shot of currentEDL.shots) {
+        const clipId = shot.source.clipId;
+        if (!urls.has(clipId)) {
+          // Try to find by matching against known IDs
+          let resolved = false;
+          for (const [key, url] of urls) {
+            if (clipId.includes(key) || key.includes(clipId)) {
+              urls.set(clipId, url);
+              resolved = true;
+              break;
+            }
+          }
+          if (!resolved) {
+            // Last resort: use server URL with the clipId
+            urls.set(clipId, `/api/media/${encodeURIComponent(clipId)}_proxy`);
+          }
+        }
+      }
+      if (currentEDL.music?.sourceId && !urls.has(currentEDL.music.sourceId)) {
+        urls.set(currentEDL.music.sourceId, `/api/media/${encodeURIComponent(currentEDL.music.sourceId)}`);
+      }
+    }
+
+    return urls;
+  }, [currentEDL, uploadedFiles]);
+
+  // Derive engine routing from EDL
+  const engineRouting = useMemo(() => {
+    if (!currentEDL) return null;
     try {
       const routing = routeEDL(currentEDL, { tier: "free" });
-      setEngineRouting(summarizeRouting(routing));
-    } catch (e) {
-      console.warn("Client side routing summary failed", e);
+      return summarizeRouting(routing);
+    } catch {
+      return null;
     }
   }, [currentEDL]);
 
@@ -143,7 +224,6 @@ function ChatPage() {
   const [directorPreviewUrl, setDirectorPreviewUrl] = useState<string | null>(null);
   const [patchSummary, setPatchSummary] = useState<string | null>(null);
   const [upgradeCta, setUpgradeCta] = useState<UpgradeCta | null>(null);
-  const [editIntensity, setEditIntensity] = useState(0.5);
   const lastPersistedStudioSnapshotRef = useRef<string | null>(null);
   const chatUiStorageKey = `monet.chat.ui.${threadId}`;
 
@@ -228,57 +308,48 @@ function ChatPage() {
     abortRef.current?.abort();
     setDraft("");
     setUploadedFiles([]);
-    setMediaUrls(new Map());
     setThinkingStage("idle");
-    setThinkingData({});
-    setIsGenerating(false);
-    setCurrentEDL(null);
-    setCurrentEdlId(null);
-    setCurrentIntentId(null);
-    setCurrentAnalysisId(null);
     setRefineFeedback("");
     setIsRefining(false);
     setAnnotations([]);
-    setIsExporting(false);
-    setExportProgress(null);
     setTranscript(null);
     setIsTranscribing(false);
     setShowTextTimeline(false);
-    setReferenceStyle(null);
     setIsAnalyzingReference(false);
     setCompositionHtml(null);
-    setCurrentIntent(null);
     setDirectorJobId(null);
     setDirectorRenderStatus(null);
     setDirectorPreviewUrl(null);
     setPatchSummary(null);
     analyzedRefIds.current.clear();
+    // Reset Zustand canonical state
+    useProjectStore.getState().resetProjectContext();
   }, [threadId]);
 
   // Restore EDL from persisted thread state when switching threads or on refresh
   useEffect(() => {
     if (!active) return;
-    setCurrentEDL(active.latestEdl ? (active.latestEdl as MonetEDL) : null);
-    setCurrentEdlId(active.latestEdlId ?? null);
-    setCurrentIntentId(active.latestIntentId ?? null);
-    setCurrentAnalysisId(active.latestAnalysisId ?? null);
+    const latestEdl = active.latestEdl ? (active.latestEdl as any) : null;
+    if (latestEdl) {
+      setGeneration({ edl: latestEdl, edlId: active.latestEdlId ?? undefined, status: "ready" });
+    }
+    if (active.latestIntentId) setPrompt({ intentId: active.latestIntentId });
+    if (active.latestAnalysisId) setAnalysis({ analysisId: active.latestAnalysisId });
+
     const latestRef = active.latestReferenceStyle
       ? (active.latestReferenceStyle as ReferenceStyle)
       : null;
-    setReferenceStyle(latestRef);
-    const latestTrace = (active as any).latestReferenceTrace ?? null;
-    setReferenceTrace(latestTrace);
 
     // Auto-wire ReferenceStyle into Project Store settings
     const project = useProjectStore.getState().project;
-    if (project) {
+    if (project && latestRef) {
       const updatedProject = {
         ...project,
         settings: {
           ...project.settings,
           monet: {
-            ...project.settings?.monet,
-            referenceStyle: latestRef || undefined,
+            ...(project.settings?.monet || {}),
+            referenceStyle: latestRef,
             referenceStyleId: (active as any).latestReferenceStyleId || undefined
           }
         }
@@ -291,82 +362,7 @@ function ChatPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [active?.messages.length]);
 
-  useEffect(() => {
-    const urls = new Map<string, string>();
-    const footageWithPreview = uploadedFiles.filter(
-      (file) => file.type === "footage" && !!file.preview
-    );
-
-    for (const file of footageWithPreview) {
-      if (file.type !== "footage" || !file.preview) continue;
-      for (const key of resolveMediaKeys(file)) {
-        // Prefer local blob URL for immediate playback to avoid waiting for server proxy generation.
-        urls.set(key, file.preview);
-      }
-    }
-
-    // Resiliency: if the EDL references unknown clip IDs but the user has only
-    // one footage source loaded, bind unresolved IDs to that source.
-    if (currentEDL && footageWithPreview.length === 1) {
-      const firstFootage = footageWithPreview[0];
-      const fallbackPreview = firstFootage.r2FileId
-        ? buildMediaUrl(`${firstFootage.r2FileId}_proxy`)
-        : firstFootage.preview;
-
-      if (fallbackPreview) {
-        for (const shot of currentEDL.shots) {
-          if (!urls.has(shot.source.clipId)) {
-            urls.set(shot.source.clipId, fallbackPreview);
-          }
-        }
-      }
-    }
-
-    // Recover persisted attachments from thread history after reload.
-    for (const message of active?.messages ?? []) {
-      for (const attachment of message.attachments ?? []) {
-        if (attachment.type !== "footage") continue;
-        const mediaId = attachment.r2FileId ?? attachment.id;
-        if (!mediaId) continue;
-        if (!urls.has(mediaId)) {
-          urls.set(mediaId, buildMediaUrl(mediaId));
-        }
-      }
-    }
-
-    // Also map directly from the EDL in case legacy thread attachments did not
-    // persist r2FileId correctly.
-    if (currentEDL) {
-      for (const shot of currentEDL.shots) {
-        const mediaId = shot.source.clipId;
-        if (!urls.has(mediaId)) {
-          urls.set(mediaId, buildPreviewMediaUrl(mediaId));
-        }
-      }
-
-      const musicId = currentEDL.music?.sourceId;
-      if (musicId && !urls.has(musicId)) {
-        urls.set(musicId, buildMediaUrl(musicId));
-      }
-    }
-
-    // If there is one footage source in memory, still map unresolved EDL IDs to
-    // that local preview as a last-resort resiliency path.
-    if (currentEDL && footageWithPreview.length === 1 && footageWithPreview[0].preview) {
-      const firstFootage = footageWithPreview[0];
-      const fallbackPreview = firstFootage.r2FileId
-        ? buildMediaUrl(`${firstFootage.r2FileId}_proxy`)
-        : firstFootage.preview ?? "";
-
-      for (const shot of currentEDL.shots) {
-        if (!urls.has(shot.source.clipId)) {
-          urls.set(shot.source.clipId, fallbackPreview);
-        }
-      }
-    }
-
-    setMediaUrls(urls);
-  }, [uploadedFiles, currentEDL, active?.messages, mediaApiBase]);
+  // mediaUrls is now derived via useMemo above
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -466,8 +462,6 @@ function ChatPage() {
       }
       const styleRes = await analyzeReferenceStyle(threadId, fileId);
       if (styleRes.success && styleRes.style) {
-        setReferenceStyle(styleRes.style);
-        if ((styleRes as any).trace) setReferenceTrace((styleRes as any).trace);
         updateThread(threadId, (t: ChatThread) => ({
           ...t,
           updatedAt: Date.now(),
@@ -476,7 +470,7 @@ function ChatPage() {
           latestReferenceTrace: (styleRes as any).trace,
         }));
 
-        // Instantly sync analyzed style into the active Project Store
+        // Sync reference style into Zustand store
         const project = useProjectStore.getState().project;
         if (project) {
           const updatedProject = {
@@ -484,7 +478,7 @@ function ChatPage() {
             settings: {
               ...project.settings,
               monet: {
-                ...project.settings?.monet,
+                ...(project.settings?.monet || {}),
                 referenceStyle: styleRes.style,
                 referenceStyleId: styleRes.referenceStyleId
               }
@@ -511,8 +505,6 @@ function ChatPage() {
     try {
       const styleRes = await analyzeReferenceStyleByUrl(threadId, url);
       if (styleRes.success && styleRes.style) {
-        setReferenceStyle(styleRes.style);
-        if ((styleRes as any).trace) setReferenceTrace((styleRes as any).trace);
         updateThread(threadId, (t: ChatThread) => ({
           ...t,
           updatedAt: Date.now(),
@@ -521,7 +513,7 @@ function ChatPage() {
           latestReferenceTrace: (styleRes as any).trace,
         }));
 
-        // Instantly sync analyzed style into the active Project Store
+        // Sync reference style into Zustand store
         const project = useProjectStore.getState().project;
         if (project) {
           const updatedProject = {
@@ -529,7 +521,7 @@ function ChatPage() {
             settings: {
               ...project.settings,
               monet: {
-                ...project.settings?.monet,
+                ...(project.settings?.monet || {}),
                 referenceStyle: styleRes.style,
                 referenceStyleId: styleRes.referenceStyleId
               }
@@ -565,15 +557,19 @@ function ChatPage() {
 
     useProjectStore.setState({ project: syncedProject });
 
-    console.log("[ChatPage] Synced project media before apply", {
-      mediaCount: syncedProject.mediaLibrary?.items?.length ?? 0,
-      mediaIds: syncedProject.mediaLibrary?.items?.map((item: any) => item.id),
-      edlClipIds: Array.from(
-        new Set(generatedEdl.shots.map((shot: any) => shot.source?.clipId).filter(Boolean))
-      ),
-    });
+    // Build mediaUrlMap from uploaded files (r2FileId → blob URL) for the store
+    const mediaUrlMap: Record<string, string> = {};
+    for (const f of currentFiles) {
+      if (f.r2FileId && (f.type === "footage" || f.type === "music")) {
+        mediaUrlMap[f.r2FileId] = URL.createObjectURL(f.file);
+      }
+    }
 
-    const applyResult = await useProjectStore.getState().applyMonetEDLToProject(generatedEdl);
+    const applyResult = await useProjectStore.getState().applyMonetEDLToProject(
+      generatedEdl,
+      undefined,
+      mediaUrlMap
+    );
 
     if (!applyResult.success) {
       throw new Error(
@@ -581,11 +577,6 @@ function ChatPage() {
           "Failed to apply Monet EDL to project tracks"
       );
     }
-
-    console.log("[ChatPage] Monet EDL applied successfully to OpenReel project tracks", {
-      appliedShots: applyResult.data?.appliedShots,
-      duration: applyResult.data?.duration,
-    });
   };
 
   const sendMessage = async (overrideText?: string | React.MouseEvent) => {
@@ -617,233 +608,84 @@ function ChatPage() {
     }));
 
     setDraft("");
-    setIsGenerating(true);
-    setThinkingData({});
+    setGeneration({ status: "generating" });
 
     try {
-      // Stage 1: Upload files to R2 (if not already uploaded)
       setThinkingStage("intent");
       const abort = new AbortController();
       abortRef.current = abort;
 
-      let workingFiles = uploadedFiles;
+      // Use shared pipeline for generation
+      const pipelineResult = await runGenerationPipeline({
+        projectId: threadId,
+        files: uploadedFiles.map((f) => ({ file: f.file, type: f.type as any })),
+        prompt: text,
+        intensity: editIntensity,
+        tempoMode,
+        referenceMode: referenceStyle ? "strict_replication" : "inspired",
+        signal: abort.signal,
+        onStageChange: (stage: PipelineStage) => {
+          if (stage === "uploading") setThinkingStage("intent");
+          else if (stage === "analyzing") setThinkingStage("analysis");
+          else if (stage === "generating") setThinkingStage("edl");
+          else if (stage === "ready") setThinkingStage("complete");
+          else if (stage === "error") setThinkingStage("error");
+        },
+      });
 
-      // Upload footage + music in parallel
-      const filesToUpload = uploadedFiles.filter((f) => !f.r2FileId);
-      if (filesToUpload.length > 0) {
-        const uploadResults = await Promise.all(
-          filesToUpload.map(async (f) => {
-            let metadata;
-            try {
-              if (f.file.type.startsWith("video/")) {
-                metadata = await probeVideoClientSide(f.file);
+      if (!pipelineResult.success || !pipelineResult.edl) {
+        throw new Error(pipelineResult.error || "Generation failed");
+      }
+
+      // Update uploadedFiles with R2 IDs from pipeline
+      if (pipelineResult.mediaUrlMap) {
+        setUploadedFiles((prev) =>
+          prev.map((f) => {
+            // Check if this file's name or ID appears in the mediaUrlMap keys
+            for (const key of Object.keys(pipelineResult.mediaUrlMap)) {
+              if (key === f.id || key === f.file.name || key === `dev-${f.file.name}`) {
+                return { ...f, r2FileId: key };
               }
-            } catch (probeErr) {
-              console.warn(`Probe failed for ${f.file.name}`, probeErr);
             }
-
-            const res = await uploadFileDirect(f.file, threadId, f.type, metadata, abort.signal);
-
-            if (!res.success || !res.fileId) {
-              throw new Error(
-                formatApiError(res.error) || `Upload failed for ${f.file.name}`
-              );
-            }
-
-            return {
-              localId: f.id,
-              r2FileId: res.fileId,
-            };
+            return f;
           })
         );
-
-        // Update local state with real file IDs
-        workingFiles = uploadedFiles.map((f) => {
-            const result = uploadResults.find((r) => r.localId === f.id);
-            return result ? { ...f, r2FileId: result.r2FileId } : f;
-          });
-
-        setUploadedFiles(workingFiles);
-
-        // Persist resolved R2 IDs into the just-added user message attachments.
-        updateThread(threadId, (t: ChatThread) => {
-          const updatedMessages = t.messages.map((message: ChatMessage) => {
-            if (message.id !== userMsg.id || !message.attachments) return message;
-
-            const attachments = message.attachments.map((attachment: ChatAttachment) => {
-              const resolved = workingFiles.find((f) => f.id === attachment.id);
-              if (!resolved?.r2FileId) return attachment;
-              return {
-                ...attachment,
-                r2FileId: resolved.r2FileId,
-              };
-            });
-
-            return {
-              ...message,
-              attachments,
-            };
-          });
-
-          return {
-            ...t,
-            updatedAt: Date.now(),
-            messages: updatedMessages,
-          };
-        });
       }
 
-      // Get current file IDs (real or mock for dev)
-      const getFileId = (f: UploadedFile) => f.r2FileId ?? `dev-${f.file.name}`;
+      const generatedEDL = pipelineResult.edl as MonetEDL;
 
-      // Stage 1: Intent Extraction
-      // Pass referenceStyle if one was analyzed — drives intent toward that edit DNA
-      const intentRes = await decodeIntent(text, threadId, referenceStyle ?? undefined);
+      // Apply EDL to Zustand store
+      await applyGeneratedEDLToProject(generatedEDL, uploadedFiles);
 
-      if (!intentRes.success) {
-        throw new Error(formatApiError(intentRes.error) || "Intent extraction failed");
-      }
-
-      setCurrentIntentId(intentRes.intentId ?? null);
-      if (intentRes.result?.intent) setCurrentIntent(intentRes.result.intent);
-      setThinkingData((prev) => ({
-        ...prev,
-        intentConfidence: intentRes.result?.confidence,
-      }));
-
-      // Stage 1.5: StyleDNA Compilation (non-blocking, fires in parallel with analysis)
-      const stylePromise = compileStyle(text, abortRef.current?.signal ?? undefined).catch((err: any) => {
-        console.warn("[ChatPage] style compilation failed (non-critical):", err);
-        return null;
-      });
-
-      // Stage 2: Analysis
-      setThinkingStage("analysis");
-
-      const footageIds = workingFiles
-        .filter((f) => f.type === "footage")
-        .map(getFileId);
-      const musicFile = workingFiles.find((f) => f.type === "music");
-      const musicId = musicFile ? getFileId(musicFile) : undefined;
-
-      console.log("[ChatPage] analyzeMedia inputs", {
-        workingFiles: workingFiles.map((f) => ({
-          id: f.id,
-          r2FileId: f.r2FileId,
-          name: f.file.name,
-          type: f.type,
-        })),
-        footageIds,
-        musicId,
-      });
-
-      const analysisRes = await analyzeMedia(threadId, footageIds, musicId);
-
-      if (!analysisRes.success) {
-        throw new Error(formatApiError(analysisRes.error) || "Analysis failed");
-      }
-
-      setCurrentAnalysisId(analysisRes.analysisId ?? null);
-
-      // Stage 3: EDL Generation
-      setThinkingStage("edl");
-      console.log("DEBUGGING EDL GENERATION HANDSHAKE:", { 
-        threadId, 
-        intentId: intentRes.intentId, 
-        analysisId: analysisRes.analysisId 
-      });
-      const styleResult = await stylePromise;
-
-      const edlRes = await generateEDL(
-        threadId,
-        intentRes.intentId!,
-        analysisRes.analysisId!,
-        referenceStyle ?? undefined,
-        referenceTrace ?? undefined,
-        referenceStyle ? "strict_replication" : "inspired",
-        text,
-        undefined,
-        undefined,
-        styleResult?.success ? styleResult.style : undefined,
-        editIntensity
-      );
-
-      console.log("[ChatPage] Director diagnostics", {
-        styleDirectives: (edlRes as any).styleDirectives,
-        creativeDensity: (edlRes as any).creativeDensity,
-        referenceSimilarity: (edlRes as any).referenceSimilarity,
-      });
-
-      if (!edlRes.success) {
-        throw new Error(formatApiError(edlRes.error) || "EDL generation failed");
-      }
-
-      const generatedEDL = edlRes.edl as MonetEDL;
-
-      const styledEDL = generatedEDL;
-      if (styleResult?.success && styleResult.style) {
-        console.log(
-          `[ChatPage] style compiled (${styleResult.source}, cached=${styleResult.cached}):`,
-          styleResult.style.name,
-          "→ server-side application",
-        );
-      }
-
-      if ((edlRes as any).styleApplicationSummary) {
-        console.log("[ChatPage] style applied", (edlRes as any).styleApplicationSummary);
-      }
-
-      // Generate HyperFrames visual treatment composition via Gemini
-      // Generate HyperFrames visual treatment composition via Gemini
-      // Non-blocking: fires in background, updates overlay when ready
-      const userPrompt = text;
-      if (ENABLE_HYPERFRAMES) {
-        generateCompositionOverlay(
-          userPrompt,
-          generatedEDL,
-          intentRes.result?.intent,
-          abortRef.current?.signal ?? undefined
-        ).then((compRes: any) => {
-          if (compRes.success && compRes.html) {
-            console.log(`Composition generated via ${compRes.source}`);
-            setCompositionHtml(compRes.html);
-          }
-        }).catch((compErr: any) => {
-          console.warn("Composition generation failed (non-critical):", compErr);
-        });
-      }
-
-      setThinkingData((prev) => ({
-        ...prev,
-        edlShots: styledEDL?.shots?.length ?? 0,
-        scores: edlRes.scores,
-        usedFallback: edlRes.usedFallback,
-        edl: styledEDL,
-        styleDirectives: (edlRes as any).styleDirectives,
-        creativeDensity: (edlRes as any).creativeDensity,
-        referenceSimilarity: (edlRes as any).referenceSimilarity,
-      }));
-
-      await applyGeneratedEDLToProject(styledEDL, workingFiles);
-
-      setCurrentEDL(styledEDL);
-      setCurrentEdlId(edlRes.edlId ?? null);
       setThinkingStage("complete");
 
       // Persist EDL in thread for Studio import
       updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
-        latestEdl: styledEDL,
-        latestEdlId: edlRes.edlId,
+        latestEdl: generatedEDL,
+        latestEdlId: pipelineResult.edlId,
         projectId: threadId,
       }));
 
       // Add assistant response
+      const shots = generatedEDL.shots?.length ?? 0;
+      const duration = generatedEDL.timeline?.duration ?? 30;
+      const avgShot = shots > 0 ? (duration / shots).toFixed(1) : "0";
+      const beatSync = pipelineResult.scores?.beatSyncScore != null
+        ? Math.round(pipelineResult.scores.beatSyncScore * 100)
+        : 0;
+
+      let message = `✨ Edit complete!\n\n`;
+      message += `📊 ${shots} shots, ${duration}s total (${avgShot}s avg)\n`;
+      message += `🎵 Beat sync: ${beatSync}%\n`;
+      if (pipelineResult.fallbackUsed) message += `\n⚠️ Generated with deterministic fallback (LLM busy)`;
+      message += `\n\nReady to preview and refine!`;
+
       const assistantMsg: ChatMessage = {
         id: cryptoId(),
         role: "assistant",
-        content: generateSuccessMessage(edlRes),
+        content: message,
         createdAt: Date.now(),
       };
 
@@ -853,32 +695,23 @@ function ChatPage() {
         messages: [...t.messages, assistantMsg],
       }));
     } catch (error: any) {
-      if (error?.upgradeCta) {
-        setUpgradeCta(error.upgradeCta);
-        console.log("[ChatPage] HF rate limited, used browser fallback. Upgrade CTA shown.");
-      } else {
-        console.error("Generation error:", error);
-        setThinkingStage("error");
-        setThinkingData((prev: ThinkingData) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Unknown error",
-        }));
+      console.error("Generation error:", error);
+      setGeneration({ status: "failed" });
+      setThinkingStage("error");
 
-        const errorMsg: ChatMessage = {
-          id: cryptoId(),
-          role: "assistant",
-          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
-          createdAt: Date.now(),
-        };
+      const errorMsg: ChatMessage = {
+        id: cryptoId(),
+        role: "assistant",
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
+        createdAt: Date.now(),
+      };
 
-        updateThread(threadId, (t: ChatThread) => ({
-          ...t,
-          updatedAt: Date.now(),
-          messages: [...t.messages, errorMsg],
-        }));
-      }
+      updateThread(threadId, (t: ChatThread) => ({
+        ...t,
+        updatedAt: Date.now(),
+        messages: [...t.messages, errorMsg],
+      }));
     } finally {
-      setIsGenerating(false);
       abortRef.current = null;
       setTimeout(() => {
         setThinkingStage((s: ThinkingStage) => (s === "error" ? "idle" : s));
@@ -911,70 +744,39 @@ function ChatPage() {
     setPatchSummary(null);
 
     try {
-      // 1. Submit feedback to Director
-      const res = await submitDirectorFeedback(
-        threadId,
-        feedback,
-        currentEDL ?? undefined,
-        [], // No keyframes for now to keep it fast, but could be added
-        currentIntentId ?? undefined,
-        currentAnalysisId ?? undefined
-      );
+      // Use shared refineProject orchestrator
+      const result = await refineProject({
+        projectId: threadId,
+        prompt: feedback,
+        mode: "auto",
+      });
 
-      if (!res.success) {
-        if (res.action === "GENERATE_FIRST_DRAFT") {
+      if (!result.success) {
+        if (result.error?.includes("No EDL")) {
           // If no EDL, route to full generation
           await sendMessage(feedback);
           return;
         }
-        throw new Error(formatApiError(res.error) || "Director feedback failed");
+        throw new Error(result.error || "Director feedback failed");
       }
 
-      // 2. Instant patch summary display (<2s goal met by server)
-      setPatchSummary(res.patchSummary ?? "Applying changes...");
-      if (res.newEDL) {
-        setCurrentEDL(res.newEDL);
+      // Apply refined EDL to store
+      if (result.edl) {
+        await applyGeneratedEDLToProject(result.edl as MonetEDL, uploadedFiles);
         updateThread(threadId, (t: ChatThread) => ({
           ...t,
-          latestEdl: res.newEDL,
+          latestEdl: result.edl,
           updatedAt: Date.now(),
         }));
       }
 
-      // 3. Poll render progress if jobId exists
-      if (res.jobId) {
-        setDirectorJobId(res.jobId);
-        setDirectorRenderStatus("queued");
-        
-        const poll = async () => {
-          try {
-            const status = await pollDirectorRender(res.jobId!);
-            setDirectorRenderStatus(status.status);
-            if (status.status === "done") {
-              setDirectorPreviewUrl(status.downloadUrl ?? null);
-              return true; // Stop polling
-            }
-            if (status.status === "error") {
-              return true;
-            }
-            return false;
-          } catch (err: any) {
-            console.error("Polling error:", err);
-            return true;
-          }
-        };
-
-        const interval = setInterval(async () => {
-          const stop = await poll();
-          if (stop) clearInterval(interval);
-        }, 2000);
-      }
+      setPatchSummary(result.patchSummary ?? "Applying changes...");
 
       // Add assistant message for feedback
       const msg: ChatMessage = {
         id: cryptoId(),
         role: "assistant",
-        content: `🎬 Director: "${feedback}"\n${res.patchSummary}`,
+        content: `🎬 Director: "${feedback}"\n${result.patchSummary}`,
         createdAt: Date.now(),
       };
       updateThread(threadId, (t: ChatThread) => ({
@@ -1003,47 +805,29 @@ function ChatPage() {
     setIsRefining(true);
     setRefineFeedback("");
     try {
-      const res = await refineEDL(
-        threadId,
-        currentEdlId!,
-        currentEDL as never,
-        feedback,
-        currentIntentId ?? undefined,
-        currentAnalysisId ?? undefined,
-        annotations,
-        referenceStyle ?? undefined,
-        referenceStyle ? "strict_replication" : "inspired"
-      );
+      // Use shared refineProject orchestrator
+      const result = await refineProject({
+        projectId: threadId,
+        prompt: feedback,
+        mode: "full-edl",
+      });
 
-      if (!res.success) throw new Error(formatApiError(res.error) || "Refinement failed");
+      if (!result.success) throw new Error(result.error || "Refinement failed");
 
-      const refined = res.edl as MonetEDL;
-      setCurrentEDL(refined);
-      setCurrentEdlId(res.edlId ?? currentEdlId);
-      setThinkingData((prev) => ({ ...prev, edl: refined, scores: res.scores }));
-
-      // Re-generate composition for the refined EDL
-      const refinedPrompt = `${active?.messages[0]?.content ?? ""} — ${feedback}`;
-      if (ENABLE_HYPERFRAMES) {
-        generateCompositionOverlay(refinedPrompt, refined, currentIntent ?? undefined)
-          .then((compRes: any) => {
-            if (compRes.success && compRes.html) setCompositionHtml(compRes.html);
-          })
-          .catch(() => {/* non-critical */});
+      // Apply refined EDL to store
+      if (result.edl) {
+        await applyGeneratedEDLToProject(result.edl as MonetEDL, uploadedFiles);
+        updateThread(threadId, (t: ChatThread) => ({
+          ...t,
+          updatedAt: Date.now(),
+          latestEdl: result.edl,
+        }));
       }
-
-      // Persist updated EDL
-      updateThread(threadId, (t: ChatThread) => ({
-        ...t,
-        updatedAt: Date.now(),
-        latestEdl: refined,
-        latestEdlId: res.edlId,
-      }));
 
       const msg: ChatMessage = {
         id: cryptoId(),
         role: "assistant",
-        content: `✏️ Refined! "${feedback}"\n${res.edl?.shots?.length ?? 0} shots · ${(res.edl?.timeline?.duration ?? 0).toFixed(1)}s`,
+        content: `✏️ Refined! "${feedback}"\n${(result.edl as any)?.shots?.length ?? 0} shots · ${((result.edl as any)?.timeline?.duration ?? 0).toFixed(1)}s`,
         createdAt: Date.now(),
       };
       updateThread(threadId, (t: ChatThread) => ({
@@ -1065,48 +849,21 @@ function ChatPage() {
     try {
       setExportProgress({ percent: 0, stage: "Preparing assets..." } as any);
 
-      // CRITICAL: Build server-accessible URLs for each clip.
-      // Server-side FFmpeg can't read browser blob URLs — it needs HTTP URLs.
-      // The clip already exists on the server at /api/media/<clipId>
-      const serverMediaUrls = new Map<string, string>();
-
-      const apiBase =
-        ((import.meta as any).env?.VITE_API_BASE ||
-          (typeof window !== "undefined" ? window.location.origin : ""))
-          .replace(/\/$/, "");
-
-      // Get all unique clip IDs from the EDL
-      const uniqueClipIds = new Set<string>();
-      for (const shot of currentEDL.shots) {
-        const cid = shot.source?.clipId;
-        if (cid) uniqueClipIds.add(cid);
-      }
-
-      // For each unique clip, generate the server media URL
-      for (const clipId of uniqueClipIds) {
-        const serverUrl = `${apiBase}/api/media/${encodeURIComponent(clipId)}`;
-        serverMediaUrls.set(clipId, serverUrl);
-      }
-
-      console.log("[export] using server URLs for FFmpeg:", {
-        count: serverMediaUrls.size,
-        sample: Array.from(serverMediaUrls.entries()).slice(0, 2),
+      // Use shared exportProject orchestrator
+      const result = await exportProject({
+        projectId: threadId,
+        preferServer: true,
+        onProgress: (p) => {
+          setExportProgress({ ...p, stage: p.stage } as any);
+        },
       });
 
-      setExportProgress({ percent: 5, stage: "Sending to server..." } as any);
-
-      const { exportEDLToMP4ViaServer } = await import("@/lib/export-engine");
-
-      const blob = await exportEDLToMP4ViaServer(
-        currentEDL,
-        serverMediaUrls,
-        (p) => {
-          setExportProgress({ ...p, stage: p.stage } as any);
-        }
-      );
+      if (!result.success || !result.blob) {
+        throw new Error(result.error || "Export failed");
+      }
 
       // Download
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(result.blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `monet-edit-${Date.now()}.mp4`;
@@ -1115,7 +872,7 @@ function ChatPage() {
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-      console.log("✨ Server export complete, MP4 downloading", { size: blob.size });
+      console.log("✨ Server export complete, MP4 downloading", { size: result.blob.size });
     } catch (err: any) {
       console.error("Export error:", err);
       alert(
@@ -1162,8 +919,7 @@ function ChatPage() {
   const handleAddTrackedText = () => {
     if (!currentEDL) return;
     const updated = addDemoTrackedTextOverlay(currentEDL, "TRACKED TITLE");
-    setCurrentEDL(updated);
-    setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+    setGeneration({ edl: updated as any });
     updateThread(threadId, (t: ChatThread) => ({
       ...t,
       updatedAt: Date.now(),
@@ -1176,8 +932,7 @@ function ChatPage() {
     setIsAutoTrackingFace(true);
     try {
       const updated = await addAutoFaceTrack(currentEDL, mediaUrls);
-      setCurrentEDL(updated);
-      setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+      setGeneration({ edl: updated as any });
       updateThread(threadId, (t: ChatThread) => ({
         ...t,
         updatedAt: Date.now(),
@@ -1193,13 +948,32 @@ function ChatPage() {
   const handleAddWallText = () => {
     if (!currentEDL) return;
     const updated = addDemoPlanarTextOverlay(currentEDL, "WALL TEXT");
-    setCurrentEDL(updated);
-    setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
+    setGeneration({ edl: updated as any });
     updateThread(threadId, (t: ChatThread) => ({
       ...t,
       updatedAt: Date.now(),
       latestEdl: updated,
     }));
+  };
+
+  const handleChatFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFiles = Array.from(e.target.files ?? []);
+    if (rawFiles.length === 0) return;
+    const added: UploadedFile[] = [];
+    for (const file of rawFiles) {
+      let type: UploadedFile["type"] = "footage";
+      if (file.type.startsWith("audio/")) type = "music";
+      else if (file.type.startsWith("image/")) type = "reference";
+      const preview =
+        file.type.startsWith("video/") || file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : undefined;
+      added.push({ id: crypto.randomUUID(), file, type, preview });
+    }
+    const updated = [...uploadedFiles, ...added];
+    setUploadedFiles(updated);
+    handleFilesChange(updated);
+    e.target.value = "";
   };
 
   const handleNew = () => {
@@ -1279,110 +1053,324 @@ function ChatPage() {
         </div>
       </aside>
 
-      {/* Main chat */}
+      {/* Main content */}
       <main className="flex flex-col h-screen">
-        <header className="flex items-center justify-between border-b border-border px-6 py-4">
+        <header className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
           <div>
             <div className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-              Simple mode
+              {currentEDL ? "Editing" : "New edit"}
             </div>
             <h1 className="text-base font-medium truncate max-w-md">
               {active?.title || "New conversation"}
             </h1>
           </div>
-          <a
-            href={`/studio?threadId=${encodeURIComponent(threadId)}`}
-            className="text-xs text-muted-foreground hover:text-primary tracking-widest uppercase flex items-center gap-1.5"
-          >
-            Advanced <ArrowRight className="h-3 w-3" />
-          </a>
+          <div className="flex items-center gap-3">
+            {currentEDL && (
+              <button
+                onClick={() => setGeneration({ edl: undefined, edlId: undefined, status: "idle" })}
+                className="text-xs text-muted-foreground hover:text-foreground tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+              >
+                New edit
+              </button>
+            )}
+            <a
+              href={`/studio?threadId=${encodeURIComponent(threadId)}`}
+              className="text-xs text-muted-foreground hover:text-primary tracking-widest uppercase flex items-center gap-1.5"
+            >
+              Studio <ArrowRight className="h-3 w-3" />
+            </a>
+          </div>
         </header>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl px-6 py-10">
-            {active && active.messages.length === 0 && <EmptyChat />}
-            {active?.messages.map((m: ChatMessage) => (
-              <Message key={m.id} message={m} />
-            ))}
-
-            {/* Show thinking panel during generation */}
-            {isGenerating && (
-              <div className="mt-6">
-                <ThinkingPanel
-                  stage={thinkingStage}
-                  intentConfidence={thinkingData.intentConfidence}
-                  edlShots={thinkingData.edlShots}
-                  scores={thinkingData.scores}
-                  usedFallback={thinkingData.usedFallback}
-                  error={thinkingData.error}
-                />
-              </div>
+        {/* Split layout: chat + sliding preview */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Chat column — full width when no EDL, narrows when preview slides in */}
+          <div
+            className={cn(
+              "flex flex-col min-w-0 border-r border-border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              currentEDL ? "w-[55%]" : "w-full"
             )}
+          >
+            <div ref={scrollRef} className="flex-1 overflow-y-auto">
+              <div className="mx-auto max-w-3xl px-6 py-10">
+                {active && active.messages.length === 0 && <EmptyChat onTriggerUpload={() => chatFileInputRef.current?.click()} />}
+                {active?.messages.map((m: ChatMessage) => (
+                  <Message key={m.id} message={m} />
+                ))}
 
-            {/* Show EDL preview after complete or when restored from storage */}
+                {/* Show thinking panel during generation */}
+                {isGenerating && (
+                  <div className="mt-6">
+                    <ThinkingPanel
+                      stage={thinkingStage}
+                      intentConfidence={thinkingData.intentConfidence}
+                      edlShots={thinkingData.edlShots}
+                      scores={thinkingData.scores}
+                      usedFallback={thinkingData.usedFallback}
+                      error={thinkingData.error}
+                    />
+                  </div>
+                )}
+
+                {/* Refinement section — only when EDL exists */}
+                {currentEDL && (
+                  <div className="mt-6 border-t border-border pt-4">
+                    {patchSummary && (
+                      <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="h-3 w-3 text-primary" />
+                          <span className="text-xs font-medium text-primary">Director Patch Applied</span>
+                        </div>
+                        <p className="text-sm text-foreground/80">{patchSummary}</p>
+                        {directorPreviewUrl && (
+                          <div className="mt-3 rounded-md overflow-hidden border border-border bg-black aspect-video">
+                            <video src={directorPreviewUrl} controls className="w-full h-full" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-muted-foreground mb-2 tracking-wider uppercase">
+                      Refine with Director
+                    </div>
+                    <div className="flex gap-2 flex-wrap mb-2">
+                      {["Faster cuts", "Hit the drop harder", "More energy", "Calmer pace", "Add glow effect"].map((chip) => (
+                        <button
+                          key={chip}
+                          onClick={() => setRefineFeedback(chip)}
+                          className="rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+                    {annotations.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {annotations.map((a) => (
+                          <span
+                            key={a.id}
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
+                          >
+                            <StickyNote className="h-2.5 w-2.5 shrink-0" />
+                            <span className="font-mono">{Math.floor(a.timestamp / 60)}:{String(Math.floor(a.timestamp % 60)).padStart(2, "0")}</span>
+                            <span className="max-w-[120px] truncate">{a.text}</span>
+                            <button
+                              onClick={() => setAnnotations((prev) => prev.filter((x) => x.id !== a.id))}
+                              className="ml-0.5 text-amber-500/60 hover:text-amber-500 transition-colors"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={refineFeedback}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRefineFeedback(e.target.value)}
+                        placeholder={annotations.length > 0 ? `${annotations.length} annotation${annotations.length !== 1 ? "s" : ""} queued — add global feedback or just hit Apply` : "What would you like to change? (e.g. 'make it more intense')"}
+                        className="min-h-[56px] resize-none bg-background border-border text-sm"
+                        disabled={isRefining}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleRefine();
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleRefine}
+                        disabled={(!refineFeedback.trim() && annotations.length === 0) || isRefining}
+                        className="self-end h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {isRefining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Input area */}
+            <div className="border-t border-border bg-background shrink-0">
+              <div className="mx-auto max-w-3xl px-6 py-4 space-y-4">
+                <VideoUploader
+                  key={threadId}
+                  onFilesChange={handleFilesChange}
+                  onYouTubeUrl={handleYouTubeUrl}
+                  disabled={isGenerating}
+                />
+
+                {isAnalyzingReference && (
+                  <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Analyzing reference style…
+                  </div>
+                )}
+                {referenceStyle && !isAnalyzingReference && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-primary mb-1 flex items-center gap-1.5">
+                        <Sparkles className="h-3 w-3" />
+                        Style reference loaded
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-1 capitalize">
+                        {(referenceStyle.intentMapping.genre ?? "unknown").replace(/_/g, " ")} · {referenceStyle.intentMapping.pacing ?? "unknown"} · {(referenceStyle.rhythm?.avgShotDuration ?? 0).toFixed(1)}s avg shot · {referenceStyle.rhythm?.cutAlignment ?? "unknown"} sync
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const project = useProjectStore.getState().project;
+                        if (project) {
+                          useProjectStore.setState({
+                            project: { ...project, settings: { ...project.settings, monet: { ...(project.settings?.monet || {}), referenceStyle: undefined, referenceStyleId: undefined } } }
+                          });
+                        }
+                        updateThread(threadId, (t: ChatThread) => ({ ...t, updatedAt: Date.now(), latestReferenceStyle: undefined }));
+                      }}
+                      className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors text-lg leading-none mt-0.5"
+                      aria-label="Dismiss reference style"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 px-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Intensity</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={editIntensity}
+                    onChange={(e) => setPrompt({ intensity: parseFloat(e.target.value) })}
+                    className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+                  />
+                  <span className="text-xs text-muted-foreground w-8 text-right font-mono">{Math.round(editIntensity * 100)}%</span>
+                </div>
+
+                <div className="flex items-center gap-3 px-1">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Tempo</span>
+                  <select
+                    value={tempoMode}
+                    onChange={(e) => setPrompt({ tempoMode: e.target.value })}
+                    className="flex-1 text-xs bg-muted border border-border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="beat_anticipated">Hype (ramp + hit)</option>
+                    <option value="beat_locked">Beat sync</option>
+                    <option value="reference_mirror">Match reference</option>
+                    <option value="cinematic">Cinematic</option>
+                    <option value="narrative">Narrative</option>
+                    <option value="chill_vlog">Chill vlog</option>
+                  </select>
+                </div>
+
+                <div className="relative rounded-xl border border-border bg-card focus-within:border-primary/50 transition-colors">
+                  <Textarea
+                    ref={taRef}
+                    value={draft}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
+                    placeholder="Describe the edit you want…"
+                    className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-24 focus-visible:ring-0"
+                    disabled={isGenerating}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                    <input
+                      ref={chatFileInputRef}
+                      type="file"
+                      multiple
+                      accept="video/*,audio/*,image/*"
+                      onChange={handleChatFileSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => chatFileInputRef.current?.click()}
+                      disabled={isGenerating}
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Attach files"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      onClick={() => sendMessage()}
+                      disabled={!draft.trim() || isGenerating}
+                      className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
+                  {uploadedFiles.length > 0
+                    ? `${uploadedFiles.filter(f => f.type === "footage").length} clip${uploadedFiles.filter(f => f.type === "footage").length !== 1 ? "s" : ""}${uploadedFiles.find(f => f.type === "music") ? " + music" : ""}${uploadedFiles.find(f => f.type === "reference") ? " + reference" : ""} ready`
+                    : "Upload footage and music to get started"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Preview panel — slides in when EDL exists */}
+          <div
+            className={cn(
+              "flex flex-col min-w-0 overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              currentEDL ? "w-[45%] opacity-100" : "w-0 opacity-0"
+            )}
+          >
             {currentEDL && (
-              <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-card p-3 text-xs sm:grid-cols-4">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Shots</div>
-                    <div className="mt-1 font-medium tabular-nums">{previewShotCount}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Duration</div>
-                    <div className="mt-1 font-medium tabular-nums">{previewDuration.toFixed(1)}s</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Clips</div>
-                    <div className="mt-1 font-medium tabular-nums">{previewClipCount}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Preview</div>
-                    <div className={cn("mt-1 font-medium", previewReady ? "text-emerald-500" : "text-amber-500")}>
-                      {previewReady ? "Ready" : "Media needed"}
+              <div className="flex flex-col h-full">
+                {/* Preview header */}
+                <div className="px-4 py-3 border-b border-border bg-background/80 shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-text-muted font-mono">Preview</span>
+                      <span className="text-text-tertiary">·</span>
+                      <span className="text-[10px] text-text-tertiary font-mono">
+                        {previewShotCount} shots · {previewDuration.toFixed(1)}s
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        title="Export MP4"
+                      >
+                        {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                      </Button>
+                      <a
+                        href={`/studio?threadId=${encodeURIComponent(threadId)}`}
+                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+                        title="Open in Studio"
+                      >
+                        <Film className="h-3.5 w-3.5" />
+                      </a>
                     </div>
                   </div>
                 </div>
 
-                {/* Engine routing breakdown */}
-                {engineRouting && (
-                  <div className="rounded-lg border border-border bg-card p-3 text-xs">
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2 flex items-center gap-1.5">
-                      <Film className="h-3 w-3 text-primary" />
-                      Rendering Engines Dispatched
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(engineRouting.engineLoadCounts).map(([engine, count]) => {
-                        if ((count as number) <= 0) return null;
-                        return (
-                          <div key={engine} className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-foreground border border-border">
-                            <span>{engine}</span>{" "}
-                            <span className="text-muted-foreground ml-1">×{String(count)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-2 text-[10px] text-muted-foreground flex gap-3">
-                      <span>Avg Quality: {(engineRouting.avgQualityPerEffect || 0).toFixed(1)}×</span>
-                      <span>Cost Efficiency: {(engineRouting.costEfficiency || 0).toFixed(1)}</span>
-                    </div>
-                  </div>
-                )}
+                {/* Preview content */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {/* Blueprint */}
+                  <BlueprintPreview
+                    edl={currentEDL as any}
+                    creativeDensity={(thinkingData as any).creativeDensity}
+                    referenceSimilarity={(thinkingData as any).referenceSimilarity}
+                  />
 
-                <BlueprintPreview
-                  edl={currentEDL as any}
-                  creativeDensity={(thinkingData as any).creativeDensity}
-                  referenceSimilarity={(thinkingData as any).referenceSimilarity}
-                />
-
-                {/* Video Preview — only when footage blob URLs are available */}
-                <div className="border-t border-border pt-4">
-                  <h3 className="text-sm font-medium mb-3">Preview</h3>
-                  {upgradeCta && (
-                    <UpgradePrompt
-                      cta={upgradeCta}
-                      onDismiss={() => setUpgradeCta(null)}
-                    />
-                  )}
+                  {/* Video player */}
                   {previewReady ? (
                     <VideoPreview
                       edl={currentEDL}
@@ -1396,399 +1384,59 @@ function ChatPage() {
                     />
                   ) : (
                     <div className="rounded-lg border border-border bg-secondary/20 p-4">
-                      <div className="flex items-center justify-between gap-3 mb-3">
-                        <div>
-                          <p className="text-sm font-medium">Timeline restored</p>
-                          <p className="text-xs text-muted-foreground">
-                            The edit stays intact. Re-upload the source clips to bring back the player.
-                          </p>
-                        </div>
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          {missingPreviewClips.length} missing clip{missingPreviewClips.length === 1 ? "" : "s"}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {missingPreviewClips.slice(0, 4).map((clipId: string) => (
-                          <span
-                            key={clipId}
-                            className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground"
-                          >
-                            {clipId}
-                          </span>
-                        ))}
-                        {missingPreviewClips.length > 4 && (
-                          <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
-                            +{missingPreviewClips.length - 4} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action row */}
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={handleAddTrackedText}
-                    disabled={!currentEDL}
-                  >
-                    Add Tracked Text
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={handleAutoFaceTrack}
-                    disabled={!currentEDL || isAutoTrackingFace}
-                  >
-                    {isAutoTrackingFace ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Tracking Face...
-                      </>
-                    ) : (
-                      "Auto Face Track"
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={handleAddWallText}
-                    disabled={!currentEDL}
-                  >
-                    Add Wall Text
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={handleExport}
-                    disabled={isExporting}
-                  >
-                    {isExporting ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {exportProgress
-                          ? `${exportProgress.percent}%`
-                          : "Preparing…"}
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-3.5 w-3.5" />
-                        Export MP4
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="gap-1.5 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
-                    onClick={async () => {
-                      if (!currentEdlId) {
-                        alert("No generated EDL ID found - please generate an edit first");
-                        return;
-                      }
-                      const res = await fetch("/api/export", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          "X-User-Tier": "pro",  // wire to real tier later
-                        },
-                        body: JSON.stringify({
-                          edlId: currentEdlId,
-                          threadId,
-                          resolution: "1080p",
-                          codec: "h264",
-                        }),
-                      });
-                      const data = (await res.json()) as any;
-                      if (data.success) {
-                        alert(`HD render started! Job ID: ${data.jobId}\nWe'll email you when ready.`);
-                      } else {
-                        alert(`Failed: ${data.error}`);
-                      }
-                    }}
-                  >
-                    ⚡ HD Export
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => {
-                      if (!currentEDL) return;
-                      const flipped = {
-                        ...currentEDL,
-                        timeline: {
-                          ...currentEDL.timeline,
-                          sourceRotation: ((currentEDL.timeline as any)?.sourceRotation ?? 0) + 180,
-                        },
-                      };
-                      setCurrentEDL(flipped as any);
-                    }}
-                  >
-                    🔄 Flip 180°
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => {
-                      if (!currentEDL) return;
-                      const tinted = {
-                        ...currentEDL,
-                        globalEffects: { ...currentEDL.globalEffects, colorGrade: "cinematic" },
-                      };
-                      setCurrentEDL(tinted as any);
-                    }}
-                  >
-                    🎨 Test Cinematic Grade
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={handleTranscribe}
-                    disabled={isTranscribing || uploadedFiles.filter(f => f.type === "footage").length === 0}
-                  >
-                    {isTranscribing ? (
-                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Transcribing…</>
-                    ) : (
-                      <><Type className="h-3.5 w-3.5" /> Edit by Text</>
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={handleOpenInStudio}
-                  >
-                    <Film className="h-3.5 w-3.5" />
-                    Open in Studio
-                    <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </div>
-
-                {/* Text Timeline — Phase 7B */}
-                {showTextTimeline && transcript && (
-                  <div className="border-t border-border pt-4">
-                    <TextTimeline
-                      transcript={transcript}
-                      edl={currentEDL}
-                      currentTimeMs={previewTimeMs}
-                      onEDLChange={(updated: MonetEDL) => {
-                        setCurrentEDL(updated);
-                        setThinkingData((prev: ThinkingData) => ({ ...prev, edl: updated }));
-                        updateThread(threadId, (t: ChatThread) => ({ ...t, latestEdl: updated, updatedAt: Date.now() }));
-                      }}
-                      onSeek={(ms: number) => setSeekToMs(ms)}
-                    />
-                  </div>
-                )}
-
-              {/* Refinement section */}
-                <div className="border-t border-border pt-4">
-                  {patchSummary && (
-                    <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 p-3">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="text-xs font-medium text-primary flex items-center gap-1.5">
-                          <Sparkles className="h-3 w-3" />
-                          Director Patch Applied
-                        </div>
-                        {directorRenderStatus && (
-                          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                            {directorRenderStatus === "done" ? (
-                              <span className="text-emerald-500">Render Ready</span>
-                            ) : (
-                              <>
-                                <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                Rendering...
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-foreground/80">{patchSummary}</p>
-                      
-                      {directorPreviewUrl && (
-                        <div className="mt-3 rounded-md overflow-hidden border border-border bg-black aspect-video">
-                          <video 
-                            src={directorPreviewUrl} 
-                            controls 
-                            className="w-full h-full"
-                          />
+                      <p className="text-sm font-medium">Timeline restored</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Re-upload source clips to bring back the player.
+                      </p>
+                      {missingPreviewClips.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {missingPreviewClips.slice(0, 4).map((clipId: string) => (
+                            <span key={clipId} className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
+                              {clipId}
+                            </span>
+                          ))}
+                          {missingPreviewClips.length > 4 && (
+                            <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
+                              +{missingPreviewClips.length - 4} more
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
                   )}
 
-                  <div className="text-xs text-muted-foreground mb-2 tracking-wider uppercase">
-                    Refine with Director
-                  </div>
-                  <div className="flex gap-2 flex-wrap mb-2">
-                    {["Faster cuts", "Hit the drop harder", "More energy", "Calmer pace", "Add glow effect"].map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() => setRefineFeedback(chip)}
-                        className="rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Annotation chips */}
-                  {annotations.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {annotations.map((a) => (
-                        <span
-                          key={a.id}
-                          className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
-                        >
-                          <StickyNote className="h-2.5 w-2.5 shrink-0" />
-                          <span className="font-mono">{Math.floor(a.timestamp / 60)}:{String(Math.floor(a.timestamp % 60)).padStart(2, "0")}</span>
-                          <span className="max-w-[120px] truncate">{a.text}</span>
-                          <button
-                            onClick={() => setAnnotations((prev) => prev.filter((x) => x.id !== a.id))}
-                            className="ml-0.5 text-amber-500/60 hover:text-amber-500 transition-colors"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <Textarea
-                      value={refineFeedback}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRefineFeedback(e.target.value)}
-                      placeholder={annotations.length > 0 ? `${annotations.length} annotation${annotations.length !== 1 ? "s" : ""} queued — add global feedback or just hit Apply` : "What would you like to change? (e.g. 'make it more intense')"}
-                      className="min-h-[56px] resize-none bg-background border-border text-sm"
-                      disabled={isRefining}
-                      onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleRefine();
-                        }
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleRefine}
-                      disabled={(!refineFeedback.trim() && annotations.length === 0) || isRefining}
-                      className="self-end h-9 bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      {isRefining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAddTrackedText} disabled={!currentEDL}>
+                      Tracked Text
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAutoFaceTrack} disabled={!currentEDL || isAutoTrackingFace}>
+                      {isAutoTrackingFace ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Tracking…</> : "Face Track"}
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAddWallText} disabled={!currentEDL}>
+                      Wall Text
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExport} disabled={isExporting}>
+                      {isExporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {exportProgress?.percent ?? 0}%</> : <><Download className="h-3.5 w-3.5" /> Export</>}
                     </Button>
                   </div>
+
+                  {/* Text Timeline */}
+                  {showTextTimeline && transcript && (
+                    <TextTimeline
+                      transcript={transcript}
+                      edl={currentEDL}
+                      currentTimeMs={previewTimeMs}
+                      onEDLChange={(updated: MonetEDL) => {
+                        setGeneration({ edl: updated as any });
+                        updateThread(threadId, (t: ChatThread) => ({ ...t, latestEdl: updated, updatedAt: Date.now() }));
+                      }}
+                      onSeek={(ms: number) => setSeekToMs(ms)}
+                    />
+                  )}
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="border-t border-border bg-background">
-          <div className="mx-auto max-w-3xl px-6 py-4 space-y-4">
-            {/* File uploader — always visible */}
-            <VideoUploader
-              key={threadId}
-              onFilesChange={handleFilesChange}
-              onYouTubeUrl={handleYouTubeUrl}
-              disabled={isGenerating}
-            />
-
-            {/* Reference style status */}
-            {isAnalyzingReference && (
-              <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Analyzing reference style…
-              </div>
-            )}
-            {referenceStyle && !isAnalyzingReference && (
-              <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-primary mb-1 flex items-center gap-1.5">
-                    <Sparkles className="h-3 w-3" />
-                    Style reference loaded
-                  </div>
-                  <div className="text-xs text-muted-foreground mb-1 capitalize">
-                    {referenceStyle.intentMapping.genre.replace(/_/g, " ")} · 
-                    {referenceStyle.intentMapping.pacing} · 
-                    {referenceStyle.rhythm.avgShotDuration.toFixed(1)}s avg shot · 
-                    {referenceStyle.rhythm.cutAlignment} sync
-                  </div>
-                  <div className="text-xs text-muted-foreground/70 italic line-clamp-2">
-                    “{referenceStyle.editingPhilosophy.summary}”
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setReferenceStyle(null);
-                    updateThread(threadId, (t: ChatThread) => ({
-                      ...t,
-                      updatedAt: Date.now(),
-                      latestReferenceStyle: undefined,
-                    }));
-                  }}
-                  className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors text-lg leading-none mt-0.5"
-                  aria-label="Dismiss reference style"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-
-            {/* Edit Intensity Slider */}
-            <div className="flex items-center gap-3 px-1">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Edit intensity</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={editIntensity}
-                onChange={(e) => setEditIntensity(parseFloat(e.target.value))}
-                className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
-              />
-              <span className="text-xs text-muted-foreground w-8 text-right font-mono">
-                {Math.round(editIntensity * 100)}%
-              </span>
-            </div>
-
-            {/* Prompt input */}
-            <div className="relative rounded-xl border border-border bg-card focus-within:border-primary/50 transition-colors">
-              <Textarea
-                ref={taRef}
-                value={draft}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
-                placeholder="Describe the edit you want… (e.g. ‘make a 30s anime AMV cut to the beat’)"
-                className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-12 focus-visible:ring-0"
-                disabled={isGenerating}
-                onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-              <div className="absolute right-2 bottom-2">
-                <Button
-                  size="icon"
-                  onClick={() => sendMessage()}
-                  disabled={!draft.trim() || isGenerating}
-                  className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
-              {uploadedFiles.length > 0
-                ? `${uploadedFiles.filter(f => f.type === "footage").length} clip${uploadedFiles.filter(f => f.type === "footage").length !== 1 ? "s" : ""}${uploadedFiles.find(f => f.type === "music") ? " + music" : ""}${uploadedFiles.find(f => f.type === "reference") ? " + reference" : ""} ready`
-                : "Upload footage and music to get started"}
-            </p>
           </div>
         </div>
       </main>
@@ -1838,7 +1486,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function EmptyChat() {
+function EmptyChat({ onTriggerUpload }: { onTriggerUpload?: () => void }) {
   return (
     <div className="flex flex-col items-center text-center pt-20 pb-10 gap-4">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-primary">
@@ -1848,7 +1496,14 @@ function EmptyChat() {
       <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
         Drop a clip and tell Monet the vibe. Anime, sports, fan edits — anything goes.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-6 w-full max-w-2xl">
+      <button
+        onClick={onTriggerUpload}
+        className="mt-2 flex items-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-5 py-3 text-sm text-primary hover:bg-primary/10 transition-colors"
+      >
+        <Upload className="h-4 w-4" />
+        Upload footage, music, or reference
+      </button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-4 w-full max-w-2xl">
         {[
           "Make a 30s hype reel from this match",
           "Anime AMV cut to this song",

@@ -1,4 +1,4 @@
-import { createWorker } from "../../../api/src/services/queue";
+import { createWorker, enqueueJob } from "../../../api/src/services/queue";
 import { runBetaOneEnhancers } from "@monet/edl-enhancers";
 import { Job } from "bullmq";
 import { JobPayload } from "@monet/job-contracts/src/queues";
@@ -16,7 +16,9 @@ createWorker("enhance.recipe", async (job: Job<JobPayload<"enhance.recipe">>) =>
     throw new Error(result.error?.message || "Enhancer failed");
   }
 
-  console.log("[enhance.recipe] Done");
+  console.log("[enhance.recipe] Done — enqueueing render.preview");
 
-  // TODO → enqueue render.preview
+  await enqueueJob("render.preview", {
+    edl: result.edl as any,
+  });
 });

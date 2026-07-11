@@ -1,0 +1,687 @@
+{
+  "schemaVersion": "1.0.0",
+  "policy": {
+    "allowedLicenses": [
+      "MIT",
+      "Apache-2.0",
+      "LGPL-2.1-or-later",
+      "LGPL-3.0-or-later",
+      "GPL-2.0",
+      "GPL-3.0",
+      "GPL-2.0-or-later",
+      "GPL-3.0-or-later"
+    ],
+    "blockedLicenses": [
+      "AGPL-3.0",
+      "SSPL-1.0",
+      "CC-BY-NC-4.0",
+      "Non-Commercial",
+      "Unknown",
+      "Proprietary"
+    ],
+    "failClosed": true,
+    "allowIsc": false
+  },
+  "components": [
+    {
+      "id": "ffmpeg",
+      "name": "FFmpeg LGPL Build",
+      "category": "render",
+      "license": "LGPL-2.1-or-later",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "ffmpeg"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [
+        {
+          "type": "binary",
+          "name": "ffmpeg",
+          "required": true
+        },
+        {
+          "type": "binary",
+          "name": "ffprobe",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "must-not-use-enable-gpl",
+        "must-not-use-enable-nonfree",
+        "must-not-link-libx264",
+        "must-not-link-libx265",
+        "must-output-browser-preview-proxies",
+        "prefer-vp9-av1-opus-for-patent-clean-exports"
+      ],
+      "blockedVariants": [
+        {
+          "name": "ffmpeg-enable-gpl",
+          "license": "GPL-2.0-or-later",
+          "reason": "FFmpeg becomes GPL when GPL parts are enabled."
+        },
+        {
+          "name": "ffmpeg-enable-nonfree",
+          "license": "Non-Commercial",
+          "reason": "Nonfree builds are not redistributable under the strict commercial-clean policy."
+        },
+        {
+          "name": "libx264",
+          "license": "GPL-2.0",
+          "reason": "GPL encoder; blocked from core LGPL-only build."
+        },
+        {
+          "name": "libx265",
+          "license": "GPL-2.0",
+          "reason": "GPL encoder; blocked from core LGPL-only build."
+        }
+      ],
+      "notes": "Codec patent obligations are separate from OSS license compliance."
+    },
+    {
+      "id": "revideo",
+      "name": "Revideo",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "midrender/revideo"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "revideo",
+          "required": false
+        }
+      ],
+      "constraints": [
+        "composition-adapter-only",
+        "must-not-be-canonical-edl-source"
+      ],
+      "blockedVariants": [],
+      "notes": "Use as optional TypeScript composition/render adapter, not as canonical timeline state."
+    },
+    {
+      "id": "bullmq",
+      "name": "BullMQ",
+      "category": "orchestration",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "taskforcesh/bullmq"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "bullmq",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "redis-backed",
+        "jobs-must-be-idempotent",
+        "workers-must-return-structured-artifacts"
+      ],
+      "blockedVariants": []
+    },
+    {
+      "id": "fastapi",
+      "name": "FastAPI",
+      "category": "api",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "fastapi/fastapi"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "fastapi",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "python-workers-stateless",
+        "must-expose-healthcheck",
+        "must-return-json-artifact-contracts"
+      ],
+      "blockedVariants": []
+    },
+    {
+      "id": "faster-whisper",
+      "name": "Faster-Whisper",
+      "category": "audio",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "SYSTRAN/faster-whisper"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "faster-whisper",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "word-level-timestamps-required",
+        "transcription-artifacts-must-be-cached"
+      ],
+      "blockedVariants": []
+    },
+    {
+      "id": "demucs",
+      "name": "Demucs",
+      "category": "audio",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "facebookresearch/demucs"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "demucs",
+          "required": false
+        }
+      ],
+      "constraints": [
+        "batch-worker-only",
+        "must-be-swappable-service",
+        "must-not-block-interactive-preview"
+      ],
+      "blockedVariants": [
+        {
+          "name": "gpl-stem-separation-fallback",
+          "license": "GPL",
+          "reason": "GPL fallback implementations are blocked by Monet policy."
+        }
+      ],
+      "notes": "Official repository is archived; isolate behind HTTP or gRPC worker interface."
+    },
+    {
+      "id": "meyda",
+      "name": "Meyda",
+      "category": "audio",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "meyda/meyda"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "meyda",
+          "required": false
+        }
+      ],
+      "constraints": [
+        "browser-preview-analysis-only",
+        "server-authoritative-analysis-must-be-produced-by-approved-worker"
+      ],
+      "blockedVariants": []
+    },
+    {
+      "id": "librosa",
+      "name": "Librosa",
+      "category": "audio",
+      "license": "ISC",
+      "commercialUse": true,
+      "status": "blocked-policy-exception-required",
+      "source": {
+        "type": "github",
+        "locator": "librosa/librosa"
+      },
+      "downloadPolicy": "blocked",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "librosa",
+          "required": false
+        }
+      ],
+      "constraints": [
+        "blocked-because-policy-allowlist-excludes-isc"
+      ],
+      "blockedVariants": [],
+      "notes": "ISC is permissive, but current Monet policy strictly allows MIT, Apache-2.0, and LGPL only."
+    },
+    {
+      "id": "mediapipe",
+      "name": "MediaPipe",
+      "category": "vision",
+      "license": "Apache-2.0",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "google-ai-edge/mediapipe"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "mediapipe",
+          "required": false
+        }
+      ],
+      "constraints": [
+        "motion-tracks-must-include-confidence",
+        "face-pose-hand-tracks-must-be-cached"
+      ],
+      "blockedVariants": []
+    },
+    {
+      "id": "sam2-core",
+      "name": "Segment Anything 2 Core",
+      "category": "vision",
+      "license": "Apache-2.0",
+      "commercialUse": true,
+      "status": "blocked-until-pinned",
+      "source": {
+        "type": "github",
+        "locator": "facebookresearch/sam2"
+      },
+      "downloadPolicy": "blocked-until-pinned",
+      "artifacts": [
+        {
+          "type": "source",
+          "name": "sam2-source",
+          "required": true
+        },
+        {
+          "type": "checkpoint",
+          "name": "sam2-approved-checkpoint",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "must-pin-source-commit",
+        "must-pin-checkpoint-sha256",
+        "must-audit-subcomponents",
+        "must-not-dynamically-download-unvetted-pypi-artifacts"
+      ],
+      "blockedVariants": [
+        {
+          "name": "unvetted-sam2-pypi-install",
+          "license": "Unknown",
+          "reason": "Blocked until exact package, subcomponents, and checkpoint hashes are approved."
+        }
+      ],
+      "notes": "Main repo is Apache-2.0, but production use must pin source/checkpoints and audit bundled subcomponents."
+    },
+    {
+      "id": "depth-anything-v2-small",
+      "name": "Depth Anything V2 Small",
+      "category": "depth",
+      "license": "Apache-2.0",
+      "commercialUse": true,
+      "status": "blocked-until-pinned",
+      "source": {
+        "type": "huggingface",
+        "locator": "depth-anything/Depth-Anything-V2-Small"
+      },
+      "downloadPolicy": "blocked-until-pinned",
+      "artifacts": [
+        {
+          "type": "model-weight",
+          "name": "depth_anything_v2_vits.pth",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "small-model-only",
+        "must-pin-weight-sha256",
+        "must-block-base-large-giant"
+      ],
+      "blockedVariants": [
+        {
+          "name": "Depth-Anything-V2-Base",
+          "license": "CC-BY-NC-4.0",
+          "reason": "Non-commercial model variant."
+        },
+        {
+          "name": "Depth-Anything-V2-Large",
+          "license": "CC-BY-NC-4.0",
+          "reason": "Non-commercial model variant."
+        },
+        {
+          "name": "Depth-Anything-V2-Giant",
+          "license": "CC-BY-NC-4.0",
+          "reason": "Non-commercial model variant."
+        }
+      ]
+    },
+    {
+      "id": "rife-eccv2022",
+      "name": "ECCV2022 RIFE",
+      "category": "motion",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "blocked-until-pinned",
+      "source": {
+        "type": "github",
+        "locator": "hzwer/ECCV2022-RIFE"
+      },
+      "downloadPolicy": "blocked-until-pinned",
+      "artifacts": [
+        {
+          "type": "source",
+          "name": "rife-source",
+          "required": true
+        },
+        {
+          "type": "model-weight",
+          "name": "rife-approved-weight",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "must-pin-source-commit",
+        "must-pin-weight-sha256",
+        "must-run-only-for-edl-speed-ramp-or-slowmo-events",
+        "must-cache-interpolated-window-artifacts"
+      ],
+      "blockedVariants": [
+        {
+          "name": "unlicensed-rife-forks",
+          "license": "Unknown",
+          "reason": "Only audited MIT RIFE source and pinned weights may run."
+        },
+        {
+          "name": "non-commercial-frame-interpolation-variants",
+          "license": "Non-Commercial",
+          "reason": "Non-commercial interpolation models are blocked."
+        }
+      ]
+    },
+    {
+      "id": "mlt-framework",
+      "name": "MLT Framework",
+      "category": "render",
+      "license": "LGPL-2.1-or-later",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "mlt"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [
+        {
+          "type": "binary",
+          "name": "melt",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "dynamic-linking-only",
+        "allow-relinking",
+        "release-modifications-as-lgpl"
+      ],
+      "blockedVariants": [
+        {
+          "name": "static-mlt-link",
+          "reason": "Static linking to MLT in a proprietary app is restricted; must use dynamic linking."
+        }
+      ],
+      "notes": "Core LGPL engine. Best legal compromise for advanced proprietary SaaS UI layer."
+    },
+    {
+      "id": "moviepy",
+      "name": "MoviePy",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "pypi",
+        "locator": "moviepy"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "moviepy",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "python-automation",
+        "permissive-commercial-use"
+      ],
+      "blockedVariants": [],
+      "notes": "Fully permissive MIT-licensed editing library. Cleanest legal play, excellent for headless background processing."
+    },
+    {
+      "id": "openreel-video",
+      "name": "OpenReel Video",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "internal",
+        "locator": "@monet/openreel-video"
+      },
+      "downloadPolicy": "bundled",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "@monet/openreel-video",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "fork-allowed",
+        "proprietary-features-allowed",
+        "no-license-obligations-on-saas"
+      ],
+      "blockedVariants": [],
+      "notes": "Permissive MIT license. Can be modified and sold as proprietary with zero open-source friction."
+    },
+    {
+      "id": "kdenlive",
+      "name": "Kdenlive",
+      "category": "render",
+      "license": "GPL-3.0",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "kdenlive"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [
+        {
+          "type": "binary",
+          "name": "kdenlive",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "saas-loophole-only",
+        "never-distribute-binaries",
+        "server-only-execution"
+      ],
+      "blockedVariants": [
+        {
+          "name": "kdenlive-binary-distribution",
+          "reason": "Distributing Kdenlive binaries forces open-sourcing the proprietary UI layer."
+        }
+      ],
+      "notes": "Mature backend but GPL risk requires strict headless server isolation."
+    },
+    {
+      "id": "blender",
+      "name": "Blender",
+      "category": "render",
+      "license": "GPL-3.0",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "blender"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [
+        {
+          "type": "binary",
+          "name": "blender",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "saas-loophole-only",
+        "never-distribute-binaries",
+        "server-only-execution"
+      ],
+      "blockedVariants": [
+        {
+          "name": "blender-binary-distribution",
+          "reason": "Distributing Blender binaries to users activates copyleft, exposing proprietary work."
+        }
+      ],
+      "notes": "Headless server render engine under GPL. Must never be distributed to client devices."
+    },
+    {
+      "id": "freecut",
+      "name": "FreeCut",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "internal",
+        "locator": "./freecut"
+      },
+      "downloadPolicy": "bundled",
+      "artifacts": [
+        {
+          "type": "package",
+          "name": "freecut",
+          "required": true
+        }
+      ],
+      "constraints": [
+        "action-based-automation",
+        "webgpu-accelerated",
+        "client-side-preview"
+      ],
+      "blockedVariants": [],
+      "notes": "Professional-grade browser video editor (NLE) with an action-based serializable core. Perfect for LLM automated edits."
+    },
+    {
+      "id": "kubeezcut",
+      "name": "KubeezCut",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "MeepCastana/KubeezCut"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [],
+      "constraints": [],
+      "blockedVariants": [],
+      "notes": "AI-first fork of FreeCut."
+    },
+    {
+      "id": "opencut",
+      "name": "OpenCut",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "opencut-app/opencut"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [],
+      "constraints": [],
+      "blockedVariants": [],
+      "notes": "Original open-source CapCut alternative."
+    },
+    {
+      "id": "omniclip",
+      "name": "OmniClip",
+      "category": "render",
+      "license": "MIT",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "github",
+        "locator": "omni-media/omniclip"
+      },
+      "downloadPolicy": "runtime-download-approved",
+      "artifacts": [],
+      "constraints": [],
+      "blockedVariants": [],
+      "notes": "Hackable web editor."
+    },
+    {
+      "id": "shotcut",
+      "name": "Shotcut",
+      "category": "render",
+      "license": "GPL-3.0",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "shotcut"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [],
+      "constraints": [
+        "saas-loophole-only",
+        "never-distribute-binaries",
+        "server-only-execution"
+      ],
+      "blockedVariants": [],
+      "notes": "GPL editor based on MLT."
+    },
+    {
+      "id": "natron",
+      "name": "Natron",
+      "category": "render",
+      "license": "GPL-2.0",
+      "commercialUse": true,
+      "status": "approved",
+      "source": {
+        "type": "system",
+        "locator": "natron"
+      },
+      "downloadPolicy": "system-installed-approved",
+      "artifacts": [],
+      "constraints": [
+        "saas-loophole-only",
+        "never-distribute-binaries",
+        "server-only-execution"
+      ],
+      "blockedVariants": [],
+      "notes": "Node-based compositor."
+    }
+  ]
+}

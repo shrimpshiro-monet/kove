@@ -9,122 +9,50 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StyleLabRouteImport } from './routes/style-lab'
 import { Route as StudioRouteImport } from './routes/studio'
-import { Route as ShotcutSandboxRouteImport } from './routes/shotcut-sandbox'
-import { Route as ReferenceAnalysisRouteImport } from './routes/reference-analysis'
-import { Route as PureEffectsRouteImport } from './routes/pure-effects'
-import { Route as OpenreelSandboxRouteImport } from './routes/openreel-sandbox'
-import { Route as OpencutSandboxRouteImport } from './routes/opencut-sandbox'
-import { Route as OmniclipSandboxRouteImport } from './routes/omniclip-sandbox'
-import { Route as NatronSandboxRouteImport } from './routes/natron-sandbox'
-import { Route as MoviepySandboxRouteImport } from './routes/moviepy-sandbox'
-import { Route as MltSandboxRouteImport } from './routes/mlt-sandbox'
-import { Route as KubeezcutSandboxRouteImport } from './routes/kubeezcut-sandbox'
-import { Route as KdenliveSandboxRouteImport } from './routes/kdenlive-sandbox'
-import { Route as HyperframesShowcaseRouteImport } from './routes/hyperframes-showcase'
-import { Route as FreecutSandboxRouteImport } from './routes/freecut-sandbox'
-import { Route as FfmpegSandboxRouteImport } from './routes/ffmpeg-sandbox'
-import { Route as EnginesSandboxRouteImport } from './routes/engines-sandbox'
-import { Route as EditlyShowcaseRouteImport } from './routes/editly-showcase'
+import { Route as SimpleEditorRouteImport } from './routes/simple-editor'
+import { Route as LandingRouteImport } from './routes/landing'
+import { Route as EditorRouteImport } from './routes/editor'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
-import { Route as BlenderSandboxRouteImport } from './routes/blender-sandbox'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudioProjectIdRouteImport } from './routes/studio_.$projectId'
 import { Route as ChatThreadIdRouteImport } from './routes/chat_.$threadId'
 
+const StyleLabRoute = StyleLabRouteImport.update({
+  id: '/style-lab',
+  path: '/style-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudioRoute = StudioRouteImport.update({
   id: '/studio',
   path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ShotcutSandboxRoute = ShotcutSandboxRouteImport.update({
-  id: '/shotcut-sandbox',
-  path: '/shotcut-sandbox',
+const SimpleEditorRoute = SimpleEditorRouteImport.update({
+  id: '/simple-editor',
+  path: '/simple-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReferenceAnalysisRoute = ReferenceAnalysisRouteImport.update({
-  id: '/reference-analysis',
-  path: '/reference-analysis',
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PureEffectsRoute = PureEffectsRouteImport.update({
-  id: '/pure-effects',
-  path: '/pure-effects',
+const EditorRoute = EditorRouteImport.update({
+  id: '/editor',
+  path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OpenreelSandboxRoute = OpenreelSandboxRouteImport.update({
-  id: '/openreel-sandbox',
-  path: '/openreel-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OpencutSandboxRoute = OpencutSandboxRouteImport.update({
-  id: '/opencut-sandbox',
-  path: '/opencut-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OmniclipSandboxRoute = OmniclipSandboxRouteImport.update({
-  id: '/omniclip-sandbox',
-  path: '/omniclip-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NatronSandboxRoute = NatronSandboxRouteImport.update({
-  id: '/natron-sandbox',
-  path: '/natron-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MoviepySandboxRoute = MoviepySandboxRouteImport.update({
-  id: '/moviepy-sandbox',
-  path: '/moviepy-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MltSandboxRoute = MltSandboxRouteImport.update({
-  id: '/mlt-sandbox',
-  path: '/mlt-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KubeezcutSandboxRoute = KubeezcutSandboxRouteImport.update({
-  id: '/kubeezcut-sandbox',
-  path: '/kubeezcut-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KdenliveSandboxRoute = KdenliveSandboxRouteImport.update({
-  id: '/kdenlive-sandbox',
-  path: '/kdenlive-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HyperframesShowcaseRoute = HyperframesShowcaseRouteImport.update({
-  id: '/hyperframes-showcase',
-  path: '/hyperframes-showcase',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FreecutSandboxRoute = FreecutSandboxRouteImport.update({
-  id: '/freecut-sandbox',
-  path: '/freecut-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FfmpegSandboxRoute = FfmpegSandboxRouteImport.update({
-  id: '/ffmpeg-sandbox',
-  path: '/ffmpeg-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EnginesSandboxRoute = EnginesSandboxRouteImport.update({
-  id: '/engines-sandbox',
-  path: '/engines-sandbox',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditlyShowcaseRoute = EditlyShowcaseRouteImport.update({
-  id: '/editly-showcase',
-  path: '/editly-showcase',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlenderSandboxRoute = BlenderSandboxRouteImport.update({
-  id: '/blender-sandbox',
-  path: '/blender-sandbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -145,74 +73,38 @@ const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/blender-sandbox': typeof BlenderSandboxRoute
   '/chat': typeof ChatRoute
-  '/editly-showcase': typeof EditlyShowcaseRoute
-  '/engines-sandbox': typeof EnginesSandboxRoute
-  '/ffmpeg-sandbox': typeof FfmpegSandboxRoute
-  '/freecut-sandbox': typeof FreecutSandboxRoute
-  '/hyperframes-showcase': typeof HyperframesShowcaseRoute
-  '/kdenlive-sandbox': typeof KdenliveSandboxRoute
-  '/kubeezcut-sandbox': typeof KubeezcutSandboxRoute
-  '/mlt-sandbox': typeof MltSandboxRoute
-  '/moviepy-sandbox': typeof MoviepySandboxRoute
-  '/natron-sandbox': typeof NatronSandboxRoute
-  '/omniclip-sandbox': typeof OmniclipSandboxRoute
-  '/opencut-sandbox': typeof OpencutSandboxRoute
-  '/openreel-sandbox': typeof OpenreelSandboxRoute
-  '/pure-effects': typeof PureEffectsRoute
-  '/reference-analysis': typeof ReferenceAnalysisRoute
-  '/shotcut-sandbox': typeof ShotcutSandboxRoute
+  '/dashboard': typeof DashboardRoute
+  '/editor': typeof EditorRoute
+  '/landing': typeof LandingRoute
+  '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
+  '/style-lab': typeof StyleLabRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/blender-sandbox': typeof BlenderSandboxRoute
   '/chat': typeof ChatRoute
-  '/editly-showcase': typeof EditlyShowcaseRoute
-  '/engines-sandbox': typeof EnginesSandboxRoute
-  '/ffmpeg-sandbox': typeof FfmpegSandboxRoute
-  '/freecut-sandbox': typeof FreecutSandboxRoute
-  '/hyperframes-showcase': typeof HyperframesShowcaseRoute
-  '/kdenlive-sandbox': typeof KdenliveSandboxRoute
-  '/kubeezcut-sandbox': typeof KubeezcutSandboxRoute
-  '/mlt-sandbox': typeof MltSandboxRoute
-  '/moviepy-sandbox': typeof MoviepySandboxRoute
-  '/natron-sandbox': typeof NatronSandboxRoute
-  '/omniclip-sandbox': typeof OmniclipSandboxRoute
-  '/opencut-sandbox': typeof OpencutSandboxRoute
-  '/openreel-sandbox': typeof OpenreelSandboxRoute
-  '/pure-effects': typeof PureEffectsRoute
-  '/reference-analysis': typeof ReferenceAnalysisRoute
-  '/shotcut-sandbox': typeof ShotcutSandboxRoute
+  '/dashboard': typeof DashboardRoute
+  '/editor': typeof EditorRoute
+  '/landing': typeof LandingRoute
+  '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
+  '/style-lab': typeof StyleLabRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/blender-sandbox': typeof BlenderSandboxRoute
   '/chat': typeof ChatRoute
-  '/editly-showcase': typeof EditlyShowcaseRoute
-  '/engines-sandbox': typeof EnginesSandboxRoute
-  '/ffmpeg-sandbox': typeof FfmpegSandboxRoute
-  '/freecut-sandbox': typeof FreecutSandboxRoute
-  '/hyperframes-showcase': typeof HyperframesShowcaseRoute
-  '/kdenlive-sandbox': typeof KdenliveSandboxRoute
-  '/kubeezcut-sandbox': typeof KubeezcutSandboxRoute
-  '/mlt-sandbox': typeof MltSandboxRoute
-  '/moviepy-sandbox': typeof MoviepySandboxRoute
-  '/natron-sandbox': typeof NatronSandboxRoute
-  '/omniclip-sandbox': typeof OmniclipSandboxRoute
-  '/opencut-sandbox': typeof OpencutSandboxRoute
-  '/openreel-sandbox': typeof OpenreelSandboxRoute
-  '/pure-effects': typeof PureEffectsRoute
-  '/reference-analysis': typeof ReferenceAnalysisRoute
-  '/shotcut-sandbox': typeof ShotcutSandboxRoute
+  '/dashboard': typeof DashboardRoute
+  '/editor': typeof EditorRoute
+  '/landing': typeof LandingRoute
+  '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
+  '/style-lab': typeof StyleLabRoute
   '/chat_/$threadId': typeof ChatThreadIdRoute
   '/studio_/$projectId': typeof StudioProjectIdRoute
 }
@@ -220,104 +112,63 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/blender-sandbox'
     | '/chat'
-    | '/editly-showcase'
-    | '/engines-sandbox'
-    | '/ffmpeg-sandbox'
-    | '/freecut-sandbox'
-    | '/hyperframes-showcase'
-    | '/kdenlive-sandbox'
-    | '/kubeezcut-sandbox'
-    | '/mlt-sandbox'
-    | '/moviepy-sandbox'
-    | '/natron-sandbox'
-    | '/omniclip-sandbox'
-    | '/opencut-sandbox'
-    | '/openreel-sandbox'
-    | '/pure-effects'
-    | '/reference-analysis'
-    | '/shotcut-sandbox'
+    | '/dashboard'
+    | '/editor'
+    | '/landing'
+    | '/simple-editor'
     | '/studio'
+    | '/style-lab'
     | '/chat/$threadId'
     | '/studio/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/blender-sandbox'
     | '/chat'
-    | '/editly-showcase'
-    | '/engines-sandbox'
-    | '/ffmpeg-sandbox'
-    | '/freecut-sandbox'
-    | '/hyperframes-showcase'
-    | '/kdenlive-sandbox'
-    | '/kubeezcut-sandbox'
-    | '/mlt-sandbox'
-    | '/moviepy-sandbox'
-    | '/natron-sandbox'
-    | '/omniclip-sandbox'
-    | '/opencut-sandbox'
-    | '/openreel-sandbox'
-    | '/pure-effects'
-    | '/reference-analysis'
-    | '/shotcut-sandbox'
+    | '/dashboard'
+    | '/editor'
+    | '/landing'
+    | '/simple-editor'
     | '/studio'
+    | '/style-lab'
     | '/chat/$threadId'
     | '/studio/$projectId'
   id:
     | '__root__'
     | '/'
-    | '/blender-sandbox'
     | '/chat'
-    | '/editly-showcase'
-    | '/engines-sandbox'
-    | '/ffmpeg-sandbox'
-    | '/freecut-sandbox'
-    | '/hyperframes-showcase'
-    | '/kdenlive-sandbox'
-    | '/kubeezcut-sandbox'
-    | '/mlt-sandbox'
-    | '/moviepy-sandbox'
-    | '/natron-sandbox'
-    | '/omniclip-sandbox'
-    | '/opencut-sandbox'
-    | '/openreel-sandbox'
-    | '/pure-effects'
-    | '/reference-analysis'
-    | '/shotcut-sandbox'
+    | '/dashboard'
+    | '/editor'
+    | '/landing'
+    | '/simple-editor'
     | '/studio'
+    | '/style-lab'
     | '/chat_/$threadId'
     | '/studio_/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BlenderSandboxRoute: typeof BlenderSandboxRoute
   ChatRoute: typeof ChatRoute
-  EditlyShowcaseRoute: typeof EditlyShowcaseRoute
-  EnginesSandboxRoute: typeof EnginesSandboxRoute
-  FfmpegSandboxRoute: typeof FfmpegSandboxRoute
-  FreecutSandboxRoute: typeof FreecutSandboxRoute
-  HyperframesShowcaseRoute: typeof HyperframesShowcaseRoute
-  KdenliveSandboxRoute: typeof KdenliveSandboxRoute
-  KubeezcutSandboxRoute: typeof KubeezcutSandboxRoute
-  MltSandboxRoute: typeof MltSandboxRoute
-  MoviepySandboxRoute: typeof MoviepySandboxRoute
-  NatronSandboxRoute: typeof NatronSandboxRoute
-  OmniclipSandboxRoute: typeof OmniclipSandboxRoute
-  OpencutSandboxRoute: typeof OpencutSandboxRoute
-  OpenreelSandboxRoute: typeof OpenreelSandboxRoute
-  PureEffectsRoute: typeof PureEffectsRoute
-  ReferenceAnalysisRoute: typeof ReferenceAnalysisRoute
-  ShotcutSandboxRoute: typeof ShotcutSandboxRoute
+  DashboardRoute: typeof DashboardRoute
+  EditorRoute: typeof EditorRoute
+  LandingRoute: typeof LandingRoute
+  SimpleEditorRoute: typeof SimpleEditorRoute
   StudioRoute: typeof StudioRoute
+  StyleLabRoute: typeof StyleLabRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
   StudioProjectIdRoute: typeof StudioProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/style-lab': {
+      id: '/style-lab'
+      path: '/style-lab'
+      fullPath: '/style-lab'
+      preLoaderRoute: typeof StyleLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/studio': {
       id: '/studio'
       path: '/studio'
@@ -325,116 +176,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/shotcut-sandbox': {
-      id: '/shotcut-sandbox'
-      path: '/shotcut-sandbox'
-      fullPath: '/shotcut-sandbox'
-      preLoaderRoute: typeof ShotcutSandboxRouteImport
+    '/simple-editor': {
+      id: '/simple-editor'
+      path: '/simple-editor'
+      fullPath: '/simple-editor'
+      preLoaderRoute: typeof SimpleEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reference-analysis': {
-      id: '/reference-analysis'
-      path: '/reference-analysis'
-      fullPath: '/reference-analysis'
-      preLoaderRoute: typeof ReferenceAnalysisRouteImport
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pure-effects': {
-      id: '/pure-effects'
-      path: '/pure-effects'
-      fullPath: '/pure-effects'
-      preLoaderRoute: typeof PureEffectsRouteImport
+    '/editor': {
+      id: '/editor'
+      path: '/editor'
+      fullPath: '/editor'
+      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/openreel-sandbox': {
-      id: '/openreel-sandbox'
-      path: '/openreel-sandbox'
-      fullPath: '/openreel-sandbox'
-      preLoaderRoute: typeof OpenreelSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/opencut-sandbox': {
-      id: '/opencut-sandbox'
-      path: '/opencut-sandbox'
-      fullPath: '/opencut-sandbox'
-      preLoaderRoute: typeof OpencutSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/omniclip-sandbox': {
-      id: '/omniclip-sandbox'
-      path: '/omniclip-sandbox'
-      fullPath: '/omniclip-sandbox'
-      preLoaderRoute: typeof OmniclipSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/natron-sandbox': {
-      id: '/natron-sandbox'
-      path: '/natron-sandbox'
-      fullPath: '/natron-sandbox'
-      preLoaderRoute: typeof NatronSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/moviepy-sandbox': {
-      id: '/moviepy-sandbox'
-      path: '/moviepy-sandbox'
-      fullPath: '/moviepy-sandbox'
-      preLoaderRoute: typeof MoviepySandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mlt-sandbox': {
-      id: '/mlt-sandbox'
-      path: '/mlt-sandbox'
-      fullPath: '/mlt-sandbox'
-      preLoaderRoute: typeof MltSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kubeezcut-sandbox': {
-      id: '/kubeezcut-sandbox'
-      path: '/kubeezcut-sandbox'
-      fullPath: '/kubeezcut-sandbox'
-      preLoaderRoute: typeof KubeezcutSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kdenlive-sandbox': {
-      id: '/kdenlive-sandbox'
-      path: '/kdenlive-sandbox'
-      fullPath: '/kdenlive-sandbox'
-      preLoaderRoute: typeof KdenliveSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hyperframes-showcase': {
-      id: '/hyperframes-showcase'
-      path: '/hyperframes-showcase'
-      fullPath: '/hyperframes-showcase'
-      preLoaderRoute: typeof HyperframesShowcaseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/freecut-sandbox': {
-      id: '/freecut-sandbox'
-      path: '/freecut-sandbox'
-      fullPath: '/freecut-sandbox'
-      preLoaderRoute: typeof FreecutSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ffmpeg-sandbox': {
-      id: '/ffmpeg-sandbox'
-      path: '/ffmpeg-sandbox'
-      fullPath: '/ffmpeg-sandbox'
-      preLoaderRoute: typeof FfmpegSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/engines-sandbox': {
-      id: '/engines-sandbox'
-      path: '/engines-sandbox'
-      fullPath: '/engines-sandbox'
-      preLoaderRoute: typeof EnginesSandboxRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editly-showcase': {
-      id: '/editly-showcase'
-      path: '/editly-showcase'
-      fullPath: '/editly-showcase'
-      preLoaderRoute: typeof EditlyShowcaseRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -442,13 +209,6 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blender-sandbox': {
-      id: '/blender-sandbox'
-      path: '/blender-sandbox'
-      fullPath: '/blender-sandbox'
-      preLoaderRoute: typeof BlenderSandboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -477,25 +237,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BlenderSandboxRoute: BlenderSandboxRoute,
   ChatRoute: ChatRoute,
-  EditlyShowcaseRoute: EditlyShowcaseRoute,
-  EnginesSandboxRoute: EnginesSandboxRoute,
-  FfmpegSandboxRoute: FfmpegSandboxRoute,
-  FreecutSandboxRoute: FreecutSandboxRoute,
-  HyperframesShowcaseRoute: HyperframesShowcaseRoute,
-  KdenliveSandboxRoute: KdenliveSandboxRoute,
-  KubeezcutSandboxRoute: KubeezcutSandboxRoute,
-  MltSandboxRoute: MltSandboxRoute,
-  MoviepySandboxRoute: MoviepySandboxRoute,
-  NatronSandboxRoute: NatronSandboxRoute,
-  OmniclipSandboxRoute: OmniclipSandboxRoute,
-  OpencutSandboxRoute: OpencutSandboxRoute,
-  OpenreelSandboxRoute: OpenreelSandboxRoute,
-  PureEffectsRoute: PureEffectsRoute,
-  ReferenceAnalysisRoute: ReferenceAnalysisRoute,
-  ShotcutSandboxRoute: ShotcutSandboxRoute,
+  DashboardRoute: DashboardRoute,
+  EditorRoute: EditorRoute,
+  LandingRoute: LandingRoute,
+  SimpleEditorRoute: SimpleEditorRoute,
   StudioRoute: StudioRoute,
+  StyleLabRoute: StyleLabRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
   StudioProjectIdRoute: StudioProjectIdRoute,
 }

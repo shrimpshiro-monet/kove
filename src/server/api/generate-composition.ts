@@ -99,7 +99,7 @@ export async function handleGenerateComposition(
       .replace("{{COLOR_GRADE}}", colorGrade)
       .replace("{{INTENT_JSON}}", JSON.stringify(intent ?? {}, null, 2));
 
-    const raw = await ai.generateContentJSON({
+    const raw = await ai.generateContentJSON<string>({
       prompt: filledPrompt,
       temperature: 1.0, // Creative — let it go wild
     });

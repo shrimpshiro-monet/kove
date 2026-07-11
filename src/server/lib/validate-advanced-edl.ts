@@ -133,12 +133,12 @@ export function validateAndNormalizeAdvancedEDL(input: unknown): MonetEDL {
     })
     .filter((overlay) => overlay.endTime >= overlay.startTime);
 
-  const cleanEdl: MonetEDL = {
+  const cleanEdl = {
     ...edl,
     motionTracks,
     planarTracks,
     textOverlays,
-  };
+  } as MonetEDL;
 
   // Perform non-destructive capabilities normalization (defaulting to Canvas Preview capabilities for baseline server safety)
   const normalizedResult = normalizeCreativeEDL(cleanEdl, CANVAS_PREVIEW_CAPABILITIES);

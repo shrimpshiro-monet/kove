@@ -1,3 +1,4 @@
+import { EffectSpecMap } from "@monet/edl";
 import type { EffectParams } from "./types";
 
 export class EffectsEngine {
@@ -184,6 +185,21 @@ export class EffectsEngine {
     height: number,
     time: number
   ) {
+    const spec = EffectSpecMap[effect.type];
+    if (spec?.canvas2d) {
+      const params: Record<string, number> = {
+        intensity: effect.intensity,
+        ...(effect.params ?? {}),
+      };
+      for (const [key, def] of Object.entries(spec.params)) {
+        if (params[key] === undefined) {
+          params[key] = def.default;
+        }
+      }
+      spec.canvas2d(ctx, params, width, height);
+      return;
+    }
+
     switch (effect.type) {
       case "blur":
       case "gaussian-blur":
@@ -378,7 +394,7 @@ export class EffectsEngine {
       }
       case "bloom": {
         const bloomIntensity = effect.params?.intensity ?? effect.intensity ?? 0.3;
-        this.applyBloom(ctx, bloomIntensity, width, height);
+        this.applyBloom(ctx, bloomIntensity, width, height, effect.params);
         break;
       }
       case "context_shake":
@@ -426,6 +442,37 @@ export class EffectsEngine {
       case "overlay": {
         const overlayIntensity = effect.params?.intensity ?? effect.intensity ?? 0.3;
         this.applyOverlay(ctx, overlayIntensity, width, height);
+        break;
+      }
+      case "wave_warp":
+      case "waveWarp":
+      case "wave-warp": {
+        const waveIntensity = effect.params?.intensity ?? effect.intensity ?? 0.4;
+        const waveSpeed = effect.params?.speed ?? 2;
+        this.applyWaveWarp(ctx, waveIntensity, waveSpeed, width, height, time);
+        break;
+      }
+      case "fisheye":
+      case "fisheye_lens":
+      case "fisheyeLens": {
+        const fishIntensity = effect.params?.intensity ?? effect.intensity ?? 0.5;
+        this.applyFisheye(ctx, fishIntensity, width, height);
+        break;
+      }
+      case "color_balance":
+      case "colorBalance":
+      case "color-balance": {
+        const balIntensity = effect.params?.intensity ?? effect.intensity ?? 0.5;
+        const shadows = effect.params?.shadows ?? 0;
+        const highlights = effect.params?.highlights ?? 0;
+        this.applyColorBalance(ctx, balIntensity, shadows, highlights, width, height);
+        break;
+      }
+      case "color_grade": {
+        const sat = effect.params?.saturation ?? 1;
+        const bright = effect.params?.brightness ?? 1;
+        const cont = effect.params?.contrast ?? 1;
+        this.appendFilter(ctx, `saturate(${sat}) brightness(${bright}) contrast(${cont})`);
         break;
       }
     }
@@ -659,13 +706,26 @@ export class EffectsEngine {
     ctx: CanvasRenderingContext2D,
     intensity: number,
     width: number,
-    height: number
+    height: number,
+    params?: Record<string, number>
   ) {
+    const targetHighlights = params?.targetHighlights ?? 0;
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.globalAlpha = intensity * 0.5;
-    ctx.filter = `blur(${intensity * 20}px) brightness(150%)`;
-    ctx.drawImage(ctx.canvas, 0, 0, width, height);
+
+    if (targetHighlights > 0) {
+      // Bloom only bright areas: boost brightness aggressively so only
+      // highlights contribute to the blurred glow, then composite.
+      const boost = 150 + targetHighlights * 200; // 150-350% brightness
+      ctx.globalAlpha = intensity * 0.5 * (1 - targetHighlights * 0.3);
+      ctx.filter = `blur(${intensity * 20}px) brightness(${boost}%)`;
+      ctx.drawImage(ctx.canvas, 0, 0, width, height);
+    } else {
+      ctx.globalAlpha = intensity * 0.5;
+      ctx.filter = `blur(${intensity * 20}px) brightness(150%)`;
+      ctx.drawImage(ctx.canvas, 0, 0, width, height);
+    }
+
     ctx.restore();
   }
 
@@ -797,6 +857,113 @@ export class EffectsEngine {
     ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
     ctx.fillRect(0, 0, width, height);
     ctx.restore();
+  }
+
+  private applyWaveWarp(
+    ctx: CanvasRenderingContext2D,
+    intensity: number,
+    speed: number,
+    width: number,
+    height: number,
+    time: number
+  ) {
+    const amplitude = intensity * 20;
+    const frequency = 3;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const output = new Uint8ClampedArray(data.length);
+
+    for (let y = 0; y < height; y++) {
+      const offset = Math.sin((y / height) * Math.PI * frequency + time * speed) * amplitude;
+      const srcX = Math.round(offset);
+
+      for (let x = 0; x < width; x++) {
+        const srcIdx = (y * width + x) * 4;
+        const dstX = Math.max(0, Math.min(width - 1, x + srcX));
+        const dstIdx = (y * width + dstX) * 4;
+
+        output[dstIdx] = data[srcIdx];
+        output[dstIdx + 1] = data[srcIdx + 1];
+        output[dstIdx + 2] = data[srcIdx + 2];
+        output[dstIdx + 3] = data[srcIdx + 3];
+      }
+    }
+
+    const outputImageData = new ImageData(output, width, height);
+    ctx.putImageData(outputImageData, 0, 0);
+  }
+
+  private applyFisheye(
+    ctx: CanvasRenderingContext2D,
+    intensity: number,
+    width: number,
+    height: number
+  ) {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    const output = new Uint8ClampedArray(data.length);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const maxRadius = Math.sqrt(cx * cx + cy * cy);
+    const strength = intensity * 0.5;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const dx = (x - cx) / cx;
+        const dy = (y - cy) / cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 1) {
+          const newDist = Math.pow(dist, 1 - strength);
+          const angle = Math.atan2(dy, dx);
+          const srcX = Math.round(cx + Math.cos(angle) * newDist * cx);
+          const srcY = Math.round(cy + Math.sin(angle) * newDist * cy);
+
+          if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+            const srcIdx = (srcY * width + srcX) * 4;
+            const dstIdx = (y * width + x) * 4;
+            output[dstIdx] = data[srcIdx];
+            output[dstIdx + 1] = data[srcIdx + 1];
+            output[dstIdx + 2] = data[srcIdx + 2];
+            output[dstIdx + 3] = data[srcIdx + 3];
+          }
+        }
+      }
+    }
+
+    const outputImageData = new ImageData(output, width, height);
+    ctx.putImageData(outputImageData, 0, 0);
+  }
+
+  private applyColorBalance(
+    ctx: CanvasRenderingContext2D,
+    intensity: number,
+    shadows: number,
+    highlights: number,
+    width: number,
+    height: number
+  ) {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+
+      // Shadows affect dark areas, highlights affect bright areas
+      const shadowFactor = (1 - luminance) * shadows * intensity;
+      const highlightFactor = luminance * highlights * intensity;
+
+      // Warm shadows (push red/green), cool highlights (push blue)
+      data[i] = Math.max(0, Math.min(255, r + shadowFactor * 20 - highlightFactor * 10));
+      data[i + 1] = Math.max(0, Math.min(255, g + shadowFactor * 10));
+      data[i + 2] = Math.max(0, Math.min(255, b - shadowFactor * 10 + highlightFactor * 20));
+    }
+
+    ctx.putImageData(imageData, 0, 0);
   }
 
   resetEffects(ctx: CanvasRenderingContext2D) {

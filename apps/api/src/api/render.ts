@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { enqueueJob } from "../services/queue";
-import type { MonetEDL } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 
 interface RenderBody {
   edl?: unknown;

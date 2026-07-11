@@ -1,6 +1,13 @@
 // API Client for Monet backend
 // Typed fetch wrappers for all endpoints
 
+import type { ProjectEDL as MonetEDL } from "@monet/edl";
+
+interface PreviewFrame {
+  timestamp: number;
+  imageUrl: string;
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -196,7 +203,7 @@ export async function analyzeReferenceStyle(
   const res = await fetch(`${API_BASE}/api/analyze-reference`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ projectId, fileId }),
+    body: JSON.stringify({ projectId, referenceFileId: fileId }),
     signal,
   });
 
@@ -266,7 +273,9 @@ export async function generateEDL(
   style?: string,
   durationSeconds?: number,
   styleDNA?: any,
-  intensity?: number
+  intensity?: number,
+  tempoMode?: "beat_locked" | "beat_anticipated" | "narrative" | "cinematic" | "chill_vlog" | "reference_mirror",
+  analysisData?: unknown
 ): Promise<EDLResult> {
   const res = await fetch(`${API_BASE}/api/generate-edl`, {
     method: "POST",
@@ -275,6 +284,7 @@ export async function generateEDL(
       projectId,
       intentId,
       analysisId,
+      analysisData,
       referenceStyle,
       referenceTrace,
       referenceMode,
@@ -283,6 +293,7 @@ export async function generateEDL(
       durationSeconds,
       styleDNA,
       intensity,
+      tempoMode,
     }),
   });
 
@@ -379,40 +390,122 @@ export async function uploadFileDirect(
   }
 }
 
-/**
- * Refine an existing EDL based on natural language feedback.
- * Uses cached analysis — never re-analyzes footage.
- */
-export async function refineEDL(
-  projectId: string,
-  edlId: string,
-  edl: EDLResult["edl"],
-  feedback: string,
-  intentId?: string,
-  analysisId?: string,
-  annotations?: import("../server/types/annotation").TimelineAnnotation[],
-  referenceStyle?: import("../server/types/reference-style").ReferenceStyle,
-  referenceMode: "strict_replication" | "inspired" = "strict_replication",
+export interface RefineEDLStreamEvents {
+  onChunk?: (text: string) => void;
+  onClarification?: (q: string) => void;
+  onDone?: (payload: { edl: any; edlId: string; scores: any }) => void;
+  onError?: (err: { code: string; message: string }) => void;
+}
+
+async function refineEDLStream(
+  params: {
+    projectId: string;
+    edlId?: string;
+    edl: any;
+    feedback: string;
+    intentId?: string;
+    analysisId?: string;
+    annotations?: any;
+    referenceStyle?: any;
+    referenceMode?: "strict_replication" | "inspired";
+  },
+  events: RefineEDLStreamEvents = {},
   signal?: AbortSignal
-): Promise<RefineEDLResult> {
+): Promise<void> {
   const res = await fetch(`${API_BASE}/api/refine-edl`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      projectId,
-      edlId,
-      edl,
-      feedback,
-      intentId,
-      analysisId,
-      annotations,
-      referenceStyle,
-      referenceMode,
+      referenceMode: "strict_replication",
+      ...params,
     }),
     signal,
   });
 
-  return res.json();
+  if (!res.ok || !res.body) {
+    events.onError?.({
+      code: "HTTP_ERROR",
+      message: `Server returned ${res.status}`,
+    });
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let idx;
+      while ((idx = buffer.indexOf("\n\n")) !== -1) {
+        const frame = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+
+        for (const line of frame.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (payload === "[DONE]") return;
+          try {
+            const obj = JSON.parse(payload);
+            if (obj.chunk) events.onChunk?.(obj.chunk);
+            else if (obj.clarification) events.onClarification?.(obj.clarification);
+            else if (obj.error)
+              events.onError?.({ code: obj.error, message: obj.message ?? "" });
+            else if (obj.done)
+              events.onDone?.({ edl: obj.edl, edlId: obj.edlId, scores: obj.scores });
+          } catch {
+            // ignore parse errors on partial frames
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      events.onError?.({ code: "ABORTED", message: "User cancelled" });
+    } else {
+      events.onError?.({ code: "STREAM_ERROR", message: String(err) });
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+/**
+ * Backward-compatible refineEDL — accepts old positional args or new params object.
+ * Used by chat_.$threadId.tsx (old) and useRefineEDL hook (new).
+ */
+export async function refineEDL(
+  ...args: any[]
+): Promise<any> {
+  // New signature: (params, events?, signal?)
+  if (args.length >= 1 && typeof args[0] === "object" && !Array.isArray(args[0]) && "projectId" in args[0] && "edl" in args[0] && "feedback" in args[0]) {
+    return refineEDLStream(args[0], args[1], args[2]);
+  }
+
+  // Old signature: (projectId, edlId, edl, feedback, intentId?, analysisId?, annotations?, referenceStyle?, referenceMode?)
+  const [projectId, edlId, edl, feedback, intentId, analysisId, annotations, referenceStyle, referenceMode] = args;
+  let result: RefineEDLResult = { success: false };
+
+  await refineEDLStream(
+    { projectId, edlId, edl, feedback, intentId, analysisId, annotations, referenceStyle, referenceMode },
+    {
+      onDone: ({ edl, edlId, scores }) => {
+        result = { success: true, edl, edlId, scores };
+      },
+      onError: (err) => {
+        result = { success: false, error: err.message || err.code };
+      },
+      onClarification: (q) => {
+        result = { success: false, error: `Clarification needed: ${q}` };
+      },
+    }
+  );
+
+  return result;
 }
 
 /**
@@ -456,7 +549,7 @@ export interface StudioProjectLookupResult {
   projectId?: string;
   edlId?: string;
   projectName?: string;
-  edl?: import("../server/types/edl").MonetEDL;
+  edl?: any;
   source?: "db";
   error?: string;
 }
@@ -475,7 +568,7 @@ export interface StudioProjectPersistResult {
  */
 export async function generateCompositionOverlay(
   prompt: string,
-  edl: import("../server/types/edl").MonetEDL,
+  edl: any,
   intent?: unknown,
   signal?: AbortSignal
 ): Promise<CompositionResult> {
@@ -528,7 +621,7 @@ export async function persistStudioProject(
     threadId?: string;
     projectName?: string;
     edlId?: string;
-    edl: import("../server/types/edl").MonetEDL;
+    edl: any;
   },
   signal?: AbortSignal
 ): Promise<StudioProjectPersistResult> {
@@ -563,7 +656,7 @@ export interface ServerExportStatusResult {
  * Use when WebCodecs is unavailable (Safari, Firefox).
  */
 export async function queueServerExport(
-  edl: import("../server/types/edl").MonetEDL,
+  edl: any,
   projectId?: string,
   signal?: AbortSignal
 ): Promise<ServerExportQueueResult> {
@@ -591,7 +684,7 @@ export async function pollExportStatus(
 
 export interface DirectorFeedbackResult {
   success: boolean;
-  newEDL?: import("../server/types/edl").MonetEDL;
+  newEDL?: any;
   patchSummary?: string;
   versionId?: string;
   jobId?: string;
@@ -605,8 +698,8 @@ export interface DirectorFeedbackResult {
 export async function submitDirectorFeedback(
   projectId: string,
   feedback: string,
-  currentEDL?: import("../server/types/edl").MonetEDL,
-  keyframes?: import("../server/types/edl").PreviewFrame[],
+  currentEDL?: any,
+  keyframes?: PreviewFrame[],
   intentId?: string,
   analysisId?: string,
   signal?: AbortSignal

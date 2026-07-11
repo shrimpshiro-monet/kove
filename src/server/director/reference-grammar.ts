@@ -127,6 +127,10 @@ export function compileReferenceGrammar(style: ReferenceStyle): ReferenceGrammar
   const avgShotDur = style.rhythm?.avgShotDuration ?? 1.5;
   const variance = style.rhythm?.shotDurationVariance ?? 0.3;
 
+  console.log(`[grammar] compileReferenceGrammar: duration=${duration}, shotDurations=${shotDurations.length}, energyCurve=${energyCurve.length}, climaxPos=${climaxPos}`);
+  console.log(`[grammar] style keys: ${Object.keys(style).join(", ")}`);
+  console.log(`[grammar] referenceTrace: ${JSON.stringify((style as any).referenceTrace).substring(0, 200)}`);
+
   // ── Topology ──
   const minShots = Math.max(1, Math.round(shotDurations.length * 0.65));
   const maxShots = Math.max(1, Math.round(shotDurations.length * 1.25));

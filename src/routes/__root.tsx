@@ -72,21 +72,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Monet — AI video editor" },
-      { name: "description", content: "Monet is an AI video editor. Edit anime, sports, fan edits and anything else by chat — or take the brushes in Studio." },
-      { name: "author", content: "Monet" },
-      { property: "og:title", content: "Monet — AI video editor" },
+      { title: "Kove — AI video editor" },
+      { name: "description", content: "Kove is an AI video editor. Edit anime, sports, fan edits and anything else by chat — or take the brushes in Studio." },
+      { name: "author", content: "Kove" },
+      { property: "og:title", content: "Kove — AI video editor" },
       { property: "og:description", content: "Edit any video with AI. Chat to direct, or pick up the brushes in Studio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@Kove" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap",
       },
       {
         rel: "stylesheet",

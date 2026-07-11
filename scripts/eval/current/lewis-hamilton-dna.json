@@ -1,0 +1,4904 @@
+{
+  "name": "lewis-hamilton",
+  "source": "/Users/hamza/Desktop/reserves/monet-ai-story/reference-edits-2/lewis hamilton.MP4",
+  "duration": 21.105011,
+  "resolution": {
+    "width": 768,
+    "height": 576
+  },
+  "fps": 30.0,
+  "totalShots": 55,
+  "avgShotDuration": 0.3734244545454545,
+  "cutRate": 2.606016173125899,
+  "shots": [
+    {
+      "index": 0,
+      "start": 0,
+      "end": 4.266667,
+      "duration": 4.266667,
+      "motion_magnitude": 0.14639477501169032,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.14639477501169032,
+      "shotType": "close",
+      "shotTypeConfidence": 0.35853451725245067,
+      "effects": [
+        "fade_black",
+        "blur"
+      ],
+      "transitions": [
+        "fade_black"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 4,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_left",
+        "hasShadow": false,
+        "avgBrightness": 43.97411346435547
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 0,
+        "description": "Liam Lawson is introduced in a dimly lit, intense portrait shot with graphic overlays.",
+        "actions": [
+          "posing",
+          "staring"
+        ],
+        "subjects": [
+          "Liam Lawson"
+        ],
+        "emotion": "intensity",
+        "event_type": "setup",
+        "narrative_role": "establishing",
+        "importance": 8,
+        "time": 0
+      }
+    },
+    {
+      "index": 1,
+      "start": 4.266667,
+      "end": 4.333333,
+      "duration": 0.06666599999999967,
+      "motion_magnitude": 0.203515625,
+      "camera_motion": "static",
+      "subject_motion": "celebrating",
+      "energy": 0.203515625,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.28403231086074215,
+      "effects": [
+        "fade_black",
+        "blur"
+      ],
+      "transitions": [
+        "fade_black"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 3,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_left",
+        "hasShadow": false,
+        "avgBrightness": 36.120034535725914
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 1,
+        "description": "A quick visual glitch or frame containing text.",
+        "actions": [
+          "transitioning"
+        ],
+        "subjects": [
+          "text"
+        ],
+        "emotion": "disorientation",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 4.266667
+      }
+    },
+    {
+      "index": 2,
+      "start": 4.366667,
+      "end": 4.433333,
+      "duration": 0.06666600000000056,
+      "motion_magnitude": 0.7986632029215495,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.7986632029215495,
+      "shotType": "close",
+      "shotTypeConfidence": 0.29117213310171547,
+      "effects": [
+        "wipe",
+        "blur",
+        "vignette",
+        "glow",
+        "watermark"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur",
+        "vignette",
+        "glow"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 3,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_left",
+        "hasShadow": false,
+        "avgBrightness": 34.04352696736654
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 2,
+        "description": "Another rapid frame featuring Lewis Hamilton with large white overlay text.",
+        "actions": [
+          "transitioning"
+        ],
+        "subjects": [
+          "Lewis Hamilton",
+          "text"
+        ],
+        "emotion": "urgency",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 4.366667
+      }
+    },
+    {
+      "index": 3,
+      "start": 4.433333,
+      "end": 4.9,
+      "duration": 0.46666700000000017,
+      "motion_magnitude": 0.4567576471964518,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.4567576471964518,
+      "shotType": "close",
+      "shotTypeConfidence": 0.299067105566452,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 5,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_left",
+        "hasShadow": false,
+        "avgBrightness": 57.503144073486325
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 3,
+        "description": "A focused shot of Lewis Hamilton appearing in dark, red-tinged lighting with branding elements.",
+        "actions": [
+          "staring"
+        ],
+        "subjects": [
+          "Lewis Hamilton"
+        ],
+        "emotion": "seriousness",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 6,
+        "time": 4.433333
+      }
+    },
+    {
+      "index": 4,
+      "start": 4.9,
+      "end": 4.966667,
+      "duration": 0.06666699999999981,
+      "motion_magnitude": 0.48070659637451174,
+      "camera_motion": "static",
+      "subject_motion": "celebrating",
+      "energy": 0.48070659637451174,
+      "shotType": "close",
+      "shotTypeConfidence": 0.34933207196514127,
+      "effects": [
+        "fade_black",
+        "blur"
+      ],
+      "transitions": [
+        "fade_black"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 6,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "bottom_left",
+        "hasShadow": false,
+        "avgBrightness": 37.88930702209473
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 4,
+        "description": "A single frame flash of the sequence.",
+        "actions": [
+          "transitioning"
+        ],
+        "subjects": [
+          "text"
+        ],
+        "emotion": "tension",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 1,
+        "time": 4.9
+      }
+    },
+    {
+      "index": 5,
+      "start": 5.1,
+      "end": 5.733333,
+      "duration": 0.6333330000000004,
+      "motion_magnitude": 0.8978940963745118,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.8978940963745118,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.401591292496973,
+      "effects": [
+        "blur",
+        "wipe",
+        "glow"
+      ],
+      "transitions": [
+        "blur",
+        "wipe"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": true,
+        "avgBrightness": 114.63878027598064
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 5,
+        "description": "A slightly different angle or brightness of the previous shot of Lewis Hamilton.",
+        "actions": [
+          "staring"
+        ],
+        "subjects": [
+          "Lewis Hamilton"
+        ],
+        "emotion": "seriousness",
+        "event_type": "action",
+        "narrative_role": "climax",
+        "importance": 6,
+        "time": 5.1
+      }
+    },
+    {
+      "index": 6,
+      "start": 5.733333,
+      "end": 5.933333,
+      "duration": 0.20000000000000018,
+      "motion_magnitude": 0.9217942555745442,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.9217942555745442,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2785796829137851,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 13,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": true,
+        "avgBrightness": 131.71871009239783
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 6,
+        "description": "A rapid flicker effect transitioning the screen.",
+        "actions": [
+          "transitioning"
+        ],
+        "subjects": [
+          "visual distortion"
+        ],
+        "emotion": "tension",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 5.733333
+      }
+    },
+    {
+      "index": 7,
+      "start": 5.933333,
+      "end": 6.1,
+      "duration": 0.16666699999999945,
+      "motion_magnitude": 0.9571857770284017,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.9571857770284017,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3314615535233361,
+      "effects": [
+        "wipe",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": true,
+        "avgBrightness": 132.09052403767905
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 7,
+        "description": "A dark frame showing signal noise or digital static.",
+        "actions": [
+          "distorting"
+        ],
+        "subjects": [
+          "digital artifact"
+        ],
+        "emotion": "disorientation",
+        "event_type": "transition",
+        "narrative_role": "disruption",
+        "importance": 2,
+        "time": 5.933333
+      }
+    },
+    {
+      "index": 8,
+      "start": 6.133333,
+      "end": 6.266667,
+      "duration": 0.13333399999999962,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.32008430539733124,
+      "effects": [
+        "wipe",
+        "glitch",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe",
+        "glitch"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_center",
+        "hasShadow": false,
+        "avgBrightness": 138.14299710591635
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 8,
+        "description": "A strobe-like flash within the static sequence.",
+        "actions": [
+          "flashing"
+        ],
+        "subjects": [
+          "visual effects"
+        ],
+        "emotion": "urgency",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 6.133333
+      }
+    },
+    {
+      "index": 9,
+      "start": 6.266667,
+      "end": 6.433333,
+      "duration": 0.1666660000000002,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.33114199387812326,
+      "effects": [
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 13,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 134.9376076918382
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 9,
+        "description": "The sequence concludes with a distorted, dark frame of static.",
+        "actions": [
+          "fading"
+        ],
+        "subjects": [
+          "data corruption"
+        ],
+        "emotion": "void",
+        "event_type": "transition",
+        "narrative_role": "resolution",
+        "importance": 3,
+        "time": 6.266667
+      }
+    },
+    {
+      "index": 10,
+      "start": 6.433333,
+      "end": 6.6,
+      "duration": 0.16666699999999945,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.33310191819653306,
+      "effects": [
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 7,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 109.90308434622628
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 10,
+        "time": 6.433333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 11,
+      "start": 6.6,
+      "end": 6.866667,
+      "duration": 0.266667,
+      "motion_magnitude": 0.931736691792806,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 0.931736691792806,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3053430956035822,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 2,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 49.45786666870117
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 11,
+        "time": 6.6,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 12,
+      "start": 6.866667,
+      "end": 7.1,
+      "duration": 0.233333,
+      "motion_magnitude": 0.7472401724921333,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.7472401724921333,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3794884673449181,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 4,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 48.39487075805664
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 12,
+        "time": 6.866667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 13,
+      "start": 7.133333,
+      "end": 7.233333,
+      "duration": 0.09999999999999964,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.33188687731542826,
+      "effects": [
+        "blur",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 6,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 121.7791633605957
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 13,
+        "time": 7.133333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 14,
+      "start": 7.233333,
+      "end": 7.366667,
+      "duration": 0.13333399999999962,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.31920173444304933,
+      "effects": [
+        "wipe",
+        "blur",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 126.16706275939941
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 14,
+        "time": 7.233333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 15,
+      "start": 7.4,
+      "end": 8.766667,
+      "duration": 1.3666669999999996,
+      "motion_magnitude": 0.7723532994588218,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.7723532994588218,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3300524823638106,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 5,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 109.21353912353516
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "speed_up",
+      "semanticEvent": {
+        "shotIndex": 15,
+        "time": 7.4,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 16,
+      "start": 8.766667,
+      "end": 8.833333,
+      "duration": 0.06666599999999967,
+      "motion_magnitude": 0.8135295232137044,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.8135295232137044,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.35776526428494854,
+      "effects": [
+        "wipe",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 4,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 124.41474914550781
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 16,
+        "time": 8.766667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 17,
+      "start": 8.833333,
+      "end": 8.9,
+      "duration": 0.0666670000000007,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2841796137923681,
+      "effects": [
+        "wipe",
+        "vignette"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 5,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_center",
+        "hasShadow": false,
+        "avgBrightness": 117.93878326416015
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 17,
+        "time": 8.833333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 18,
+      "start": 8.9,
+      "end": 9.0,
+      "duration": 0.09999999999999964,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.37672900795929637,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 18,
+        "time": 8.9,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 19,
+      "start": 9.033333,
+      "end": 9.666667,
+      "duration": 0.6333339999999996,
+      "motion_magnitude": 0.5203214698367649,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5203214698367649,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3581985163634737,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 19,
+        "time": 9.033333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 20,
+      "start": 9.666667,
+      "end": 9.766667,
+      "duration": 0.09999999999999964,
+      "motion_magnitude": 0.6505781173706054,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.6505781173706054,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3033196611465748,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 20,
+        "time": 9.666667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 21,
+      "start": 9.766667,
+      "end": 9.9,
+      "duration": 0.13333300000000037,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.30439064553140144,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 21,
+        "time": 9.766667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 22,
+      "start": 9.933333,
+      "end": 10.1,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.362857480181654,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 2,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 99.99471282958984
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 22,
+        "time": 9.933333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 23,
+      "start": 10.1,
+      "end": 10.266667,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3627949952223848,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 23,
+        "time": 10.1,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 24,
+      "start": 10.266667,
+      "end": 10.433333,
+      "duration": 0.16666599999999931,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.35762216240920564,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 9,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 105.97263929578993
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 24,
+        "time": 10.266667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 25,
+      "start": 10.433333,
+      "end": 10.6,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 0.968109385172526,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.968109385172526,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.35377608963797635,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 10,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 102.51468963623047
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 25,
+        "time": 10.433333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 26,
+      "start": 10.6,
+      "end": 10.7,
+      "duration": 0.09999999999999964,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "medium",
+      "shotTypeConfidence": 0.28165130925372844,
+      "effects": [],
+      "transitions": [],
+      "visualEffects": [],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": true,
+        "avgBrightness": 123.00117492675781
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 26,
+        "time": 10.6,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 27,
+      "start": 10.733333,
+      "end": 11.366667,
+      "duration": 0.6333339999999996,
+      "motion_magnitude": 0.6506640632947287,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.6506640632947287,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.3153223678957414,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 11,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 110.745623848655
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 27,
+        "time": 10.733333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 28,
+      "start": 11.4,
+      "end": 11.7,
+      "duration": 0.29999999999999893,
+      "motion_magnitude": 0.6643055478731792,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.6643055478731792,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3091601988397777,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 100.53139902750651
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 28,
+        "time": 11.4,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 29,
+      "start": 11.7,
+      "end": 11.766667,
+      "duration": 0.0666670000000007,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.29443766302909974,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 103.64970143636067
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 29,
+        "time": 11.7,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 30,
+      "start": 11.766667,
+      "end": 12.066667,
+      "duration": 0.3000000000000007,
+      "motion_magnitude": 0.8498674816555448,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.8498674816555448,
+      "shotType": "close",
+      "shotTypeConfidence": 0.31072242188184185,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 100.47651570638021
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 30,
+        "time": 11.766667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 31,
+      "start": 12.066667,
+      "end": 12.233333,
+      "duration": 0.16666599999999931,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.34523872555540774,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 100.62870229085287
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 31,
+        "time": 12.066667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 32,
+      "start": 12.233333,
+      "end": 12.4,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 0.8189860979715984,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.8189860979715984,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3603922575466082,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 95.40391693115234
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 32,
+        "time": 12.233333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 33,
+      "start": 12.4,
+      "end": 12.633333,
+      "duration": 0.233333,
+      "motion_magnitude": 0.780200809902615,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.780200809902615,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3594403652463397,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 96.35066121419271
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 33,
+        "time": 12.4,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 34,
+      "start": 12.633333,
+      "end": 12.8,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 0.7626944382985432,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.7626944382985432,
+      "shotType": "close",
+      "shotTypeConfidence": 0.35802188234345766,
+      "effects": [
+        "glitch",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 102.5520243326823
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 34,
+        "time": 12.633333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 35,
+      "start": 12.8,
+      "end": 12.966667,
+      "duration": 0.16666699999999857,
+      "motion_magnitude": 0.7626944382985432,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.7626944382985432,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.32154406745298,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 11,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "regular",
+        "dominantPlacement": "top_center",
+        "hasShadow": false,
+        "avgBrightness": 133.42292646928266
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 35,
+        "time": 12.8,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 36,
+      "start": 12.966667,
+      "end": 13.2,
+      "duration": 0.233333,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3104190763608212,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "regular",
+        "dominantPlacement": "bottom_right",
+        "hasShadow": false,
+        "avgBrightness": 135.06134847005208
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 36,
+        "time": 12.966667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 37,
+      "start": 13.2,
+      "end": 13.333333,
+      "duration": 0.13333300000000037,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3089255607231417,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_left",
+        "hasShadow": false,
+        "avgBrightness": 121.3101079305013
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 37,
+        "time": 13.2,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 38,
+      "start": 13.366667,
+      "end": 13.466667,
+      "duration": 0.09999999999999964,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.30232383258241563,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 110.26273498535156
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 38,
+        "time": 13.366667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 39,
+      "start": 13.466667,
+      "end": 13.633333,
+      "duration": 0.1666660000000011,
+      "motion_magnitude": 0.7932274182637533,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.7932274182637533,
+      "shotType": "close",
+      "shotTypeConfidence": 0.30409951931513823,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow",
+        "watermark"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 106.89308471679688
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 39,
+        "time": 13.466667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 40,
+      "start": 13.633333,
+      "end": 13.8,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.29716293965858676,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 90.29629770914714
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 40,
+        "time": 13.633333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 41,
+      "start": 13.8,
+      "end": 13.966667,
+      "duration": 0.16666699999999857,
+      "motion_magnitude": 0.8424505233764649,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.8424505233764649,
+      "shotType": "close",
+      "shotTypeConfidence": 0.29496583124456344,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 109.12851511637369
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 41,
+        "time": 13.8,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 42,
+      "start": 13.966667,
+      "end": 14.133333,
+      "duration": 0.1666660000000011,
+      "motion_magnitude": 0.853999137878418,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.853999137878418,
+      "shotType": "close",
+      "shotTypeConfidence": 0.30059408070708243,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 88.54661254882812
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 42,
+        "time": 13.966667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 43,
+      "start": 14.133333,
+      "end": 14.3,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 0.9840381940205891,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.9840381940205891,
+      "shotType": "close",
+      "shotTypeConfidence": 0.29322410927003745,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "medium",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 72.96423924763998
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 43,
+        "time": 14.133333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 44,
+      "start": 14.3,
+      "end": 14.466667,
+      "duration": 0.16666699999999857,
+      "motion_magnitude": 0.9898142496744792,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.9898142496744792,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2923354659500678,
+      "effects": [
+        "wipe",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 15,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 52.004281234741214
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 44,
+        "time": 14.3,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 45,
+      "start": 14.466667,
+      "end": 14.633333,
+      "duration": 0.1666660000000011,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.2956892733480366,
+      "effects": [
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 13,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 56.8743214240441
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 45,
+        "time": 14.466667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 46,
+      "start": 14.633333,
+      "end": 14.7,
+      "duration": 0.06666699999999892,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.28319869575896206,
+      "effects": [
+        "glitch",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 10,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_right",
+        "hasShadow": false,
+        "avgBrightness": 57.90760269165039
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 46,
+        "time": 14.633333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 47,
+      "start": 14.733333,
+      "end": 15.433333,
+      "duration": 0.6999999999999993,
+      "motion_magnitude": 0.8148861567179362,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.8148861567179362,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.34919632998902256,
+      "effects": [
+        "wipe",
+        "blur",
+        "glow"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "speed_up",
+      "semanticEvent": {
+        "shotIndex": 47,
+        "time": 14.733333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 48,
+      "start": 15.466667,
+      "end": 15.533333,
+      "duration": 0.06666600000000145,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.3379469544191364,
+      "effects": [
+        "blur",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 48,
+        "time": 15.466667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 49,
+      "start": 15.533333,
+      "end": 15.6,
+      "duration": 0.06666699999999892,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3663396980284144,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 5,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center_right",
+        "hasShadow": false,
+        "avgBrightness": 94.49683380126953
+      },
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 49,
+        "time": 15.533333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 50,
+      "start": 15.666667,
+      "end": 15.733333,
+      "duration": 0.06666599999999967,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3370696486846759,
+      "effects": [
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 50,
+        "time": 15.666667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 51,
+      "start": 15.733333,
+      "end": 16.8,
+      "duration": 1.0666670000000007,
+      "motion_magnitude": 0.5420291929533987,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.5420291929533987,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3629590232237153,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 51,
+        "time": 15.733333,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 52,
+      "start": 16.8,
+      "end": 16.966667,
+      "duration": 0.16666700000000034,
+      "motion_magnitude": 0.6736093521118164,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 0.6736093521118164,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.36636299088289614,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 52,
+        "time": 16.8,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 53,
+      "start": 16.966667,
+      "end": 17.066667,
+      "duration": 0.09999999999999787,
+      "motion_magnitude": 0.44392360051472984,
+      "camera_motion": "static",
+      "subject_motion": "celebrating",
+      "energy": 0.44392360051472984,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.35052645081696215,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 53,
+        "time": 16.966667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 54,
+      "start": 17.066667,
+      "end": 21.105011,
+      "duration": 4.038344000000002,
+      "motion_magnitude": 0.09861818244302174,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.09861818244302174,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4545127749240397,
+      "effects": [
+        "blur",
+        "vignette",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 0.75,
+      "speedType": "slow",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 54,
+        "time": 17.066667,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    }
+  ],
+  "motionStats": {
+    "avg_magnitude": 0.5300758597900024,
+    "peak_magnitude": 1.0,
+    "peak_time": 5.2,
+    "variance": 0.15640469129129972,
+    "high_motion_segments": [
+      {
+        "start": 4.4,
+        "end": 4.5,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 5.1,
+        "end": 5.6,
+        "duration": 0.5
+      },
+      {
+        "start": 5.7,
+        "end": 6.9,
+        "duration": 1.2000000000000002
+      },
+      {
+        "start": 7.0,
+        "end": 7.1,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 7.2,
+        "end": 7.7,
+        "duration": 0.5
+      },
+      {
+        "start": 8.3,
+        "end": 8.4,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 8.6,
+        "end": 8.7,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 8.8,
+        "end": 9.2,
+        "duration": 0.3999999999999986
+      },
+      {
+        "start": 9.8,
+        "end": 11.1,
+        "duration": 1.299999999999999
+      },
+      {
+        "start": 11.5,
+        "end": 11.6,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 11.7,
+        "end": 11.9,
+        "duration": 0.20000000000000107
+      },
+      {
+        "start": 12.0,
+        "end": 12.3,
+        "duration": 0.3000000000000007
+      },
+      {
+        "start": 12.4,
+        "end": 12.5,
+        "duration": 0.09999999999999964
+      },
+      {
+        "start": 12.7,
+        "end": 12.8,
+        "duration": 0.10000000000000142
+      },
+      {
+        "start": 12.9,
+        "end": 13.5,
+        "duration": 0.5999999999999996
+      },
+      {
+        "start": 13.6,
+        "end": 13.9,
+        "duration": 0.3000000000000007
+      },
+      {
+        "start": 14.1,
+        "end": 14.9,
+        "duration": 0.8000000000000007
+      },
+      {
+        "start": 15.1,
+        "end": 15.4,
+        "duration": 0.3000000000000007
+      },
+      {
+        "start": 15.5,
+        "end": 15.9,
+        "duration": 0.40000000000000036
+      },
+      {
+        "start": 17.1,
+        "end": 17.3,
+        "duration": 0.1999999999999993
+      }
+    ],
+    "motion_curve": [
+      {
+        "time": 0.2,
+        "magnitude": 0.0009374999751647314,
+        "raw_diff": 0.02812499925494194
+      },
+      {
+        "time": 0.3,
+        "magnitude": 0.00040798612559835116,
+        "raw_diff": 0.012239583767950535
+      },
+      {
+        "time": 0.4,
+        "magnitude": 0.00011111111380159854,
+        "raw_diff": 0.0033333334140479565
+      },
+      {
+        "time": 0.5,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 0.6,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 0.7,
+        "magnitude": 0.000920138880610466,
+        "raw_diff": 0.02760416641831398
+      },
+      {
+        "time": 0.8,
+        "magnitude": 0.0028784722089767456,
+        "raw_diff": 0.08635416626930237
+      },
+      {
+        "time": 0.9,
+        "magnitude": 0.0030555556217829387,
+        "raw_diff": 0.09166666865348816
+      },
+      {
+        "time": 1.0,
+        "magnitude": 0.0029305554926395416,
+        "raw_diff": 0.08791666477918625
+      },
+      {
+        "time": 1.1,
+        "magnitude": 0.01566493014494578,
+        "raw_diff": 0.4699479043483734
+      },
+      {
+        "time": 1.2,
+        "magnitude": 0.021864583094914753,
+        "raw_diff": 0.6559374928474426
+      },
+      {
+        "time": 1.3,
+        "magnitude": 0.04160763820012411,
+        "raw_diff": 1.2482291460037231
+      },
+      {
+        "time": 1.4,
+        "magnitude": 0.049892361958821616,
+        "raw_diff": 1.4967708587646484
+      },
+      {
+        "time": 1.5,
+        "magnitude": 0.09971354007720948,
+        "raw_diff": 2.991406202316284
+      },
+      {
+        "time": 1.6,
+        "magnitude": 0.1210572878519694,
+        "raw_diff": 3.631718635559082
+      },
+      {
+        "time": 1.7,
+        "magnitude": 0.2142586867014567,
+        "raw_diff": 6.427760601043701
+      },
+      {
+        "time": 1.8,
+        "magnitude": 0.2869357744852702,
+        "raw_diff": 8.608073234558105
+      },
+      {
+        "time": 1.9,
+        "magnitude": 0.23066145579020184,
+        "raw_diff": 6.919843673706055
+      },
+      {
+        "time": 2.0,
+        "magnitude": 0.3196788152058919,
+        "raw_diff": 9.590364456176758
+      },
+      {
+        "time": 2.1,
+        "magnitude": 0.2800954818725586,
+        "raw_diff": 8.402864456176758
+      },
+      {
+        "time": 2.2,
+        "magnitude": 0.3905781110127767,
+        "raw_diff": 11.7173433303833
+      },
+      {
+        "time": 2.3,
+        "magnitude": 0.33086980183919273,
+        "raw_diff": 9.926094055175781
+      },
+      {
+        "time": 2.4,
+        "magnitude": 0.43913195927937826,
+        "raw_diff": 13.173958778381348
+      },
+      {
+        "time": 2.5,
+        "magnitude": 0.519777774810791,
+        "raw_diff": 15.59333324432373
+      },
+      {
+        "time": 2.6,
+        "magnitude": 0.275409730275472,
+        "raw_diff": 8.26229190826416
+      },
+      {
+        "time": 2.7,
+        "magnitude": 0.02087673544883728,
+        "raw_diff": 0.6263020634651184
+      },
+      {
+        "time": 2.8,
+        "magnitude": 0.023527777194976805,
+        "raw_diff": 0.7058333158493042
+      },
+      {
+        "time": 2.9,
+        "magnitude": 0.035956597328186034,
+        "raw_diff": 1.078697919845581
+      },
+      {
+        "time": 3.0,
+        "magnitude": 0.08642013867696126,
+        "raw_diff": 2.592604160308838
+      },
+      {
+        "time": 3.1,
+        "magnitude": 0.10922048886617025,
+        "raw_diff": 3.2766146659851074
+      },
+      {
+        "time": 3.2,
+        "magnitude": 0.48778820037841797,
+        "raw_diff": 14.633646011352539
+      },
+      {
+        "time": 3.3,
+        "magnitude": 0.41863193511962893,
+        "raw_diff": 12.558958053588867
+      },
+      {
+        "time": 3.4,
+        "magnitude": 0.27455902099609375,
+        "raw_diff": 8.236770629882812
+      },
+      {
+        "time": 3.5,
+        "magnitude": 0.04631944497426351,
+        "raw_diff": 1.3895833492279053
+      },
+      {
+        "time": 3.6,
+        "magnitude": 0.07697222232818604,
+        "raw_diff": 2.309166669845581
+      },
+      {
+        "time": 3.7,
+        "magnitude": 0.051029515266418454,
+        "raw_diff": 1.5308854579925537
+      },
+      {
+        "time": 3.8,
+        "magnitude": 0.03765451510747274,
+        "raw_diff": 1.1296354532241821
+      },
+      {
+        "time": 3.9,
+        "magnitude": 0.04070659875869751,
+        "raw_diff": 1.2211979627609253
+      },
+      {
+        "time": 4.0,
+        "magnitude": 0.2372066020965576,
+        "raw_diff": 7.1161980628967285
+      },
+      {
+        "time": 4.1,
+        "magnitude": 0.08564409414927164,
+        "raw_diff": 2.5693228244781494
+      },
+      {
+        "time": 4.2,
+        "magnitude": 0.3212326367696126,
+        "raw_diff": 9.636979103088379
+      },
+      {
+        "time": 4.3,
+        "magnitude": 0.203515625,
+        "raw_diff": 6.10546875
+      },
+      {
+        "time": 4.4,
+        "magnitude": 0.7986632029215495,
+        "raw_diff": 23.959896087646484
+      },
+      {
+        "time": 4.5,
+        "magnitude": 0.442043399810791,
+        "raw_diff": 13.26130199432373
+      },
+      {
+        "time": 4.6,
+        "magnitude": 0.5478698094685872,
+        "raw_diff": 16.436094284057617
+      },
+      {
+        "time": 4.7,
+        "magnitude": 0.1871180534362793,
+        "raw_diff": 5.613541603088379
+      },
+      {
+        "time": 4.8,
+        "magnitude": 0.6260503768920899,
+        "raw_diff": 18.781511306762695
+      },
+      {
+        "time": 4.9,
+        "magnitude": 0.48070659637451174,
+        "raw_diff": 14.421197891235352
+      },
+      {
+        "time": 5.0,
+        "magnitude": 0.11464062531789145,
+        "raw_diff": 3.439218759536743
+      },
+      {
+        "time": 5.1,
+        "magnitude": 0.8506336847941081,
+        "raw_diff": 25.519010543823242
+      },
+      {
+        "time": 5.2,
+        "magnitude": 1.0,
+        "raw_diff": 69.81229400634766
+      },
+      {
+        "time": 5.3,
+        "magnitude": 0.983305549621582,
+        "raw_diff": 29.49916648864746
+      },
+      {
+        "time": 5.4,
+        "magnitude": 0.8348715464274089,
+        "raw_diff": 25.046146392822266
+      },
+      {
+        "time": 5.5,
+        "magnitude": 0.9644999821980794,
+        "raw_diff": 28.934999465942383
+      },
+      {
+        "time": 5.6,
+        "magnitude": 0.695638910929362,
+        "raw_diff": 20.86916732788086
+      },
+      {
+        "time": 5.7,
+        "magnitude": 0.9563090006510416,
+        "raw_diff": 28.68927001953125
+      },
+      {
+        "time": 5.8,
+        "magnitude": 0.8435885111490885,
+        "raw_diff": 25.307655334472656
+      },
+      {
+        "time": 5.9,
+        "magnitude": 1.0,
+        "raw_diff": 31.07729148864746
+      },
+      {
+        "time": 6.0,
+        "magnitude": 0.9143715540568034,
+        "raw_diff": 27.4311466217041
+      },
+      {
+        "time": 6.1,
+        "magnitude": 1.0,
+        "raw_diff": 31.649948120117188
+      },
+      {
+        "time": 6.2,
+        "magnitude": 1.0,
+        "raw_diff": 88.00567626953125
+      },
+      {
+        "time": 6.3,
+        "magnitude": 1.0,
+        "raw_diff": 48.40583419799805
+      },
+      {
+        "time": 6.4,
+        "magnitude": 1.0,
+        "raw_diff": 52.14921951293945
+      },
+      {
+        "time": 6.5,
+        "magnitude": 1.0,
+        "raw_diff": 46.48666763305664
+      },
+      {
+        "time": 6.6,
+        "magnitude": 1.0,
+        "raw_diff": 54.07765579223633
+      },
+      {
+        "time": 6.7,
+        "magnitude": 1.0,
+        "raw_diff": 79.48229217529297
+      },
+      {
+        "time": 6.8,
+        "magnitude": 0.7952100753784179,
+        "raw_diff": 23.85630226135254
+      },
+      {
+        "time": 6.9,
+        "magnitude": 0.7028402964274089,
+        "raw_diff": 21.085208892822266
+      },
+      {
+        "time": 7.0,
+        "magnitude": 1.0,
+        "raw_diff": 49.80260467529297
+      },
+      {
+        "time": 7.1,
+        "magnitude": 0.5388802210489909,
+        "raw_diff": 16.166406631469727
+      },
+      {
+        "time": 7.2,
+        "magnitude": 1.0,
+        "raw_diff": 71.10942840576172
+      },
+      {
+        "time": 7.3,
+        "magnitude": 1.0,
+        "raw_diff": 48.31171798706055
+      },
+      {
+        "time": 7.4,
+        "magnitude": 1.0,
+        "raw_diff": 49.373958587646484
+      },
+      {
+        "time": 7.5,
+        "magnitude": 1.0,
+        "raw_diff": 76.05088806152344
+      },
+      {
+        "time": 7.6,
+        "magnitude": 0.8090208053588868,
+        "raw_diff": 24.2706241607666
+      },
+      {
+        "time": 7.7,
+        "magnitude": 0.5771441141764323,
+        "raw_diff": 17.31432342529297
+      },
+      {
+        "time": 7.8,
+        "magnitude": 0.7589080174763997,
+        "raw_diff": 22.767240524291992
+      },
+      {
+        "time": 7.9,
+        "magnitude": 0.6004704793294271,
+        "raw_diff": 18.014114379882812
+      },
+      {
+        "time": 8.0,
+        "magnitude": 0.7355555852254232,
+        "raw_diff": 22.066667556762695
+      },
+      {
+        "time": 8.1,
+        "magnitude": 0.7825156529744466,
+        "raw_diff": 23.4754695892334
+      },
+      {
+        "time": 8.2,
+        "magnitude": 0.6683159510294596,
+        "raw_diff": 20.04947853088379
+      },
+      {
+        "time": 8.3,
+        "magnitude": 0.8179392496744792,
+        "raw_diff": 24.538177490234375
+      },
+      {
+        "time": 8.4,
+        "magnitude": 0.7609114329020182,
+        "raw_diff": 22.827342987060547
+      },
+      {
+        "time": 8.5,
+        "magnitude": 0.7865503311157227,
+        "raw_diff": 23.59650993347168
+      },
+      {
+        "time": 8.6,
+        "magnitude": 0.8692100524902344,
+        "raw_diff": 26.07630157470703
+      },
+      {
+        "time": 8.7,
+        "magnitude": 0.646404520670573,
+        "raw_diff": 19.392135620117188
+      },
+      {
+        "time": 8.8,
+        "magnitude": 0.8135295232137044,
+        "raw_diff": 24.405885696411133
+      },
+      {
+        "time": 8.9,
+        "magnitude": 1.0,
+        "raw_diff": 99.03520965576172
+      },
+      {
+        "time": 9.0,
+        "magnitude": 1.0,
+        "raw_diff": 53.46921920776367
+      },
+      {
+        "time": 9.1,
+        "magnitude": 1.0,
+        "raw_diff": 110.723388671875
+      },
+      {
+        "time": 9.2,
+        "magnitude": 0.44886805216471354,
+        "raw_diff": 13.466041564941406
+      },
+      {
+        "time": 9.3,
+        "magnitude": 0.36181424458821615,
+        "raw_diff": 10.854427337646484
+      },
+      {
+        "time": 9.4,
+        "magnitude": 0.49370832443237306,
+        "raw_diff": 14.811249732971191
+      },
+      {
+        "time": 9.5,
+        "magnitude": 0.3837743123372396,
+        "raw_diff": 11.513229370117188
+      },
+      {
+        "time": 9.6,
+        "magnitude": 0.4337638854980469,
+        "raw_diff": 13.012916564941406
+      },
+      {
+        "time": 9.7,
+        "magnitude": 0.6505781173706054,
+        "raw_diff": 19.517343521118164
+      },
+      {
+        "time": 9.8,
+        "magnitude": 1.0,
+        "raw_diff": 48.43604278564453
+      },
+      {
+        "time": 9.9,
+        "magnitude": 1.0,
+        "raw_diff": 55.985206604003906
+      },
+      {
+        "time": 10.0,
+        "magnitude": 1.0,
+        "raw_diff": 83.58036804199219
+      },
+      {
+        "time": 10.1,
+        "magnitude": 1.0,
+        "raw_diff": 35.44661331176758
+      },
+      {
+        "time": 10.2,
+        "magnitude": 1.0,
+        "raw_diff": 30.9012508392334
+      },
+      {
+        "time": 10.3,
+        "magnitude": 1.0,
+        "raw_diff": 32.42656326293945
+      },
+      {
+        "time": 10.4,
+        "magnitude": 1.0,
+        "raw_diff": 31.538436889648438
+      },
+      {
+        "time": 10.5,
+        "magnitude": 0.9362187703450521,
+        "raw_diff": 28.086563110351562
+      },
+      {
+        "time": 10.6,
+        "magnitude": 1.0,
+        "raw_diff": 32.28468704223633
+      },
+      {
+        "time": 10.7,
+        "magnitude": 1.0,
+        "raw_diff": 39.503334045410156
+      },
+      {
+        "time": 10.8,
+        "magnitude": 1.0,
+        "raw_diff": 92.0542221069336
+      },
+      {
+        "time": 10.9,
+        "magnitude": 0.8541735967000326,
+        "raw_diff": 25.625207901000977
+      },
+      {
+        "time": 11.0,
+        "magnitude": 1.0,
+        "raw_diff": 35.80437469482422
+      },
+      {
+        "time": 11.1,
+        "magnitude": 0.5289930661519369,
+        "raw_diff": 15.869791984558105
+      },
+      {
+        "time": 11.2,
+        "magnitude": 0.42312847773234047,
+        "raw_diff": 12.693854331970215
+      },
+      {
+        "time": 11.3,
+        "magnitude": 0.09768923918406168,
+        "raw_diff": 2.9306771755218506
+      },
+      {
+        "time": 11.4,
+        "magnitude": 0.07604339917500814,
+        "raw_diff": 2.281301975250244
+      },
+      {
+        "time": 11.5,
+        "magnitude": 1.0,
+        "raw_diff": 87.78760528564453
+      },
+      {
+        "time": 11.6,
+        "magnitude": 0.5811787923177083,
+        "raw_diff": 17.43536376953125
+      },
+      {
+        "time": 11.7,
+        "magnitude": 1.0,
+        "raw_diff": 38.423126220703125
+      },
+      {
+        "time": 11.8,
+        "magnitude": 1.0,
+        "raw_diff": 43.64505386352539
+      },
+      {
+        "time": 11.9,
+        "magnitude": 0.7217152913411459,
+        "raw_diff": 21.651458740234375
+      },
+      {
+        "time": 12.0,
+        "magnitude": 0.8278871536254883,
+        "raw_diff": 24.83661460876465
+      },
+      {
+        "time": 12.1,
+        "magnitude": 1.0,
+        "raw_diff": 30.187761306762695
+      },
+      {
+        "time": 12.2,
+        "magnitude": 1.0,
+        "raw_diff": 35.19328308105469
+      },
+      {
+        "time": 12.3,
+        "magnitude": 0.6842274347941081,
+        "raw_diff": 20.526823043823242
+      },
+      {
+        "time": 12.4,
+        "magnitude": 0.9537447611490886,
+        "raw_diff": 28.612342834472656
+      },
+      {
+        "time": 12.5,
+        "magnitude": 0.7615989685058594,
+        "raw_diff": 22.84796905517578
+      },
+      {
+        "time": 12.6,
+        "magnitude": 0.6252587000528972,
+        "raw_diff": 18.757761001586914
+      },
+      {
+        "time": 12.7,
+        "magnitude": 1.0,
+        "raw_diff": 38.2756233215332
+      },
+      {
+        "time": 12.8,
+        "magnitude": 0.5253888765970866,
+        "raw_diff": 15.761666297912598
+      },
+      {
+        "time": 12.9,
+        "magnitude": 1.0,
+        "raw_diff": 80.58234405517578
+      },
+      {
+        "time": 13.0,
+        "magnitude": 1.0,
+        "raw_diff": 30.33776092529297
+      },
+      {
+        "time": 13.1,
+        "magnitude": 1.0,
+        "raw_diff": 55.9713020324707
+      },
+      {
+        "time": 13.2,
+        "magnitude": 1.0,
+        "raw_diff": 42.424583435058594
+      },
+      {
+        "time": 13.3,
+        "magnitude": 1.0,
+        "raw_diff": 50.464115142822266
+      },
+      {
+        "time": 13.4,
+        "magnitude": 1.0,
+        "raw_diff": 82.84114837646484
+      },
+      {
+        "time": 13.5,
+        "magnitude": 0.769633674621582,
+        "raw_diff": 23.08901023864746
+      },
+      {
+        "time": 13.6,
+        "magnitude": 0.8168211619059245,
+        "raw_diff": 24.504634857177734
+      },
+      {
+        "time": 13.7,
+        "magnitude": 1.0,
+        "raw_diff": 33.85114669799805
+      },
+      {
+        "time": 13.8,
+        "magnitude": 1.0,
+        "raw_diff": 38.46531295776367
+      },
+      {
+        "time": 13.9,
+        "magnitude": 0.6849010467529297,
+        "raw_diff": 20.54703140258789
+      },
+      {
+        "time": 14.0,
+        "magnitude": 0.7079982757568359,
+        "raw_diff": 21.239948272705078
+      },
+      {
+        "time": 14.1,
+        "magnitude": 1.0,
+        "raw_diff": 31.611562728881836
+      },
+      {
+        "time": 14.2,
+        "magnitude": 0.9680763880411783,
+        "raw_diff": 29.04229164123535
+      },
+      {
+        "time": 14.3,
+        "magnitude": 1.0,
+        "raw_diff": 35.419166564941406
+      },
+      {
+        "time": 14.4,
+        "magnitude": 0.9796284993489583,
+        "raw_diff": 29.38885498046875
+      },
+      {
+        "time": 14.5,
+        "magnitude": 1.0,
+        "raw_diff": 31.87484359741211
+      },
+      {
+        "time": 14.6,
+        "magnitude": 1.0,
+        "raw_diff": 31.9989070892334
+      },
+      {
+        "time": 14.7,
+        "magnitude": 1.0,
+        "raw_diff": 40.41718673706055
+      },
+      {
+        "time": 14.8,
+        "magnitude": 1.0,
+        "raw_diff": 80.20255279541016
+      },
+      {
+        "time": 14.9,
+        "magnitude": 0.5988003412882487,
+        "raw_diff": 17.96401023864746
+      },
+      {
+        "time": 15.0,
+        "magnitude": 0.7362673441569011,
+        "raw_diff": 22.08802032470703
+      },
+      {
+        "time": 15.1,
+        "magnitude": 1.0,
+        "raw_diff": 30.2589054107666
+      },
+      {
+        "time": 15.2,
+        "magnitude": 0.802013905843099,
+        "raw_diff": 24.06041717529297
+      },
+      {
+        "time": 15.3,
+        "magnitude": 0.8024131774902343,
+        "raw_diff": 24.07239532470703
+      },
+      {
+        "time": 15.4,
+        "magnitude": 0.7647083282470704,
+        "raw_diff": 22.94124984741211
+      },
+      {
+        "time": 15.5,
+        "magnitude": 1.0,
+        "raw_diff": 93.2273941040039
+      },
+      {
+        "time": 15.6,
+        "magnitude": 1.0,
+        "raw_diff": 84.78801727294922
+      },
+      {
+        "time": 15.7,
+        "magnitude": 1.0,
+        "raw_diff": 124.29359436035156
+      },
+      {
+        "time": 15.8,
+        "magnitude": 1.0,
+        "raw_diff": 100.27833557128906
+      },
+      {
+        "time": 15.9,
+        "magnitude": 0.5090156237284342,
+        "raw_diff": 15.270468711853027
+      },
+      {
+        "time": 16.0,
+        "magnitude": 0.5848697662353516,
+        "raw_diff": 17.546092987060547
+      },
+      {
+        "time": 16.1,
+        "magnitude": 0.34134028752644857,
+        "raw_diff": 10.240208625793457
+      },
+      {
+        "time": 16.2,
+        "magnitude": 0.3260382016499837,
+        "raw_diff": 9.781146049499512
+      },
+      {
+        "time": 16.3,
+        "magnitude": 0.5631579717000326,
+        "raw_diff": 16.894739151000977
+      },
+      {
+        "time": 16.4,
+        "magnitude": 0.3344496409098307,
+        "raw_diff": 10.033489227294922
+      },
+      {
+        "time": 16.5,
+        "magnitude": 0.7065087000528971,
+        "raw_diff": 21.195261001586914
+      },
+      {
+        "time": 16.6,
+        "magnitude": 0.48809722264607747,
+        "raw_diff": 14.642916679382324
+      },
+      {
+        "time": 16.7,
+        "magnitude": 0.5175312360127767,
+        "raw_diff": 15.5259370803833
+      },
+      {
+        "time": 16.8,
+        "magnitude": 0.5913124720255534,
+        "raw_diff": 17.7393741607666
+      },
+      {
+        "time": 16.9,
+        "magnitude": 0.7559062321980794,
+        "raw_diff": 22.677186965942383
+      },
+      {
+        "time": 17.0,
+        "magnitude": 0.44392360051472984,
+        "raw_diff": 13.317708015441895
+      },
+      {
+        "time": 17.1,
+        "magnitude": 0.9643645604451497,
+        "raw_diff": 28.930936813354492
+      },
+      {
+        "time": 17.2,
+        "magnitude": 1.0,
+        "raw_diff": 66.28473663330078
+      },
+      {
+        "time": 17.3,
+        "magnitude": 0.3106406211853027,
+        "raw_diff": 9.319218635559082
+      },
+      {
+        "time": 17.4,
+        "magnitude": 0.2934236208597819,
+        "raw_diff": 8.802708625793457
+      },
+      {
+        "time": 17.5,
+        "magnitude": 0.30014063517252604,
+        "raw_diff": 9.004219055175781
+      },
+      {
+        "time": 17.6,
+        "magnitude": 0.11869791348775229,
+        "raw_diff": 3.5609374046325684
+      },
+      {
+        "time": 17.7,
+        "magnitude": 0.3283593813578288,
+        "raw_diff": 9.850781440734863
+      },
+      {
+        "time": 17.8,
+        "magnitude": 0.0722291628519694,
+        "raw_diff": 2.166874885559082
+      },
+      {
+        "time": 17.9,
+        "magnitude": 0.1147326389948527,
+        "raw_diff": 3.441979169845581
+      },
+      {
+        "time": 18.0,
+        "magnitude": 0.05593923727671305,
+        "raw_diff": 1.6781771183013916
+      },
+      {
+        "time": 18.1,
+        "magnitude": 0.039241317907969156,
+        "raw_diff": 1.1772395372390747
+      },
+      {
+        "time": 18.2,
+        "magnitude": 0.015612847606341044,
+        "raw_diff": 0.4683854281902313
+      },
+      {
+        "time": 18.3,
+        "magnitude": 0.02571354111035665,
+        "raw_diff": 0.7714062333106995
+      },
+      {
+        "time": 18.4,
+        "magnitude": 0.014571180939674378,
+        "raw_diff": 0.4371354281902313
+      },
+      {
+        "time": 18.5,
+        "magnitude": 0.026402777433395384,
+        "raw_diff": 0.7920833230018616
+      },
+      {
+        "time": 18.6,
+        "magnitude": 0.012375000119209289,
+        "raw_diff": 0.3712500035762787
+      },
+      {
+        "time": 18.7,
+        "magnitude": 0.0072413196166356405,
+        "raw_diff": 0.2172395884990692
+      },
+      {
+        "time": 18.8,
+        "magnitude": 0.01822395920753479,
+        "raw_diff": 0.5467187762260437
+      },
+      {
+        "time": 18.9,
+        "magnitude": 0.01250868042310079,
+        "raw_diff": 0.3752604126930237
+      },
+      {
+        "time": 19.0,
+        "magnitude": 0.01647569437821706,
+        "raw_diff": 0.49427083134651184
+      },
+      {
+        "time": 19.1,
+        "magnitude": 0.009848958253860474,
+        "raw_diff": 0.2954687476158142
+      },
+      {
+        "time": 19.2,
+        "magnitude": 0.007097222407658895,
+        "raw_diff": 0.21291667222976685
+      },
+      {
+        "time": 19.3,
+        "magnitude": 0.018892361720403036,
+        "raw_diff": 0.5667708516120911
+      },
+      {
+        "time": 19.4,
+        "magnitude": 0.012557291984558105,
+        "raw_diff": 0.37671875953674316
+      },
+      {
+        "time": 19.5,
+        "magnitude": 0.016267361243565877,
+        "raw_diff": 0.4880208373069763
+      },
+      {
+        "time": 19.6,
+        "magnitude": 0.010140624642372132,
+        "raw_diff": 0.30421873927116394
+      },
+      {
+        "time": 19.7,
+        "magnitude": 0.006737847129503886,
+        "raw_diff": 0.20213541388511658
+      },
+      {
+        "time": 19.8,
+        "magnitude": 0.018927083412806193,
+        "raw_diff": 0.5678125023841858
+      },
+      {
+        "time": 19.9,
+        "magnitude": 0.012656249602635701,
+        "raw_diff": 0.37968748807907104
+      },
+      {
+        "time": 20.0,
+        "magnitude": 0.015935763716697693,
+        "raw_diff": 0.4780729115009308
+      },
+      {
+        "time": 20.1,
+        "magnitude": 0.010157986481984457,
+        "raw_diff": 0.3047395944595337
+      },
+      {
+        "time": 20.2,
+        "magnitude": 0.0071718752384185794,
+        "raw_diff": 0.21515625715255737
+      },
+      {
+        "time": 20.3,
+        "magnitude": 0.018769097328186036,
+        "raw_diff": 0.563072919845581
+      },
+      {
+        "time": 20.4,
+        "magnitude": 0.010480902592341105,
+        "raw_diff": 0.31442707777023315
+      },
+      {
+        "time": 20.5,
+        "magnitude": 0.021223958333333334,
+        "raw_diff": 0.63671875
+      },
+      {
+        "time": 20.6,
+        "magnitude": 0.013218749562899272,
+        "raw_diff": 0.39656248688697815
+      },
+      {
+        "time": 20.7,
+        "magnitude": 0.015829861164093018,
+        "raw_diff": 0.4748958349227905
+      },
+      {
+        "time": 20.8,
+        "magnitude": 0.005067708094914755,
+        "raw_diff": 0.15203124284744263
+      },
+      {
+        "time": 20.9,
+        "magnitude": 0.025505208969116212,
+        "raw_diff": 0.7651562690734863
+      },
+      {
+        "time": 21.0,
+        "magnitude": 0.013781249523162842,
+        "raw_diff": 0.41343748569488525
+      },
+      {
+        "time": 21.1,
+        "magnitude": 0.0261840283870697,
+        "raw_diff": 0.7855208516120911
+      }
+    ]
+  },
+  "colorProfile": {
+    "dominant_palette": [],
+    "contrast": 0,
+    "black_point": 0,
+    "white_point": 255,
+    "saturation_mean": 50,
+    "luminance_mean": 128,
+    "color_temperature": "neutral",
+    "grade": "normal",
+    "skin_tone": {
+      "presence": 0,
+      "is_present": false
+    }
+  },
+  "shotTypes": {
+    "totalShots": 55,
+    "distribution": {
+      "close": 0.6181818181818182,
+      "extreme_close": 0.2727272727272727,
+      "wide": 0.09090909090909091,
+      "medium": 0.01818181818181818
+    },
+    "counts": {
+      "close": 34,
+      "extreme_close": 15,
+      "wide": 5,
+      "medium": 1
+    },
+    "dominantType": "close",
+    "variedFraming": true
+  },
+  "effects": {
+    "totalEffects": 110,
+    "effectsPerShot": 2.0,
+    "transitions": {
+      "fade_black": 3,
+      "wipe": 17,
+      "blur": 1,
+      "glitch": 10
+    },
+    "visualEffects": {
+      "blur": 16,
+      "vignette": 22,
+      "glow": 38
+    },
+    "overlays": {
+      "watermark": 3
+    },
+    "mostCommonEffect": "glow",
+    "effectVariety": 7
+  },
+  "text": {
+    "shotsWithText": 43,
+    "totalTextRegions": 454,
+    "textFrequency": 0.7818181818181819,
+    "dominantColor": "white",
+    "dominantSize": "small",
+    "dominantPlacement": "top_right",
+    "hasText": true
+  },
+  "speed": {
+    "avgSpeed": 1.1227272727272728,
+    "speedDistribution": {
+      "normal": 0.8545454545454545,
+      "very_fast": 0.12727272727272726,
+      "slow": 0.01818181818181818
+    },
+    "shotsWithRamps": 2,
+    "rampRatio": 0.03636363636363636,
+    "hasSlowMotion": false,
+    "hasFastMotion": true,
+    "hasRamps": true,
+    "dominantSpeed": "normal"
+  },
+  "semanticEvents": {
+    "totalEvents": 55,
+    "eventTypes": {
+      "setup": 0.01818181818181818,
+      "transition": 0.12727272727272726,
+      "action": 0.8545454545454545
+    },
+    "emotions": {
+      "intensity": 0.01818181818181818,
+      "disorientation": 0.03636363636363636,
+      "urgency": 0.03636363636363636,
+      "seriousness": 0.03636363636363636,
+      "tension": 0.03636363636363636,
+      "void": 0.01818181818181818,
+      "neutral": 0.8181818181818182
+    },
+    "narrativeArc": {
+      "establishing": 0.01818181818181818,
+      "building": 0.9272727272727272,
+      "climax": 0.01818181818181818,
+      "disruption": 0.01818181818181818,
+      "resolution": 0.01818181818181818
+    },
+    "avgImportance": 4.709090909090909,
+    "dominantEventType": "action",
+    "dominantEmotion": "neutral",
+    "climaxPosition": 5
+  },
+  "audioAnalysis": {
+    "tempo_bpm": 116.1,
+    "beats": [
+      {
+        "time": 0.18575963718820862,
+        "energy": 0.14620031070477227,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.29240062140954454
+      },
+      {
+        "time": 1.3931972789115645,
+        "energy": 0.14140853134105053,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.28281706268210105
+      },
+      {
+        "time": 1.6950566893424037,
+        "energy": 0.10437202757671181,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.20874405515342362
+      },
+      {
+        "time": 1.9272562358276644,
+        "energy": 0.15926192810864276,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.3185238562172855
+      },
+      {
+        "time": 2.136235827664399,
+        "energy": 0.18178170458391263,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.36356340916782526
+      },
+      {
+        "time": 2.647074829931973,
+        "energy": 0.14220615695042046,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.28441231390084093
+      },
+      {
+        "time": 3.274013605442177,
+        "energy": 0.14255352356318338,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.28510704712636675
+      },
+      {
+        "time": 3.877732426303855,
+        "energy": 0.1428292788749706,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.2856585577499412
+      },
+      {
+        "time": 4.31891156462585,
+        "energy": 0.2944624490299285,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.588924898059857
+      },
+      {
+        "time": 17.995556,
+        "type": "silence_start",
+        "source": "silence",
+        "strength": 0.5
+      },
+      {
+        "time": 18.08449,
+        "type": "silence_end",
+        "source": "silence",
+        "strength": 0.5
+      },
+      {
+        "time": 21.106939,
+        "type": "silence_end",
+        "source": "silence",
+        "strength": 0.5
+      }
+    ],
+    "beat_count": 12,
+    "avg_beat_interval": 0.516795865633075
+  },
+  "grammarRules": {
+    "pacing": {
+      "avgDuration": 0.3734244545454545,
+      "minDuration": 0.06666599999999967,
+      "maxDuration": 4.266667,
+      "stdDev": 0.7736289537517399,
+      "fastCutsCount": 47,
+      "slowCutsCount": 2
+    },
+    "motion": {
+      "avgMagnitude": 0.5300758597900024,
+      "peakMagnitude": 1.0,
+      "hasHighMotion": "True",
+      "motionVariety": 20
+    },
+    "rhythm": {
+      "tempo": 116.1,
+      "cutsOnBeat": 5.263157894736842,
+      "avgBeatsBetweenCuts": 0.19642857142857142,
+      "isBeatDriven": false
+    },
+    "color": {
+      "grade": "normal",
+      "temperature": "neutral",
+      "saturationLevel": "medium",
+      "contrastLevel": "low",
+      "hasSkinTone": false
+    },
+    "cameraLanguage": {
+      "dominantMotion": "static",
+      "motionVariety": 3,
+      "staticRatio": 0.7272727272727273,
+      "dynamicRatio": 0.2727272727272727
+    },
+    "subjectLanguage": {
+      "dominantMotion": "running",
+      "motionVariety": 2,
+      "actionRatio": 1.0
+    },
+    "shotTypes": {
+      "distribution": {
+        "close": 0.6181818181818182,
+        "extreme_close": 0.2727272727272727,
+        "wide": 0.09090909090909091,
+        "medium": 0.01818181818181818
+      },
+      "dominantType": "close",
+      "variedFraming": true,
+      "closeUpRatio": 0.8909090909090909,
+      "wideRatio": 0.09090909090909091
+    },
+    "effects": {
+      "totalEffects": 110,
+      "effectsPerShot": 2.0,
+      "transitions": {
+        "fade_black": 3,
+        "wipe": 17,
+        "blur": 1,
+        "glitch": 10
+      },
+      "visualEffects": {
+        "blur": 16,
+        "vignette": 22,
+        "glow": 38
+      },
+      "overlays": {
+        "watermark": 3
+      },
+      "mostCommonEffect": "glow",
+      "effectVariety": 7,
+      "hasTransitions": true,
+      "hasVisualEffects": true,
+      "hasOverlays": true
+    },
+    "text": {
+      "hasText": true,
+      "textFrequency": 0.7818181818181819,
+      "shotsWithText": 43,
+      "dominantColor": "white",
+      "dominantSize": "small",
+      "dominantPlacement": "top_right"
+    },
+    "speed": {
+      "avgSpeed": 1.1227272727272728,
+      "dominantSpeed": "normal",
+      "hasSlowMotion": false,
+      "hasFastMotion": true,
+      "hasRamps": true,
+      "rampRatio": 0.03636363636363636,
+      "speedDistribution": {
+        "normal": 0.8545454545454545,
+        "very_fast": 0.12727272727272726,
+        "slow": 0.01818181818181818
+      }
+    },
+    "semantic": {
+      "totalEvents": 55,
+      "eventTypes": {
+        "setup": 0.01818181818181818,
+        "transition": 0.12727272727272726,
+        "action": 0.8545454545454545
+      },
+      "emotions": {
+        "intensity": 0.01818181818181818,
+        "disorientation": 0.03636363636363636,
+        "urgency": 0.03636363636363636,
+        "seriousness": 0.03636363636363636,
+        "tension": 0.03636363636363636,
+        "void": 0.01818181818181818,
+        "neutral": 0.8181818181818182
+      },
+      "narrativeArc": {
+        "establishing": 0.01818181818181818,
+        "building": 0.9272727272727272,
+        "climax": 0.01818181818181818,
+        "disruption": 0.01818181818181818,
+        "resolution": 0.01818181818181818
+      },
+      "avgImportance": 4.709090909090909,
+      "dominantEventType": "action",
+      "dominantEmotion": "neutral",
+      "climaxPosition": 5,
+      "hasNarrativeArc": true
+    },
+    "styleSummary": {
+      "isBeatDriven": false,
+      "isHighEnergy": "True",
+      "isDesaturated": false,
+      "isDark": false,
+      "pacingType": "fast"
+    }
+  },
+  "energyCurve": [
+    {
+      "time": 0.2,
+      "energy": 0.0009374999751647314
+    },
+    {
+      "time": 0.3,
+      "energy": 0.00040798612559835116
+    },
+    {
+      "time": 0.4,
+      "energy": 0.00011111111380159854
+    },
+    {
+      "time": 0.5,
+      "energy": 0.0
+    },
+    {
+      "time": 0.6,
+      "energy": 0.0
+    },
+    {
+      "time": 0.7,
+      "energy": 0.000920138880610466
+    },
+    {
+      "time": 0.8,
+      "energy": 0.0028784722089767456
+    },
+    {
+      "time": 0.9,
+      "energy": 0.0030555556217829387
+    },
+    {
+      "time": 1.0,
+      "energy": 0.0029305554926395416
+    },
+    {
+      "time": 1.1,
+      "energy": 0.01566493014494578
+    },
+    {
+      "time": 1.2,
+      "energy": 0.021864583094914753
+    },
+    {
+      "time": 1.3,
+      "energy": 0.04160763820012411
+    },
+    {
+      "time": 1.4,
+      "energy": 0.049892361958821616
+    },
+    {
+      "time": 1.5,
+      "energy": 0.09971354007720948
+    },
+    {
+      "time": 1.6,
+      "energy": 0.1210572878519694
+    },
+    {
+      "time": 1.7,
+      "energy": 0.2142586867014567
+    },
+    {
+      "time": 1.8,
+      "energy": 0.2869357744852702
+    },
+    {
+      "time": 1.9,
+      "energy": 0.23066145579020184
+    },
+    {
+      "time": 2.0,
+      "energy": 0.3196788152058919
+    },
+    {
+      "time": 2.1,
+      "energy": 0.2800954818725586
+    },
+    {
+      "time": 2.2,
+      "energy": 0.3905781110127767
+    },
+    {
+      "time": 2.3,
+      "energy": 0.33086980183919273
+    },
+    {
+      "time": 2.4,
+      "energy": 0.43913195927937826
+    },
+    {
+      "time": 2.5,
+      "energy": 0.519777774810791
+    },
+    {
+      "time": 2.6,
+      "energy": 0.275409730275472
+    },
+    {
+      "time": 2.7,
+      "energy": 0.02087673544883728
+    },
+    {
+      "time": 2.8,
+      "energy": 0.023527777194976805
+    },
+    {
+      "time": 2.9,
+      "energy": 0.035956597328186034
+    },
+    {
+      "time": 3.0,
+      "energy": 0.08642013867696126
+    },
+    {
+      "time": 3.1,
+      "energy": 0.10922048886617025
+    },
+    {
+      "time": 3.2,
+      "energy": 0.48778820037841797
+    },
+    {
+      "time": 3.3,
+      "energy": 0.41863193511962893
+    },
+    {
+      "time": 3.4,
+      "energy": 0.27455902099609375
+    },
+    {
+      "time": 3.5,
+      "energy": 0.04631944497426351
+    },
+    {
+      "time": 3.6,
+      "energy": 0.07697222232818604
+    },
+    {
+      "time": 3.7,
+      "energy": 0.051029515266418454
+    },
+    {
+      "time": 3.8,
+      "energy": 0.03765451510747274
+    },
+    {
+      "time": 3.9,
+      "energy": 0.04070659875869751
+    },
+    {
+      "time": 4.0,
+      "energy": 0.2372066020965576
+    },
+    {
+      "time": 4.1,
+      "energy": 0.08564409414927164
+    },
+    {
+      "time": 4.2,
+      "energy": 0.3212326367696126
+    },
+    {
+      "time": 4.3,
+      "energy": 0.203515625
+    },
+    {
+      "time": 4.4,
+      "energy": 0.7986632029215495
+    },
+    {
+      "time": 4.5,
+      "energy": 0.442043399810791
+    },
+    {
+      "time": 4.6,
+      "energy": 0.5478698094685872
+    },
+    {
+      "time": 4.7,
+      "energy": 0.1871180534362793
+    },
+    {
+      "time": 4.8,
+      "energy": 0.6260503768920899
+    },
+    {
+      "time": 4.9,
+      "energy": 0.48070659637451174
+    },
+    {
+      "time": 5.0,
+      "energy": 0.11464062531789145
+    },
+    {
+      "time": 5.1,
+      "energy": 0.8506336847941081
+    },
+    {
+      "time": 5.2,
+      "energy": 1.0
+    },
+    {
+      "time": 5.3,
+      "energy": 0.983305549621582
+    },
+    {
+      "time": 5.4,
+      "energy": 0.8348715464274089
+    },
+    {
+      "time": 5.5,
+      "energy": 0.9644999821980794
+    },
+    {
+      "time": 5.6,
+      "energy": 0.695638910929362
+    },
+    {
+      "time": 5.7,
+      "energy": 0.9563090006510416
+    },
+    {
+      "time": 5.8,
+      "energy": 0.8435885111490885
+    },
+    {
+      "time": 5.9,
+      "energy": 1.0
+    },
+    {
+      "time": 6.0,
+      "energy": 0.9143715540568034
+    },
+    {
+      "time": 6.1,
+      "energy": 1.0
+    },
+    {
+      "time": 6.2,
+      "energy": 1.0
+    },
+    {
+      "time": 6.3,
+      "energy": 1.0
+    },
+    {
+      "time": 6.4,
+      "energy": 1.0
+    },
+    {
+      "time": 6.5,
+      "energy": 1.0
+    },
+    {
+      "time": 6.6,
+      "energy": 1.0
+    },
+    {
+      "time": 6.7,
+      "energy": 1.0
+    },
+    {
+      "time": 6.8,
+      "energy": 0.7952100753784179
+    },
+    {
+      "time": 6.9,
+      "energy": 0.7028402964274089
+    },
+    {
+      "time": 7.0,
+      "energy": 1.0
+    },
+    {
+      "time": 7.1,
+      "energy": 0.5388802210489909
+    },
+    {
+      "time": 7.2,
+      "energy": 1.0
+    },
+    {
+      "time": 7.3,
+      "energy": 1.0
+    },
+    {
+      "time": 7.4,
+      "energy": 1.0
+    },
+    {
+      "time": 7.5,
+      "energy": 1.0
+    },
+    {
+      "time": 7.6,
+      "energy": 0.8090208053588868
+    },
+    {
+      "time": 7.7,
+      "energy": 0.5771441141764323
+    },
+    {
+      "time": 7.8,
+      "energy": 0.7589080174763997
+    },
+    {
+      "time": 7.9,
+      "energy": 0.6004704793294271
+    },
+    {
+      "time": 8.0,
+      "energy": 0.7355555852254232
+    },
+    {
+      "time": 8.1,
+      "energy": 0.7825156529744466
+    },
+    {
+      "time": 8.2,
+      "energy": 0.6683159510294596
+    },
+    {
+      "time": 8.3,
+      "energy": 0.8179392496744792
+    },
+    {
+      "time": 8.4,
+      "energy": 0.7609114329020182
+    },
+    {
+      "time": 8.5,
+      "energy": 0.7865503311157227
+    },
+    {
+      "time": 8.6,
+      "energy": 0.8692100524902344
+    },
+    {
+      "time": 8.7,
+      "energy": 0.646404520670573
+    },
+    {
+      "time": 8.8,
+      "energy": 0.8135295232137044
+    },
+    {
+      "time": 8.9,
+      "energy": 1.0
+    },
+    {
+      "time": 9.0,
+      "energy": 1.0
+    },
+    {
+      "time": 9.1,
+      "energy": 1.0
+    },
+    {
+      "time": 9.2,
+      "energy": 0.44886805216471354
+    },
+    {
+      "time": 9.3,
+      "energy": 0.36181424458821615
+    },
+    {
+      "time": 9.4,
+      "energy": 0.49370832443237306
+    },
+    {
+      "time": 9.5,
+      "energy": 0.3837743123372396
+    },
+    {
+      "time": 9.6,
+      "energy": 0.4337638854980469
+    },
+    {
+      "time": 9.7,
+      "energy": 0.6505781173706054
+    },
+    {
+      "time": 9.8,
+      "energy": 1.0
+    },
+    {
+      "time": 9.9,
+      "energy": 1.0
+    },
+    {
+      "time": 10.0,
+      "energy": 1.0
+    },
+    {
+      "time": 10.1,
+      "energy": 1.0
+    },
+    {
+      "time": 10.2,
+      "energy": 1.0
+    },
+    {
+      "time": 10.3,
+      "energy": 1.0
+    },
+    {
+      "time": 10.4,
+      "energy": 1.0
+    },
+    {
+      "time": 10.5,
+      "energy": 0.9362187703450521
+    },
+    {
+      "time": 10.6,
+      "energy": 1.0
+    },
+    {
+      "time": 10.7,
+      "energy": 1.0
+    },
+    {
+      "time": 10.8,
+      "energy": 1.0
+    },
+    {
+      "time": 10.9,
+      "energy": 0.8541735967000326
+    },
+    {
+      "time": 11.0,
+      "energy": 1.0
+    },
+    {
+      "time": 11.1,
+      "energy": 0.5289930661519369
+    },
+    {
+      "time": 11.2,
+      "energy": 0.42312847773234047
+    },
+    {
+      "time": 11.3,
+      "energy": 0.09768923918406168
+    },
+    {
+      "time": 11.4,
+      "energy": 0.07604339917500814
+    },
+    {
+      "time": 11.5,
+      "energy": 1.0
+    },
+    {
+      "time": 11.6,
+      "energy": 0.5811787923177083
+    },
+    {
+      "time": 11.7,
+      "energy": 1.0
+    },
+    {
+      "time": 11.8,
+      "energy": 1.0
+    },
+    {
+      "time": 11.9,
+      "energy": 0.7217152913411459
+    },
+    {
+      "time": 12.0,
+      "energy": 0.8278871536254883
+    },
+    {
+      "time": 12.1,
+      "energy": 1.0
+    },
+    {
+      "time": 12.2,
+      "energy": 1.0
+    },
+    {
+      "time": 12.3,
+      "energy": 0.6842274347941081
+    },
+    {
+      "time": 12.4,
+      "energy": 0.9537447611490886
+    },
+    {
+      "time": 12.5,
+      "energy": 0.7615989685058594
+    },
+    {
+      "time": 12.6,
+      "energy": 0.6252587000528972
+    },
+    {
+      "time": 12.7,
+      "energy": 1.0
+    },
+    {
+      "time": 12.8,
+      "energy": 0.5253888765970866
+    },
+    {
+      "time": 12.9,
+      "energy": 1.0
+    },
+    {
+      "time": 13.0,
+      "energy": 1.0
+    },
+    {
+      "time": 13.1,
+      "energy": 1.0
+    },
+    {
+      "time": 13.2,
+      "energy": 1.0
+    },
+    {
+      "time": 13.3,
+      "energy": 1.0
+    },
+    {
+      "time": 13.4,
+      "energy": 1.0
+    },
+    {
+      "time": 13.5,
+      "energy": 0.769633674621582
+    },
+    {
+      "time": 13.6,
+      "energy": 0.8168211619059245
+    },
+    {
+      "time": 13.7,
+      "energy": 1.0
+    },
+    {
+      "time": 13.8,
+      "energy": 1.0
+    },
+    {
+      "time": 13.9,
+      "energy": 0.6849010467529297
+    },
+    {
+      "time": 14.0,
+      "energy": 0.7079982757568359
+    },
+    {
+      "time": 14.1,
+      "energy": 1.0
+    },
+    {
+      "time": 14.2,
+      "energy": 0.9680763880411783
+    },
+    {
+      "time": 14.3,
+      "energy": 1.0
+    },
+    {
+      "time": 14.4,
+      "energy": 0.9796284993489583
+    },
+    {
+      "time": 14.5,
+      "energy": 1.0
+    },
+    {
+      "time": 14.6,
+      "energy": 1.0
+    },
+    {
+      "time": 14.7,
+      "energy": 1.0
+    },
+    {
+      "time": 14.8,
+      "energy": 1.0
+    },
+    {
+      "time": 14.9,
+      "energy": 0.5988003412882487
+    },
+    {
+      "time": 15.0,
+      "energy": 0.7362673441569011
+    },
+    {
+      "time": 15.1,
+      "energy": 1.0
+    },
+    {
+      "time": 15.2,
+      "energy": 0.802013905843099
+    },
+    {
+      "time": 15.3,
+      "energy": 0.8024131774902343
+    },
+    {
+      "time": 15.4,
+      "energy": 0.7647083282470704
+    },
+    {
+      "time": 15.5,
+      "energy": 1.0
+    },
+    {
+      "time": 15.6,
+      "energy": 1.0
+    },
+    {
+      "time": 15.7,
+      "energy": 1.0
+    },
+    {
+      "time": 15.8,
+      "energy": 1.0
+    },
+    {
+      "time": 15.9,
+      "energy": 0.5090156237284342
+    },
+    {
+      "time": 16.0,
+      "energy": 0.5848697662353516
+    },
+    {
+      "time": 16.1,
+      "energy": 0.34134028752644857
+    },
+    {
+      "time": 16.2,
+      "energy": 0.3260382016499837
+    },
+    {
+      "time": 16.3,
+      "energy": 0.5631579717000326
+    },
+    {
+      "time": 16.4,
+      "energy": 0.3344496409098307
+    },
+    {
+      "time": 16.5,
+      "energy": 0.7065087000528971
+    },
+    {
+      "time": 16.6,
+      "energy": 0.48809722264607747
+    },
+    {
+      "time": 16.7,
+      "energy": 0.5175312360127767
+    },
+    {
+      "time": 16.8,
+      "energy": 0.5913124720255534
+    },
+    {
+      "time": 16.9,
+      "energy": 0.7559062321980794
+    },
+    {
+      "time": 17.0,
+      "energy": 0.44392360051472984
+    },
+    {
+      "time": 17.1,
+      "energy": 0.9643645604451497
+    },
+    {
+      "time": 17.2,
+      "energy": 1.0
+    },
+    {
+      "time": 17.3,
+      "energy": 0.3106406211853027
+    },
+    {
+      "time": 17.4,
+      "energy": 0.2934236208597819
+    },
+    {
+      "time": 17.5,
+      "energy": 0.30014063517252604
+    },
+    {
+      "time": 17.6,
+      "energy": 0.11869791348775229
+    },
+    {
+      "time": 17.7,
+      "energy": 0.3283593813578288
+    },
+    {
+      "time": 17.8,
+      "energy": 0.0722291628519694
+    },
+    {
+      "time": 17.9,
+      "energy": 0.1147326389948527
+    },
+    {
+      "time": 18.0,
+      "energy": 0.05593923727671305
+    },
+    {
+      "time": 18.1,
+      "energy": 0.039241317907969156
+    },
+    {
+      "time": 18.2,
+      "energy": 0.015612847606341044
+    },
+    {
+      "time": 18.3,
+      "energy": 0.02571354111035665
+    },
+    {
+      "time": 18.4,
+      "energy": 0.014571180939674378
+    },
+    {
+      "time": 18.5,
+      "energy": 0.026402777433395384
+    },
+    {
+      "time": 18.6,
+      "energy": 0.012375000119209289
+    },
+    {
+      "time": 18.7,
+      "energy": 0.0072413196166356405
+    },
+    {
+      "time": 18.8,
+      "energy": 0.01822395920753479
+    },
+    {
+      "time": 18.9,
+      "energy": 0.01250868042310079
+    },
+    {
+      "time": 19.0,
+      "energy": 0.01647569437821706
+    },
+    {
+      "time": 19.1,
+      "energy": 0.009848958253860474
+    },
+    {
+      "time": 19.2,
+      "energy": 0.007097222407658895
+    },
+    {
+      "time": 19.3,
+      "energy": 0.018892361720403036
+    },
+    {
+      "time": 19.4,
+      "energy": 0.012557291984558105
+    },
+    {
+      "time": 19.5,
+      "energy": 0.016267361243565877
+    },
+    {
+      "time": 19.6,
+      "energy": 0.010140624642372132
+    },
+    {
+      "time": 19.7,
+      "energy": 0.006737847129503886
+    },
+    {
+      "time": 19.8,
+      "energy": 0.018927083412806193
+    },
+    {
+      "time": 19.9,
+      "energy": 0.012656249602635701
+    },
+    {
+      "time": 20.0,
+      "energy": 0.015935763716697693
+    },
+    {
+      "time": 20.1,
+      "energy": 0.010157986481984457
+    },
+    {
+      "time": 20.2,
+      "energy": 0.0071718752384185794
+    },
+    {
+      "time": 20.3,
+      "energy": 0.018769097328186036
+    },
+    {
+      "time": 20.4,
+      "energy": 0.010480902592341105
+    },
+    {
+      "time": 20.5,
+      "energy": 0.021223958333333334
+    },
+    {
+      "time": 20.6,
+      "energy": 0.013218749562899272
+    },
+    {
+      "time": 20.7,
+      "energy": 0.015829861164093018
+    },
+    {
+      "time": 20.8,
+      "energy": 0.005067708094914755
+    },
+    {
+      "time": 20.9,
+      "energy": 0.025505208969116212
+    },
+    {
+      "time": 21.0,
+      "energy": 0.013781249523162842
+    },
+    {
+      "time": 21.1,
+      "energy": 0.0261840283870697
+    }
+  ]
+}

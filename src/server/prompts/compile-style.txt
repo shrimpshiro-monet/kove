@@ -62,7 +62,9 @@ RULE 1 — ONLY use effects from this list:
   vhs_tracking, crt_curve, noise_grain, posterize, cross_process, duotone,
   gradient_map, displacement_map, turbulence, mirror, kaleidoscope,
   outline_glow, shadow_boost, highlight_crush, flash_white, particle_system,
-  artifact_block, bloom, overlay
+  artifact_block, bloom, overlay,
+  halftone, ink_edges, frame_stutter, vignette_pro, bw_toggle,
+  flash_white, multi_exposure, desaturate
   Anything else will be silently dropped.
 
 RULE 2 — ALL numeric ranges must be respected:

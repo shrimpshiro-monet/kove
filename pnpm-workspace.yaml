@@ -1,3 +1,4 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "external/openreel-video/packages/*"

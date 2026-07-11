@@ -1,9 +1,13 @@
 export * from "./monet-edl.js";
 export * from "./schemas.js";
-export { MonetEDL, Shot, EditDNA, Act, CharacterFocus, SegmentRef, EditIntent, MotionTrack, PlanarTrack, MaskAsset, TextOverlay, Effect } from "./monet-ai-edl.js";
+export { MonetEDL, Shot, EditDNA, Act, CharacterFocus, SegmentRef, EditIntent, MotionTrack, PlanarTrack, MaskAsset, TextOverlay, Effect, EasingType, TransitionType, ColorGradePreset, Keyframe, Keyframeable } from "./monet-ai-edl.js";
 export * from "./validators.js";
 export * from "./normalizers.js";
 export * from "./analysis-types.js";
 export * from "./effect-types.js";
 export * from "./health-check.js";
 export * from "./spatial-types.js";
+export * from "./tempo-modes.js";
+export * from "./reference-structure.js";
+export * from "./zod-schemas.js";
+export * from "./effect-spec.js";

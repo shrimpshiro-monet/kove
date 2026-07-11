@@ -1,0 +1,1 @@
+# monet/auth package

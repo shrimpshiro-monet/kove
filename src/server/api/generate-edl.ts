@@ -47,6 +47,8 @@ export async function handleGenerateEDL(
       styleDNA?: any;
       intensity?: number;
       tempoMode?: string;
+      momentMap?: any;
+      vocabulary?: any;
     };
 
     const {
@@ -54,6 +56,7 @@ export async function handleGenerateEDL(
       analysisData, targetDuration: targetDur, style,
       referenceStyle: clientReferenceStyle, referenceTrace, referenceMode,
       styleDNA, intensity, tempoMode,
+      momentMap, vocabulary,
     } = body;
     const ai = getAIService(env);
 
@@ -186,7 +189,10 @@ export async function handleGenerateEDL(
           analysis,
           ai,
           referenceStyle,
+          referenceTrace,
           referenceMode,
+          momentMap,
+          vocabulary,
           analysisId,
           clipIds,
           prompt,

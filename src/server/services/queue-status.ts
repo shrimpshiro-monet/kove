@@ -13,7 +13,7 @@ export interface QueueStatus {
 const STATUS_KEY = "queue:hf:status";
 
 export async function getQueueStatus(env: Env): Promise<QueueStatus> {
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (!kv) {
     return { tier: "free", isBusy: false, estimatedWaitSec: 0, recentFailures: 0 };
   }
@@ -23,7 +23,8 @@ export async function getQueueStatus(env: Env): Promise<QueueStatus> {
   }
   try {
     return JSON.parse(raw);
-  } catch {
+  } catch (e) {
+    console.warn("[queue] status parse failed:", e);
     return { tier: "free", isBusy: false, estimatedWaitSec: 0, recentFailures: 0 };
   }
 }
@@ -32,7 +33,7 @@ export async function markQueueBusy(
   env: Env,
   estimatedWaitSec: number,
 ): Promise<void> {
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (!kv) return;
   const status: QueueStatus = {
     tier: "free",
@@ -44,13 +45,17 @@ export async function markQueueBusy(
     await kv.put(STATUS_KEY, JSON.stringify(status), {
       expirationTtl: 60,
     });
-  } catch {}
+  } catch (e) {
+    console.warn("[queue] markBusy failed:", e);
+  }
 }
 
 export async function clearQueueStatus(env: Env): Promise<void> {
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (!kv) return;
   try {
     await kv.delete(STATUS_KEY);
-  } catch {}
+  } catch (e) {
+    console.warn("[queue] clearStatus failed:", e);
+  }
 }

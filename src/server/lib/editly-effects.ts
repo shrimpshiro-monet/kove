@@ -1,6 +1,8 @@
 // src/server/lib/editly-effects.ts
 // Converts MonetEDL effects into real FFmpeg filter chains
+// Pattern: Effect.copy() before apply() prevents mutation bugs (from MoviePy research)
 
+import { EffectSpecMap } from "@monet/edl";
 import type { Effect, Shot } from "../types/edl";
 
 export interface FFmpegFilter {
@@ -9,12 +11,26 @@ export interface FFmpegFilter {
 }
 
 /**
+ * Deep copy an effect to prevent mutation during filter generation.
+ * Pattern from MoviePy: Effect.copy() before apply() prevents bugs
+ * when the same effect instance is reused across multiple shots.
+ */
+export function copyEffect(effect: Effect): Effect {
+  return {
+    ...effect,
+    params: effect.params ? { ...effect.params } : undefined,
+  };
+}
+
+/**
  * Convert a MonetEDL effect into one or more FFmpeg filter strings.
  * These get injected into Editly's customFrame or applied via
  * the ffmpegFilter layer option.
  */
 export function effectToFFmpegFilters(effect: Effect): string[] {
-  const intensity = effect.intensity ?? 0.5;
+  // Always work on a copy to prevent mutation
+  const fx = copyEffect(effect);
+  const intensity = fx.intensity ?? 0.5;
 
   switch (effect.type as string) {
     // ─── BLUR EFFECTS ───
@@ -365,9 +381,225 @@ export function effectToFFmpegFilters(effect: Effect): string[] {
       // Particles can't be done in pure FFmpeg — skip gracefully
       return [];
 
-    default:
+    // ─── COMIC / STYLE EFFECTS ───
+    case "halftone":
+    case "halftone_dot": {
+      // Ben-Day dot pattern: threshold + tile to create dot matrix
+      const dotSize = Math.max(2, Math.round((1 - intensity) * 8));
+      return [
+        `format=gray`,
+        `threshold=128`,
+        `tile=${dotSize}x${dotSize}`,
+        `scale=1920:1080:flags=neighbor`,
+        `format=yuv420p`,
+      ];
+    }
+
+    case "ink_edges":
+    case "inkEdges":
+    case "ink-edges": {
+      // Comic-style ink outlines: edge detect + negate for black lines
+      const edgeLow = (0.05 + intensity * 0.15).toFixed(2);
+      const edgeHigh = (0.1 + intensity * 0.2).toFixed(2);
+      return [`edgedetect=low=${edgeLow}:high=${edgeHigh}:mode=colors`];
+    }
+
+    case "frame_stutter":
+    case "frameStutter":
+    case "frame-stutter": {
+      // Stepped frame-rate: reduce to 8-12fps for hand-drawn feel
+      const stutterFps = Math.max(6, Math.round(8 + intensity * 8));
+      return [`fps=fps=${stutterFps}`];
+    }
+
+    // ─── VIGNETTE ───
+    case "vignette_pro":
+    case "vignettePro":
+    case "vignette-pro": {
+      // Strong radial vignette: angle controls darkness spread
+      const angle = (intensity * Math.PI) / 3;
+      return [`vignette=${angle.toFixed(2)}`];
+    }
+
+    // ─── B&W TOGGLE ───
+    case "bw_toggle":
+    case "bwToggle":
+    case "bw-toggle": {
+      // Full desaturation with contrast boost
+      return [
+        `hue=s=0`,
+        `eq=contrast=${(1 + intensity * 0.6).toFixed(2)}:brightness=${(intensity * -0.02).toFixed(3)}`,
+      ];
+    }
+
+    // ─── FLASH WHITE ───
+    case "flash_white":
+    case "flashWhite":
+    case "flash-white": {
+      // White flash overlay: blend white at intensity
+      return [
+        `split[fw_orig][fw_white]`,
+        `[fw_white]color=white:s=1920x1080[fw_blank]`,
+        `[fw_orig][fw_blank]blend=all_mode=normal:all_opacity=${intensity.toFixed(2)}[fw_out]`,
+      ];
+    }
+
+    // ─── MULTI-EXPOSURE ───
+    case "multi_exposure":
+    case "multiExposure":
+    case "multi-exposure": {
+      // Double exposure: blend current frame with a shifted copy
+      return [
+        `split[me_orig][me_copy]`,
+        `[me_copy]crop=iw*0.8:ih*0.8:iw*0.1:ih*0.1,scale=1920:1080[me_crop]`,
+        `[me_orig][me_crop]blend=all_mode=screen:all_opacity=${(intensity * 0.6).toFixed(2)}`,
+      ];
+    }
+
+    // ─── DESATURATE ───
+    case "desaturate": {
+      // Partial desaturation: reduce saturation by intensity amount
+      const sat = (1 - intensity).toFixed(2);
+      return [`eq=saturation=${sat}`];
+    }
+
+    // ─── NOISE GRAIN ───
+    case "noise_grain":
+    case "noiseGrain":
+    case "noise-grain": {
+      const amount = Math.max(1, intensity * 40);
+      return [`noise=alls=${amount}:allf=t`];
+    }
+
+    // ─── WAVE WARP ───
+    case "wave_warp":
+    case "waveWarp":
+    case "wave-warp": {
+      const amp = Math.max(1, intensity * 15);
+      const freq = effect.params?.frequency ?? 3;
+      const speed = effect.params?.speed ?? 2;
+      return [`geq=lum='lum(X,Y)+${amp}*sin(Y/${freq}+N/${speed})'`];
+    }
+
+    // ─── FISHEYE ───
+    case "fisheye":
+    case "fisheye_lens":
+    case "fisheyeLens": {
+      const strength = (intensity - 0.5) * 0.4;
+      return [`lenscorrection=cx=0.5:cy=0.5:k1=${strength.toFixed(3)}:k2=${strength.toFixed(3)}`];
+    }
+
+    // ─── COLOR BALANCE ───
+    case "color_balance":
+    case "colorBalance":
+    case "color-balance": {
+      const warmth = intensity * 0.3;
+      return [
+        `curves=r='0/0 0.25/${(0.25 + warmth).toFixed(2)} 0.75/${(0.75 - warmth * 0.3).toFixed(2)} 1/1':b='0/0 0.25/${(0.25 - warmth * 0.5).toFixed(2)} 0.75/${(0.75 + warmth * 0.2).toFixed(2)} 1/1'`,
+      ];
+    }
+
+    // ─── LIGHT LEAK ───
+    case "light_leak":
+    case "lightLeak":
+    case "light-leak": {
+      const opacity = Math.min(0.5, intensity * 0.4);
+      return [
+        `split[ll_orig][ll_tint]`,
+        `[ll_tint]colorbalance=rs=${(intensity * 0.4).toFixed(2)}:gs=${(intensity * 0.1).toFixed(2)}:bs=-${(intensity * 0.2).toFixed(2)}[ll_warm]`,
+        `[ll_orig][ll_warm]blend=all_mode=screen:all_opacity=${opacity.toFixed(2)}[ll_out]`,
+      ];
+    }
+
+    // ─── BLOOM ───
+    case "bloom": {
+      const blurAmt = Math.max(2, intensity * 20);
+      const opacity = Math.min(0.6, intensity * 0.5);
+      return [
+        `split[b_orig][b_blur]`,
+        `[b_blur]boxblur=${blurAmt}:${blurAmt / 2},eq=brightness=${(intensity * 0.3).toFixed(2)}[b_bright]`,
+        `[b_orig][b_bright]blend=all_mode=screen:all_opacity=${opacity.toFixed(2)}[b_out]`,
+      ];
+    }
+
+    // ─── VHS TRACKING ───
+    case "vhs_tracking":
+    case "vhsTracking":
+    case "vhs-tracking": {
+      const shift = Math.max(1, intensity * 6);
+      return [
+        `rgbashift=rh=${shift}:bh=-${shift}`,
+        `noise=alls=${(intensity * 15).toFixed(0)}:allf=t`,
+        `eq=saturation=${(1 + intensity * 0.3).toFixed(2)}:contrast=${(1 + intensity * 0.2).toFixed(2)}`,
+      ];
+    }
+
+    // ─── OVERLAY ───
+    case "overlay": {
+      const opacity = Math.min(0.4, intensity * 0.3);
+      return [`color=gray@${opacity.toFixed(2)}:s=1920x1080,blend=all_mode=overlay:all_opacity=1`];
+    }
+
+    // ─── HALFTONE BENDAY ───
+    case "halftone_benday":
+    case "halftoneBenday":
+    case "halftone-benday": {
+      const dotSize = Math.max(2, Math.round(intensity * 6));
+      return [
+        `format=gray`,
+        `threshold=128`,
+        `tile=${dotSize}x${dotSize}`,
+        `scale=1920:1080:flags=neighbor`,
+        `format=yuv420p`,
+      ];
+    }
+
+    // ─── COMIC INK EDGES ───
+    case "comic_ink_edges":
+    case "comicInkEdges":
+    case "comic-ink-edges": {
+      const thresh = 0.1 + intensity * 0.2;
+      return [`edgedetect=low=${thresh.toFixed(2)}:high=${(thresh + 0.1).toFixed(2)}:mode=colors,negate`];
+    }
+
+    // ─── FRAME STUTTER ANIME ───
+    case "frame_stutter_anime":
+    case "frameStutterAnime":
+    case "frame-stutter-anime": {
+      const stutterFps = Math.max(6, Math.round(8 + intensity * 8));
+      return [`fps=fps=${stutterFps}`];
+    }
+
+    // ─── LENS FLARE ───
+    case "lens_flare":
+    case "lensFlare":
+    case "lens-flare": {
+      const size = Math.max(10, intensity * 80);
+      const opacity = Math.min(0.5, intensity * 0.4);
+      return [
+        `split[lf_orig][lf_tint]`,
+        `[lf_tint]colorbalance=rs=${(intensity * 0.3).toFixed(2)}:gs=${(intensity * 0.15).toFixed(2)}[lf_warm]`,
+        `[lf_orig][lf_warm]blend=all_mode=screen:all_opacity=${opacity.toFixed(2)}[lf_out]`,
+      ];
+    }
+
+    default: {
+      const spec = EffectSpecMap[effect.type as string];
+      if (spec?.ffmpeg) {
+        const params: Record<string, number> = {
+          intensity: effect.intensity ?? 0.5,
+          ...(effect.params as Record<string, number> ?? {}),
+        };
+        for (const [key, def] of Object.entries(spec.params)) {
+          if (params[key] === undefined) {
+            params[key] = def.default;
+          }
+        }
+        return spec.ffmpeg(params);
+      }
       console.warn(`[editly-effects] Unknown effect type: ${effect.type}`);
       return [];
+    }
   }
 }
 

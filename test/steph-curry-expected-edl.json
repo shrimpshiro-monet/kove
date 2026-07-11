@@ -1,0 +1,135 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "title": "Steph Curry — Reference Match v4",
+    "createdAt": 0,
+    "aiModel": "gemini-2.5-flash",
+    "prompt": "19s Steph Curry highlight. Buildup → shot in air → celebration → emotional reaction → peak scream → the make → fade to black. Velocity ramps, subject isolation, dark grade on hero shots.",
+    "intentId": "test-steph-v4",
+    "analysisId": "test-steph-v4"
+  },
+  "timeline": {
+    "resolution": { "width": 576, "height": 576 },
+    "fps": 30,
+    "duration": 19.16
+  },
+  "music": {
+    "id": "music-steph",
+    "sourceId": "bbf.mp3",
+    "bpm": 140,
+    "volume": 0.85
+  },
+  "shots": [
+    {
+      "id": "buildup",
+      "source": { "clipId": "src", "inPoint": 0.0, "outPoint": 2.5 },
+      "timing": { "startTime": 0.0, "duration": 2.5, "speed": 1.0 },
+      "effects": [],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Buildup — Curry driving to basket. Sets the scene."
+    },
+    {
+      "id": "tension",
+      "source": { "clipId": "src", "inPoint": 2.5, "outPoint": 3.5 },
+      "timing": { "startTime": 2.5, "duration": 1.0, "speed": 0.6, "speedRamp": { "startSpeed": 1.0, "endSpeed": 0.5, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f1", "type": "impact_flash", "intensity": 0.6, "startTime": 0, "duration": 0.033 }
+      ],
+      "transition": { "type": "whip_pan", "duration": 0.1 },
+      "aiRationale": "Ball in air — tension builds. Velocity ramp into slow-mo."
+    },
+    {
+      "id": "hero-smile",
+      "source": { "clipId": "src", "inPoint": 9.5, "outPoint": 11.5 },
+      "timing": { "startTime": 3.5, "duration": 2.0, "speed": 0.4, "speedRamp": { "startSpeed": 1.2, "endSpeed": 0.35, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f2", "type": "subject_isolation", "intensity": 0.8 }
+      ],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Curry smiling — celebration. Slow-mo with subject isolation."
+    },
+    {
+      "id": "flash-1",
+      "source": { "clipId": "src", "inPoint": 11.5, "outPoint": 11.54 },
+      "timing": { "startTime": 5.5, "duration": 0.033, "speed": 1.0 },
+      "effects": [
+        { "id": "f3", "type": "flash_white", "intensity": 1.0, "startTime": 0, "duration": 0.033 }
+      ],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Flash frame"
+    },
+    {
+      "id": "hero-emotion",
+      "source": { "clipId": "src", "inPoint": 17.5, "outPoint": 19.5 },
+      "timing": { "startTime": 5.53, "duration": 2.0, "speed": 0.35, "speedRamp": { "startSpeed": 1.0, "endSpeed": 0.3, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f4", "type": "subject_isolation", "intensity": 0.9 },
+        { "id": "f4b", "type": "context_shake", "intensity": 0.3, "startTime": 0.5, "duration": 1.0 }
+      ],
+      "transition": { "type": "whip_pan", "duration": 0.12 },
+      "aiRationale": "Hands on face — maximum emotion. Desaturated. Subject isolation."
+    },
+    {
+      "id": "flash-2",
+      "source": { "clipId": "src", "inPoint": 19.5, "outPoint": 19.54 },
+      "timing": { "startTime": 7.53, "duration": 0.033, "speed": 1.0 },
+      "effects": [
+        { "id": "f5", "type": "flash_white", "intensity": 1.0, "startTime": 0, "duration": 0.033 }
+      ],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Flash frame"
+    },
+    {
+      "id": "hero-scream",
+      "source": { "clipId": "src", "inPoint": 19.5, "outPoint": 21.5 },
+      "timing": { "startTime": 7.56, "duration": 2.0, "speed": 0.4, "speedRamp": { "startSpeed": 1.0, "endSpeed": 0.35, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f6", "type": "subject_isolation", "intensity": 0.85 },
+        { "id": "f6b", "type": "context_shake", "intensity": 0.4, "startTime": 0, "duration": 0.8 }
+      ],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Curry screaming — peak emotion. Maximum isolation. Dark grade."
+    },
+    {
+      "id": "whip-1",
+      "source": { "clipId": "src", "inPoint": 21.5, "outPoint": 21.9 },
+      "timing": { "startTime": 9.56, "duration": 0.3, "speed": 2.0 },
+      "effects": [],
+      "transition": { "type": "whip_pan", "duration": 0.12 },
+      "aiRationale": "Fast whip"
+    },
+    {
+      "id": "hero-make",
+      "source": { "clipId": "src", "inPoint": 11.5, "outPoint": 13.5 },
+      "timing": { "startTime": 9.86, "duration": 2.0, "speed": 0.35, "speedRamp": { "startSpeed": 1.5, "endSpeed": 0.3, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f7", "type": "impact_flash", "intensity": 0.8, "startTime": 0, "duration": 0.033 },
+        { "id": "f7b", "type": "subject_isolation", "intensity": 0.7 }
+      ],
+      "transition": { "type": "cut", "duration": 0 },
+      "aiRationale": "Ball through net — the payoff. Velocity ramp fast→slow."
+    },
+    {
+      "id": "hero-celebrate",
+      "source": { "clipId": "src", "inPoint": 13.5, "outPoint": 16.0 },
+      "timing": { "startTime": 11.86, "duration": 2.5, "speed": 0.45, "speedRamp": { "startSpeed": 1.0, "endSpeed": 0.4, "easing": "ease-out" } },
+      "effects": [
+        { "id": "f8", "type": "subject_isolation", "intensity": 0.75 }
+      ],
+      "transition": { "type": "whip_pan", "duration": 0.1 },
+      "aiRationale": "Final celebration — victory lap. Slow-mo."
+    },
+    {
+      "id": "outro",
+      "source": { "clipId": "src", "inPoint": 16.0, "outPoint": 17.0 },
+      "timing": { "startTime": 14.36, "duration": 1.0, "speed": 1.0 },
+      "effects": [],
+      "transition": { "type": "dip_black", "duration": 0.8 },
+      "aiRationale": "Fade to black — clean ending."
+    }
+  ],
+  "globalEffects": {
+    "colorGrade": "raw",
+    "vignette": 0.2
+  }
+}

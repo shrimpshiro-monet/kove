@@ -1,158 +1,115 @@
-import type { MonetEDL, Shot } from "../types/edl";
+import type { MonetEDL } from "../types/edl";
 import type { ReferenceStyle } from "../types/reference-style";
 
-export type ReferenceMode = "strict_replication" | "inspired";
+type Mode = "strict_replication" | "inspired";
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
+interface SectionSpec {
+  role: string;
+  startPct: number;
+  endPct: number;
+  minDur: number;
+  maxDur: number;
 }
 
-function averageShotDuration(shots: Shot[]): number {
-  if (shots.length === 0) return 0;
-  return shots.reduce((sum, shot) => sum + shot.timing.duration, 0) / shots.length;
-}
+function deriveSections(ref: ReferenceStyle): SectionSpec[] {
+  const climax = ref.pacing?.climaxPosition ?? 0.25;
+  const avg = ref.rhythm?.avgShotDuration ?? 0.9;
+  const structure = ref.intentMapping?.structure;
 
-function reflowTimeline(shots: Shot[], totalDuration: number): Shot[] {
-  const result: Shot[] = [];
-  let t = 0;
-  for (const shot of shots) {
-    if (t >= totalDuration) break;
-    const nextDuration = clamp(shot.timing.duration, 0.5, Math.max(0.5, totalDuration - t));
-    result.push({
-      ...shot,
-      timing: {
-        ...shot.timing,
-        startTime: t,
-        duration: nextDuration,
-      },
-    });
-    t += nextDuration;
+  if (structure === "setup_to_montage" || structure === "dialogue_drama") {
+    return [
+      { role: "hook",    startPct: 0,             endPct: climax * 0.6,   minDur: avg * 1.6, maxDur: avg * 4.5 },
+      { role: "setup",   startPct: climax * 0.6,  endPct: climax,         minDur: avg * 1.0, maxDur: avg * 2.5 },
+      { role: "drop",    startPct: climax,        endPct: climax + 0.05,  minDur: 0.25,      maxDur: avg * 1.2 },
+      { role: "montage", startPct: climax + 0.05, endPct: 0.95,           minDur: 0.30,      maxDur: avg * 1.3 },
+      { role: "ending",  startPct: 0.95,          endPct: 1.0,            minDur: 0.35,      maxDur: avg * 1.5 },
+    ];
   }
-  return result;
-}
-
-function enforceTransitionMix(
-  shots: Shot[],
-  cutRatioTarget: number,
-  mode: ReferenceMode,
-): Shot[] {
-  if (shots.length === 0) return shots;
-  const targetCutShots = Math.round(cutRatioTarget * shots.length);
-  return shots.map((shot, i) => {
-    const shouldCut = i < targetCutShots;
-    if (shouldCut) {
-      return {
-        ...shot,
-        transition: { type: "cut", duration: 0 },
-      };
-    }
-    return {
-      ...shot,
-      transition: {
-        type: mode === "strict_replication" ? "crossfade" : shot.transition?.type ?? "crossfade",
-        duration: clamp(shot.transition?.duration ?? 0.25, 0.1, 0.5),
-      },
-    };
-  });
-}
-
-function enforceEffectsDensity(
-  shots: Shot[],
-  effectsFrequencyTarget: number,
-  intensity: number,
-): Shot[] {
-  if (shots.length === 0) return shots;
-  const targetWithEffects = Math.round(effectsFrequencyTarget * shots.length);
-
-  return shots.map((shot, i) => {
-    if (i < targetWithEffects) {
-      if (shot.effects && shot.effects.length > 0) return shot;
-      return {
-        ...shot,
-        effects: [{ id: `effect-glow-${i}`, type: "glow", intensity: clamp(intensity, 0.2, 0.8) }],
-      };
-    }
-    return {
-      ...shot,
-      effects: [],
-    };
-  });
-}
-
-function enforceBeatLock(shots: Shot[], beatGrid: number[]): Shot[] {
-  if (beatGrid.length === 0) return shots;
-  return shots.map((shot) => {
-    const start = shot.timing.startTime;
-    let bestIdx = 0;
-    let bestDist = Number.POSITIVE_INFINITY;
-    for (let i = 0; i < beatGrid.length; i++) {
-      const dist = Math.abs(beatGrid[i] - start);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
-    }
-    return {
-      ...shot,
-      beatLock: {
-        beatIndex: bestIdx,
-        lockMode: "start",
-      },
-    };
-  });
+  return [
+    { role: "build",  startPct: 0,   endPct: 0.5, minDur: avg * 0.9, maxDur: avg * 1.6 },
+    { role: "peak",   startPct: 0.5, endPct: 0.9, minDur: avg * 0.6, maxDur: avg * 1.2 },
+    { role: "ending", startPct: 0.9, endPct: 1.0, minDur: avg * 0.8, maxDur: avg * 1.5 },
+  ];
 }
 
 export function enforceReferenceStyleOnEDL(
   edl: MonetEDL,
-  style: ReferenceStyle,
-  mode: ReferenceMode,
+  ref: ReferenceStyle,
+  mode: Mode,
 ): MonetEDL {
-  if (!Array.isArray(edl.shots) || edl.shots.length === 0) return edl;
+  if (!edl.shots?.length) return edl;
 
-  const strict = mode === "strict_replication";
-  const targetAvg = clamp(style.rhythm.avgShotDuration, 0.6, 8);
-  const currentAvg = averageShotDuration(edl.shots);
-  const scale = currentAvg > 0 ? targetAvg / currentAvg : 1;
-  const scaleClamp = strict ? [0.75, 1.35] : [0.6, 1.6];
-  const scaled = edl.shots.map((shot) => ({
-    ...shot,
-    timing: {
-      ...shot.timing,
-      duration: clamp(shot.timing.duration * clamp(scale, scaleClamp[0], scaleClamp[1]), 0.5, 8),
-    },
-  }));
+  const dur = edl.timeline?.duration ?? 30;
+  const sections = deriveSections(ref);
+  const tol = mode === "strict_replication" ? 1.0 : 1.3;
 
-  const reflowed = reflowTimeline(scaled, edl.timeline.duration);
-  const withTransitions = enforceTransitionMix(
-    reflowed,
-    clamp(style.effects.transitionsBreakdown.cutPercentage, 0.5, 0.99),
-    mode,
-  );
-  const withEffects = enforceEffectsDensity(
-    withTransitions,
-    clamp(style.effects.effectsFrequency, 0, 0.9),
-    style.effects.overallIntensity,
-  );
+  // 1) tag section + clamp per-section (never global)
+  for (const shot of edl.shots) {
+    const startPct = shot.timing.startTime / dur;
+    const sec =
+      sections.find((x) => startPct >= x.startPct && startPct < x.endPct) ??
+      sections[sections.length - 1];
+    shot.sectionRole = sec.role;
 
-  const processedShots = edl.music?.beatGrid?.length
-    ? enforceBeatLock(withEffects, edl.music.beatGrid)
-    : withEffects;
+    // preserve intentional outliers (a deliberate hold or hero moment)
+    if ((shot as any).isHero || (shot as any).holdForImpact) continue;
 
-  const finalShots = processedShots.map((shot) => ({
-    ...shot,
-    meta: {
-      ...shot.meta,
-      styleMode: mode,
-      styleTags: Array.from(new Set([...(shot.meta?.styleTags || []), "strict_reference"])),
-    },
-  }));
+    const min = sec.minDur;
+    const max = sec.maxDur * tol;
+    if (shot.timing.duration < min) shot.timing.duration = min;
+    else if (shot.timing.duration > max) shot.timing.duration = max;
+  }
 
-  return {
-    ...edl,
-    shots: finalShots,
-    globalEffects: {
-      ...edl.globalEffects,
-      colorGrade: style.intentMapping.colorTreatment,
-    },
-  };
+  // 2) reflow sequentially, then normalize to target WITHOUT killing contrast
+  reflowToTarget(edl, dur);
+
+  // 3) transition mix (section-aware): montage/drop never crossfades
+  enforceTransitionMix(edl, ref);
+
+  return edl;
+}
+
+function reflowToTarget(edl: MonetEDL, target: number) {
+  let t = 0;
+  for (const s of edl.shots) {
+    s.timing.startTime = t;
+    t += s.timing.duration;
+  }
+  const scale = target / (t || target);
+  if (Math.abs(scale - 1) > 0.02) {
+    let acc = 0;
+    for (const s of edl.shots) {
+      s.timing.duration *= scale;
+      s.timing.startTime = acc;
+      acc += s.timing.duration;
+    }
+  }
+  if (edl.timeline) edl.timeline.duration = target;
+}
+
+function enforceTransitionMix(edl: MonetEDL, ref: ReferenceStyle) {
+  const tb = ref.effects.transitionsBreakdown;
+
+  for (const shot of edl.shots) {
+    if (!shot.transition) shot.transition = { type: "cut", duration: 0 };
+    const t = shot.transition.type;
+    // HARD RULE: high-energy sections stay on hard cuts
+    if (
+      (shot.sectionRole === "montage" || shot.sectionRole === "drop") &&
+      (t === "crossfade" || t === "dissolve")
+    ) {
+      shot.transition = { type: "cut", duration: 0 };
+    }
+  }
+
+  // Allocate crossfade budget deterministically to hook/setup only
+  const cfBudget = Math.round((tb.crossfadePercentage ?? 0) * edl.shots.length);
+  if (cfBudget > 0) {
+    const eligible = edl.shots.filter(
+      (s) => s.sectionRole === "hook" || s.sectionRole === "setup",
+    );
+    eligible.slice(0, cfBudget).forEach((s) => {
+      s.transition = { type: "crossfade", duration: 0.3 };
+    });
+  }
 }

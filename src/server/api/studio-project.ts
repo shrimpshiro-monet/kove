@@ -158,7 +158,8 @@ export async function handleGetStudioProject(request: Request, env: Env | undefi
           edl: parsedEdl,
           source: "db",
         } satisfies StudioProjectResult);
-      } catch {
+      } catch (e) {
+        console.warn("[studio-project] failed to parse snapshot edl, skipping:", e);
         continue;
       }
     }
@@ -181,7 +182,8 @@ export async function handleGetStudioProject(request: Request, env: Env | undefi
     let parsedEdl: MonetEDL;
     try {
       parsedEdl = JSON.parse(latest.edlJson) as MonetEDL;
-    } catch {
+    } catch (e) {
+      console.warn("[studio-project] failed to parse edlJson for project", id, ":", e);
       continue;
     }
 

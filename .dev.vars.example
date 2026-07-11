@@ -19,3 +19,5 @@ GCS_BUCKET=your-gcs-bucket-name
 
 # Environment
 ENVIRONMENT=development
+
+DIGITALOCEAN_API_KEY="doo_v1_cd505c829ff95904c49590ecdf6fe1d899fd472a468df64ab39ddbc32c7a6447"

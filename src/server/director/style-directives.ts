@@ -1,7 +1,11 @@
+import type { TempoMode } from "@monet/edl";
+
+export type { TempoMode };
 export type EditIntensity = "low" | "medium" | "high" | "extreme";
 
 export type StyleDirectives = {
   mode: "inspired" | "strict_replication";
+  tempoMode: TempoMode;
 
   pacing: {
     targetAvgShotDurationSec: number;
@@ -61,11 +65,17 @@ function normalizeCutAlignment(value: unknown): string {
 
 export function compileReferenceStyleToDirectives(
   referenceStyle: any | null | undefined,
-  mode: "inspired" | "strict_replication"
+  mode: "inspired" | "strict_replication",
+  tempoMode?: TempoMode
 ): StyleDirectives {
   const pacing = normalizePacing(referenceStyle?.intentMapping?.pacing);
   const avgShotDuration = Number(referenceStyle?.rhythm?.avgShotDuration ?? 1.2);
   const cutAlignment = normalizeCutAlignment(referenceStyle?.rhythm?.cutAlignment);
+
+  // Derive tempo mode from reference if not explicitly set
+  const effectiveTempo: TempoMode =
+    tempoMode ??
+    (mode === "strict_replication" ? "reference_mirror" : "narrative");
 
   const highEnergy =
     mode === "strict_replication" ||
@@ -77,13 +87,18 @@ export function compileReferenceStyleToDirectives(
     mode === "strict_replication" &&
     (avgShotDuration < 0.8 || pacing.includes("fast"));
 
+  // Tempo-aware overrides
+  const tempoOverrides = getTempoOverrides(effectiveTempo);
+
   return {
     mode,
+    tempoMode: effectiveTempo,
 
     pacing: {
-      targetAvgShotDurationSec: highEnergy
-        ? Math.max(0.28, Math.min(avgShotDuration, 0.85))
-        : Math.max(0.75, Math.min(avgShotDuration, 1.8)),
+      targetAvgShotDurationSec: tempoOverrides.avgShotDuration ??
+        (highEnergy
+          ? Math.max(0.28, Math.min(avgShotDuration, 0.85))
+          : Math.max(0.75, Math.min(avgShotDuration, 1.8))),
       maxShotDurationSec: highEnergy ? 1.25 : 2.4,
       minShotDurationSec: highEnergy ? 0.16 : 0.35,
       cutDensity: extremeEnergy ? "extreme" : highEnergy ? "high" : "medium",
@@ -92,24 +107,31 @@ export function compileReferenceStyleToDirectives(
 
     rhythm: {
       beatAlignment:
-        cutAlignment.includes("transient") || cutAlignment.includes("hard") || cutAlignment.includes("tight")
-          ? "transient_locked"
-          : highEnergy
-            ? "beat_locked"
-            : "loose",
-      hitMajorTransients: highEnergy,
-      requireDropMoment: highEnergy,
+        effectiveTempo === "beat_locked" || effectiveTempo === "beat_anticipated"
+          ? "beat_locked"
+          : effectiveTempo === "reference_mirror"
+            ? "transient_locked"
+            : cutAlignment.includes("transient") || cutAlignment.includes("hard") || cutAlignment.includes("tight")
+              ? "transient_locked"
+              : highEnergy
+                ? "beat_locked"
+                : "loose",
+      hitMajorTransients: highEnergy || effectiveTempo === "beat_anticipated",
+      requireDropMoment: highEnergy || effectiveTempo === "beat_anticipated",
     },
 
     motion: {
-      pushInFrequency: extremeEnergy ? "extreme" : highEnergy ? "high" : "medium",
-      speedRampFrequency: extremeEnergy ? "high" : highEnergy ? "medium" : "low",
+      pushInFrequency: tempoOverrides.pushInFrequency ??
+        (extremeEnergy ? "extreme" : highEnergy ? "high" : "medium"),
+      speedRampFrequency: tempoOverrides.speedRampFrequency ??
+        (extremeEnergy ? "high" : highEnergy ? "medium" : "low"),
       cameraShakeFrequency: highEnergy ? "medium" : "low",
       velocityCurveStyle: highEnergy ? "bezier_punchy" : "ease",
     },
 
     effects: {
-      flashFrequency: extremeEnergy ? "extreme" : highEnergy ? "high" : "medium",
+      flashFrequency: tempoOverrides.flashFrequency ??
+        (extremeEnergy ? "extreme" : highEnergy ? "high" : "medium"),
       glowFrequency: mode === "strict_replication" ? "medium" : "low",
       transitionFrequency: highEnergy ? "medium" : "low",
       allowedEffects: [
@@ -121,6 +143,8 @@ export function compileReferenceStyleToDirectives(
         "whip_transition",
         "kinetic_caption",
         "color_pulse",
+        "vignette_punch",
+        "chromatic_burst",
       ],
     },
 
@@ -138,9 +162,73 @@ export function compileReferenceStyleToDirectives(
     },
 
     minimumCreativeDensity: {
-      minEffectsPer10Sec: extremeEnergy ? 8 : highEnergy ? 5 : 2,
+      minEffectsPer10Sec: tempoOverrides.minEffectsPer10Sec ??
+        (extremeEnergy ? 8 : highEnergy ? 5 : 2),
       minMotionEventsPer10Sec: extremeEnergy ? 6 : highEnergy ? 4 : 1,
-      minBeatLockedCutsPercent: highEnergy ? 70 : 35,
+      minBeatLockedCutsPercent: tempoOverrides.minBeatLockedCutsPercent ??
+        (highEnergy ? 70 : 35),
     },
   };
+}
+
+function getTempoOverrides(tempo: TempoMode): Partial<{
+  avgShotDuration: number;
+  pushInFrequency: EditIntensity;
+  speedRampFrequency: EditIntensity;
+  flashFrequency: EditIntensity;
+  minEffectsPer10Sec: number;
+  minBeatLockedCutsPercent: number;
+}> {
+  switch (tempo) {
+    case "beat_locked":
+      return {
+        pushInFrequency: "medium",
+        speedRampFrequency: "low",
+        flashFrequency: "high",
+        minEffectsPer10Sec: 6,
+        minBeatLockedCutsPercent: 85,
+      };
+    case "beat_anticipated":
+      return {
+        pushInFrequency: "high",
+        speedRampFrequency: "high",
+        flashFrequency: "high",
+        minEffectsPer10Sec: 7,
+        minBeatLockedCutsPercent: 80,
+      };
+    case "narrative":
+      return {
+        pushInFrequency: "low",
+        speedRampFrequency: "low",
+        flashFrequency: "low",
+        minEffectsPer10Sec: 1,
+        minBeatLockedCutsPercent: 20,
+      };
+    case "cinematic":
+      return {
+        avgShotDuration: 3.5,
+        pushInFrequency: "medium",
+        speedRampFrequency: "medium",
+        flashFrequency: "low",
+        minEffectsPer10Sec: 2,
+        minBeatLockedCutsPercent: 30,
+      };
+    case "chill_vlog":
+      return {
+        avgShotDuration: 2.4,
+        pushInFrequency: "low",
+        speedRampFrequency: "low",
+        flashFrequency: "low",
+        minEffectsPer10Sec: 1,
+        minBeatLockedCutsPercent: 25,
+      };
+    case "reference_mirror":
+      return {
+        pushInFrequency: "high",
+        speedRampFrequency: "high",
+        flashFrequency: "high",
+        minEffectsPer10Sec: 5,
+        minBeatLockedCutsPercent: 70,
+      };
+  }
 }

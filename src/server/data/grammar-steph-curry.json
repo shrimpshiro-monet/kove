@@ -1,0 +1,2675 @@
+{
+  "name": "steph-curry",
+  "source": "./reference-edits-2/steph curry.MP4",
+  "duration": 19.155011,
+  "resolution": {
+    "width": 576,
+    "height": 576
+  },
+  "fps": 29.97,
+  "totalShots": 14,
+  "avgShotDuration": 1.3348482857142852,
+  "cutRate": 0.7308792461669691,
+  "shots": [
+    {
+      "index": 0,
+      "start": 0,
+      "end": 7.107107,
+      "duration": 7.107107,
+      "motion_magnitude": 0.568832342738197,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.568832342738197,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3367725622966358,
+      "effects": [
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 6,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "medium",
+        "dominantWeight": "regular",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 123.64146677652995
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 0,
+        "description": "Stephen Curry launches a difficult, contested three-pointer while leaning away from the defender.",
+        "actions": [
+          "shooting"
+        ],
+        "subjects": [
+          "player",
+          "defender",
+          "basketball"
+        ],
+        "emotion": "tension",
+        "event_type": "action",
+        "narrative_role": "climax",
+        "importance": 10,
+        "time": 0
+      }
+    },
+    {
+      "index": 1,
+      "start": 7.140474,
+      "end": 7.807808,
+      "duration": 0.6673339999999994,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.2737761111903485,
+      "effects": [
+        "blur",
+        "vignette",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 4,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 93.67472457885742
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 1,
+        "description": "Close-up reaction shot of Stephen Curry after the shot attempt, looking intense.",
+        "actions": [
+          "yelling"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "excitement",
+        "event_type": "reaction",
+        "narrative_role": "building",
+        "importance": 6,
+        "time": 7.140474
+      }
+    },
+    {
+      "index": 2,
+      "start": 7.841175,
+      "end": 8.975642,
+      "duration": 1.1344670000000008,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.38088280026594407,
+      "effects": [
+        "blur",
+        "glow"
+      ],
+      "transitions": [
+        "blur"
+      ],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 9,
+      "textProperties": {
+        "dominantColor": "white",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 123.29628245035808
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 2,
+        "description": "A stylish, greyscale edit showing Curry yelling with text overlay on screen.",
+        "actions": [
+          "yelling"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "celebration",
+        "event_type": "reaction",
+        "narrative_role": "building",
+        "importance": 5,
+        "time": 7.841175
+      }
+    },
+    {
+      "index": 3,
+      "start": 9.042376,
+      "end": 9.542876,
+      "duration": 0.5004999999999988,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3079697187162652,
+      "effects": [
+        "fade_white",
+        "blur",
+        "blur",
+        "vignette",
+        "watermark"
+      ],
+      "transitions": [
+        "fade_white",
+        "blur"
+      ],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": true,
+      "textCount": 2,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "center",
+        "hasShadow": false,
+        "avgBrightness": 75.42801666259766
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 3,
+        "description": "Quick cut to a greyscale close-up of Curry looking shocked or frustrated with hands on his head.",
+        "actions": [
+          "reacting"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "shock",
+        "event_type": "reaction",
+        "narrative_role": "building",
+        "importance": 4,
+        "time": 9.042376
+      }
+    },
+    {
+      "index": 4,
+      "start": 9.542876,
+      "end": 10.143477,
+      "duration": 0.600601000000001,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.30657395142114796,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 4,
+        "description": "Short clip of Curry's physical movement on court, maintaining the fast-paced edit style.",
+        "actions": [
+          "moving"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "tension",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 3,
+        "time": 9.542876
+      }
+    },
+    {
+      "index": 5,
+      "start": 10.143477,
+      "end": 12.579246,
+      "duration": 2.4357689999999987,
+      "motion_magnitude": 0.9571663061777751,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.9571663061777751,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.3812409903260066,
+      "effects": [
+        "blur",
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 5,
+        "description": "Extended slow-motion black and white shot of Curry running back and celebrating, looking like a highlight reel.",
+        "actions": [
+          "celebrating",
+          "running"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "celebration",
+        "event_type": "celebration",
+        "narrative_role": "resolution",
+        "importance": 8,
+        "time": 10.143477
+      }
+    },
+    {
+      "index": 6,
+      "start": 12.712713,
+      "end": 13.713714,
+      "duration": 1.0010009999999987,
+      "motion_magnitude": 0.9771857643127442,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 0.9771857643127442,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4796809160350419,
+      "effects": [
+        "vignette",
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "vignette",
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 12,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "small",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_center",
+        "hasShadow": false,
+        "avgBrightness": 108.77879206339519
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": true,
+      "rampType": "slow_down",
+      "semanticEvent": {
+        "shotIndex": 6,
+        "description": "Close-up of Curry's face transitioning through stylistic video filters.",
+        "actions": [
+          "observing"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "calm",
+        "event_type": "transition",
+        "narrative_role": "resolution",
+        "importance": 3,
+        "time": 12.712713
+      }
+    },
+    {
+      "index": 7,
+      "start": 13.713714,
+      "end": 14.180848,
+      "duration": 0.4671339999999997,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "medium",
+      "shotTypeConfidence": 0.2986766894517831,
+      "effects": [
+        "glitch",
+        "blur"
+      ],
+      "transitions": [
+        "glitch"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 7,
+        "description": "Rapid micro-cut of Curry's intense facial expression.",
+        "actions": [
+          "reacting"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "excitement",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 2,
+        "time": 13.713714
+      }
+    },
+    {
+      "index": 8,
+      "start": 14.247581,
+      "end": 14.347681,
+      "duration": 0.10009999999999941,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3629480606490707,
+      "effects": [
+        "blur"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 8,
+        "description": "Extremely brief flash cut of Curry, likely part of an aesthetic beat-sync.",
+        "actions": [
+          "standing"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "intensity",
+        "event_type": "transition",
+        "narrative_role": "building",
+        "importance": 1,
+        "time": 14.247581
+      }
+    },
+    {
+      "index": 9,
+      "start": 14.381048,
+      "end": 16.149483,
+      "duration": 1.7684350000000002,
+      "motion_magnitude": 0.9979762748435692,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 0.9979762748435692,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.5009706156548008,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": true,
+      "textCount": 3,
+      "textProperties": {
+        "dominantColor": "yellow",
+        "dominantSize": "large",
+        "dominantWeight": "bold",
+        "dominantPlacement": "top_center",
+        "hasShadow": true,
+        "avgBrightness": 83.59277598063152
+      },
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 9,
+        "description": "Final shot of Curry looking toward the crowd or bench, finishing the highlight sequence.",
+        "actions": [
+          "looking"
+        ],
+        "subjects": [
+          "player"
+        ],
+        "emotion": "celebration",
+        "event_type": "celebration",
+        "narrative_role": "resolution",
+        "importance": 6,
+        "time": 14.381048
+      }
+    },
+    {
+      "index": 10,
+      "start": 16.18285,
+      "end": 16.316316,
+      "duration": 0.13346600000000208,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.32702712593824507,
+      "effects": [
+        "wipe",
+        "blur"
+      ],
+      "transitions": [
+        "wipe"
+      ],
+      "visualEffects": [
+        "blur"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 10,
+        "time": 16.18285,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 11,
+      "start": 16.316316,
+      "end": 16.48315,
+      "duration": 0.16683399999999793,
+      "motion_magnitude": 1.0,
+      "camera_motion": "static",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "close",
+      "shotTypeConfidence": 0.3280466427795393,
+      "effects": [
+        "glow"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "glow"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.0,
+      "speedType": "normal",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 11,
+        "time": 16.316316,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 12,
+      "start": 16.516517,
+      "end": 17.384051,
+      "duration": 0.8675339999999991,
+      "motion_magnitude": 1.0,
+      "camera_motion": "tracking",
+      "subject_motion": "running",
+      "energy": 1.0,
+      "shotType": "extreme_close",
+      "shotTypeConfidence": 0.3375423893009998,
+      "effects": [
+        "blur",
+        "vignette"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 2.0,
+      "speedType": "very_fast",
+      "hasRamp": false,
+      "rampType": null,
+      "semanticEvent": {
+        "shotIndex": 12,
+        "time": 16.516517,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    },
+    {
+      "index": 13,
+      "start": 17.417417,
+      "end": 19.155011,
+      "duration": 1.7375939999999979,
+      "motion_magnitude": 0.24411080467934698,
+      "camera_motion": "handheld",
+      "subject_motion": "running",
+      "energy": 0.24411080467934698,
+      "shotType": "wide",
+      "shotTypeConfidence": 0.4699804852730869,
+      "effects": [
+        "blur",
+        "vignette",
+        "watermark"
+      ],
+      "transitions": [],
+      "visualEffects": [
+        "blur",
+        "vignette"
+      ],
+      "overlays": [
+        "watermark"
+      ],
+      "hasText": false,
+      "textCount": 0,
+      "textProperties": {},
+      "avgSpeed": 1.5,
+      "speedType": "fast",
+      "hasRamp": true,
+      "rampType": "slow_down",
+      "semanticEvent": {
+        "shotIndex": 13,
+        "time": 17.417417,
+        "description": "Unknown action",
+        "actions": [],
+        "subjects": [],
+        "emotion": "neutral",
+        "event_type": "action",
+        "narrative_role": "building",
+        "importance": 5
+      }
+    }
+  ],
+  "motionStats": {
+    "avg_magnitude": 0.7626993173288011,
+    "peak_magnitude": 1.0,
+    "peak_time": 3.6,
+    "variance": 0.09388929505272987,
+    "high_motion_segments": [],
+    "motion_curve": [
+      {
+        "time": 0.2,
+        "magnitude": 0.7586649576822917,
+        "raw_diff": 22.75994873046875
+      },
+      {
+        "time": 0.3,
+        "magnitude": 0.7294774373372396,
+        "raw_diff": 21.884323120117188
+      },
+      {
+        "time": 0.4,
+        "magnitude": 0.732953135172526,
+        "raw_diff": 21.98859405517578
+      },
+      {
+        "time": 0.5,
+        "magnitude": 0.7306371688842773,
+        "raw_diff": 21.91911506652832
+      },
+      {
+        "time": 0.6,
+        "magnitude": 0.7514513651529948,
+        "raw_diff": 22.543540954589844
+      },
+      {
+        "time": 0.7,
+        "magnitude": 0.7929166793823242,
+        "raw_diff": 23.787500381469727
+      },
+      {
+        "time": 0.8,
+        "magnitude": 0.7777882258097331,
+        "raw_diff": 23.333646774291992
+      },
+      {
+        "time": 0.9,
+        "magnitude": 0.759227434794108,
+        "raw_diff": 22.776823043823242
+      },
+      {
+        "time": 1.0,
+        "magnitude": 0.7539896011352539,
+        "raw_diff": 22.619688034057617
+      },
+      {
+        "time": 1.1,
+        "magnitude": 0.7076735814412435,
+        "raw_diff": 21.230207443237305
+      },
+      {
+        "time": 1.2,
+        "magnitude": 0.7166753768920898,
+        "raw_diff": 21.500261306762695
+      },
+      {
+        "time": 1.3,
+        "magnitude": 0.7335746765136719,
+        "raw_diff": 22.007240295410156
+      },
+      {
+        "time": 1.4,
+        "magnitude": 0.71971009572347,
+        "raw_diff": 21.5913028717041
+      },
+      {
+        "time": 1.5,
+        "magnitude": 0.7001840591430664,
+        "raw_diff": 21.005521774291992
+      },
+      {
+        "time": 1.6,
+        "magnitude": 0.6989044825236003,
+        "raw_diff": 20.967134475708008
+      },
+      {
+        "time": 1.7,
+        "magnitude": 0.6778871536254882,
+        "raw_diff": 20.33661460876465
+      },
+      {
+        "time": 1.8,
+        "magnitude": 0.6268107732137044,
+        "raw_diff": 18.804323196411133
+      },
+      {
+        "time": 1.9,
+        "magnitude": 0.5706024169921875,
+        "raw_diff": 17.118072509765625
+      },
+      {
+        "time": 2.0,
+        "magnitude": 0.5230416615804037,
+        "raw_diff": 15.69124984741211
+      },
+      {
+        "time": 2.1,
+        "magnitude": 0.4626840273539225,
+        "raw_diff": 13.880520820617676
+      },
+      {
+        "time": 2.2,
+        "magnitude": 0.40248263676961266,
+        "raw_diff": 12.074479103088379
+      },
+      {
+        "time": 2.3,
+        "magnitude": 0.3877343813578288,
+        "raw_diff": 11.632031440734863
+      },
+      {
+        "time": 2.4,
+        "magnitude": 0.3975833257039388,
+        "raw_diff": 11.927499771118164
+      },
+      {
+        "time": 2.5,
+        "magnitude": 0.5217031160990397,
+        "raw_diff": 15.651093482971191
+      },
+      {
+        "time": 2.6,
+        "magnitude": 0.5704826354980469,
+        "raw_diff": 17.114479064941406
+      },
+      {
+        "time": 2.7,
+        "magnitude": 0.5832309087117513,
+        "raw_diff": 17.49692726135254
+      },
+      {
+        "time": 2.8,
+        "magnitude": 0.5156753540039063,
+        "raw_diff": 15.470260620117188
+      },
+      {
+        "time": 2.9,
+        "magnitude": 0.3540746370951335,
+        "raw_diff": 10.622239112854004
+      },
+      {
+        "time": 3.0,
+        "magnitude": 0.3727413177490234,
+        "raw_diff": 11.182239532470703
+      },
+      {
+        "time": 3.1,
+        "magnitude": 0.35358158747355145,
+        "raw_diff": 10.607447624206543
+      },
+      {
+        "time": 3.2,
+        "magnitude": 0.20857985814412436,
+        "raw_diff": 6.2573957443237305
+      },
+      {
+        "time": 3.3,
+        "magnitude": 0.17087674140930176,
+        "raw_diff": 5.126302242279053
+      },
+      {
+        "time": 3.4,
+        "magnitude": 0.30322395960489906,
+        "raw_diff": 9.096718788146973
+      },
+      {
+        "time": 3.5,
+        "magnitude": 0.7701510111490886,
+        "raw_diff": 23.104530334472656
+      },
+      {
+        "time": 3.6,
+        "magnitude": 1.0,
+        "raw_diff": 33.17156219482422
+      },
+      {
+        "time": 3.7,
+        "magnitude": 1.0,
+        "raw_diff": 32.12541580200195
+      },
+      {
+        "time": 3.8,
+        "magnitude": 1.0,
+        "raw_diff": 31.94838523864746
+      },
+      {
+        "time": 3.9,
+        "magnitude": 1.0,
+        "raw_diff": 32.08906173706055
+      },
+      {
+        "time": 4.0,
+        "magnitude": 1.0,
+        "raw_diff": 32.03630065917969
+      },
+      {
+        "time": 4.1,
+        "magnitude": 1.0,
+        "raw_diff": 31.55661392211914
+      },
+      {
+        "time": 4.2,
+        "magnitude": 1.0,
+        "raw_diff": 31.2957820892334
+      },
+      {
+        "time": 4.3,
+        "magnitude": 1.0,
+        "raw_diff": 30.522499084472656
+      },
+      {
+        "time": 4.4,
+        "magnitude": 1.0,
+        "raw_diff": 30.69010353088379
+      },
+      {
+        "time": 4.5,
+        "magnitude": 0.3991857528686523,
+        "raw_diff": 11.97557258605957
+      },
+      {
+        "time": 4.6,
+        "magnitude": 0.3799895922342936,
+        "raw_diff": 11.399687767028809
+      },
+      {
+        "time": 4.7,
+        "magnitude": 0.3797864596048991,
+        "raw_diff": 11.393593788146973
+      },
+      {
+        "time": 4.8,
+        "magnitude": 0.38221352895100913,
+        "raw_diff": 11.466405868530273
+      },
+      {
+        "time": 4.9,
+        "magnitude": 0.35982637405395507,
+        "raw_diff": 10.794791221618652
+      },
+      {
+        "time": 5.0,
+        "magnitude": 0.361859385172526,
+        "raw_diff": 10.855781555175781
+      },
+      {
+        "time": 5.1,
+        "magnitude": 0.3664340337117513,
+        "raw_diff": 10.993021011352539
+      },
+      {
+        "time": 5.2,
+        "magnitude": 0.35829687118530273,
+        "raw_diff": 10.748906135559082
+      },
+      {
+        "time": 5.3,
+        "magnitude": 0.37554861704508463,
+        "raw_diff": 11.266458511352539
+      },
+      {
+        "time": 5.4,
+        "magnitude": 0.4118038177490234,
+        "raw_diff": 12.354114532470703
+      },
+      {
+        "time": 5.5,
+        "magnitude": 0.37034374872843423,
+        "raw_diff": 11.110312461853027
+      },
+      {
+        "time": 5.6,
+        "magnitude": 0.4355260531107585,
+        "raw_diff": 13.065781593322754
+      },
+      {
+        "time": 5.7,
+        "magnitude": 0.3859513918558756,
+        "raw_diff": 11.57854175567627
+      },
+      {
+        "time": 5.8,
+        "magnitude": 0.4020989735921224,
+        "raw_diff": 12.062969207763672
+      },
+      {
+        "time": 5.9,
+        "magnitude": 0.3921510378519694,
+        "raw_diff": 11.764531135559082
+      },
+      {
+        "time": 6.0,
+        "magnitude": 0.39685417811075846,
+        "raw_diff": 11.905625343322754
+      },
+      {
+        "time": 6.1,
+        "magnitude": 0.4145156224568685,
+        "raw_diff": 12.435468673706055
+      },
+      {
+        "time": 6.2,
+        "magnitude": 0.4145798683166504,
+        "raw_diff": 12.437396049499512
+      },
+      {
+        "time": 6.3,
+        "magnitude": 0.4167795181274414,
+        "raw_diff": 12.503385543823242
+      },
+      {
+        "time": 6.4,
+        "magnitude": 0.45288368860880535,
+        "raw_diff": 13.58651065826416
+      },
+      {
+        "time": 6.5,
+        "magnitude": 0.4625711758931478,
+        "raw_diff": 13.877135276794434
+      },
+      {
+        "time": 6.6,
+        "magnitude": 0.4594201405843099,
+        "raw_diff": 13.782604217529297
+      },
+      {
+        "time": 6.7,
+        "magnitude": 0.44953123728434247,
+        "raw_diff": 13.485937118530273
+      },
+      {
+        "time": 6.8,
+        "magnitude": 0.44191665649414064,
+        "raw_diff": 13.257499694824219
+      },
+      {
+        "time": 6.9,
+        "magnitude": 0.46077082951863607,
+        "raw_diff": 13.823124885559082
+      },
+      {
+        "time": 7.0,
+        "magnitude": 0.42597916920979817,
+        "raw_diff": 12.779375076293945
+      },
+      {
+        "time": 7.1,
+        "magnitude": 0.42447048823038735,
+        "raw_diff": 12.734114646911621
+      },
+      {
+        "time": 7.2,
+        "magnitude": 1.0,
+        "raw_diff": 61.82369613647461
+      },
+      {
+        "time": 7.3,
+        "magnitude": 1.0,
+        "raw_diff": 35.13505172729492
+      },
+      {
+        "time": 7.4,
+        "magnitude": 1.0,
+        "raw_diff": 38.575260162353516
+      },
+      {
+        "time": 7.5,
+        "magnitude": 1.0,
+        "raw_diff": 35.266822814941406
+      },
+      {
+        "time": 7.6,
+        "magnitude": 1.0,
+        "raw_diff": 40.49348831176758
+      },
+      {
+        "time": 7.7,
+        "magnitude": 1.0,
+        "raw_diff": 38.75583267211914
+      },
+      {
+        "time": 7.8,
+        "magnitude": 1.0,
+        "raw_diff": 34.77786636352539
+      },
+      {
+        "time": 7.9,
+        "magnitude": 1.0,
+        "raw_diff": 100.11437225341797
+      },
+      {
+        "time": 8.0,
+        "magnitude": 1.0,
+        "raw_diff": 99.88463592529297
+      },
+      {
+        "time": 8.1,
+        "magnitude": 1.0,
+        "raw_diff": 56.37968826293945
+      },
+      {
+        "time": 8.2,
+        "magnitude": 1.0,
+        "raw_diff": 33.215415954589844
+      },
+      {
+        "time": 8.3,
+        "magnitude": 1.0,
+        "raw_diff": 44.17036437988281
+      },
+      {
+        "time": 8.4,
+        "magnitude": 1.0,
+        "raw_diff": 57.491512298583984
+      },
+      {
+        "time": 8.5,
+        "magnitude": 1.0,
+        "raw_diff": 49.09958267211914
+      },
+      {
+        "time": 8.6,
+        "magnitude": 1.0,
+        "raw_diff": 42.59843826293945
+      },
+      {
+        "time": 8.7,
+        "magnitude": 1.0,
+        "raw_diff": 41.689064025878906
+      },
+      {
+        "time": 8.8,
+        "magnitude": 1.0,
+        "raw_diff": 36.782447814941406
+      },
+      {
+        "time": 8.9,
+        "magnitude": 1.0,
+        "raw_diff": 41.1041145324707
+      },
+      {
+        "time": 9.0,
+        "magnitude": 1.0,
+        "raw_diff": 50.24546813964844
+      },
+      {
+        "time": 9.1,
+        "magnitude": 1.0,
+        "raw_diff": 85.0081787109375
+      },
+      {
+        "time": 9.2,
+        "magnitude": 1.0,
+        "raw_diff": 30.882083892822266
+      },
+      {
+        "time": 9.3,
+        "magnitude": 1.0,
+        "raw_diff": 39.81057357788086
+      },
+      {
+        "time": 9.4,
+        "magnitude": 1.0,
+        "raw_diff": 39.39052200317383
+      },
+      {
+        "time": 9.5,
+        "magnitude": 1.0,
+        "raw_diff": 42.12078094482422
+      },
+      {
+        "time": 9.6,
+        "magnitude": 1.0,
+        "raw_diff": 51.4474983215332
+      },
+      {
+        "time": 9.7,
+        "magnitude": 1.0,
+        "raw_diff": 45.62322998046875
+      },
+      {
+        "time": 9.8,
+        "magnitude": 1.0,
+        "raw_diff": 34.913387298583984
+      },
+      {
+        "time": 9.9,
+        "magnitude": 1.0,
+        "raw_diff": 36.424686431884766
+      },
+      {
+        "time": 10.0,
+        "magnitude": 1.0,
+        "raw_diff": 35.360572814941406
+      },
+      {
+        "time": 10.1,
+        "magnitude": 1.0,
+        "raw_diff": 35.44270706176758
+      },
+      {
+        "time": 10.2,
+        "magnitude": 1.0,
+        "raw_diff": 41.569583892822266
+      },
+      {
+        "time": 10.3,
+        "magnitude": 0.5129982630411783,
+        "raw_diff": 15.389947891235352
+      },
+      {
+        "time": 10.4,
+        "magnitude": 0.9643316268920898,
+        "raw_diff": 28.929948806762695
+      },
+      {
+        "time": 10.5,
+        "magnitude": 1.0,
+        "raw_diff": 38.87546920776367
+      },
+      {
+        "time": 10.6,
+        "magnitude": 1.0,
+        "raw_diff": 35.4183349609375
+      },
+      {
+        "time": 10.7,
+        "magnitude": 0.9196545282999674,
+        "raw_diff": 27.589635848999023
+      },
+      {
+        "time": 10.8,
+        "magnitude": 0.7164478937784831,
+        "raw_diff": 21.493436813354492
+      },
+      {
+        "time": 10.9,
+        "magnitude": 0.8585590362548828,
+        "raw_diff": 25.756771087646484
+      },
+      {
+        "time": 11.0,
+        "magnitude": 1.0,
+        "raw_diff": 31.880311965942383
+      },
+      {
+        "time": 11.1,
+        "magnitude": 1.0,
+        "raw_diff": 36.383907318115234
+      },
+      {
+        "time": 11.2,
+        "magnitude": 1.0,
+        "raw_diff": 33.9701042175293
+      },
+      {
+        "time": 11.3,
+        "magnitude": 1.0,
+        "raw_diff": 34.084373474121094
+      },
+      {
+        "time": 11.4,
+        "magnitude": 1.0,
+        "raw_diff": 44.23994827270508
+      },
+      {
+        "time": 11.5,
+        "magnitude": 1.0,
+        "raw_diff": 60.620262145996094
+      },
+      {
+        "time": 11.6,
+        "magnitude": 1.0,
+        "raw_diff": 78.63890838623047
+      },
+      {
+        "time": 11.7,
+        "magnitude": 1.0,
+        "raw_diff": 41.21484375
+      },
+      {
+        "time": 11.8,
+        "magnitude": 1.0,
+        "raw_diff": 31.633333206176758
+      },
+      {
+        "time": 11.9,
+        "magnitude": 1.0,
+        "raw_diff": 39.5361442565918
+      },
+      {
+        "time": 12.0,
+        "magnitude": 1.0,
+        "raw_diff": 73.2714614868164
+      },
+      {
+        "time": 12.1,
+        "magnitude": 1.0,
+        "raw_diff": 85.62359619140625
+      },
+      {
+        "time": 12.2,
+        "magnitude": 1.0,
+        "raw_diff": 79.16505432128906
+      },
+      {
+        "time": 12.3,
+        "magnitude": 1.0,
+        "raw_diff": 52.81041717529297
+      },
+      {
+        "time": 12.4,
+        "magnitude": 1.0,
+        "raw_diff": 56.21484375
+      },
+      {
+        "time": 12.5,
+        "magnitude": 1.0,
+        "raw_diff": 46.825157165527344
+      },
+      {
+        "time": 12.6,
+        "magnitude": 1.0,
+        "raw_diff": 47.547760009765625
+      },
+      {
+        "time": 12.7,
+        "magnitude": 1.0,
+        "raw_diff": 71.3652114868164
+      },
+      {
+        "time": 12.8,
+        "magnitude": 1.0,
+        "raw_diff": 72.47744750976562
+      },
+      {
+        "time": 12.9,
+        "magnitude": 0.9670277913411458,
+        "raw_diff": 29.010833740234375
+      },
+      {
+        "time": 13.0,
+        "magnitude": 1.0,
+        "raw_diff": 38.63291549682617
+      },
+      {
+        "time": 13.1,
+        "magnitude": 1.0,
+        "raw_diff": 33.37067794799805
+      },
+      {
+        "time": 13.2,
+        "magnitude": 1.0,
+        "raw_diff": 36.48255157470703
+      },
+      {
+        "time": 13.3,
+        "magnitude": 1.0,
+        "raw_diff": 36.12546920776367
+      },
+      {
+        "time": 13.4,
+        "magnitude": 0.8755225499471029,
+        "raw_diff": 26.265676498413086
+      },
+      {
+        "time": 13.5,
+        "magnitude": 1.0,
+        "raw_diff": 30.03890609741211
+      },
+      {
+        "time": 13.6,
+        "magnitude": 0.9293073018391927,
+        "raw_diff": 27.87921905517578
+      },
+      {
+        "time": 13.7,
+        "magnitude": 1.0,
+        "raw_diff": 36.33390808105469
+      },
+      {
+        "time": 13.8,
+        "magnitude": 1.0,
+        "raw_diff": 70.99073028564453
+      },
+      {
+        "time": 13.9,
+        "magnitude": 1.0,
+        "raw_diff": 55.0009880065918
+      },
+      {
+        "time": 14.0,
+        "magnitude": 1.0,
+        "raw_diff": 33.90854263305664
+      },
+      {
+        "time": 14.1,
+        "magnitude": 1.0,
+        "raw_diff": 66.66958618164062
+      },
+      {
+        "time": 14.2,
+        "magnitude": 1.0,
+        "raw_diff": 59.64125061035156
+      },
+      {
+        "time": 14.3,
+        "magnitude": 1.0,
+        "raw_diff": 56.748958587646484
+      },
+      {
+        "time": 14.4,
+        "magnitude": 1.0,
+        "raw_diff": 92.73041534423828
+      },
+      {
+        "time": 14.5,
+        "magnitude": 1.0,
+        "raw_diff": 37.18547058105469
+      },
+      {
+        "time": 14.6,
+        "magnitude": 1.0,
+        "raw_diff": 32.816978454589844
+      },
+      {
+        "time": 14.7,
+        "magnitude": 1.0,
+        "raw_diff": 32.37046813964844
+      },
+      {
+        "time": 14.8,
+        "magnitude": 1.0,
+        "raw_diff": 37.76911544799805
+      },
+      {
+        "time": 14.9,
+        "magnitude": 1.0,
+        "raw_diff": 32.750885009765625
+      },
+      {
+        "time": 15.0,
+        "magnitude": 0.9635729471842448,
+        "raw_diff": 28.907188415527344
+      },
+      {
+        "time": 15.1,
+        "magnitude": 1.0,
+        "raw_diff": 41.979740142822266
+      },
+      {
+        "time": 15.2,
+        "magnitude": 1.0,
+        "raw_diff": 45.79375076293945
+      },
+      {
+        "time": 15.3,
+        "magnitude": 1.0,
+        "raw_diff": 43.46645736694336
+      },
+      {
+        "time": 15.4,
+        "magnitude": 1.0,
+        "raw_diff": 40.534061431884766
+      },
+      {
+        "time": 15.5,
+        "magnitude": 1.0,
+        "raw_diff": 44.7252082824707
+      },
+      {
+        "time": 15.6,
+        "magnitude": 1.0,
+        "raw_diff": 42.64973831176758
+      },
+      {
+        "time": 15.7,
+        "magnitude": 1.0,
+        "raw_diff": 41.16635513305664
+      },
+      {
+        "time": 15.8,
+        "magnitude": 1.0,
+        "raw_diff": 30.121822357177734
+      },
+      {
+        "time": 15.9,
+        "magnitude": 1.0,
+        "raw_diff": 44.089012145996094
+      },
+      {
+        "time": 16.0,
+        "magnitude": 1.0,
+        "raw_diff": 60.977237701416016
+      },
+      {
+        "time": 16.1,
+        "magnitude": 1.0,
+        "raw_diff": 51.73015594482422
+      },
+      {
+        "time": 16.2,
+        "magnitude": 1.0,
+        "raw_diff": 95.59796905517578
+      },
+      {
+        "time": 16.3,
+        "magnitude": 1.0,
+        "raw_diff": 61.79573059082031
+      },
+      {
+        "time": 16.4,
+        "magnitude": 1.0,
+        "raw_diff": 49.666717529296875
+      },
+      {
+        "time": 16.5,
+        "magnitude": 1.0,
+        "raw_diff": 52.75765609741211
+      },
+      {
+        "time": 16.6,
+        "magnitude": 1.0,
+        "raw_diff": 75.38056945800781
+      },
+      {
+        "time": 16.7,
+        "magnitude": 1.0,
+        "raw_diff": 50.90224075317383
+      },
+      {
+        "time": 16.8,
+        "magnitude": 1.0,
+        "raw_diff": 31.499427795410156
+      },
+      {
+        "time": 16.9,
+        "magnitude": 1.0,
+        "raw_diff": 30.286561965942383
+      },
+      {
+        "time": 17.0,
+        "magnitude": 1.0,
+        "raw_diff": 36.72411346435547
+      },
+      {
+        "time": 17.1,
+        "magnitude": 1.0,
+        "raw_diff": 33.80255126953125
+      },
+      {
+        "time": 17.2,
+        "magnitude": 1.0,
+        "raw_diff": 43.84775924682617
+      },
+      {
+        "time": 17.3,
+        "magnitude": 1.0,
+        "raw_diff": 53.71067810058594
+      },
+      {
+        "time": 17.4,
+        "magnitude": 1.0,
+        "raw_diff": 60.83171844482422
+      },
+      {
+        "time": 17.5,
+        "magnitude": 1.0,
+        "raw_diff": 59.63520812988281
+      },
+      {
+        "time": 17.6,
+        "magnitude": 0.6978090286254883,
+        "raw_diff": 20.93427085876465
+      },
+      {
+        "time": 17.7,
+        "magnitude": 0.2731562614440918,
+        "raw_diff": 8.194687843322754
+      },
+      {
+        "time": 17.8,
+        "magnitude": 0.1480381965637207,
+        "raw_diff": 4.441145896911621
+      },
+      {
+        "time": 17.9,
+        "magnitude": 0.15881423950195311,
+        "raw_diff": 4.764427185058594
+      },
+      {
+        "time": 18.0,
+        "magnitude": 0.20019791920979818,
+        "raw_diff": 6.005937576293945
+      },
+      {
+        "time": 18.1,
+        "magnitude": 0.2000121593475342,
+        "raw_diff": 6.000364780426025
+      },
+      {
+        "time": 18.2,
+        "magnitude": 0.21000173886617024,
+        "raw_diff": 6.300052165985107
+      },
+      {
+        "time": 18.3,
+        "magnitude": 0.22628992398579914,
+        "raw_diff": 6.788697719573975
+      },
+      {
+        "time": 18.4,
+        "magnitude": 0.3247604052225749,
+        "raw_diff": 9.742812156677246
+      },
+      {
+        "time": 18.5,
+        "magnitude": 0.30544617970784504,
+        "raw_diff": 9.163385391235352
+      },
+      {
+        "time": 18.6,
+        "magnitude": 0.34035415649414064,
+        "raw_diff": 10.210624694824219
+      },
+      {
+        "time": 18.7,
+        "magnitude": 0.06500347057978312,
+        "raw_diff": 1.9501041173934937
+      },
+      {
+        "time": 18.8,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 18.9,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 19.0,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 19.1,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      },
+      {
+        "time": 19.2,
+        "magnitude": 0.0,
+        "raw_diff": 0.0
+      }
+    ]
+  },
+  "colorProfile": {
+    "dominant_palette": [],
+    "contrast": 0,
+    "black_point": 0,
+    "white_point": 255,
+    "saturation_mean": 50,
+    "luminance_mean": 128,
+    "color_temperature": "neutral",
+    "grade": "normal",
+    "skin_tone": {
+      "presence": 0,
+      "is_present": false
+    }
+  },
+  "shotTypes": {
+    "totalShots": 14,
+    "distribution": {
+      "extreme_close": 0.42857142857142855,
+      "wide": 0.35714285714285715,
+      "close": 0.14285714285714285,
+      "medium": 0.07142857142857142
+    },
+    "counts": {
+      "extreme_close": 6,
+      "wide": 5,
+      "close": 2,
+      "medium": 1
+    },
+    "dominantType": "extreme_close",
+    "variedFraming": true
+  },
+  "effects": {
+    "totalEffects": 30,
+    "effectsPerShot": 2.142857142857143,
+    "transitions": {
+      "blur": 2,
+      "fade_white": 1,
+      "glitch": 1,
+      "wipe": 1
+    },
+    "visualEffects": {
+      "vignette": 8,
+      "blur": 10,
+      "glow": 4
+    },
+    "overlays": {
+      "watermark": 3
+    },
+    "mostCommonEffect": "blur",
+    "effectVariety": 7
+  },
+  "text": {
+    "shotsWithText": 6,
+    "totalTextRegions": 36,
+    "textFrequency": 0.42857142857142855,
+    "dominantColor": "yellow",
+    "dominantSize": "small",
+    "dominantPlacement": "center",
+    "hasText": true
+  },
+  "speed": {
+    "avgSpeed": 1.75,
+    "speedDistribution": {
+      "very_fast": 0.7142857142857143,
+      "normal": 0.21428571428571427,
+      "fast": 0.07142857142857142
+    },
+    "shotsWithRamps": 2,
+    "rampRatio": 0.14285714285714285,
+    "hasSlowMotion": false,
+    "hasFastMotion": true,
+    "hasRamps": true,
+    "dominantSpeed": "very_fast"
+  },
+  "semanticEvents": {
+    "totalEvents": 14,
+    "eventTypes": {
+      "action": 0.35714285714285715,
+      "reaction": 0.21428571428571427,
+      "transition": 0.2857142857142857,
+      "celebration": 0.14285714285714285
+    },
+    "emotions": {
+      "tension": 0.14285714285714285,
+      "excitement": 0.14285714285714285,
+      "celebration": 0.21428571428571427,
+      "shock": 0.07142857142857142,
+      "calm": 0.07142857142857142,
+      "intensity": 0.07142857142857142,
+      "neutral": 0.2857142857142857
+    },
+    "narrativeArc": {
+      "climax": 0.07142857142857142,
+      "building": 0.7142857142857143,
+      "resolution": 0.21428571428571427
+    },
+    "avgImportance": 4.857142857142857,
+    "dominantEventType": "action",
+    "dominantEmotion": "neutral",
+    "climaxPosition": 0
+  },
+  "audioAnalysis": {
+    "tempo_bpm": 114.8,
+    "beats": [
+      {
+        "time": 2.136235827664399,
+        "energy": 0.12104064972383187,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.24208129944766374
+      },
+      {
+        "time": 2.2058956916099772,
+        "energy": 0.1206511143128345,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.241302228625669
+      },
+      {
+        "time": 2.2755555555555556,
+        "energy": 0.1198835948202615,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.239767189640523
+      },
+      {
+        "time": 3.0650340136054424,
+        "energy": 0.10581599070341693,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.21163198140683387
+      },
+      {
+        "time": 4.365351473922902,
+        "energy": 0.12334113864098371,
+        "type": "energy_peak",
+        "source": "energy",
+        "strength": 0.24668227728196743
+      }
+    ],
+    "beat_count": 5,
+    "avg_beat_interval": 0.5226480836236934
+  },
+  "grammarRules": {
+    "pacing": {
+      "avgDuration": 1.3348482857142852,
+      "minDuration": 0.10009999999999941,
+      "maxDuration": 7.107107,
+      "stdDev": 1.7324039363864316,
+      "fastCutsCount": 4,
+      "slowCutsCount": 2
+    },
+    "motion": {
+      "avgMagnitude": 0.7626993173288011,
+      "peakMagnitude": 1.0,
+      "hasHighMotion": true,
+      "motionVariety": 0
+    },
+    "rhythm": {
+      "tempo": 114.8,
+      "cutsOnBeat": 0.0,
+      "avgBeatsBetweenCuts": 0.3333333333333333,
+      "isBeatDriven": false
+    },
+    "color": {
+      "grade": "normal",
+      "temperature": "neutral",
+      "saturationLevel": "medium",
+      "contrastLevel": "low",
+      "hasSkinTone": false
+    },
+    "cameraLanguage": {
+      "dominantMotion": "tracking",
+      "motionVariety": 3,
+      "staticRatio": 0.21428571428571427,
+      "dynamicRatio": 0.7857142857142857
+    },
+    "subjectLanguage": {
+      "dominantMotion": "running",
+      "motionVariety": 1,
+      "actionRatio": 1.0
+    },
+    "shotTypes": {
+      "distribution": {
+        "extreme_close": 0.42857142857142855,
+        "wide": 0.35714285714285715,
+        "close": 0.14285714285714285,
+        "medium": 0.07142857142857142
+      },
+      "dominantType": "extreme_close",
+      "variedFraming": true,
+      "closeUpRatio": 0.5714285714285714,
+      "wideRatio": 0.35714285714285715
+    },
+    "effects": {
+      "totalEffects": 30,
+      "effectsPerShot": 2.142857142857143,
+      "transitions": {
+        "blur": 2,
+        "fade_white": 1,
+        "glitch": 1,
+        "wipe": 1
+      },
+      "visualEffects": {
+        "vignette": 8,
+        "blur": 10,
+        "glow": 4
+      },
+      "overlays": {
+        "watermark": 3
+      },
+      "mostCommonEffect": "blur",
+      "effectVariety": 7,
+      "hasTransitions": true,
+      "hasVisualEffects": true,
+      "hasOverlays": true
+    },
+    "text": {
+      "hasText": true,
+      "textFrequency": 0.42857142857142855,
+      "shotsWithText": 6,
+      "dominantColor": "yellow",
+      "dominantSize": "small",
+      "dominantPlacement": "center"
+    },
+    "speed": {
+      "avgSpeed": 1.75,
+      "dominantSpeed": "very_fast",
+      "hasSlowMotion": false,
+      "hasFastMotion": true,
+      "hasRamps": true,
+      "rampRatio": 0.14285714285714285,
+      "speedDistribution": {
+        "very_fast": 0.7142857142857143,
+        "normal": 0.21428571428571427,
+        "fast": 0.07142857142857142
+      }
+    },
+    "semantic": {
+      "totalEvents": 14,
+      "eventTypes": {
+        "action": 0.35714285714285715,
+        "reaction": 0.21428571428571427,
+        "transition": 0.2857142857142857,
+        "celebration": 0.14285714285714285
+      },
+      "emotions": {
+        "tension": 0.14285714285714285,
+        "excitement": 0.14285714285714285,
+        "celebration": 0.21428571428571427,
+        "shock": 0.07142857142857142,
+        "calm": 0.07142857142857142,
+        "intensity": 0.07142857142857142,
+        "neutral": 0.2857142857142857
+      },
+      "narrativeArc": {
+        "climax": 0.07142857142857142,
+        "building": 0.7142857142857143,
+        "resolution": 0.21428571428571427
+      },
+      "avgImportance": 4.857142857142857,
+      "dominantEventType": "action",
+      "dominantEmotion": "neutral",
+      "climaxPosition": 0,
+      "hasNarrativeArc": true
+    },
+    "styleSummary": {
+      "isBeatDriven": false,
+      "isHighEnergy": true,
+      "isDesaturated": false,
+      "isDark": false,
+      "pacingType": "medium"
+    }
+  },
+  "energyCurve": [
+    {
+      "time": 0.2,
+      "energy": 0.7586649576822917
+    },
+    {
+      "time": 0.3,
+      "energy": 0.7294774373372396
+    },
+    {
+      "time": 0.4,
+      "energy": 0.732953135172526
+    },
+    {
+      "time": 0.5,
+      "energy": 0.7306371688842773
+    },
+    {
+      "time": 0.6,
+      "energy": 0.7514513651529948
+    },
+    {
+      "time": 0.7,
+      "energy": 0.7929166793823242
+    },
+    {
+      "time": 0.8,
+      "energy": 0.7777882258097331
+    },
+    {
+      "time": 0.9,
+      "energy": 0.759227434794108
+    },
+    {
+      "time": 1.0,
+      "energy": 0.7539896011352539
+    },
+    {
+      "time": 1.1,
+      "energy": 0.7076735814412435
+    },
+    {
+      "time": 1.2,
+      "energy": 0.7166753768920898
+    },
+    {
+      "time": 1.3,
+      "energy": 0.7335746765136719
+    },
+    {
+      "time": 1.4,
+      "energy": 0.71971009572347
+    },
+    {
+      "time": 1.5,
+      "energy": 0.7001840591430664
+    },
+    {
+      "time": 1.6,
+      "energy": 0.6989044825236003
+    },
+    {
+      "time": 1.7,
+      "energy": 0.6778871536254882
+    },
+    {
+      "time": 1.8,
+      "energy": 0.6268107732137044
+    },
+    {
+      "time": 1.9,
+      "energy": 0.5706024169921875
+    },
+    {
+      "time": 2.0,
+      "energy": 0.5230416615804037
+    },
+    {
+      "time": 2.1,
+      "energy": 0.4626840273539225
+    },
+    {
+      "time": 2.2,
+      "energy": 0.40248263676961266
+    },
+    {
+      "time": 2.3,
+      "energy": 0.3877343813578288
+    },
+    {
+      "time": 2.4,
+      "energy": 0.3975833257039388
+    },
+    {
+      "time": 2.5,
+      "energy": 0.5217031160990397
+    },
+    {
+      "time": 2.6,
+      "energy": 0.5704826354980469
+    },
+    {
+      "time": 2.7,
+      "energy": 0.5832309087117513
+    },
+    {
+      "time": 2.8,
+      "energy": 0.5156753540039063
+    },
+    {
+      "time": 2.9,
+      "energy": 0.3540746370951335
+    },
+    {
+      "time": 3.0,
+      "energy": 0.3727413177490234
+    },
+    {
+      "time": 3.1,
+      "energy": 0.35358158747355145
+    },
+    {
+      "time": 3.2,
+      "energy": 0.20857985814412436
+    },
+    {
+      "time": 3.3,
+      "energy": 0.17087674140930176
+    },
+    {
+      "time": 3.4,
+      "energy": 0.30322395960489906
+    },
+    {
+      "time": 3.5,
+      "energy": 0.7701510111490886
+    },
+    {
+      "time": 3.6,
+      "energy": 1.0
+    },
+    {
+      "time": 3.7,
+      "energy": 1.0
+    },
+    {
+      "time": 3.8,
+      "energy": 1.0
+    },
+    {
+      "time": 3.9,
+      "energy": 1.0
+    },
+    {
+      "time": 4.0,
+      "energy": 1.0
+    },
+    {
+      "time": 4.1,
+      "energy": 1.0
+    },
+    {
+      "time": 4.2,
+      "energy": 1.0
+    },
+    {
+      "time": 4.3,
+      "energy": 1.0
+    },
+    {
+      "time": 4.4,
+      "energy": 1.0
+    },
+    {
+      "time": 4.5,
+      "energy": 0.3991857528686523
+    },
+    {
+      "time": 4.6,
+      "energy": 0.3799895922342936
+    },
+    {
+      "time": 4.7,
+      "energy": 0.3797864596048991
+    },
+    {
+      "time": 4.8,
+      "energy": 0.38221352895100913
+    },
+    {
+      "time": 4.9,
+      "energy": 0.35982637405395507
+    },
+    {
+      "time": 5.0,
+      "energy": 0.361859385172526
+    },
+    {
+      "time": 5.1,
+      "energy": 0.3664340337117513
+    },
+    {
+      "time": 5.2,
+      "energy": 0.35829687118530273
+    },
+    {
+      "time": 5.3,
+      "energy": 0.37554861704508463
+    },
+    {
+      "time": 5.4,
+      "energy": 0.4118038177490234
+    },
+    {
+      "time": 5.5,
+      "energy": 0.37034374872843423
+    },
+    {
+      "time": 5.6,
+      "energy": 0.4355260531107585
+    },
+    {
+      "time": 5.7,
+      "energy": 0.3859513918558756
+    },
+    {
+      "time": 5.8,
+      "energy": 0.4020989735921224
+    },
+    {
+      "time": 5.9,
+      "energy": 0.3921510378519694
+    },
+    {
+      "time": 6.0,
+      "energy": 0.39685417811075846
+    },
+    {
+      "time": 6.1,
+      "energy": 0.4145156224568685
+    },
+    {
+      "time": 6.2,
+      "energy": 0.4145798683166504
+    },
+    {
+      "time": 6.3,
+      "energy": 0.4167795181274414
+    },
+    {
+      "time": 6.4,
+      "energy": 0.45288368860880535
+    },
+    {
+      "time": 6.5,
+      "energy": 0.4625711758931478
+    },
+    {
+      "time": 6.6,
+      "energy": 0.4594201405843099
+    },
+    {
+      "time": 6.7,
+      "energy": 0.44953123728434247
+    },
+    {
+      "time": 6.8,
+      "energy": 0.44191665649414064
+    },
+    {
+      "time": 6.9,
+      "energy": 0.46077082951863607
+    },
+    {
+      "time": 7.0,
+      "energy": 0.42597916920979817
+    },
+    {
+      "time": 7.1,
+      "energy": 0.42447048823038735
+    },
+    {
+      "time": 7.2,
+      "energy": 1.0
+    },
+    {
+      "time": 7.3,
+      "energy": 1.0
+    },
+    {
+      "time": 7.4,
+      "energy": 1.0
+    },
+    {
+      "time": 7.5,
+      "energy": 1.0
+    },
+    {
+      "time": 7.6,
+      "energy": 1.0
+    },
+    {
+      "time": 7.7,
+      "energy": 1.0
+    },
+    {
+      "time": 7.8,
+      "energy": 1.0
+    },
+    {
+      "time": 7.9,
+      "energy": 1.0
+    },
+    {
+      "time": 8.0,
+      "energy": 1.0
+    },
+    {
+      "time": 8.1,
+      "energy": 1.0
+    },
+    {
+      "time": 8.2,
+      "energy": 1.0
+    },
+    {
+      "time": 8.3,
+      "energy": 1.0
+    },
+    {
+      "time": 8.4,
+      "energy": 1.0
+    },
+    {
+      "time": 8.5,
+      "energy": 1.0
+    },
+    {
+      "time": 8.6,
+      "energy": 1.0
+    },
+    {
+      "time": 8.7,
+      "energy": 1.0
+    },
+    {
+      "time": 8.8,
+      "energy": 1.0
+    },
+    {
+      "time": 8.9,
+      "energy": 1.0
+    },
+    {
+      "time": 9.0,
+      "energy": 1.0
+    },
+    {
+      "time": 9.1,
+      "energy": 1.0
+    },
+    {
+      "time": 9.2,
+      "energy": 1.0
+    },
+    {
+      "time": 9.3,
+      "energy": 1.0
+    },
+    {
+      "time": 9.4,
+      "energy": 1.0
+    },
+    {
+      "time": 9.5,
+      "energy": 1.0
+    },
+    {
+      "time": 9.6,
+      "energy": 1.0
+    },
+    {
+      "time": 9.7,
+      "energy": 1.0
+    },
+    {
+      "time": 9.8,
+      "energy": 1.0
+    },
+    {
+      "time": 9.9,
+      "energy": 1.0
+    },
+    {
+      "time": 10.0,
+      "energy": 1.0
+    },
+    {
+      "time": 10.1,
+      "energy": 1.0
+    },
+    {
+      "time": 10.2,
+      "energy": 1.0
+    },
+    {
+      "time": 10.3,
+      "energy": 0.5129982630411783
+    },
+    {
+      "time": 10.4,
+      "energy": 0.9643316268920898
+    },
+    {
+      "time": 10.5,
+      "energy": 1.0
+    },
+    {
+      "time": 10.6,
+      "energy": 1.0
+    },
+    {
+      "time": 10.7,
+      "energy": 0.9196545282999674
+    },
+    {
+      "time": 10.8,
+      "energy": 0.7164478937784831
+    },
+    {
+      "time": 10.9,
+      "energy": 0.8585590362548828
+    },
+    {
+      "time": 11.0,
+      "energy": 1.0
+    },
+    {
+      "time": 11.1,
+      "energy": 1.0
+    },
+    {
+      "time": 11.2,
+      "energy": 1.0
+    },
+    {
+      "time": 11.3,
+      "energy": 1.0
+    },
+    {
+      "time": 11.4,
+      "energy": 1.0
+    },
+    {
+      "time": 11.5,
+      "energy": 1.0
+    },
+    {
+      "time": 11.6,
+      "energy": 1.0
+    },
+    {
+      "time": 11.7,
+      "energy": 1.0
+    },
+    {
+      "time": 11.8,
+      "energy": 1.0
+    },
+    {
+      "time": 11.9,
+      "energy": 1.0
+    },
+    {
+      "time": 12.0,
+      "energy": 1.0
+    },
+    {
+      "time": 12.1,
+      "energy": 1.0
+    },
+    {
+      "time": 12.2,
+      "energy": 1.0
+    },
+    {
+      "time": 12.3,
+      "energy": 1.0
+    },
+    {
+      "time": 12.4,
+      "energy": 1.0
+    },
+    {
+      "time": 12.5,
+      "energy": 1.0
+    },
+    {
+      "time": 12.6,
+      "energy": 1.0
+    },
+    {
+      "time": 12.7,
+      "energy": 1.0
+    },
+    {
+      "time": 12.8,
+      "energy": 1.0
+    },
+    {
+      "time": 12.9,
+      "energy": 0.9670277913411458
+    },
+    {
+      "time": 13.0,
+      "energy": 1.0
+    },
+    {
+      "time": 13.1,
+      "energy": 1.0
+    },
+    {
+      "time": 13.2,
+      "energy": 1.0
+    },
+    {
+      "time": 13.3,
+      "energy": 1.0
+    },
+    {
+      "time": 13.4,
+      "energy": 0.8755225499471029
+    },
+    {
+      "time": 13.5,
+      "energy": 1.0
+    },
+    {
+      "time": 13.6,
+      "energy": 0.9293073018391927
+    },
+    {
+      "time": 13.7,
+      "energy": 1.0
+    },
+    {
+      "time": 13.8,
+      "energy": 1.0
+    },
+    {
+      "time": 13.9,
+      "energy": 1.0
+    },
+    {
+      "time": 14.0,
+      "energy": 1.0
+    },
+    {
+      "time": 14.1,
+      "energy": 1.0
+    },
+    {
+      "time": 14.2,
+      "energy": 1.0
+    },
+    {
+      "time": 14.3,
+      "energy": 1.0
+    },
+    {
+      "time": 14.4,
+      "energy": 1.0
+    },
+    {
+      "time": 14.5,
+      "energy": 1.0
+    },
+    {
+      "time": 14.6,
+      "energy": 1.0
+    },
+    {
+      "time": 14.7,
+      "energy": 1.0
+    },
+    {
+      "time": 14.8,
+      "energy": 1.0
+    },
+    {
+      "time": 14.9,
+      "energy": 1.0
+    },
+    {
+      "time": 15.0,
+      "energy": 0.9635729471842448
+    },
+    {
+      "time": 15.1,
+      "energy": 1.0
+    },
+    {
+      "time": 15.2,
+      "energy": 1.0
+    },
+    {
+      "time": 15.3,
+      "energy": 1.0
+    },
+    {
+      "time": 15.4,
+      "energy": 1.0
+    },
+    {
+      "time": 15.5,
+      "energy": 1.0
+    },
+    {
+      "time": 15.6,
+      "energy": 1.0
+    },
+    {
+      "time": 15.7,
+      "energy": 1.0
+    },
+    {
+      "time": 15.8,
+      "energy": 1.0
+    },
+    {
+      "time": 15.9,
+      "energy": 1.0
+    },
+    {
+      "time": 16.0,
+      "energy": 1.0
+    },
+    {
+      "time": 16.1,
+      "energy": 1.0
+    },
+    {
+      "time": 16.2,
+      "energy": 1.0
+    },
+    {
+      "time": 16.3,
+      "energy": 1.0
+    },
+    {
+      "time": 16.4,
+      "energy": 1.0
+    },
+    {
+      "time": 16.5,
+      "energy": 1.0
+    },
+    {
+      "time": 16.6,
+      "energy": 1.0
+    },
+    {
+      "time": 16.7,
+      "energy": 1.0
+    },
+    {
+      "time": 16.8,
+      "energy": 1.0
+    },
+    {
+      "time": 16.9,
+      "energy": 1.0
+    },
+    {
+      "time": 17.0,
+      "energy": 1.0
+    },
+    {
+      "time": 17.1,
+      "energy": 1.0
+    },
+    {
+      "time": 17.2,
+      "energy": 1.0
+    },
+    {
+      "time": 17.3,
+      "energy": 1.0
+    },
+    {
+      "time": 17.4,
+      "energy": 1.0
+    },
+    {
+      "time": 17.5,
+      "energy": 1.0
+    },
+    {
+      "time": 17.6,
+      "energy": 0.6978090286254883
+    },
+    {
+      "time": 17.7,
+      "energy": 0.2731562614440918
+    },
+    {
+      "time": 17.8,
+      "energy": 0.1480381965637207
+    },
+    {
+      "time": 17.9,
+      "energy": 0.15881423950195311
+    },
+    {
+      "time": 18.0,
+      "energy": 0.20019791920979818
+    },
+    {
+      "time": 18.1,
+      "energy": 0.2000121593475342
+    },
+    {
+      "time": 18.2,
+      "energy": 0.21000173886617024
+    },
+    {
+      "time": 18.3,
+      "energy": 0.22628992398579914
+    },
+    {
+      "time": 18.4,
+      "energy": 0.3247604052225749
+    },
+    {
+      "time": 18.5,
+      "energy": 0.30544617970784504
+    },
+    {
+      "time": 18.6,
+      "energy": 0.34035415649414064
+    },
+    {
+      "time": 18.7,
+      "energy": 0.06500347057978312
+    },
+    {
+      "time": 18.8,
+      "energy": 0.0
+    },
+    {
+      "time": 18.9,
+      "energy": 0.0
+    },
+    {
+      "time": 19.0,
+      "energy": 0.0
+    },
+    {
+      "time": 19.1,
+      "energy": 0.0
+    },
+    {
+      "time": 19.2,
+      "energy": 0.0
+    }
+  ]
+}

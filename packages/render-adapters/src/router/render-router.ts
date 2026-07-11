@@ -1,7 +1,7 @@
 import { execa } from "execa";
 import fs from "node:fs";
 import path from "node:path";
-import type { MonetEDL } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 import { renderTimelineWithFFmpeg } from "../ffmpeg/render-timeline";
 import type { ActionResult, TimelineRenderResult } from "../ffmpeg/timeline-types";
 
@@ -67,6 +67,7 @@ export async function processVibeEngine(
         outputPath,
         duration: timeline.tracks.reduce((sum, t) => sum + (t.endFrame - t.startFrame) / timeline.settings.fps, 0),
         inputCount: timeline.tracks.length,
+        filterComplex: "",
       },
     };
   } catch (error: any) {

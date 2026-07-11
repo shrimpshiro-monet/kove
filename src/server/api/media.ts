@@ -100,6 +100,30 @@ export async function handleMedia(
     }
   }
 
+  // Fallback: check Fastify storage directory for dev uploads
+  if (!localMedia) {
+    try {
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
+      const storageDir = path.resolve(process.cwd(), "apps/api/storage/uploads");
+      const files = await fs.readdir(storageDir).catch(() => []);
+      const match = files.find((f) => f.startsWith(clipId));
+      if (match) {
+        const filePath = path.join(storageDir, match);
+        const data = await fs.readFile(filePath);
+        const ext = path.extname(match).toLowerCase();
+        const mimeMap: Record<string, string> = {
+          ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+          ".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/m4a",
+        };
+        mimeType = mimeMap[ext] || "application/octet-stream";
+        localMedia = { data: data.buffer as ArrayBuffer, mimeType, r2Key: clipId };
+      }
+    } catch {
+      // Fastify storage fallback failed — continue to other paths
+    }
+  }
+
   if (localMedia) {
     return buildLocalMediaResponse(
       localMedia.data,

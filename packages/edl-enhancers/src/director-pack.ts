@@ -7,7 +7,7 @@ import type {
   TranscriptWord,
   ReferenceStyle
 } from "@monet/edl/src/analysis-types";
-import type { Clip, CropKeyframe, EffectBlock, MonetEDL, Track } from "@monet/edl/src/schemas";
+import type { Clip, CropKeyframe, EffectBlock, ProjectEDL as MonetEDL, Track } from "@monet/edl/src/schemas";
 import { deriveHybridSignals } from "./reference-style-engine";
 
 export interface ActionError {

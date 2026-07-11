@@ -385,5 +385,15 @@ export function getDevEnv(existingEnv?: any): Env {
     }
   }
 
+  // AI Provider keys
+  env.CEREBRAS_API_KEY = stripQuotes(env.CEREBRAS_API_KEY || process.env.CEREBRAS_API_KEY || "");
+  env.GROQ_API_KEY = stripQuotes(env.GROQ_API_KEY || process.env.GROQ_API_KEY || "");
+  env.DASHSCOPE_API_KEY = stripQuotes(env.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY || "");
+  env.NVIDIA_NIM_API_KEY = stripQuotes(env.NVIDIA_NIM_API_KEY || process.env.NVIDIA_NIM_API_KEY || "");
+  env.NVIDIA_NIM_MODEL = stripQuotes(env.NVIDIA_NIM_MODEL || process.env.NVIDIA_NIM_MODEL || "");
+  env.AZURE_FOUNDRY_ENDPOINT = stripQuotes(env.AZURE_FOUNDRY_ENDPOINT || process.env.AZURE_FOUNDRY_ENDPOINT || "");
+  env.AZURE_FOUNDRY_KEY = stripQuotes(env.AZURE_FOUNDRY_KEY || process.env.AZURE_FOUNDRY_KEY || "");
+  env.MEDIA_SIDECAR_URL = stripQuotes(env.MEDIA_SIDECAR_URL || process.env.MEDIA_SIDECAR_URL || "");
+
   return env as Env;
 }

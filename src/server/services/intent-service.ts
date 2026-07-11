@@ -88,18 +88,14 @@ export async function createIntentFromPrompt(
 
   const ai = getAIService(env);
 
-  const intent = await ai.generateContentJSON({
-    prompt: [
-      {
-        text:
-          `Convert this user edit request into a structured video-editing intent.\n\n` +
-          `Prompt: ${prompt}\n` +
-          `Thread ID: ${params.threadId ?? "unknown"}\n` +
-          `Style: ${params.style ?? "auto"}\n` +
-          `Target duration seconds: ${params.durationSeconds ?? 30}\n\n` +
-          `Return JSON only.`,
-      },
-    ],
+  const intent = await ai.generateContentJSON<Record<string, unknown>>({
+    prompt:
+      `Convert this user edit request into a structured video-editing intent.\n\n` +
+      `Prompt: ${prompt}\n` +
+      `Thread ID: ${params.threadId ?? "unknown"}\n` +
+      `Style: ${params.style ?? "auto"}\n` +
+      `Target duration seconds: ${params.durationSeconds ?? 30}\n\n` +
+      `Return JSON only.`,
     stage: "intent",
     temperature: 0.3,
     schema: {

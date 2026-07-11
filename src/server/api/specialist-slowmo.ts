@@ -8,7 +8,11 @@ export async function handleSpecialistSlowmo(
   env: Env,
 ): Promise<Response> {
   try {
-    const body = await request.json() as any;
+    const body = (await request.json()) as {
+      videoUrl?: string;
+      targetFps?: number;
+      interpolationFactor?: number;
+    };
     const userTier = (request.headers.get("X-User-Tier") ?? "free").toLowerCase();
 
     if (!body.videoUrl) {
@@ -22,7 +26,7 @@ export async function handleSpecialistSlowmo(
     });
 
     // If FFmpeg fallback used and user is free, suggest upgrade for true RIFE
-    const usingFallback = (result as any).useFFmpegFilter === true;
+    const usingFallback = "useFFmpegFilter" in result && (result as { useFFmpegFilter?: boolean }).useFFmpegFilter === true;
     return jsonResponse({
       success: true,
       ...result,

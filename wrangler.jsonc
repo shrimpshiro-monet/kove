@@ -6,13 +6,16 @@
 		"nodejs_compat"
 	],
 	"main": "src/server.ts",
+	"alias": {
+		"#tanstack-start-entry": "./src/stubs/tanstack-entry.ts",
+		"#tanstack-start-plugin-adapters": "./src/stubs/tanstack-adapters.ts",
+		"#tanstack-router-entry": "./src/stubs/tanstack-entry.ts",
+		"tanstack-start-manifest:v": "./src/stubs/tanstack-manifest.ts",
+		"tanstack-start-injected-head-scripts:v": "./src/stubs/tanstack-head.ts"
+	},
 	"vars": {
 		"ENVIRONMENT": "development",
-		"GEMINI_API_KEY": "AIzaSyADt7T72roaSn1BzIgVg08GGR-JYDl-dAw",
-		"MONET_API_URL": "http://localhost:3000",
-		"MONET_AI_SERVICE_URL": "https://ai.monet.app",
-		"MONET_AI_SERVICE_KEY": "development-test-key",
-		"HUGGINGFACE_API_KEY": "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"
+		"MONET_API_URL": "http://localhost:3000"
 	},
 	"r2_buckets": [
 		{
@@ -38,6 +41,15 @@
 			"binding": "MONET_KV",
 			"id": "1f14a68b4c994e6093f7132cc7f35ef3",
 			"preview_id": "2bfdf90e80d245dbb243ff924a12e97f"
+		}
+	],
+	"ai": {
+		"binding": "AI"
+	},
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS",
+			"dataset": "monet_ai_calls"
 		}
 	],
 	"queues": {

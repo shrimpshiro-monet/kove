@@ -67,20 +67,8 @@ export default defineConfig({
   },
   vite: {
     server: {
-      host: "127.0.0.1",
+      host: true,
       port: 8787,
-      proxy: {
-        "/uploads": {
-          target: "http://127.0.0.1:3000",
-          changeOrigin: true,
-          secure: false,
-        },
-        "/api/specialist": {
-          target: "http://127.0.0.1:8788",
-          changeOrigin: true,
-          secure: false,
-        },
-      },
     },
     define: {
       // Inject .dev.vars into process.env for SSR
@@ -110,6 +98,30 @@ export default defineConfig({
       ),
       "process.env.AZURE_OPENAI_DEPLOYMENT": JSON.stringify(
         loadDevVars().AZURE_OPENAI_DEPLOYMENT || ""
+      ),
+      "process.env.DASHSCOPE_API_KEY": JSON.stringify(
+        loadDevVars().DASHSCOPE_API_KEY || ""
+      ),
+      "process.env.NVIDIA_NIM_API_KEY": JSON.stringify(
+        loadDevVars().NVIDIA_NIM_API_KEY || ""
+      ),
+      "process.env.NVIDIA_NIM_MODEL": JSON.stringify(
+        loadDevVars().NVIDIA_NIM_MODEL || ""
+      ),
+      "process.env.CEREBRAS_API_KEY": JSON.stringify(
+        loadDevVars().CEREBRAS_API_KEY || ""
+      ),
+      "process.env.GROQ_API_KEY": JSON.stringify(
+        loadDevVars().GROQ_API_KEY || ""
+      ),
+      "process.env.AZURE_FOUNDRY_ENDPOINT": JSON.stringify(
+        loadDevVars().AZURE_FOUNDRY_ENDPOINT || ""
+      ),
+      "process.env.AZURE_FOUNDRY_KEY": JSON.stringify(
+        loadDevVars().AZURE_FOUNDRY_KEY || ""
+      ),
+      "process.env.MEDIA_SIDECAR_URL": JSON.stringify(
+        loadDevVars().MEDIA_SIDECAR_URL || ""
       ),
     },
   },

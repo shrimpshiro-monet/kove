@@ -1,7 +1,7 @@
 // Monet Canvas Renderer
 // Renders MonetEDL to Canvas2D for preview
 
-import type { MonetEDL, Shot } from "../../server/types/edl";
+import type { MonetEDL, Shot, TextOverlay, MotionTrack, PlanarTrack } from "../../server/types/edl";
 
 function hashEdlForRender(edl: any): string {
   if (!edl) return "empty";
@@ -29,7 +29,9 @@ import {
   getSourceTimeForShot,
   normalizeEDLForPreview,
   resolvePreviewTime,
+  computeSpeedRampSourceTime,
 } from "./monet-edl-preview-normalizer";
+import { cubicBezier } from "../../server/lib/bezier-velocity";
 import type { RenderContext, RenderFrame } from "./types";
 import { MediaLoader } from "./media-loader";
 import { EffectsEngine } from "./effects";
@@ -449,10 +451,15 @@ export class MonetRenderer {
       const quantizedTimeInShot = Math.floor(timeInShot * fps) / fps;
       
       if (activeShot.timing.speedRamp) {
-        const { startSpeed, endSpeed } = activeShot.timing.speedRamp;
-        const duration = activeShot.timing.duration;
-        const integral = startSpeed * quantizedTimeInShot + ((endSpeed - startSpeed) * quantizedTimeInShot * quantizedTimeInShot) / (2 * duration);
-        sourceTime = activeShot.source.inPoint + integral;
+        const { startSpeed, endSpeed, easing } = activeShot.timing.speedRamp;
+        sourceTime = computeSpeedRampSourceTime(
+          activeShot.source.inPoint,
+          quantizedTimeInShot,
+          activeShot.timing.duration,
+          startSpeed ?? 1,
+          endSpeed ?? startSpeed ?? 1,
+          easing ?? "linear"
+        );
       } else {
         const speed = activeShot.timing.speed || 1.0;
         sourceTime = activeShot.source.inPoint + quantizedTimeInShot * speed;
@@ -510,6 +517,38 @@ export class MonetRenderer {
       height,
       edl: this.edl,
     });
+
+    // === Speed ramp motion blur ===
+    // Apply directional blur proportional to instantaneous playback speed.
+    // This is the visual signature of speed ramps — fast sections streak,
+    // slow sections are crisp. Applied on the offscreen canvas after the
+    // video frame is drawn but before compositing to the main canvas.
+    const speedRampEffect = getShotEffect(activeShot, ["speed_ramp"]);
+    if (speedRampEffect && activeShot.timing?.speedRamp) {
+      const { startSpeed = 1, endSpeed = 1, easing = "linear" } = activeShot.timing.speedRamp;
+      const localT = Math.max(0, timelineTime - activeShot.timing.startTime);
+      const shotDur = Math.max(0.001, activeShot.timing.duration);
+      const progress = Math.max(0, Math.min(1, localT / shotDur));
+      const easedProgress = easing === "linear" ? progress : cubicBezier(progress, 0.42, 0, 0.58, 1);
+      const currentSpeed = startSpeed + (endSpeed - startSpeed) * easedProgress;
+
+      // Only blur when speed exceeds 1.3x — below that it looks muddy
+      if (currentSpeed > 1.3) {
+        const blurAmount = Math.min((currentSpeed - 1) * 2.5, 8); // max 8px blur
+        const samples = Math.min(Math.ceil(blurAmount * 0.8), 5); // directional samples
+        const intensity = getEffectParam(speedRampEffect, "intensity", 0.6);
+
+        offscreenCtx.save();
+        offscreenCtx.globalAlpha = intensity / samples;
+        for (let i = 1; i <= samples; i++) {
+          const offset = (i / samples) * blurAmount;
+          // Vertical motion blur (most natural for speed ramps)
+          offscreenCtx.drawImage(offscreenCanvas!, 0, -offset, width, height);
+        }
+        offscreenCtx.restore();
+      }
+    }
+
     offscreenCtx.restore();
 
     // Prepare main canvas context
@@ -535,9 +574,12 @@ export class MonetRenderer {
     });
 
     // Separate pre-draw effects (transforms, shakes) from post-draw effects (grain, scanlines, etc.)
+    // NOTE: context_shake is excluded here because it's already applied in applyShotTransformAndDraw.
+    // Including it here would cause double-application (the EffectsEngine.applyShake overwrites the
+    // shot-level shake, making it appear for only a split second).
     const preDrawEffects = effectsParams.filter(e => 
       !this.effects.hasCustomDraw([e]) && 
-      ["shake", "zoom_pulse", "context_shake", "whip_pan"].includes(e.type)
+      ["shake", "zoom_pulse", "whip_pan", "color_grade"].includes(e.type)
     );
     const postDrawEffects = effectsParams.filter(e => 
       !this.effects.hasCustomDraw([e]) && 
@@ -625,12 +667,12 @@ export class MonetRenderer {
     } else {
       this.webglGrade.resize(width, height);
     }
-    const gradeName = (this.edl as any).globalEffects?.colorGrade ?? "raw";
+    const gradeName = (this.edl as any)?.globalEffects?.colorGrade ?? "raw";
     const params = GRADE_PRESETS[gradeName] ?? GRADE_PRESETS.raw;
-    this.webglGrade.apply(this.canvas!, params);
-    
-    // Now blit the WebGL canvas back onto the visible canvas
-    ctx.drawImage(this.webglGrade.getCanvas(), 0, 0, width, height);
+    if (this.canvas) {
+      this.webglGrade.apply(this.canvas, params);
+      ctx.drawImage(this.webglGrade.getCanvas(), 0, 0, width, height);
+    }
 
     // Determine if frame_stutter is active on this shot
     const animTiming = activeShot.effects?.find(
@@ -741,7 +783,7 @@ export class MonetRenderer {
     if (!this.edl || !this.renderContext) return;
 
     const overlays = (this.edl.textOverlays ?? []).filter(
-      (overlay) => timelineTime >= overlay.startTime && timelineTime <= overlay.endTime
+      (overlay: TextOverlay) => timelineTime >= overlay.startTime && timelineTime <= overlay.endTime
     );
 
     if (overlays.length === 0) return;
@@ -756,14 +798,14 @@ export class MonetRenderer {
       if (overlay.tracking) {
         if (overlay.tracking.mode === "planar") {
           const planarTrack = (this.edl.planarTracks ?? []).find(
-            (t) => t.id === overlay.tracking?.trackId && t.clipId === shot.source.clipId
+            (t: PlanarTrack) => t.id === overlay.tracking?.trackId && t.clipId === shot.source.clipId
           );
           if (planarTrack) {
             planar = interpolatePlanarPoint(planarTrack, sourceTime);
           }
         } else {
           const track = (this.edl.motionTracks ?? []).find(
-            (t) => t.id === overlay.tracking?.trackId && t.clipId === shot.source.clipId
+            (t: MotionTrack) => t.id === overlay.tracking?.trackId && t.clipId === shot.source.clipId
           );
 
           const tracked = track ? interpolateTrackPoint(track, sourceTime) : undefined;
@@ -834,10 +876,15 @@ export class MonetRenderer {
     const timeInShot = time - currentShot.timing.startTime;
     let sourceTime = 0;
     if (currentShot.timing.speedRamp) {
-      const { startSpeed, endSpeed } = currentShot.timing.speedRamp;
-      // Linear integration of speed over time
-      const integral = startSpeed * timeInShot + ((endSpeed - startSpeed) * timeInShot * timeInShot) / (2 * currentShot.timing.duration);
-      sourceTime = currentShot.source.inPoint + integral;
+      const { startSpeed, endSpeed, easing } = currentShot.timing.speedRamp;
+      sourceTime = computeSpeedRampSourceTime(
+        currentShot.source.inPoint,
+        timeInShot,
+        currentShot.timing.duration,
+        startSpeed ?? 1,
+        endSpeed ?? startSpeed ?? 1,
+        easing ?? "linear"
+      );
     } else {
       const speed = currentShot.timing.speed || 1.0;
       sourceTime = currentShot.source.inPoint + timeInShot * speed;
@@ -1014,14 +1061,40 @@ function getLocalShotProgress(shot: Shot, timelineTime: number): number {
 }
 
 function getVideoRotation(video: HTMLVideoElement): number {
+  // Check for cached rotation
+  const cached = (video as any).__monetRotationCached;
+  if (typeof cached === "number" && cached !== 0) return cached;
+
   // Check for explicit rotation hint stored on the element
   const explicit = (video as any).__monetRotation;
-  if (typeof explicit === "number") return explicit;
+  if (typeof explicit === "number") {
+    (video as any).__monetRotationCached = explicit;
+    return explicit;
+  }
+
+  // Check if the browser applies rotation via CSS transform
+  // (Safari, Chrome apply this for MP4/MOV rotation metadata)
+  try {
+    const computedStyle = window.getComputedStyle(video);
+    const transform = computedStyle.transform || video.style.transform || "";
+    const rotateMatch = transform.match(/rotate\((\d+)deg\)/);
+    if (rotateMatch) {
+      const deg = parseInt(rotateMatch[1], 10);
+      if (deg === 90 || deg === 180 || deg === 270) {
+        (video as any).__monetRotationCached = deg;
+        return deg;
+      }
+    }
+  } catch {}
 
   // Frame is upside down → 180
-  if ((video as any).__monetUpsideDown) return 180;
+  if ((video as any).__monetUpsideDown) {
+    (video as any).__monetRotationCached = 180;
+    return 180;
+  }
 
-  // Default: no rotation. Browser already handles common metadata rotations.
+  // Cache 0 as default — don't re-detect every frame
+  (video as any).__monetRotationCached = 0;
   return 0;
 }
 
@@ -1055,7 +1128,8 @@ function applyShotTransformAndDraw(params: {
   const speedRamp = getShotEffect(shot, ["speed_ramp"]);
   if (speedRamp) {
     const progress = getLocalShotProgress(shot, timelineTime);
-    const punch = Math.sin(progress * Math.PI) * (isStrict ? 0.065 : 0.045);
+    const easedProgress = cubicBezier(progress, 0.42, 0, 0.58, 1);
+    const punch = Math.sin(easedProgress * Math.PI) * (isStrict ? 0.065 : 0.045);
     scale *= 1 + punch;
   }
 
@@ -1103,7 +1177,7 @@ function applyShotTransformAndDraw(params: {
   // Always render right-side-up by default. Phone uploads and metadata-tagged
   // videos sometimes carry rotation hints — respect those, otherwise no rotation.
   const explicitRotation =
-    shot.source?.rotation ??
+    (shot.source as any)?.rotation ??
     edl?.timeline?.sourceRotation;
 
   const videoRotation = getVideoRotation(video);
@@ -1144,19 +1218,32 @@ function applyShotEffects(params: {
     const effectId = getEffectId(effect);
     const intensity = readNumber((effect as any).intensity, getEffectParam(effect, "intensity", 1));
 
-    if (effectId === "impact_flash") {
+    if (effectId === "impact_flash" || effectId === "flash_white" || effectId === "flash_black") {
       const flashStart = getEffectParam(effect, "startTime", 0);
       const flashDuration = getEffectParam(effect, "duration", getEffectParam(effect, "durationSec", 0.08));
 
       if (localTime >= flashStart && localTime <= flashStart + flashDuration) {
+        const isFlashFrame = flashDuration <= 0.05;
         const t = (localTime - flashStart) / Math.max(0.001, flashDuration);
-        const flashProgress = 1 - t;
-        ctx.save();
-        ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = Math.min(0.4, intensity * flashProgress);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, width, height);
-        ctx.restore();
+
+        if (isFlashFrame) {
+          const flashColor = (effect as any).params?.flashColor === 0
+            || (effect as any).params?.flashColor === "black"
+            || effectId === "flash_black"
+            ? "#000000" : "#ffffff";
+          ctx.save();
+          ctx.fillStyle = flashColor;
+          ctx.fillRect(0, 0, width, height);
+          ctx.restore();
+        } else {
+          const flashProgress = 1 - t;
+          ctx.save();
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = Math.min(0.4, intensity * flashProgress);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, width, height);
+          ctx.restore();
+        }
       }
     }
 
@@ -1240,6 +1327,58 @@ function applyShotEffects(params: {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
       ctx.restore();
+    }
+
+    if (effectId === "vignette_punch") {
+      const punchStart = getEffectParam(effect, "startTime", 0);
+      const punchDuration = getEffectParam(effect, "duration", 0.3);
+
+      if (localTime >= punchStart && localTime <= punchStart + punchDuration) {
+        const t = (localTime - punchStart) / Math.max(0.001, punchDuration);
+        const pulse = Math.sin(t * Math.PI);
+        const strength = intensity * pulse;
+
+        const gradient = ctx.createRadialGradient(
+          width / 2,
+          height / 2,
+          Math.min(width, height) * 0.15,
+          width / 2,
+          height / 2,
+          Math.max(width, height) * 0.65
+        );
+        gradient.addColorStop(0, "rgba(0,0,0,0)");
+        gradient.addColorStop(1, `rgba(0,0,0,${Math.min(0.85, strength * 0.7)})`);
+
+        ctx.save();
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+      }
+    }
+
+    if (effectId === "chromatic_burst") {
+      const burstStart = getEffectParam(effect, "startTime", 0);
+      const burstDuration = getEffectParam(effect, "duration", 0.15);
+
+      if (localTime >= burstStart && localTime <= burstStart + burstDuration) {
+        const t = (localTime - burstStart) / Math.max(0.001, burstDuration);
+        const burst = Math.sin(t * Math.PI);
+        const offset = Math.round(burst * intensity * 12);
+
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = burst * 0.4;
+
+        // Red channel shifted left
+        ctx.fillStyle = "rgba(255,0,0,0.3)";
+        ctx.fillRect(-offset, 0, width, height);
+
+        // Blue channel shifted right
+        ctx.fillStyle = "rgba(0,0,255,0.3)";
+        ctx.fillRect(offset, 0, width, height);
+
+        ctx.restore();
+      }
     }
   }
 }

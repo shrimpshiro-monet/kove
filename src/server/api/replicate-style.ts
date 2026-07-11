@@ -58,7 +58,9 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
     // PHASE 1: Compile Reference Grammar
     // ══════════════════════════════════════════════════════════════
     const grammar = compileReferenceGrammar(referenceStyle);
-    console.log(`[replicate-style] Grammar compiled: ${grammar.topology.referenceShotCount} ref shots, range [${grammar.topology.minGeneratedShots}-${grammar.topology.maxGeneratedShots}], ${grammar.sections.length} sections, ${grammar.effects.length} effect moments`);
+    const refTrace = (referenceStyle as any).referenceTrace;
+    const shotDurs = refTrace?.shotDurations ?? [];
+    console.log(`[replicate-style] Grammar: refShotCount=${grammar.topology.referenceShotCount}, traceShotDurations=${shotDurs.length}, shotDurs=${JSON.stringify(shotDurs.slice(0, 5))}, range=[${grammar.topology.minGeneratedShots}-${grammar.topology.maxGeneratedShots}], sections=${grammar.sections.length}`);
 
     // ══════════════════════════════════════════════════════════════
     // PHASE 2: Build Source Plan (shot-count topology aware)

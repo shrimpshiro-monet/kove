@@ -1,359 +1,176 @@
+/**
+ * edl-to-openreel.ts — Bridge from MonetEDL to OpenReel Project
+ *
+ * Converts our AI-generated EDL into OpenReel's NLE Project format,
+ * enabling the Director→Operator pipeline where AI decisions drive
+ * a professional browser-based video editor.
+ */
+
+import type { ProjectEDL as MonetEDL } from "@monet/edl";
 import type {
-  Clip as MonetClip,
-  EffectBlock,
-  MediaAsset,
-  ProjectEDL as MonetEDL,
-  Track as MonetTrack,
-  TrackType,
-} from "@monet/edl";
+  OpenReelProject as Project,
+  OpenReelTrack,
+  OpenReelClip,
+  OpenReelEffect,
+  OpenReelTransform as Transform,
+  OpenReelKeyframe as Keyframe,
+  OpenReelTransition as Transition,
+} from "./openreel-types";
 
-export interface ActionError {
-  code: string;
-  message: string;
-}
+const ASPECT_RATIO_MAP: Record<string, { width: number; height: number }> = {
+  "16:9": { width: 1920, height: 1080 },
+  "9:16": { width: 1080, height: 1920 },
+  "1:1": { width: 1080, height: 1080 },
+};
 
-export interface ActionResult<TData = unknown> {
-  success: boolean;
-  error?: ActionError;
-  data?: TData;
-}
+const EASING_MAP: Record<string, string> = {
+  "linear": "linear",
+  "ease-in": "ease-in",
+  "ease-out": "ease-out",
+  "ease-in-out": "ease-in-out",
+  "bezier": "ease-in-out",
+};
 
-export type OpenReelTrackType = "video" | "audio" | "text" | "graphics";
-
-export interface Project {
-  timeline: {
-    tracks: Track[];
-    duration: number;
-    markers: Marker[];
-  };
-  mediaLibrary: {
-    items: MediaItem[];
-  };
-  settings: ProjectSettings;
-  modifiedAt?: number;
-}
-
-export interface ProjectSettings {
-  fps?: number;
-  aspectRatio?: "16:9" | "9:16" | "1:1";
-  monet?: {
-    edl: MonetEDL;
-    lastSyncedAt: number;
-    syncVersion: number;
-  };
-  [key: string]: unknown;
-}
-
-export interface Marker {
-  id: string;
-  time: number;
-  label?: string;
-  type?: string;
-}
-
-export interface Track {
-  id: string;
-  type: OpenReelTrackType;
-  clips: Clip[];
-  transitions: Transition[];
-  locked: boolean;
-  hidden: boolean;
-}
-
-export interface Clip {
-  id: string;
-  mediaId: string;
-  startTime: number;
-  duration: number;
-  inPoint: number;
-  outPoint: number;
-  speed: number;
-  meta?: Record<string, unknown>;
-}
-
-export interface Transition {
-  id: string;
-  fromClipId?: string;
-  toClipId?: string;
-  startTime?: number;
-  duration?: number;
-  type?: string;
-  params?: Record<string, unknown>;
-}
-
-export interface MediaItem {
-  id: string;
-  src: string;
-  duration: number;
-  width?: number;
-  height?: number;
-  type: "video" | "audio" | "image";
-  meta?: Record<string, unknown>;
-}
-
-export function convertEDLToProject(edl: MonetEDL): ActionResult<Project | null> {
-  try {
-    const validation = validateEDLForOpenReel(edl);
-
-    if (!validation.success) {
-      return validation;
-    }
-
-    const mediaItems = convertAssetsToMediaItems(edl);
-    const tracks = edl.timeline.tracks.map(convertTrack);
-
-    const project: Project = {
-      timeline: {
-        tracks,
-        duration: calculateTimelineDuration(tracks),
-        markers: edl.timeline.markers.map((marker: Marker) => ({
-          id: marker.id,
-          time: marker.time,
-          label: marker.label,
-          type: marker.type,
-        })),
-      },
-      mediaLibrary: {
-        items: mediaItems,
-      },
-      settings: {
-        fps: edl.meta.fps,
-        aspectRatio: edl.meta.aspectRatio,
-        monet: {
-          edl,
-          lastSyncedAt: Date.now(),
-          syncVersion: 1,
-        },
-      },
-      modifiedAt: Date.now(),
-    };
-
-    return {
-      success: true,
-      data: project,
-    };
-  } catch (error) {
-    console.error("[edl-to-openreel] convertEDLToProject failed", {
-      error,
-      edlId: edl?.id,
-    });
-
-    return {
-      success: false,
-      error: {
-        code: "EDL_TO_OPENREEL_FAILED",
-        message: "Failed to convert MonetEDL to OpenReel project",
-      },
-    };
-  }
-}
-
-function validateEDLForOpenReel(edl: MonetEDL): ActionResult<null> {
-  if (!edl || typeof edl !== "object") {
-    return {
-      success: false,
-      error: {
-        code: "INVALID_EDL",
-        message: "EDL is required",
-      },
-    };
-  }
-
-  if (edl.version !== 1) {
-    return {
-      success: false,
-      error: {
-        code: "UNSUPPORTED_EDL_VERSION",
-        message: "Only MonetEDL version 1 is supported",
-      },
-    };
-  }
-
-  if (!edl.timeline || !Array.isArray(edl.timeline.tracks)) {
-    return {
-      success: false,
-      error: {
-        code: "INVALID_TIMELINE",
-        message: "EDL timeline tracks are required",
-      },
-    };
-  }
-
-  for (const track of edl.timeline.tracks) {
-    if (!track.id || !Array.isArray(track.clips)) {
-      return {
-        success: false,
-        error: {
-          code: "INVALID_TRACK",
-          message: `Invalid track ${track.id || "unknown"}`,
-        },
-      };
-    }
-
-    for (const clip of track.clips) {
-      if (!clip.id || !clip.mediaId) {
-        return {
-          success: false,
-          error: {
-            code: "INVALID_CLIP",
-            message: `Invalid clip in track ${track.id}`,
-          },
-        };
-      }
-
-      if (
-        !Number.isFinite(clip.startTime) ||
-        !Number.isFinite(clip.duration) ||
-        clip.duration <= 0
-      ) {
-        return {
-          success: false,
-          error: {
-            code: "INVALID_CLIP_TIMING",
-            message: `Clip ${clip.id} has invalid timing`,
-          },
-        };
-      }
-    }
-  }
+function mapTransform(monetTransform: any): Transform {
+  const pos = monetTransform.position?.[0] ?? { x: 0, y: 0 };
+  const scale = monetTransform.scale?.[0] ?? { value: 1 };
+  const rotation = monetTransform.rotation?.[0] ?? { value: 0 };
 
   return {
-    success: true,
-    data: null,
+    position: { x: pos.x ?? 0, y: pos.y ?? 0 },
+    scale: { x: scale.value ?? 1, y: scale.value ?? 1 },
+    rotation: rotation.value ?? 0,
+    anchor: { x: 0.5, y: 0.5 },
+    opacity: 1,
   };
 }
 
-function convertAssetsToMediaItems(edl: MonetEDL): MediaItem[] {
-  const items: MediaItem[] = [];
-
-  for (const asset of Object.values(edl.assets.media)) {
-    items.push(convertMediaAsset(asset));
-  }
-
-  for (const asset of Object.values(edl.assets.audio)) {
-    items.push({
-      id: asset.id,
-      src: asset.path,
-      duration: asset.duration,
-      type: "audio",
-      meta: {
-        monetAssetType: "audio",
-      },
-    });
-  }
-
-  for (const asset of Object.values(edl.assets.overlays)) {
-    items.push({
-      id: asset.id,
-      src: asset.path,
-      duration: 0,
-      type: asset.type === "image" ? "image" : "video",
-      meta: {
-        monetAssetType: "overlay",
-        overlayType: asset.type,
-      },
-    });
-  }
-
-  return items;
+function mapKeyframes(monetKeyframes: any[], property: string): Keyframe[] {
+  if (!monetKeyframes?.length) return [];
+  return monetKeyframes.map((kf: any) => ({
+    id: `kf-${property}-${kf.time}-${Math.random().toString(36).slice(2, 8)}`,
+    time: kf.time,
+    property,
+    value: kf.value ?? kf.x ?? 0,
+    easing: (EASING_MAP[kf.easing] ?? "linear") as any,
+  }));
 }
 
-function convertMediaAsset(asset: MediaAsset): MediaItem {
+function mapEffect(monetEffect: any): OpenReelEffect {
   return {
-    id: asset.id,
-    src: asset.path,
-    duration: asset.duration,
-    width: asset.width,
-    height: asset.height,
-    type: "video",
-    meta: {
-      monetAssetType: "media",
+    id: monetEffect.id,
+    type: monetEffect.type,
+    params: {
+      ...monetEffect.params,
+      startTime: monetEffect.start,
+      duration: monetEffect.duration,
+    },
+    enabled: true,
+  };
+}
+
+function mapClip(monetClip: any, trackId: string): OpenReelClip {
+  const keyframes: Keyframe[] = [
+    ...mapKeyframes(monetClip.transforms?.position, "position.x"),
+    ...mapKeyframes(monetClip.transforms?.scale, "scale.x"),
+    ...mapKeyframes(monetClip.transforms?.rotation, "rotation"),
+  ];
+
+  return {
+    id: monetClip.id,
+    mediaId: monetClip.mediaId,
+    trackId,
+    startTime: monetClip.startTime,
+    duration: monetClip.duration,
+    inPoint: monetClip.inPoint,
+    outPoint: monetClip.outPoint,
+    effects: (monetClip.effects ?? []).map(mapEffect),
+    audioEffects: [],
+    transform: mapTransform(monetClip.transforms),
+    volume: monetClip.audio?.gain ?? 1,
+    keyframes,
+    speed: monetClip.speed ?? 1,
+    meta: monetClip.meta,
+  };
+}
+
+function mapTrack(monetTrack: any): OpenReelTrack {
+  const orType = mapTrackType(monetTrack.type);
+
+  return {
+    id: monetTrack.id,
+    type: orType,
+    name: `${orType} ${monetTrack.id}`,
+    clips: monetTrack.clips.map((c: any) => mapClip(c, monetTrack.id)),
+    transitions: [],
+    locked: monetTrack.locked ?? false,
+    hidden: monetTrack.hidden ?? false,
+    muted: false,
+    solo: false,
+  };
+}
+
+function mapTrackType(type: string): "video" | "audio" | "image" | "text" | "graphics" {
+  switch (type) {
+    case "video": return "video";
+    case "audio": return "audio";
+    case "text": return "text";
+    case "fx": return "graphics";
+    case "mask": return "graphics";
+    default: return "video";
+  }
+}
+
+export function convertEDLToOpenReelProject(
+  edl: MonetEDL,
+  mediaItems: Array<{ id: string; name: string; type: "video" | "audio" | "image"; duration: number; width: number; height: number }> = [],
+): Project {
+  const ar = ASPECT_RATIO_MAP[edl.meta.aspectRatio] ?? ASPECT_RATIO_MAP["16:9"];
+
+  return {
+    version: 1,
+    id: edl.id,
+    name: `AI Edit — ${edl.id}`,
+    createdAt: edl.meta.createdAt,
+    modifiedAt: edl.meta.updatedAt,
+    settings: {
+      width: ar.width,
+      height: ar.height,
+      frameRate: edl.meta.fps,
+      sampleRate: edl.meta.sampleRate,
+      channels: 2,
+    },
+    mediaLibrary: {
+      items: mediaItems.map((m) => ({
+        id: m.id,
+        name: m.name,
+        type: m.type,
+        fileHandle: null,
+        blob: null,
+        metadata: {
+          duration: m.duration,
+          width: m.width,
+          height: m.height,
+          frameRate: edl.meta.fps,
+          codec: "h264",
+          sampleRate: edl.meta.sampleRate,
+          channels: 2,
+          fileSize: 0,
+        },
+        thumbnailUrl: null,
+        waveformData: null,
+      })),
+    },
+    timeline: {
+      tracks: edl.timeline.tracks.map(mapTrack),
+      subtitles: [],
+      duration: edl.timeline.duration,
+      markers: (edl.timeline.markers ?? []).map((m) => ({
+        id: m.id,
+        time: m.time,
+        label: m.label ?? m.type ?? "marker",
+        color: "#FF6B6B",
+      })),
     },
   };
-}
-
-function convertTrack(track: MonetTrack): Track {
-  return {
-    id: track.id,
-    type: mapTrackType(track.type),
-    clips: track.clips.map((clip) => convertClip(track, clip)),
-    transitions: extractTransitions(track),
-    locked: track.locked,
-    hidden: track.hidden,
-  };
-}
-
-function mapTrackType(type: TrackType): OpenReelTrackType {
-  if (type === "video") return "video";
-  if (type === "audio") return "audio";
-  if (type === "text") return "text";
-
-  return "graphics";
-}
-
-function convertClip(track: MonetTrack, clip: MonetClip): Clip {
-  return {
-    id: clip.id,
-    mediaId: clip.mediaId,
-    startTime: clip.startTime,
-    duration: clip.duration,
-    inPoint: clip.inPoint,
-    outPoint: clip.outPoint,
-    speed: clip.speed,
-    meta: {
-      ...(clip.meta ?? {}),
-      monet: {
-        trackId: track.id,
-        trackType: track.type,
-        effects: clip.effects,
-        transforms: clip.transforms,
-        audio: clip.audio,
-        sourceClipId: clip.id,
-      },
-      effects: clip.effects,
-      transforms: clip.transforms,
-      audio: clip.audio,
-    },
-  };
-}
-
-function extractTransitions(track: MonetTrack): Transition[] {
-  const transitions: Transition[] = [];
-
-  for (const clip of track.clips) {
-    for (const effect of clip.effects) {
-      if (isTransitionEffect(effect)) {
-        transitions.push({
-          id: effect.id,
-          fromClipId: clip.id,
-          startTime: effect.start,
-          duration: effect.duration,
-          type: effect.type,
-          params: effect.params,
-        });
-      }
-    }
-  }
-
-  return transitions;
-}
-
-function isTransitionEffect(effect: EffectBlock): boolean {
-  return effect.type === "gl_transition" || effect.type === "whip_transition";
-}
-
-function calculateTimelineDuration(tracks: Track[]): number {
-  let maxDuration = 0;
-
-  for (const track of tracks) {
-    for (const clip of track.clips) {
-      const end = clip.startTime + clip.duration;
-
-      if (end > maxDuration) {
-        maxDuration = end;
-      }
-    }
-  }
-
-  return Math.round(maxDuration * 1000) / 1000;
 }

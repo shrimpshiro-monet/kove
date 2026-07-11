@@ -23,12 +23,12 @@ export interface JobPayloadMap {
 
   "enhance.recipe": {
     edl: unknown;
-    features: string[];
+    features?: string[];
   };
 
   "render.preview": {
     edl: unknown;
-    outputPath: string;
+    outputPath?: string;
     width?: number;
     height?: number;
     fps?: number;
@@ -36,7 +36,7 @@ export interface JobPayloadMap {
 
   "render.final": {
     edl: unknown;
-    outputPath: string;
+    outputPath?: string;
     width?: number;
     height?: number;
     fps?: number;

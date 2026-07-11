@@ -23,35 +23,29 @@ export interface DepthResult {
   cached: boolean;
 }
 
-function hashKey(prefix: string, payload: unknown): string {
-  const str = JSON.stringify(payload);
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-  }
-  return `${prefix}:${h.toString(36)}`;
-}
+import { hashKey } from "../lib/hash";
 
 export async function extractDepth(
   env: Env,
   request: DepthRequest,
 ): Promise<DepthResult> {
   // Try HuggingFace first (free path) unless Replicate is explicitly requested
-  const useReplicate = (env as any).USE_REPLICATE === "true";
+  const useReplicate = env.USE_REPLICATE === "true";
   if (!useReplicate) {
     return extractDepthHF(env, request);
   }
 
   const cacheKey = hashKey("depth", request);
 
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (kv) {
     const cached = await kv.get(cacheKey);
     if (cached) {
       try {
         return { ...JSON.parse(cached), cached: true };
-      } catch {}
+      } catch (e) {
+        console.warn("[depth] cache parse failed:", e);
+      }
     }
   }
 
@@ -92,7 +86,9 @@ export async function extractDepth(
       await kv.put(cacheKey, JSON.stringify(result), {
         expirationTtl: 60 * 60 * 24 * 30,
       });
-    } catch {}
+    } catch (e) {
+      console.warn("[depth] cache write failed:", e);
+    }
   }
 
   return result;
@@ -108,13 +104,15 @@ export async function extractDepthHF(
 ): Promise<DepthResult> {
   const cacheKey = hashKey("depth_hf", request);
 
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (kv) {
     const cached = await kv.get(cacheKey);
     if (cached) {
       try {
         return { ...JSON.parse(cached), cached: true };
-      } catch {}
+      } catch (e) {
+        console.warn("[depth-hf] cache parse failed:", e);
+      }
     }
   }
 
@@ -134,7 +132,7 @@ export async function extractDepthHF(
     inputs: { image: base64 },
   });
 
-  const r2Bucket = (env as any).MONET_MEDIA;
+  const r2Bucket = env.MONET_MEDIA;
   let depthUrl = request.videoUrl;
 
   if (r2Bucket && result.data instanceof ArrayBuffer) {
@@ -157,7 +155,9 @@ export async function extractDepthHF(
       await kv.put(cacheKey, JSON.stringify(finalResult), {
         expirationTtl: 60 * 60 * 24 * 30,
       });
-    } catch {}
+    } catch (e) {
+      console.warn("[depth-hf] cache write failed:", e);
+    }
   }
 
   return finalResult;

@@ -42,6 +42,10 @@ MUSIC_STRUCTURE: {{MUSIC_STRUCTURE}}
 REFERENCE_STYLE: {{REFERENCE_STYLE}}
 AVAILABLE_CLIPS: {{AVAILABLE_CLIPS}}
 
+{{REFERENCE_CONSTRAINTS}}
+{{REFERENCE_DIRECTOR_SECTION}}
+{{STYLE_SLOT_SECTION}}
+
 ═══════════════════════════════════════════════════════════════════════
 COMPILED STYLE DNA
 ═══════════════════════════════════════════════════════════════════════
@@ -227,6 +231,12 @@ SPECIALIST EFFECTS (auto-dispatched to engines):
     kaleidoscope     intensity 0.6-0.9, 0.4-0.8s — mirror reflection
     pulse_wave       intensity 0.5-0.8, 0.3-0.6s — radial shock wave
     liquid           intensity 0.4-0.7, full shot — water surface
+    wave_warp        intensity 0.3-0.7, full shot — sine wave displacement
+    fisheye          intensity 0.4-0.8, 0.3-0.6s — lens distortion bulge
+
+  GPU Color Effects (all tiers):
+    color_balance    intensity 0.3-0.6, full shot — warm shadows / cool highlights
+                     params: { shadows: -1.0 to 1.0, highlights: -1.0 to 1.0 }
 
   GPU Creative Effects (all tiers):
     plasma           intensity 0.4-0.7, full shot — psychedelic energy
@@ -279,6 +289,20 @@ SPECIALIST EFFECTS (auto-dispatched to engines):
                           Use for: city vibes, NYC, lifestyle, fast-paced
     tiktok_energy_pulse  intensity 0.4-0.7, full shot — radial energy pulse
                           Use for: TikTok, viral, high-energy, punchy
+    bw_toggle            intensity 0.7-1.0, full shot — full B&W with contrast
+                          Use for: dramatic punctuation, F1 racing, monochrome moments
+    flash_white          intensity 0.8-1.0, duration 0.06-0.15 — white flash transition
+                          Use for: scene transitions, impact punctuation, hero reveals
+    multi_exposure       intensity 0.4-0.7, full shot — double exposure blend
+                          Use for: layered composites, memory sequences, artistic openers
+    vignette_pro         intensity 0.5-0.9, full shot — heavy dark-edge vignette
+                          Use for: drama edits, character focus, moody atmosphere
+    halftone             intensity 0.7-0.95, full shot — Ben-Day dot comic pattern
+                          Use for: Spider-Verse, comic book, pop art style
+    ink_edges            intensity 0.6-0.9, full shot — inked comic outlines
+                          Use for: Spider-Verse, comic book, illustration style
+    frame_stutter        intensity 0.5-0.8, full shot — stepped frame-rate feel
+                          Use for: anime AMV, hand-drawn animation, Spider-Verse
 
 TIER GATING:
   - Free: only edge_outline, face_detect_overlay from specialist list
@@ -298,6 +322,60 @@ EFFECT STACKING:
                   (hologram + bloom_highlights) for cyberpunk/neon vibes
                   (thermal + subject_isolation) for intense moments
                   (crt_monitor + film_scratches) for retro/80s aesthetics
+
+TRANSITIONS (shot-to-shot):
+  Use these in shot.transition to control how shots blend. NOT the same as effects.
+
+  BASIC (always available):
+    cut              duration 0 — hard cut, default for 80%+ of shots
+    crossfade        duration 0.3-0.8 — smooth blend between shots
+    dissolve         duration 0.3-0.6 — soft fade between shots
+    dip_black        duration 0.4-0.8 — fade to black then fade in
+    flash            duration 0.3-0.6 — fade to white then fade in
+    flash_white      duration 0.06-0.15 — quick white flash burst
+    flash_frame      duration 0.1-0.2 — single-frame white flash
+    slide            duration 0.4-0.7 — current shot slides in from right
+
+  WIPE TRANSITIONS (AE-grade):
+    radial_wipe      duration 0.5-0.8 — clock-hand wipe from center
+    clock_wipe       duration 0.5-0.8 — clock-hand wipe from top
+    linear_wipe      duration 0.4-0.7 — edge wipe with soft feather
+    gradient_wipe    duration 0.5-0.8 — diagonal gradient reveal
+    barn_doors       duration 0.4-0.7 — doors open from center
+    iris             duration 0.5-0.8 — circular iris open/close
+    pinwheel         duration 0.5-0.8 — rotating blade wipe
+
+  CREATIVE TRANSITIONS:
+    zoom_blur        duration 0.4-0.7 — zoom + blur + white flash
+    morph            duration 0.5-0.8 — crossfade with bulge warp
+    morph_cut        duration 0.3-0.5 — seamless morph cut between similar shots
+    film_burn        duration 0.5-0.8 — warm light leak transition
+    glitch           duration 0.3-0.6 — RGB split + block displacement
+    whip_pan         duration 0.3-0.5 — fast horizontal motion blur
+    spin             duration 0.4-0.7 — rotating transition with blur
+    blur             duration 0.4-0.7 — gaussian blur in/out
+    pixelate         duration 0.5-0.8 — mosaic pixelate in/out
+    push             duration 0.4-0.7 — current shot pushes next shot off screen
+    cube             duration 0.5-0.8 — 3D cube rotation between shots
+    ripple           duration 0.5-0.8 — water ripple distortion transition
+    swirl            duration 0.4-0.7 — spiral swirl between shots
+    dreamy           duration 0.5-0.8 — soft dreamy zoom transition
+    wind             duration 0.4-0.7 — horizontal wind wipe
+    mosaic           duration 0.5-0.8 — mosaic tile reveal
+    radial           duration 0.4-0.7 — radial wipe from center
+    doorway          duration 0.5-0.8 — door-open reveal
+    heart            duration 0.5-0.8 — heart-shaped iris reveal
+    kaleidoscope     duration 0.4-0.7 — kaleidoscope mirror transition
+
+  TRANSITION RULES:
+  - 80%+ of shots use "cut" — transitions are punctuation, not default
+  - Use crossfade/dissolve for emotional or slow moments
+  - Use flash/whip_pan for energy peaks and drops
+  - Use radial_wipe/iris for reveals and scene changes
+  - Use film_burn for warm/artistic transitions
+  - Use glitch for tech/glitch aesthetic edits
+  - Never use the same transition on 3+ consecutive shots
+  - transition.duration is in seconds (0 = instant cut)
                   (lens_blur + depth_focus) for cinematic DOF
                   (plasma + context_shake) for psychedelic energy
   - Invalid: speed_ramp + push_in (visual conflict)
@@ -321,10 +399,28 @@ EFFECT DIVERSITY RULES (MANDATORY):
 
 SPIDERVERSE RULES:
   - When user prompt mentions "spider-verse", "comic", "anime", "into the spiderverse", "comic book", "inked":
-    • Stack halftone (0.85) + comic_edges (0.75) + frame_stutter (animTiming: 2) on EVERY shot
+    • Stack halftone (0.85) + ink_edges (0.75) + frame_stutter (0.6) on EVERY shot
     • Add chromatic_glitch (0.8) on hero shots + drops
-    • Set globalEffects.colorGrade to "vibrant"
+    • Set globalEffects.colorGrade to "hyper_neon"
     • Set effectBudget HIGH (60+) — these aesthetics are maximalist
+
+AMV/ANIME RULES:
+  - When user prompt mentions "anime", "amv", "manga", "jujutsu", "dragon ball":
+    • Use chromatic_burst + speed_ramp + context_shake on action shots
+    • Set globalEffects.colorGrade to "bright_warm" or "vivid_red"
+    • Cut rate: 3-5 cuts/sec during action, 1-2 cuts/sec during dialogue
+
+DRAMA/DIALOGUE RULES:
+  - When user prompt mentions "drama", "dialogue", "TV show", "film edit":
+    • Use vignette_pro + bw_toggle for dramatic punctuation
+    • Set globalEffects.colorGrade to "cool_desaturated" or "warm_dark"
+    • Slow pacing (1-2s avg shot), tension-pivot structure
+
+SPORTS HIGHLIGHT RULES:
+  - When user prompt mentions "sports", "basketball", "F1", "racing", "highlights":
+    • Use impact_flash + speed_ramp + chromatic_burst on hero shots
+    • Set globalEffects.colorGrade to "neutral_desaturated" or "cool_dark"
+    • Fast pacing (0.5-1s avg shot), beat-locked cuts
 
 ▶ STEP 6: HERO MOMENTS
 Place exactly directorParams.heroMomentCount hero shots:
@@ -341,6 +437,9 @@ Place exactly directorParams.heroMomentCount hero shots:
 ▶ STEP 7: GLOBAL STYLE
 globalEffects.colorGrade — pick ONE from INTENT.style.colorTreatment:
   cinematic | vibrant | vintage | monochrome | anime | raw
+  cool_desaturated | warm_dark | vivid_red | neutral_desaturated
+  bright_warm | vibrant_warm | hyper_neon | cool_dark
+  warm_cinematic | desaturated_natural
 
 If REFERENCE_STYLE provided, REPLACE with REFERENCE_STYLE.visualStyle.colorGrade.
 

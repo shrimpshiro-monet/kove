@@ -1,4 +1,4 @@
-import { MonetEDL } from "@monet/edl/src/schemas";
+import { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 import { EnhancerContext, EnhancerResult } from "./types";
 
 import { applyPushIn } from "./push-in-motion";

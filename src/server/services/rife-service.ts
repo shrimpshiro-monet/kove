@@ -19,35 +19,29 @@ export interface RIFEResult {
   cached: boolean;
 }
 
-function hashKey(prefix: string, payload: unknown): string {
-  const str = JSON.stringify(payload);
-  let h = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-  }
-  return `${prefix}:${h.toString(36)}`;
-}
+import { hashKey } from "../lib/hash";
 
 export async function interpolateFrames(
   env: Env,
   request: RIFERequest,
 ): Promise<RIFEResult> {
   // Try HuggingFace/free path first unless Replicate is explicitly requested
-  const useReplicate = (env as any).USE_REPLICATE === "true";
+  const useReplicate = env.USE_REPLICATE === "true";
   if (!useReplicate) {
     return interpolateFramesFFmpeg(env, request);
   }
 
   const cacheKey = hashKey("rife", request);
 
-  const kv = (env as any).MONET_KV;
+  const kv = env.MONET_KV;
   if (kv) {
     const cached = await kv.get(cacheKey);
     if (cached) {
       try {
         return { ...JSON.parse(cached), cached: true };
-      } catch {}
+      } catch (e) {
+        console.warn("[rife] cache parse failed:", e);
+      }
     }
   }
 
@@ -88,7 +82,9 @@ export async function interpolateFrames(
       await kv.put(cacheKey, JSON.stringify(result), {
         expirationTtl: 60 * 60 * 24 * 30,
       });
-    } catch {}
+    } catch (e) {
+      console.warn("[rife] cache write failed:", e);
+    }
   }
 
   return result;

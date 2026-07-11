@@ -6,9 +6,33 @@ export interface RoutedEffect {
   effectKind: string;
   shotId: string;
   engineId: EngineId;
-  isPreferred: boolean;     // engine's preferredFor hit
+  isPreferred: boolean;
   fallbackUsed: boolean;
 }
+
+// Map effect names from fast-planner/effect-mapper to engine-registry names
+const EFFECT_ALIASES: Record<string, string> = {
+  saturation: "color_grade",
+  contrast: "color_grade",
+  brightness: "color_grade",
+  glow: "color_pulse",
+  vignette_pro: "vignette_punch",
+  chromatic_aberration: "chromatic_burst",
+  posterize_time: "color_grade",
+  echo: "motion_blur",
+  flash_white: "impact_flash",
+  shake: "context_shake",
+  zoom_pulse: "push_in",
+  color_pop: "color_pulse",
+  energy_boost: "impact_flash",
+  tension_build: "speed_ramp",
+  speed_emphasis: "speed_ramp",
+  glitch: "glitch_transition",
+  glitch_chaos: "glitch_transition",
+  subject_focus: "push_in",
+  impact_hit: "impact_flash",
+  dreamy_soft: "color_grade",
+};
 
 const MULTI_ENGINE_EFFECTS: Record<string, EngineId[]> = {
   push_in: ["openreel", "webgl-grade"],
@@ -55,9 +79,10 @@ export function routeEDL(
   const engineUseCount: Record<string, number> = {};
 
   for (const shot of edl.shots ?? []) {
-    const effects = (shot.effects ?? shot.features ?? []).map((e: any) =>
-      e.type ?? e.kind ?? "unknown",
-    );
+    const effects = (shot.effects ?? shot.features ?? []).map((e: any) => {
+      const raw = e.type ?? e.kind ?? "unknown";
+      return EFFECT_ALIASES[raw] ?? raw;
+    });
 
     const engineLoad: Partial<Record<EngineId, string[]>> = {};
 

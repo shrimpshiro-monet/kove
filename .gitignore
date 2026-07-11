@@ -1,95 +1,135 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-gcp-local-key.json
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
-*.local
-
-# Wrangler / Cloudflare
-.wrangler/
-.dev.vars
-
-# Sensitive files
-*.key
-*.pem
-gcp-local-key*.txt
-gcp-local-key*.json
-monet-key.json
-
-# Uploads / media files
-apps/api/storage/
-*.MP4
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.webm
-
-# Python cache
+# Dependencies
+node_modules/
+.pnpm-store/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-.Python
 .venv/
 venv/
 
-# Monet reference edits (large media files)
-monet-reference-edits/
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.output/
+.vinxi/
+.wrangler/
+.tanstack/
+.nitro/
+.tsbuildinfo
 
-# External engines (large, not part of core)
-remotion/
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+.dev.vars
+*.key
+*.pem
+gcp-*.json
+gcp-*.txt
+monet-key.json
+
+# User uploads & generated content
+apps/api/storage/
+apps/api/uploads/
+.tmp/
+*.mp4
+*.mov
+*.webm
+*.MP4
+*.MOV
+
+# Vendored editors & external deps (deleted or gitignored to prevent bloat)
+frontend/
+freecut/
+OpenCut/
 openreel-video/
-hyperframes/
 moviepy/
+remotion/
+CapC-Pro-2/
 editly/
 external/
-freecut/
+hyperframes/
 twick/
-OpenCut/
-CapC-Pro-2/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.aider*
+# Separate Python monolith (not part of JS/TS product)
+# monet/      — unignored, tracks Python code
+# workers/    — unignored, tracks Python AI workers
+# sidecar/    — unignored
+# bin/        — unignored
+# brain/      — unignored
+# k8s/        — unignored
 
-# AI助手配置
-.claude/
-.junie/
+# Reference video assets (extracted frames/scenes — don't track images)
+longer-reference-videos-for-youtube/frames/
+longer-reference-videos-for-youtube/scenes/
+monet-reference-edits/frames/
+reference-edits-2/frames/
 
-# Turbo cache
-.turbo/
+# Root test scripts & dead docs
+test-*.sh
+start-studio.sh
+check-engines-edit.ts
+TESTING.md
+VERTEX-AI-SETUP.md
+tree.md
+tree.txt
+tree_for_production_*.md
+phased-out-plan.md
+project.pdf
+prometheus.yml
+review.c
+wrangler.jsonc.backup
+skills-lock.json
 
-# Temp files
-check-tmp.*
-.ignore
-.ignore.save
-
-# Documentation (not code)
+# Dead documentation
 GEMINI.md
 MONET-CORE-LOOP.md
 monet-src.txt
 repomix-output.*
-tree.md
-tree.txt
-tree_for_production_*.md
 test_output.txt
+CODEBASE.md
+CODEBASE_FULL.md
+FULL-CODEBASE.md
+SUCCESS.md
+PIPELINE-TEST.md
+RENDERER-COMPLETE.md
+PRODUCTION-RESILIENCE.md
+VIBE-EDITOR-PLAN.md
+HYPERFRAMES-INTEGRATION.md
+
+# Agent config files (use local configs, don't track)
+.clineignore
+.geminiignore
+.kimiignore
+.qodo/
+.rooignore
+.aider*
+.junie/
+.mimocode/
+.lovable/
+.claude/settings.local.json
+
+# IDE & OS
+.DS_Store
+.idea/
+.vscode/
+!.vscode/launch.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log
+yarn-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.turbo/
+.eslintcache

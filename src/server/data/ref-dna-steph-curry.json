@@ -1,0 +1,253 @@
+{
+  "name": "steph-curry",
+  "source": "./reference-edits-2/steph curry.MP4",
+  "duration": 19.155011,
+  "resolution": {
+    "width": 576,
+    "height": 576
+  },
+  "totalShots": 14,
+  "avgShotDuration": 1.3348482857142852,
+  "cutRate": 0.7308792461669691,
+  "shots": [
+    {
+      "index": 0,
+      "start": 0,
+      "end": 7.107107,
+      "duration": 7.107107,
+      "color": {
+        "r": 36.8356,
+        "g": 31.5051,
+        "b": 36.6751,
+        "y": 33.6882995,
+        "saturation": 25.25449409026292,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 1,
+      "start": 7.140474,
+      "end": 7.807808,
+      "duration": 0.6673339999999994,
+      "color": {
+        "r": 12.8204,
+        "g": 13.7467,
+        "b": 17.9261,
+        "y": 13.9461879,
+        "saturation": 26.56548245321965,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "fadeBlack"
+    },
+    {
+      "index": 2,
+      "start": 7.841175,
+      "end": 8.975642,
+      "duration": 1.1344670000000008,
+      "color": {
+        "r": 40.4098,
+        "g": 36.0312,
+        "b": 40.2567,
+        "y": 37.8221084,
+        "saturation": 56.24864528771768,
+        "grade": "dark"
+      },
+      "grade": "dark",
+      "transition_in": "cut"
+    },
+    {
+      "index": 3,
+      "start": 9.042376,
+      "end": 9.542876,
+      "duration": 0.5004999999999988,
+      "color": {
+        "r": 43.0521,
+        "g": 44.252,
+        "b": 44.701,
+        "y": 43.9444159,
+        "saturation": 18.9331332783598,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 4,
+      "start": 9.542876,
+      "end": 10.143477,
+      "duration": 0.600601000000001,
+      "color": {
+        "r": 6.6601,
+        "g": 9.9114,
+        "b": 11.011,
+        "y": 9.0646157,
+        "saturation": 57.16066337132228,
+        "grade": "dark"
+      },
+      "grade": "dark",
+      "transition_in": "fadeBlack"
+    },
+    {
+      "index": 5,
+      "start": 10.143477,
+      "end": 12.579246,
+      "duration": 2.4357689999999987,
+      "color": {
+        "r": 0.6544,
+        "g": 0.6544,
+        "b": 0.6544,
+        "y": 0.6544,
+        "saturation": 0.0,
+        "grade": "bw"
+      },
+      "grade": "bw",
+      "transition_in": "fadeBlack"
+    },
+    {
+      "index": 6,
+      "start": 12.712713,
+      "end": 13.713714,
+      "duration": 1.0010009999999987,
+      "color": {
+        "r": 16.9451,
+        "g": 17.2332,
+        "b": 17.632,
+        "y": 17.1925213,
+        "saturation": 9.820629725599266,
+        "grade": "bw"
+      },
+      "grade": "bw",
+      "transition_in": "fadeBlack"
+    },
+    {
+      "index": 7,
+      "start": 13.713714,
+      "end": 14.180848,
+      "duration": 0.4671339999999997,
+      "color": {
+        "r": 17.8787,
+        "g": 20.0705,
+        "b": 21.4925,
+        "y": 19.577259799999997,
+        "saturation": 34.30036636527951,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 8,
+      "start": 14.247581,
+      "end": 14.347681,
+      "duration": 0.10009999999999941,
+      "color": {
+        "r": 83.4734,
+        "g": 86.3535,
+        "b": 89.2993,
+        "y": 85.82817130000001,
+        "saturation": 15.338338480094007,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 9,
+      "start": 14.381048,
+      "end": 16.149483,
+      "duration": 1.7684350000000002,
+      "color": {
+        "r": 29.2243,
+        "g": 32.2325,
+        "b": 33.0436,
+        "y": 31.425513600000002,
+        "saturation": 30.800674380115,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 10,
+      "start": 16.18285,
+      "end": 16.316316,
+      "duration": 0.13346600000000208,
+      "color": {
+        "r": 29.1239,
+        "g": 26.2797,
+        "b": 26.8638,
+        "y": 27.196703199999995,
+        "saturation": 24.917393753092327,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "cut"
+    },
+    {
+      "index": 11,
+      "start": 16.316316,
+      "end": 16.48315,
+      "duration": 0.16683399999999793,
+      "color": {
+        "r": 20.9718,
+        "g": 20.5074,
+        "b": 19.4744,
+        "y": 20.5284936,
+        "saturation": 35.66871941126209,
+        "grade": "dark"
+      },
+      "grade": "dark",
+      "transition_in": "cut"
+    },
+    {
+      "index": 12,
+      "start": 16.516517,
+      "end": 17.384051,
+      "duration": 0.8675339999999991,
+      "color": {
+        "r": 25.6977,
+        "g": 23.2048,
+        "b": 22.0647,
+        "y": 23.8202057,
+        "saturation": 32.03366572381263,
+        "grade": "desaturated"
+      },
+      "grade": "desaturated",
+      "transition_in": "fadeBlack"
+    },
+    {
+      "index": 13,
+      "start": 17.417417,
+      "end": 19.155011,
+      "duration": 1.7375939999999979,
+      "color": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "y": 0.0,
+        "saturation": 0.0,
+        "grade": "bw"
+      },
+      "grade": "bw",
+      "transition_in": "fadeBlack"
+    }
+  ],
+  "energyCurve": [],
+  "colorProfile": {
+    "avgSaturation": 26.21730045143837,
+    "avgBrightness": 26.049206849999997,
+    "gradesUsed": [
+      "dark",
+      "desaturated",
+      "bw"
+    ]
+  },
+  "transitions": {
+    "cut": 8,
+    "fadeBlack": 6,
+    "fadeBW": 0
+  }
+}

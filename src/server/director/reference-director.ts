@@ -2,6 +2,8 @@
 // Exposes the Editor DNA engine translating analyzed styles to AI rules
 
 import type { ReferenceStyle } from "../types/reference-style";
+import type { MomentMap } from "../lib/moment-mapping";
+import type { EffectVocabulary } from "../lib/effect-vocabulary";
 
 /**
  * Build the "Reference Director" section injected into the EDL generation prompt.
@@ -12,11 +14,19 @@ import type { ReferenceStyle } from "../types/reference-style";
  * like the reference editor — not generically.
  *
  * Philosophy: give Gemini the editor's CONTRACT, not just their numbers.
+ *
+ * @param rs - ReferenceStyle from Gemini analysis
+ * @param referenceMode - strict_replication or inspired
+ * @param targetDurationSec - Target output duration
+ * @param momentMap - Optional moment-level mapping for precise editing
+ * @param vocabulary - Optional effect vocabulary for specific effect instructions
  */
 export function buildReferenceDirectorSection(
   rs: ReferenceStyle,
   referenceMode: "strict_replication" | "inspired",
-  targetDurationSec: number
+  targetDurationSec: number,
+  momentMap?: MomentMap | null,
+  vocabulary?: EffectVocabulary | null
 ): string {
   const im = rs.intentMapping;
   const ph = rs.editingPhilosophy;
@@ -110,6 +120,9 @@ Write each shot's aiRationale the way THIS editor would think.
 - Be specific: "This closeup of [action] at the ${Math.round(pa.climaxPosition * 100)}% climax point mirrors the reference editor's signature move of ${ph.signatureMove.toLowerCase()}"
 - Not generic: never write "high motion score" — write what a human editor would say
 
+${buildMomentMapSection(momentMap, targetDurationSec)}
+${buildEffectVocabularySection(vocabulary)}
+
 ${replicationContract}
 
 ---
@@ -147,5 +160,115 @@ Deliverable behavior:
 - If reference says strict beat alignment, lock cuts to beats wherever musically possible.
 - If footage quality or coverage is insufficient, degrade gracefully and explain deviations in aiRationale.
 - In strict mode, prioritize preserving reference rhythm over adding extra novelty.
+`;
+}
+
+/**
+ * Build the moment map section of the prompt.
+ * This gives the EDL generator specific timeline positions to hit.
+ */
+function buildMomentMapSection(
+  momentMap: MomentMap | null | undefined,
+  targetDurationSec: number
+): string {
+  if (!momentMap || momentMap.moments.length === 0) return "";
+
+  const mustHit = momentMap.moments.filter(m => m.priority === "must_hit");
+  const shouldHit = momentMap.moments.filter(m => m.priority === "should_hit");
+
+  const momentLines: string[] = [];
+
+  if (mustHit.length > 0) {
+    momentLines.push("**MUST-HIT MOMENTS (non-negotiable)**:");
+    for (const m of mustHit) {
+      const timePercent = Math.round(m.normalizedTime * 100);
+      momentLines.push(
+        `  - [${timePercent}%] ${m.type}: ${m.description} (duration: ${m.shotDuration.toFixed(2)}s, effects: ${m.effects.map(e => e.type).join(", ") || "none"})`
+      );
+    }
+  }
+
+  if (shouldHit.length > 0) {
+    momentLines.push("**SHOULD-HIT MOMENTS (strong preference)**:");
+    for (const m of shouldHit) {
+      const timePercent = Math.round(m.normalizedTime * 100);
+      momentLines.push(
+        `  - [${timePercent}%] ${m.type}: ${m.description} (duration: ${m.shotDuration.toFixed(2)}s)`
+      );
+    }
+  }
+
+  if (momentLines.length === 0) return "";
+
+  return `
+### MOMENT MAP — Match these specific timeline positions
+
+The reference editor makes specific decisions at these exact timeline positions.
+You MUST place shots at these positions with the specified characteristics.
+
+${momentLines.join("\n")}
+
+Rhythm pattern: ${momentMap.rhythmPattern}
+Climax position: ${Math.round(momentMap.climaxPosition * 100)}% of timeline
+Breathing moments: ${momentMap.breathingPositions.map(t => `${Math.round(t * 100)}%`).join(", ") || "none"}
+`;
+}
+
+/**
+ * Build the effect vocabulary section of the prompt.
+ * This gives the EDL generator specific effects to use and when.
+ */
+function buildEffectVocabularySection(
+  vocabulary: EffectVocabulary | null | undefined
+): string {
+  if (!vocabulary || vocabulary.totalEffects === 0) return "";
+
+  // Get top effects by frequency
+  const topEffects = Object.entries(vocabulary.effectFrequency)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 6);
+
+  if (topEffects.length === 0) return "";
+
+  const effectLines = topEffects.map(([type, count]) => {
+    const pct = Math.round((count / vocabulary.totalEffects) * 100);
+    return `  - ${type}: ${count} occurrences (${pct}%)`;
+  });
+
+  const transitionLines: string[] = [];
+  const tb = vocabulary.transitionBreakdown;
+  const totalTransitions = tb.cuts + tb.crossfades + tb.whipPans + tb.other;
+  if (totalTransitions > 0) {
+    transitionLines.push(`  - Cuts: ${Math.round((tb.cuts / totalTransitions) * 100)}%`);
+    transitionLines.push(`  - Crossfades: ${Math.round((tb.crossfades / totalTransitions) * 100)}%`);
+    transitionLines.push(`  - Whip pans: ${Math.round((tb.whipPans / totalTransitions) * 100)}%`);
+  }
+
+  // Effect hotspots
+  const hotspotLines = vocabulary.effectTimeline
+    .filter(b => b.effects.length >= 2)
+    .slice(0, 5)
+    .map(b => `  - [${Math.round(b.normalized * 100)}%] ${b.effects.join(", ")} (intensity: ${b.intensity.toFixed(2)})`);
+
+  return `
+### EFFECT VOCABULARY — Use these specific effects
+
+Average effects per shot: ${vocabulary.avgEffectsPerShot.toFixed(1)}
+Total effects in reference: ${vocabulary.totalEffects}
+
+Most used effects:
+${effectLines.join("\n")}
+
+Transition breakdown:
+${transitionLines.join("\n")}
+
+Effect hotspots (moments with clustered effects):
+${hotspotLines.length > 0 ? hotspotLines.join("\n") : "  (none detected)"}
+
+INSTRUCTIONS:
+- Use the effects listed above at their observed frequency
+- Place effect hotspots at the timeline positions shown
+- Match the transition breakdown percentages
+- Every effect must serve the edit's emotional arc, not just decoration
 `;
 }

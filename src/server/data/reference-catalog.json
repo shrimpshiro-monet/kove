@@ -19,15 +19,15 @@
       "colorProfile": {
         "avgRGB": [42, 49, 83],
         "brightness": 23,
-        "saturation": 49,
-        "hue": 220,
-        "classification": "DARK_BLUE_TONED"
+        "saturation": 80,
+        "hue": 190,
+        "classification": "HYPER_SATURATED_NEON"
       },
       "editCharacteristics": {
         "pacing": "moderate",
         "effects": ["comic_halftone", "ink_edges", "frame_stutter", "chromatic_glitch", "impact_flash"],
-        "transitions": ["cut", "whip_pan"],
-        "colorGrade": "desaturated_blue",
+        "transitions": ["cut", "whip_pan", "flash"],
+        "colorGrade": "hyper_neon",
         "vfxIntensity": "high",
         "referenceStyle": "spiderverse_action"
       },
@@ -36,8 +36,8 @@
     {
       "id": "spiderman-same",
       "file": "monet-reference-edits/IMPORTANT (SAME AS SPIDERAN).MP4",
-      "name": "Spider-Man Variant",
-      "style": "spiderverse_comic",
+      "name": "Sidemen Charity Match Highlights",
+      "style": "sports_highlight_tiktok",
       "duration": 22.85,
       "resolution": "576x576",
       "aspectRatio": "1:1",
@@ -51,23 +51,23 @@
         "brightness": 46,
         "saturation": 15,
         "hue": 100,
-        "classification": "DESAUTURATED_GREEN"
+        "classification": "MIXED"
       },
       "editCharacteristics": {
         "pacing": "moderate_fast",
-        "effects": ["comic_halftone", "ink_edges", "impact_flash"],
-        "transitions": ["cut"],
+        "effects": ["impact_flash", "vignette_punch", "zoom_blur"],
+        "transitions": ["cut", "zoom-blur"],
         "colorGrade": "desaturated_natural",
-        "vfxIntensity": "medium_high",
-        "referenceStyle": "spiderverse_action"
+        "vfxIntensity": "medium",
+        "referenceStyle": "sports_highlight_tiktok"
       },
-      "tags": ["spider-verse", "comic", "square_format", "instagram"]
+      "tags": ["sports", "football", "sidemen", "tiktok", "square_format", "instagram"]
     },
     {
       "id": "2nd-important",
       "file": "monet-reference-edits/2nd imporatnt.MP4",
-      "name": "Sports Edit #2",
-      "style": "sports_highlight",
+      "name": "Game of Thrones Drama Edit",
+      "style": "tv_drama_edit",
       "duration": 79.32,
       "resolution": "576x650",
       "aspectRatio": "0.89:1",
@@ -85,19 +85,19 @@
       },
       "editCharacteristics": {
         "pacing": "fast",
-        "effects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan"],
+        "effects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan", "bw_toggle"],
         "transitions": ["cut", "whip_pan"],
-        "colorGrade": "warm_desaturated",
+        "colorGrade": "warm_dark",
         "vfxIntensity": "high",
-        "referenceStyle": "sports_highlight"
+        "referenceStyle": "tv_drama_edit"
       },
-      "tags": ["sports", "basketball", "fast_cuts", "energy", "warm_tones"]
+      "tags": ["tv_drama", "game_of_thrones", "dialogue", "fast_cuts", "warm_tones"]
     },
     {
       "id": "3rd-important",
       "file": "monet-reference-edits/3rd important.MP4",
-      "name": "Sports Edit #3",
-      "style": "sports_highlight",
+      "name": "Jujutsu Kaisen Anime AMV",
+      "style": "anime_amv",
       "duration": 64.47,
       "resolution": "576x576",
       "aspectRatio": "1:1",
@@ -119,15 +119,15 @@
         "transitions": ["cut", "flash"],
         "colorGrade": "bright_warm",
         "vfxIntensity": "very_high",
-        "referenceStyle": "sports_highlight"
+        "referenceStyle": "anime_amv"
       },
-      "tags": ["sports", "rapid_cuts", "extreme_fast", "micro_cuts", "energy"]
+      "tags": ["anime", "jujutsu_kaisen", "amv", "rapid_cuts", "extreme_fast", "purple"]
     },
     {
       "id": "4th-important",
       "file": "monet-reference-edits/4TH IMPORTANT.MP4",
-      "name": "Sports Edit #4",
-      "style": "sports_highlight",
+      "name": "SuitTok Character Tribute",
+      "style": "fancam_character_tribute",
       "duration": 67.37,
       "resolution": "576x576",
       "aspectRatio": "1:1",
@@ -145,13 +145,13 @@
       },
       "editCharacteristics": {
         "pacing": "moderate",
-        "effects": ["impact_flash", "color_pulse", "speed_ramp"],
-        "transitions": ["cut"],
+        "effects": ["glitch", "speed_ramp", "multi_exposure"],
+        "transitions": ["cut", "glitch"],
         "colorGrade": "warm_dark",
         "vfxIntensity": "medium",
-        "referenceStyle": "sports_highlight"
+        "referenceStyle": "fancam_character_tribute"
       },
-      "tags": ["sports", "basketball", "moderate_cuts", "warm", "dark"]
+      "tags": ["fancam", "suits", "character_tribute", "warm", "dark", "moderate_cuts"]
     },
     {
       "id": "tiktok-unknown-1",
@@ -186,8 +186,8 @@
     {
       "id": "harvey",
       "file": "reference-edits-2/harvey.MP4",
-      "name": "Harvey Basketball",
-      "style": "sports_cinematic",
+      "name": "Suits TV Show Fan Edit",
+      "style": "tv_drama_fan_edit",
       "duration": 74.16,
       "resolution": "576x576",
       "aspectRatio": "1:1",
@@ -205,13 +205,13 @@
       },
       "editCharacteristics": {
         "pacing": "moderate",
-        "effects": ["push_in", "impact_flash", "speed_ramp", "context_shake"],
-        "transitions": ["cut", "dissolve"],
+        "effects": ["vignette_pro", "flash_white"],
+        "transitions": ["cut", "flash"],
         "colorGrade": "cool_desaturated",
-        "vfxIntensity": "medium",
-        "referenceStyle": "sports_cinematic"
+        "vfxIntensity": "low",
+        "referenceStyle": "tv_drama_fan_edit"
       },
-      "tags": ["basketball", "sports", "cinematic", "cool_tones", "moderate_pacing"]
+      "tags": ["tv_drama", "suits", "fan_edit", "cool_tones", "dialogue", "moderate_pacing"]
     },
     {
       "id": "lewis-hamilton",
@@ -486,28 +486,68 @@
   ],
   "styleSummary": {
     "spiderverse_comic": {
-      "count": 2,
-      "avgCutRate": 0.85,
-      "avgBrightness": 35,
+      "count": 1,
+      "avgCutRate": 0.73,
+      "avgBrightness": 23,
+      "avgSaturation": 80,
+      "commonEffects": ["comic_halftone", "ink_edges", "impact_flash", "chromatic_glitch"],
+      "colorSignature": "hyper-saturated neon cyan/magenta/yellow"
+    },
+    "sports_highlight_tiktok": {
+      "count": 1,
+      "avgCutRate": 0.96,
+      "avgBrightness": 46,
+      "avgSaturation": 15,
+      "commonEffects": ["impact_flash", "vignette_punch", "zoom_blur"],
+      "colorSignature": "mixed — desaturated cards, vibrant celebrations"
+    },
+    "tv_drama_edit": {
+      "count": 1,
+      "avgCutRate": 1.44,
+      "avgBrightness": 28,
+      "avgSaturation": 22,
+      "commonEffects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan", "bw_toggle"],
+      "colorSignature": "warm dark with BW punctuation"
+    },
+    "anime_amv": {
+      "count": 1,
+      "avgCutRate": 4.65,
+      "avgBrightness": 61,
+      "avgSaturation": 21,
+      "commonEffects": ["impact_flash", "color_pulse", "speed_ramp", "chromatic_burst", "context_shake"],
+      "colorSignature": "purple/magenta palette, bright warm"
+    },
+    "fancam_character_tribute": {
+      "count": 1,
+      "avgCutRate": 0.98,
+      "avgBrightness": 27,
       "avgSaturation": 32,
-      "commonEffects": ["comic_halftone", "ink_edges", "impact_flash", "frame_stutter"],
-      "colorSignature": "desaturated_blue/green, high contrast"
+      "commonEffects": ["glitch", "speed_ramp", "multi_exposure"],
+      "colorSignature": "warm dark, alternating warm/cool"
+    },
+    "tv_drama_fan_edit": {
+      "count": 1,
+      "avgCutRate": 0.89,
+      "avgBrightness": 36,
+      "avgSaturation": 13,
+      "commonEffects": ["vignette_pro", "flash_white"],
+      "colorSignature": "cool desaturated with warm bar break"
     },
     "sports_highlight": {
-      "count": 6,
-      "avgCutRate": 2.44,
-      "avgBrightness": 36,
-      "avgSaturation": 21,
+      "count": 4,
+      "avgCutRate": 2.58,
+      "avgBrightness": 37,
+      "avgSaturation": 14,
       "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan", "context_shake"],
-      "colorSignature": "warm/cool neutral, high energy"
+      "colorSignature": "varies — cool dark to bright warm"
     },
     "tiktok_dynamic": {
-      "count": 5,
-      "avgCutRate": 1.74,
-      "avgBrightness": 29,
-      "avgSaturation": 29,
+      "count": 4,
+      "avgCutRate": 1.82,
+      "avgBrightness": 33,
+      "avgSaturation": 14,
       "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
-      "colorSignature": "varies from dark to vibrant"
+      "colorSignature": "cool dark, ultrawide, dark warm"
     },
     "music_video_vibrant": {
       "count": 1,
@@ -525,13 +565,13 @@
       "commonEffects": ["push_in", "impact_flash", "speed_ramp", "chromatic_burst"],
       "colorSignature": "warm cinematic, fast cuts"
     },
-    "sports_cinematic": {
+    "tiktok_vibrant": {
       "count": 1,
-      "avgCutRate": 0.89,
-      "avgBrightness": 36,
-      "avgSaturation": 13,
-      "commonEffects": ["push_in", "impact_flash", "speed_ramp", "context_shake"],
-      "colorSignature": "cool desaturated, moderate pacing"
+      "avgCutRate": 0.08,
+      "avgBrightness": 15,
+      "avgSaturation": 87,
+      "commonEffects": ["vignette_punch", "bloom_highlights"],
+      "colorSignature": "vivid red, extreme saturation"
     }
   }
 }

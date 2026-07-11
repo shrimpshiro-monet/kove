@@ -16,4 +16,12 @@ export type MonetEffectType =
   | "text_snap"
   | "depth_occlusion"
   | "planar_text"
-  | "jump_cut_loop";
+  | "jump_cut_loop"
+  | "halftone"
+  | "ink_edges"
+  | "frame_stutter"
+  | "vignette_pro"
+  | "bw_toggle"
+  | "flash_white"
+  | "multi_exposure"
+  | "desaturate";

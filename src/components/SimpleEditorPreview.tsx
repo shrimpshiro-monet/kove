@@ -83,6 +83,7 @@ export const SimpleEditorPreview: React.FC<SimpleEditorPreviewProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const mountedRef = useRef(false);
   const latestTimeRef = useRef(currentTime);
+  const lastEdlHashRef = useRef<string>("");
 
   const [status, setStatus] = useState<PreviewStatus>({
     state: "idle",
@@ -176,6 +177,13 @@ export const SimpleEditorPreview: React.FC<SimpleEditorPreviewProps> = ({
     if (!canvas) {
       return;
     }
+
+    // Skip re-initialization if EDL content hasn't changed
+    const edlHash = edl ? `${edl.shots?.length ?? 0}-${edl.timeline?.duration ?? 0}-${JSON.stringify(edl.shots?.[0]?.source ?? {})}` : "";
+    if (edlHash && edlHash === lastEdlHashRef.current) {
+      return;
+    }
+    lastEdlHashRef.current = edlHash;
 
     const activeCanvas = canvas;
     mountedRef.current = true;

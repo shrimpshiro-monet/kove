@@ -6,7 +6,7 @@ export const EffectItemSchema = z.object({
   id: z.string(),
   type: z.string(),
   intensity: z.number().optional(),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.string(), z.any()).optional(),
   aiRationale: z.string(),
 });
 
@@ -14,7 +14,7 @@ export const TransitionItemSchema = z.object({
   id: z.string(),
   type: z.string(),
   duration: z.number().optional(),
-  params: z.record(z.any()).optional(),
+  params: z.record(z.string(), z.any()).optional(),
   aiRationale: z.string(),
 });
 

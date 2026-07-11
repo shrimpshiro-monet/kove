@@ -1,4 +1,4 @@
-import type { MonetEDL } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 
 export interface CompileFilterResult {
   success: boolean;

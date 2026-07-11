@@ -27,11 +27,30 @@ export function mapTransition(
     "whip-pan": { name: "Directional", params: { direction: 0 } },
     "zoom-blur": { name: "CrossZoom" },
     glitch: { name: "GlitchMemories" },
+    flash: { name: "fadeBlack" },
+    dissolve: { name: "fade" },
 
-    // Extended transitions (add to TransitionType enum as needed)
+    // EDL schema transitions
+    dip_black: { name: "fadeBlack" },
+    radial_wipe: { name: "Radial" },
+    clock_wipe: { name: "Radial" },
+    linear_wipe: { name: "Directional", params: { direction: 0 } },
+    gradient_wipe: { name: "Directional", params: { direction: 0 } },
+    barn_doors: { name: "doorway" },
+    iris: { name: "CircleOpen" },
+    pinwheel: { name: "PinWheel" },
+    film_burn: { name: "burn" },
+    spin: { name: "Angular" },
+    blur: { name: "CrossZoom" },
+    pixelate: { name: "pixelize" },
+    morph_cut: { name: "fade" },
+    push: { name: "Directional", params: { direction: 1 } },
+    flash_frame: { name: "fadeBlack" },
+    flash_white: { name: "fade" },
+
+    // Extended transitions
     cube: { name: "cube" },
     morph: { name: "morph" },
-    pixelize: { name: "pixelize" },
     burn: { name: "burn" },
     ripple: { name: "ripple" },
     swirl: { name: "Swirl" },
@@ -65,8 +84,11 @@ export function mapTransition(
 export function getAvailableTransitions(): string[] {
   return [
     "cut", "crossfade", "whip-pan", "zoom-blur", "glitch",
-    "cube", "morph", "pixelize", "burn", "ripple",
-    "swirl", "dreamy", "wind", "mosaic", "radial",
-    "slide", "doorway", "heart", "kaleidoscope",
+    "flash", "dissolve", "dip_black", "radial_wipe", "clock_wipe",
+    "linear_wipe", "gradient_wipe", "barn_doors", "iris", "pinwheel",
+    "film_burn", "spin", "blur", "pixelate",
+    "cube", "morph", "burn", "ripple", "swirl", "dreamy",
+    "wind", "mosaic", "radial", "slide", "doorway", "heart", "kaleidoscope",
+    "flash_frame", "flash_white",
   ];
 }

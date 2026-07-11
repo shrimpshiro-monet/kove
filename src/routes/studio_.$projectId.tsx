@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChatThreads, useStudioProjects } from "@/lib/storage";
 import { fetchStudioProject } from "@/lib/api-client";
 import type { MonetEDL } from "@/server/types/edl";
-import { convertMonetEDLToOpenReelProject } from "@/lib/openreel/edl-to-openreel";
+import { convertEDLToOpenReelProject as convertMonetEDLToOpenReelProject } from "@monet/openreel-adapter";
 
 export const Route = createFileRoute("/studio_/$projectId")({
   component: StudioPage,
@@ -154,11 +154,7 @@ function StudioPage() {
 
   const openReelProject = useMemo(() => {
     if (!activeEDL) return null;
-    return convertMonetEDLToOpenReelProject(activeEDL, {
-      projectId,
-      projectName,
-      mediaUrlMap,
-    });
+    return convertMonetEDLToOpenReelProject(activeEDL as any, [] as any);
   }, [activeEDL, projectName, projectId, mediaUrlMap]);
 
   useEffect(() => {

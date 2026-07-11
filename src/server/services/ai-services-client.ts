@@ -58,18 +58,10 @@ export interface FaceTrackResult {
 
 const KV_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days — masks rarely change
 
-// Fast non-crypto hash for cache keys
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
-  }
-  return h.toString(36);
-}
+import { hashKey as _hashKey } from "../lib/hash";
 
 function hashKey(prefix: string, payload: unknown): string {
-  return `ai:${prefix}:${fnv1a(JSON.stringify(payload))}`;
+  return _hashKey(`ai:${prefix}`, payload);
 }
 
 export class MonetAIServicesClient {

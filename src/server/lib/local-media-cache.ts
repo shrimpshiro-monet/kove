@@ -22,7 +22,8 @@ function ensureDir(): boolean {
       mkdirSync(DEV_DIR, { recursive: true });
     }
     return true;
-  } catch {
+  } catch (e) {
+    console.warn("[media-cache] ensureDir failed:", e);
     return false;
   }
 }
@@ -56,13 +57,25 @@ export function putLocalMedia(
         })
       );
       return;
-    } catch {
-      // Fall through to memory
+    } catch (e) {
+      console.warn("[media-cache] disk write failed, falling back to memory:", e);
     }
   }
 
   // Memory fallback
   memStore.set(fileId, payload);
+}
+
+/**
+ * Return the on-disk path for a cached file (for passing to external workers).
+ * Returns null if the file doesn't exist on disk.
+ */
+export function getLocalMediaPath(fileId: string): string | null {
+  const dataPath = join(DEV_DIR, fileId);
+  if (existsSync(dataPath)) {
+    return dataPath;
+  }
+  return null;
 }
 
 export function getLocalMedia(
@@ -87,8 +100,8 @@ export function getLocalMedia(
         fileName: meta.fileName,
         originalName: meta.originalName,
       };
-    } catch {
-      // Fall through
+    } catch (e) {
+      console.warn("[media-cache] disk read failed, falling back to memory:", e);
     }
   }
 

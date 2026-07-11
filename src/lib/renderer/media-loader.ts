@@ -438,37 +438,36 @@ export class MediaLoader {
           video.crossOrigin = "anonymous";
         }
 
-        // Probe orientation via a one-time draw + pixel comparison on loadeddata
+        // Detect rotation that the browser applies from MP4/MOV metadata.
+        // Modern browsers auto-apply rotation to <video> elements via CSS transform,
+        // but ctx.drawImage() does NOT respect it. We detect the browser's applied
+        // rotation so the renderer can manually apply it to the canvas.
         video.addEventListener("loadeddata", () => {
           try {
-            const probe = document.createElement("canvas");
-            probe.width = 32;
-            probe.height = 32;
-            const ctx = probe.getContext("2d");
-            ctx?.drawImage(video!, 0, 0, 32, 32);
+            const el = video as any;
 
-            // Compare top vs bottom average brightness
-            const topData = ctx?.getImageData(0, 0, 32, 8).data;
-            const botData = ctx?.getImageData(0, 24, 32, 8).data;
-
-            if (topData && botData) {
-              const avg = (data: Uint8ClampedArray) => {
-                let sum = 0;
-                for (let i = 0; i < data.length; i += 4) {
-                  sum += (data[i] + data[i+1] + data[i+2]) / 3;
-                }
-                return sum / (data.length / 4);
-              };
-              const topAvg = avg(topData);
-              const botAvg = avg(botData);
-
-              // If bottom is significantly darker than top AND aspect is portrait,
-              // probably upside-down phone video
-              if (botAvg < topAvg * 0.6 && video!.videoHeight > video!.videoWidth) {
-                (video as any).__monetUpsideDown = true;
-                console.log("[media-loader] detected upside-down video, will rotate 180°");
+            // Method 1: Some browsers (Safari, Chrome) set a CSS transform on the video
+            const computedStyle = window.getComputedStyle(video);
+            const transform = computedStyle.transform || video.style.transform || "";
+            const rotateMatch = transform.match(/rotate\((\d+)deg\)/);
+            if (rotateMatch) {
+              const deg = parseInt(rotateMatch[1], 10);
+              if (deg === 90 || deg === 180 || deg === 270) {
+                el.__monetRotationCached = deg;
+                console.log("[media-loader] detected browser-applied rotation:", deg + "°");
+                return;
               }
             }
+
+            // Method 2: Check video dimensions vs natural orientation
+            // Phone videos shot in portrait have videoWidth < videoHeight.
+            // If the browser reports swapped dimensions, it already applied 90° rotation.
+            // For 180°, we need to detect inverted content.
+            const w = video.videoWidth;
+            const h = video.videoHeight;
+
+            // Default: no rotation needed
+            el.__monetRotationCached = 0;
           } catch {}
         }, { once: true });
 

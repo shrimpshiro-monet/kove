@@ -1,4 +1,4 @@
-import type { MonetEDL, Clip, Track, MediaAsset, AudioAsset } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL, Clip, Track, MediaAsset, AudioAsset } from "@monet/edl/src/schemas";
 
 export interface ActionError {
   code: string;

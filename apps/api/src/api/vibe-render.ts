@@ -1,87 +1,181 @@
 import type { FastifyInstance } from "fastify";
 import path from "node:path";
 import fs from "node:fs";
-import { processVibeEngine, type VibeTimeline } from "@monet/render-adapters";
+import crypto from "node:crypto";
+import { spawn, execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const WORKSPACE = process.env.KOVE_WORKSPACE || path.resolve(__dirname, "../../../..");
 
 interface VibeRenderRequest {
-  projectId: string;
-  engineTarget: "freecut" | "mlt" | "blender";
-  settings: {
-    width: number;
-    height: number;
-    fps: number;
-  };
-  tracks: {
-    id: string;
-    type: "video" | "audio";
-    assetId: string; // Resolvable to a file in storage/uploads
-    startFrame: number;
-    endFrame: number;
-    speed?: number;
-  }[];
+  edl: unknown;
+  footagePath: string;
+  musicPath?: string;
 }
 
+interface RenderJob {
+  renderJobId: string;
+  status: "queued" | "rendering" | "complete" | "failed";
+  progress: number;
+  renderUrl?: string;
+  error?: string;
+  startTime: number;
+}
+
+const renderJobs = new Map<string, RenderJob>();
+const RENDER_TIMEOUT_MS = 300_000;
+
 export async function registerVibeRenderRoute(app: FastifyInstance): Promise<void> {
+  // Existing vibe render endpoint (kept for backwards compat)
   app.post("/api/render/vibe", async (req, res) => {
     try {
-      const body = req.body as VibeRenderRequest;
-      const UPLOAD_DIR = path.resolve(process.cwd(), "storage/uploads");
+      const body = req.body as { projectId?: string; edl?: unknown; footagePath?: string; musicPath?: string };
 
-      // 1. Establish Asset Pre-Flight Routing
-      const resolvedTracks = body.tracks.map(track => {
-        const files = fs.readdirSync(UPLOAD_DIR);
-        const foundFile = files.find(f => f.startsWith(track.assetId));
-        
-        if (!foundFile) {
-          throw new Error(`Asset not found: ${track.assetId}`);
-        }
-
-        return {
-          ...track,
-          source: path.join(UPLOAD_DIR, foundFile)
+      // New path: accept EDL directly
+      if (body.edl && body.footagePath) {
+        const renderJobId = crypto.randomUUID();
+        const job: RenderJob = {
+          renderJobId,
+          status: "queued",
+          progress: 0,
+          startTime: Date.now(),
         };
-      });
+        renderJobs.set(renderJobId, job);
 
-      const timeline: VibeTimeline = {
-        projectId: body.projectId,
-        engineTarget: body.engineTarget,
-        settings: body.settings,
-        tracks: resolvedTracks
-      };
+        runEditlyRender(job, body.edl, body.footagePath, body.musicPath || null);
 
-      req.log.info({ 
-        projectId: timeline.projectId, 
-        engine: timeline.engineTarget,
-        trackCount: timeline.tracks.length 
-      }, "Starting Vibe Multi-Engine Render");
-
-      const result = await processVibeEngine(timeline);
-
-      if (result.success && result.data) {
-        return res.send({
-          success: true,
-          data: {
-            outputPath: result.data.outputPath,
-            url: `/uploads/${path.basename(result.data.outputPath)}`,
-            duration: result.data.duration,
-            engine: timeline.engineTarget
-          }
-        });
-      } else {
-        return res.status(500).send({
-          success: false,
-          error: result.error
-        });
+        return res.send({ renderJobId, status: "queued" });
       }
+
+      return res.status(400).send({ error: "edl and footagePath are required" });
     } catch (error: any) {
       req.log.error({ error }, "Vibe render route failed");
-      return res.status(500).send({
-        success: false,
-        error: {
-          code: "VIBE_RENDER_FAILED",
-          message: error.message
-        }
-      });
+      return res.status(500).send({ error: error.message });
     }
+  });
+
+  // Render status
+  app.get("/api/render/vibe/status/:renderJobId", async (req, res) => {
+    const { renderJobId } = req.params as { renderJobId: string };
+    const job = renderJobs.get(renderJobId);
+    if (!job) return res.status(404).send({ error: "Render job not found" });
+
+    const elapsed = Date.now() - job.startTime;
+    if (job.status !== "complete" && job.status !== "failed" && elapsed > RENDER_TIMEOUT_MS) {
+      job.status = "failed";
+      job.error = "Render timeout";
+    }
+
+    return res.send({
+      renderJobId: job.renderJobId,
+      status: job.status,
+      progress: job.progress,
+      renderUrl: job.renderUrl,
+      error: job.error,
+    });
+  });
+
+  // Download rendered file
+  app.get("/api/render/vibe/download/:renderJobId", async (req, res) => {
+    const { renderJobId } = req.params as { renderJobId: string };
+    const job = renderJobs.get(renderJobId);
+    if (!job || job.status !== "complete" || !job.renderUrl) {
+      return res.status(404).send({ error: "Render not ready" });
+    }
+
+    const filePath = path.join(WORKSPACE, job.renderUrl.replace(/^\//, ""));
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send({ error: "File not found" });
+    }
+
+    return res.type("video/mp4").sendFile(path.basename(filePath), path.dirname(filePath));
+  });
+}
+
+function checkDockerRunning(): boolean {
+  try {
+    execSync("docker ps", { stdio: "ignore", timeout: 3000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function runEditlyRender(
+  job: RenderJob,
+  edl: unknown,
+  footagePath: string,
+  musicPath: string | null
+): void {
+  if (!checkDockerRunning()) {
+    job.status = "failed";
+    job.error = "Docker not running. Start Docker Desktop and try again.";
+    return;
+  }
+
+  job.status = "rendering";
+  job.progress = 10;
+
+  // Write EDL to temp file for the render
+  const edlTmp = path.join("/tmp", `render-edl-${job.renderJobId}.json`);
+  fs.writeFileSync(edlTmp, JSON.stringify(edl, null, 2));
+
+  const outputTmp = path.join("/tmp", `render-output-${job.renderJobId}.mp4`);
+
+  // Use the monet_pipeline.py render_native via a small wrapper
+  const renderScript = `
+import json, sys
+sys.path.insert(0, "${path.join(WORKSPACE, "scripts")}")
+from monet_pipeline import render_native
+edl = json.load(open("${edlTmp}"))
+success = render_native(edl, "${outputTmp}", ${musicPath ? `"${musicPath}"` : "None"})
+print("RENDER_RESULT:", "OK" if success else "FAIL")
+`.trim();
+
+  const scriptTmp = path.join("/tmp", `render-script-${job.renderJobId}.py`);
+  fs.writeFileSync(scriptTmp, renderScript);
+
+  const proc = spawn("python3", [scriptTmp], {
+    cwd: WORKSPACE,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  proc.stdout?.on("data", (chunk: Buffer) => {
+    const line = chunk.toString();
+    if (line.includes("Segment")) job.progress = Math.min(90, job.progress + 5);
+    if (line.includes("concat")) job.progress = 92;
+    if (line.includes("Adding music")) job.progress = 95;
+  });
+
+  proc.on("close", (code) => {
+    // Cleanup temp files
+    try { fs.unlinkSync(edlTmp); } catch {}
+    try { fs.unlinkSync(scriptTmp); } catch {}
+
+    if (code !== 0 || !fs.existsSync(outputTmp)) {
+      job.status = "failed";
+      job.error = `Render failed (exit ${code})`;
+      return;
+    }
+
+    // Move to storage
+    const storageDir = path.join(WORKSPACE, "apps", "api", "storage", "uploads");
+    fs.mkdirSync(storageDir, { recursive: true });
+    const finalName = `render-${job.renderJobId}.mp4`;
+    fs.renameSync(outputTmp, path.join(storageDir, finalName));
+
+    job.status = "complete";
+    job.progress = 100;
+    job.renderUrl = `/uploads/${finalName}`;
+    // Cleanup after 1 hour
+    setTimeout(() => { renderJobs.delete(job.renderJobId); }, 3600_000);
+  });
+
+  proc.on("error", (err) => {
+    job.status = "failed";
+    job.error = `Failed to start render: ${err.message}`;
+    setTimeout(() => { renderJobs.delete(job.renderJobId); }, 3600_000);
   });
 }

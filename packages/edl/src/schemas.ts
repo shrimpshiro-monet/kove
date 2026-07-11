@@ -19,6 +19,9 @@ export interface EDLMeta {
   aspectRatio: "16:9" | "9:16" | "1:1";
   fps: number;
   sampleRate: number;
+  intentId?: string;
+  analysisId?: string;
+  projectId?: string;
 }
 
 export interface Timeline {

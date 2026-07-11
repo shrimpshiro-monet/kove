@@ -1,4 +1,4 @@
-import { MonetEDL } from "@monet/edl/src/schemas";
+import { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 
 export function injectSFX(edl: MonetEDL) {
   const audioTrack = edl.timeline.tracks.find(

@@ -5,12 +5,24 @@ export const ENGINE_REGISTRY: EngineCapability[] = [
   {
     id: "openreel",
     displayName: "OpenReel Canvas2D",
-    description: "Baseline renderer — cuts, transforms, simple effects",
+    description: "Baseline renderer — cuts, transforms, transitions, effects",
     supports: new Set([
       "beat_cut", "push_in", "pull_out", "impact_flash",
       "context_shake", "speed_ramp", "freeze_frame", "whip_pan",
+      "color_pulse", "vignette_punch", "chromatic_burst",
+      "wave_warp", "fisheye", "color_balance",
+      // transitions
+      "crossfade", "dissolve", "dip_black", "flash", "slide",
+      "radial_wipe", "linear_wipe", "gradient_wipe", "barn_doors",
+      "zoom_blur", "morph", "iris", "pinwheel", "film_burn",
+      "glitch_transition", "whip_pan_transition", "spin",
+      "blur_transition", "pixelate_transition",
     ]),
-    preferredFor: new Set(["beat_cut", "push_in", "freeze_frame"]),
+    preferredFor: new Set([
+      "beat_cut", "push_in", "freeze_frame",
+      "crossfade", "dip_black", "radial_wipe", "linear_wipe",
+      "barn_doors", "iris", "morph",
+    ]),
     cost: 1,
     qualityBonus: 1,
     tier: "free",

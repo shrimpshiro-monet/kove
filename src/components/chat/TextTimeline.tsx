@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { openReelWordEditWrapper } from "@/lib/openreel/editor-wrapper";
 import type { TranscriptWord, TranscriptResult } from "@/server/api/transcribe";
-import type { MonetEDL } from "@/server/types/edl";
+import type { ProjectEDL as MonetEDL } from "@monet/edl";
 
 interface TextTimelineProps {
   transcript: TranscriptResult;
-  edl: MonetEDL;
-  onEDLChange: (updatedEDL: MonetEDL) => void;
-  onSeek?: (timeMs: number) => void;
+  edl: any;
   currentTimeMs?: number;
+  onEDLChange: (updatedEDL: any) => void;
+  onSeek?: (timeMs: number) => void;
 }
 
 /** Max undo stack depth */
@@ -43,9 +43,8 @@ export function TextTimeline({
     setUndoStack([]);
   }, [
     transcript.mediaId,
-    edl.metadata.intentId,
-    edl.metadata.analysisId,
-    edl.metadata.createdAt,
+    edl.id,
+    edl.meta.createdAt,
     edl.timeline.duration,
   ]);
 
@@ -63,7 +62,7 @@ export function TextTimeline({
       const updatedEDL = openReelWordEditWrapper.applyDeletedWordIndices(
         baselineEDLRef.current,
         words,
-        next
+        [...next]
       );
       onEDLChange(updatedEDL);
     },
@@ -91,7 +90,7 @@ export function TextTimeline({
     const updatedEDL = openReelWordEditWrapper.applyDeletedWordIndices(
       baselineEDLRef.current,
       words,
-      next
+      [...next]
     );
     onEDLChange(updatedEDL);
   }, [deletedWords, onEDLChange, words]);
@@ -105,7 +104,7 @@ export function TextTimeline({
     const rebuiltEDL = openReelWordEditWrapper.applyDeletedWordIndices(
       baselineEDLRef.current,
       words,
-      prev
+      [...prev]
     );
     onEDLChange(rebuiltEDL);
   }, [undoStack, onEDLChange, words]);

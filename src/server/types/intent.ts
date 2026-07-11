@@ -1,5 +1,13 @@
 // src/server/types/intent.ts
 
+export type TempoMode =
+  | "beat_locked"
+  | "beat_anticipated"
+  | "narrative"
+  | "cinematic"
+  | "chill_vlog"
+  | "reference_mirror";
+
 export interface SimplifiedIntent {
   version: string;
   goal: { primary: string };
@@ -20,6 +28,8 @@ export interface SimplifiedIntent {
     effectsIntensity: number;
   };
   contentPreferences: { focusOn: string[] };
+  tempoMode?: TempoMode;
+  forbidBeatSync?: boolean;
 }
 
 export interface PillarWeights {

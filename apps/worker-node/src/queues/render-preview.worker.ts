@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { createWorker } from "../../../api/src/services/queue";
 import { renderEDL } from "@monet/render-adapters/src/router/render-router";
-import type { MonetEDL } from "@monet/edl/src/schemas";
+import type { ProjectEDL as MonetEDL } from "@monet/edl/src/schemas";
 
 interface RenderPreviewJobData {
   edl: MonetEDL;

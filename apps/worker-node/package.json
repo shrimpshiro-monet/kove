@@ -13,12 +13,7 @@
     "@monet/job-contracts": "workspace:",
     "@monet/render-adapters": "workspace:",
     "bullmq": "^5.78.0",
-    "dotenv": "^16.4.7",
-    "editly": "^0.14.2",
-    "execa": "^9.5.2",
-    "ioredis": "^5.4.2",
-    "nanoid": "^5.0.9",
-    "zod": "^3.24.1"
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -119,7 +119,9 @@ export class FFmpegRenderer {
                 "utf-8",
               );
               console.error(`[ffmpeg-renderer] Full error log: ${errLogPath}`);
-            } catch {}
+            } catch (e) {
+              console.warn("[ffmpeg-renderer] failed to write error log:", e);
+            }
 
             console.error("[ffmpeg-renderer] STDERR last 3000 chars:\n", stderrBuf.slice(-3000));
             console.error("[ffmpeg-renderer] FILTER GRAPH (first 1500 chars):\n", filterScript.slice(0, 1500));
@@ -213,8 +215,9 @@ export class FFmpegRenderer {
       }
 
       const inPoint = shot.source?.inPoint ?? 0;
-      const outPoint = shot.source?.outPoint ?? inPoint + (shot.timing?.duration ?? 2);
-      const shotDuration = outPoint - inPoint;
+      const targetDuration = shot.timing?.duration ?? 2;
+      const outPoint = inPoint + targetDuration;
+      const shotDuration = targetDuration;
 
       // Base chain — trim, scale, pad, normalize framerate
       const baseChain: string[] = [

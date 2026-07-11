@@ -28,5 +28,5 @@
 
 ## Commits
 
-1. `fix: increase scene detection min_scene_len to reduce over-splitting`
-2. `feat: add scene preview thumbnails to scene detection`
+- `4535f89` — `fix: increase scene detection min_scene_len to reduce over-splitting`
+  (Both tasks combined — scene-detection.ts was modified by both, so splitting would leave broken intermediate state)

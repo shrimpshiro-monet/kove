@@ -10,15 +10,17 @@ import { getAIService } from "../services/ai-service";
 import { validateAndNormalizeAdvancedEDL } from "./validate-advanced-edl";
 import { validateEDL } from "./edl-validator";
 import { enforceReferenceStyleOnEDL } from "./reference-style-enforcer";
-import { injectReferenceEffects } from "./reference-effect-injector";
 import { injectReferenceColorGrades } from "./reference-color-injector";
-import { enhanceEDLWithStyleDirectives } from "../director/enhance-edl-with-style";
+import { placeEffectsDeterministically } from "../director/effect-placement";
+import { enforceMotionContinuity } from "../director/shot-continuity";
 import { compileReferenceStyleToDirectives } from "../director/style-directives";
 import { validateCreativeDensity } from "../director/creative-density";
 import { compileTraceToStyleSlots } from "../director/reference-edit-trace";
 import { compareReferenceTraceToEDL } from "../director/reference-similarity";
 import { critiqueAndRefine } from "../services/edl-critique-service";
-import { ensureBeatLocksForMusic } from "./edl-scoring";
+import { ensureBeatLocksForMusic, type RhythmMap } from "./edl-scoring";
+import { buildReferenceDirectorSection } from "../director/reference-director";
+import { humanizeEDL, buildHumanizerConfig } from "../director/humanizer";
 
 export async function generateEDL(params: {
   env: Env;
@@ -63,25 +65,32 @@ export async function generateEDL(params: {
   const resolvedHeight = outputHeight ?? 1080;
   const resolvedFps = outputFps ?? 30;
 
+  // Use trace from style if client didn't provide one
+  const effectiveTrace = referenceTrace ?? (referenceStyle as any)?.referenceTrace ?? null;
+
   const promptTemplate = loadPromptTemplate("generate-edl-v3.txt");
 
-  // Compact footage context (top 8 segments per clip)
+  // Compact footage context (top segments per clip, with perception data)
   const compactFootage = (analysis.footage || []).map((f) => ({
     clipId: f.clipId,
     duration: f.duration,
     segments: Array.isArray(f.segments)
       ? [...f.segments]
           .sort((a, b) => (b.scores?.overall ?? 0) - (a.scores?.overall ?? 0))
-          .slice(0, 8)
-          .map((s) => ({
+          .slice(0, 16)
+          .map((s: any) => ({
             start: s.start,
             end: s.end,
             duration: s.duration,
-            tags: s.tags?.slice(0, 5),
-            score: s.scores?.overall,
-            emotion: s.scores?.emotion,
+            tags: s.tags?.slice(0, 8),
+            semantic: s.semantic ?? [],
             motion: s.scores?.motion,
-            description: s.description?.slice(0, 80),
+            motionDir: s.motionDir ?? "none",
+            faceCentered: s.faceCentered ?? false,
+            hasVelocityRamp: s.hasVelocityRamp ?? false,
+            energy: s.scores?.emotion,
+            score: s.scores?.overall,
+            description: s.description?.slice(0, 100),
           }))
       : [],
   }));
@@ -105,6 +114,16 @@ export async function generateEDL(params: {
     const rs = referenceStyle;
     const strict = referenceMode === "strict_replication";
     const tb = rs.effects.transitionsBreakdown;
+
+    // Rich director prompt — editor philosophy, signature moves, moment map
+    referenceDirectorSection = buildReferenceDirectorSection(
+      referenceStyle,
+      referenceMode,
+      targetDuration,
+      (momentMap as any) ?? null,
+      (vocabulary as any) ?? null,
+    );
+
     referenceConstraints = `
 ## REFERENCE STYLE CONSTRAINTS (${strict ? "STRICT — hard constraints" : "INSPIRED — soft targets"})
 - Average shot duration: ${rs.rhythm.avgShotDuration.toFixed(2)}s (${strict ? "±15%" : "±30%"} tolerance)
@@ -166,9 +185,9 @@ Effects should build toward the climax point and peak there.
 
   // Style slots from reference trace
   let styleSlotSection = "";
-  if (referenceTrace) {
+  if (effectiveTrace) {
     const targetDuration = intent.durationSeconds ?? 30;
-    const slots = compileTraceToStyleSlots(referenceTrace, targetDuration);
+    const slots = compileTraceToStyleSlots(effectiveTrace, targetDuration);
     if (slots.length > 0) {
       styleSlotSection = "\n## STYLE SLOTS (moment-by-moment effects from reference)\n";
       for (const slot of slots) {
@@ -217,10 +236,11 @@ Effects should build toward the climax point and peak there.
 
   // Call Gemini
   const aiModel = getConfiguredGeminiModel(env);
+  const temperature = referenceMode === "strict_replication" ? 0.25 : 0.5;
   const response = await withTimeout(
     ai.generateContentJSON({
       prompt: fullPrompt,
-      temperature: 0.7,
+      temperature,
       maxOutputTokens: 8192,
     }),
     120_000,
@@ -249,70 +269,37 @@ Effects should build toward the climax point and peak there.
     throw new Error(`EDL validation failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 
-  // Ensure beat locks
-  edl = ensureBeatLocksForMusic(edl);
+  // Post-generation mutation chain — enforce → color → effects → continuity → beat-lock LAST
+  const rhythm = (referenceStyle as any)?.rhythmMap
+    ?? (analysis.music as any)?.rhythmMap
+    ?? undefined;
 
-  // Enforce reference style if provided
   if (referenceStyle) {
     edl = enforceReferenceStyleOnEDL(edl, referenceStyle, referenceMode);
-  }
-
-  // Inject reference-specific effects from FFmpeg-extracted vocabulary
-  if (referenceStyle) {
-    edl = injectReferenceEffects(edl, referenceStyle);
-  }
-
-  if (referenceStyle) {
     edl = injectReferenceColorGrades(edl, referenceStyle);
+    if (rhythm) edl = placeEffectsDeterministically(edl, referenceStyle, rhythm);
+    edl = enforceMotionContinuity(edl);
   }
 
-  // Enhance with style directives
-  if (referenceStyle) {
-    const directives = compileReferenceStyleToDirectives(referenceStyle, referenceMode);
-    edl = enhanceEDLWithStyleDirectives(edl, directives);
-  }
+  // Beat-lock is ALWAYS last so effect placement can't drift the cuts off transients
+  edl = ensureBeatLocksForMusic(edl, rhythm as RhythmMap | undefined, {
+    maxDriftMs: 70,
+    strict: referenceMode === "strict_replication",
+  });
 
-  // Section fidelity enforcement for setup_to_montage
-  if (referenceStyle?.intentMapping?.structure === 'setup_to_montage' && edl.shots?.length > 0) {
-    const climaxPosition = referenceStyle.pacing?.climaxPosition ?? 0.5;
-    const timelineDuration = edl.timeline?.duration ?? 30;
-    const climaxTs = climaxPosition * timelineDuration;
-
-    let preClimaxEffects = 0;
-    let postClimaxEffects = 0;
-    let preClimaxCount = 0;
-    let postClimaxCount = 0;
-
-    for (const shot of edl.shots) {
-      const shotStart = shot.timing?.startTime ?? 0;
-      const isPreClimax = shotStart < climaxTs;
-
-      if (isPreClimax) {
-        preClimaxCount++;
-        if (shot.effects && shot.effects.length > 1) {
-          const heavyTypes = ['impact_flash', 'speed_ramp', 'color_pulse', 'context_shake'];
-          shot.effects = shot.effects.filter((e: any) => !heavyTypes.includes(e.type)).slice(0, 1);
-        }
-        preClimaxEffects += (shot.effects?.length ?? 0);
-      } else {
-        postClimaxCount++;
-        if (shot.effects && shot.effects.length < 2) {
-          const hasSpeed = shot.effects?.some((e: any) => e.type === 'speed_ramp');
-          const hasFlash = shot.effects?.some((e: any) => e.type === 'impact_flash' || e.type === 'flash_white');
-          if (!hasSpeed) {
-            shot.effects = shot.effects || [];
-            shot.effects.push({ id: `fx_${shot.id}_sr`, type: 'speed_ramp', intensity: 0.6, params: { entrySpeed: 1, exitSpeed: 1, anchorSpeed: 0.5 } });
-          }
-          if (!hasFlash && Math.random() < 0.4) {
-            shot.effects = shot.effects || [];
-            shot.effects.push({ id: `fx_${shot.id}_fl`, type: 'impact_flash', intensity: 0.7, params: { peakBrightness: 0.9, flashFrameCount: 2 } });
-          }
-        }
-        postClimaxEffects += (shot.effects?.length ?? 0);
-      }
+  // Humanizer — adds controlled unpredictability that makes edits feel human
+  // Applies AFTER beat-lock so imperfections layer on top of sync
+  if (referenceStyle && rhythm) {
+    try {
+      const shotDurations = referenceStyle.rhythm?.structure
+        ? [referenceStyle.rhythm.structure.firstHalfAvgShotDuration, referenceStyle.rhythm.structure.secondHalfAvgShotDuration]
+        : [referenceStyle.rhythm?.avgShotDuration ?? 1.0];
+      const humanizerConfig = buildHumanizerConfig(referenceStyle, shotDurations, resolvedFps);
+      edl = humanizeEDL(edl, referenceStyle, rhythm, humanizerConfig);
+      console.log(`[edl-generation] Humanizer applied: micro-imperfections + decay + reflow`);
+    } catch (e) {
+      console.warn(`[edl-generation] Humanizer failed: ${(e as Error).message}`);
     }
-
-    console.log(`[edl-generation] Section fidelity enforced: pre-climax ${preClimaxCount} shots/${preClimaxEffects} effects, post-climax ${postClimaxCount} shots/${postClimaxEffects} effects`);
   }
 
   // Validate creative density
@@ -341,8 +328,8 @@ Effects should build toward the climax point and peak there.
   }
 
   // Compare to reference trace
-  if (referenceTrace) {
-    const comparison = compareReferenceTraceToEDL(referenceTrace, edl);
+  if (effectiveTrace) {
+    const comparison = compareReferenceTraceToEDL(effectiveTrace, edl);
     if (comparison.overall < 0.5) {
       console.warn("[edl-generation] Low similarity to reference:", comparison.overall);
     }
@@ -442,15 +429,12 @@ function patchRawEDLForZod(
     if (!edlData.music.id) edlData.music.id = edlData.music.sourceId || `music_${Date.now()}`;
     if (!edlData.music.sourceId) edlData.music.sourceId = edlData.music.id || '';
     if (edlData.music.bpm === undefined || edlData.music.bpm === null) edlData.music.bpm = 120;
+    // Never fabricate a click track. Real beats only.
     if (!Array.isArray(edlData.music.beatGrid) || edlData.music.beatGrid.length === 0) {
-      // Generate fallback beat grid from BPM
-      const bpm = edlData.music.bpm || 120;
-      const beatInterval = 60 / bpm;
-      const duration = edlData.timeline?.duration ?? 30;
       edlData.music.beatGrid = [];
-      for (let t = 0; t < duration; t += beatInterval) {
-        edlData.music.beatGrid.push(Math.round(t * 1000) / 1000);
-      }
+      (edlData.music as any).beatSyncAvailable = false;
+    } else {
+      (edlData.music as any).beatSyncAvailable = true;
     }
     if (edlData.music.volume === undefined || edlData.music.volume === null) edlData.music.volume = 1.0;
   }

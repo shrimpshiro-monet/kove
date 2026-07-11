@@ -1,0 +1,304 @@
+{
+  "version": "1.0",
+  "referenceStyle": "spiderman-important",
+  "targetDuration": 18.393292855449307,
+  "totalShots": 15,
+  "avgShotDuration": 1.2262195236966205,
+  "colorGrade": "HYPER_SATURATED_NEON",
+  "shots": [
+    {
+      "id": "shot_001",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 0.0,
+        "end": 2.5
+      },
+      "timeline": {
+        "start": 0.0,
+        "duration": 0.9662171161441637
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "cut",
+      "description": "Stephen Curry hits a high-arching shot over defenders.",
+      "energy": 8
+    },
+    {
+      "id": "shot_002",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 2.5,
+        "end": 6.8
+      },
+      "timeline": {
+        "start": 0.9662171161441637,
+        "duration": 0.9981658076208466
+      },
+      "type": "action",
+      "effects": [
+        "frame_stutter"
+      ],
+      "transition": "whip_pan",
+      "description": "Curry celebrates and walks back down the court.",
+      "energy": 7
+    },
+    {
+      "id": "shot_003",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 6.8,
+        "end": 9.2
+      },
+      "timeline": {
+        "start": 1.9643829237650103,
+        "duration": 1.192716733713474
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Close-up of the ball swishing through the net.",
+      "energy": 9
+    },
+    {
+      "id": "shot_004",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 9.2,
+        "end": 12.3
+      },
+      "timeline": {
+        "start": 3.1570996574784846,
+        "duration": 1.1046750405510573
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry makes a jump shot while moving laterally.",
+      "energy": 8
+    },
+    {
+      "id": "shot_005",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 12.3,
+        "end": 14.9
+      },
+      "timeline": {
+        "start": 4.261774698029542,
+        "duration": 1.419598318547291
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry hits a long-distance shot, then turns to celebrate.",
+      "energy": 9
+    },
+    {
+      "id": "shot_006",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 14.9,
+        "end": 21.0
+      },
+      "timeline": {
+        "start": 5.681373016576833,
+        "duration": 1.27644903389219
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry performs his iconic 'night-night' sleep celebration, cheering loudly.",
+      "energy": 10
+    },
+    {
+      "id": "shot_007",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 21.0,
+        "end": 25.8
+      },
+      "timeline": {
+        "start": 6.957822050469023,
+        "duration": 1.5469320762289924
+      },
+      "type": "build",
+      "effects": [
+        "comic_halftone"
+      ],
+      "transition": "cut",
+      "description": "Montage of Curry walking out and onto the court.",
+      "energy": 4
+    },
+    {
+      "id": "shot_008",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 25.8,
+        "end": 29.5
+      },
+      "timeline": {
+        "start": 8.504754126698016,
+        "duration": 1.0173866105400429
+      },
+      "type": "build",
+      "effects": [
+        "comic_halftone"
+      ],
+      "transition": "cut",
+      "description": "Curry practices a jump shot in an empty arena.",
+      "energy": 5
+    },
+    {
+      "id": "shot_009",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 29.5,
+        "end": 35.8
+      },
+      "timeline": {
+        "start": 9.52214073723806,
+        "duration": 1.240421676604964
+      },
+      "type": "build",
+      "effects": [
+        "comic_halftone"
+      ],
+      "transition": "cut",
+      "description": "Curry warms up with teammates before a game.",
+      "energy": 4
+    },
+    {
+      "id": "shot_010",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 35.8,
+        "end": 39.5
+      },
+      "timeline": {
+        "start": 10.762562413843023,
+        "duration": 1.4470818735988111
+      },
+      "type": "action",
+      "effects": [
+        "frame_stutter"
+      ],
+      "transition": "whip_pan",
+      "description": "Curry drives and scores a layup in a game.",
+      "energy": 7
+    },
+    {
+      "id": "shot_011",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 39.5,
+        "end": 43.1
+      },
+      "timeline": {
+        "start": 12.209644287441835,
+        "duration": 1.037289892540173
+      },
+      "type": "build",
+      "effects": [
+        "comic_halftone"
+      ],
+      "transition": "cut",
+      "description": "Curry sitting on the sidelines looking focused.",
+      "energy": 5
+    },
+    {
+      "id": "shot_012",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 43.1,
+        "end": 49.3
+      },
+      "timeline": {
+        "start": 13.246934179982008,
+        "duration": 1.3309230993492493
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry hits a jump shot and points to the crowd.",
+      "energy": 8
+    },
+    {
+      "id": "shot_013",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 49.3,
+        "end": 52.8
+      },
+      "timeline": {
+        "start": 14.577857279331257,
+        "duration": 1.3288160872953023
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry celebrates with teammates and performs the sleep gesture again.",
+      "energy": 10
+    },
+    {
+      "id": "shot_014",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 52.8,
+        "end": 56.5
+      },
+      "timeline": {
+        "start": 15.90667336662656,
+        "duration": 1.4797181755315962
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry takes a deep shot from the corner during a game.",
+      "energy": 9
+    },
+    {
+      "id": "shot_015",
+      "source": {
+        "file": "/Users/hamza/Desktop/reserves/monet-ai-story/testfiles/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "start": 56.5,
+        "end": 100.0
+      },
+      "timeline": {
+        "start": 17.386391542158155,
+        "duration": 1.0069013132911528
+      },
+      "type": "climax",
+      "effects": [
+        "impact_flash",
+        "chromatic_glitch"
+      ],
+      "transition": "flash",
+      "description": "Curry sinks a three-pointer, resulting in a loud crowd reaction.",
+      "energy": 10
+    }
+  ]
+}

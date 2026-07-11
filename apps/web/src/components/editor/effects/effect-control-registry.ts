@@ -1,4 +1,4 @@
-import { MonetEffectBlock } from "@monet/core";
+import { type EffectBlock as MonetEffectBlock } from "@monet/edl";
 
 export type EffectParamKind = "number" | "boolean" | "text" | "select";
 

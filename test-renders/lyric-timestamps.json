@@ -1,0 +1,873 @@
+{
+  "musicStart": 76,
+  "duration": 30,
+  "totalWords": 138,
+  "words": [
+    {
+      "word": "All",
+      "start": 76,
+      "end": 76.1,
+      "confidence": 0.17993201315402985
+    },
+    {
+      "word": "that",
+      "start": 76.1,
+      "end": 76.2,
+      "confidence": 0.927074134349823
+    },
+    {
+      "word": "type",
+      "start": 76.2,
+      "end": 76.48,
+      "confidence": 0.19547437131404877
+    },
+    {
+      "word": "shit,",
+      "start": 76.48,
+      "end": 76.84,
+      "confidence": 0.7914252281188965
+    },
+    {
+      "word": "by",
+      "start": 76.92,
+      "end": 77.18,
+      "confidence": 0.19167473912239075
+    },
+    {
+      "word": "the",
+      "start": 77.18,
+      "end": 77.3,
+      "confidence": 0.8977213501930237
+    },
+    {
+      "word": "Rory",
+      "start": 77.3,
+      "end": 77.54,
+      "confidence": 0.41124124825000763
+    },
+    {
+      "word": "I'm",
+      "start": 77.54,
+      "end": 77.8,
+      "confidence": 0.6435694247484207
+    },
+    {
+      "word": "rich,",
+      "start": 77.8,
+      "end": 77.98,
+      "confidence": 0.9071495532989502
+    },
+    {
+      "word": "I",
+      "start": 78.08,
+      "end": 78.14,
+      "confidence": 0.9843499660491943
+    },
+    {
+      "word": "ain't",
+      "start": 78.14,
+      "end": 78.28,
+      "confidence": 0.9885416030883789
+    },
+    {
+      "word": "rent",
+      "start": 78.28,
+      "end": 78.44,
+      "confidence": 0.6172493100166321
+    },
+    {
+      "word": "one",
+      "start": 78.44,
+      "end": 78.64,
+      "confidence": 0.9131033420562744
+    },
+    {
+      "word": "I'm",
+      "start": 78.64,
+      "end": 79.1,
+      "confidence": 0.8567956387996674
+    },
+    {
+      "word": "on",
+      "start": 79.1,
+      "end": 79.18,
+      "confidence": 0.913754403591156
+    },
+    {
+      "word": "counter",
+      "start": 79.18,
+      "end": 79.36,
+      "confidence": 0.15819421410560608
+    },
+    {
+      "word": "while",
+      "start": 79.36,
+      "end": 79.68,
+      "confidence": 0.2521921396255493
+    },
+    {
+      "word": "I",
+      "start": 79.68,
+      "end": 79.82,
+      "confidence": 0.9796798825263977
+    },
+    {
+      "word": "get",
+      "start": 79.82,
+      "end": 79.94,
+      "confidence": 0.9734469652175903
+    },
+    {
+      "word": "my",
+      "start": 79.94,
+      "end": 80.12,
+      "confidence": 0.9817702174186707
+    },
+    {
+      "word": "10,",
+      "start": 80.12,
+      "end": 80.36,
+      "confidence": 0.7109168767929077
+    },
+    {
+      "word": "9",
+      "start": 80.44,
+      "end": 80.6,
+      "confidence": 0.35232216119766235
+    },
+    {
+      "word": "If",
+      "start": 80.6,
+      "end": 80.96,
+      "confidence": 0.398699015378952
+    },
+    {
+      "word": "she",
+      "start": 80.96,
+      "end": 81.12,
+      "confidence": 0.9299688339233398
+    },
+    {
+      "word": "asked",
+      "start": 81.12,
+      "end": 81.32,
+      "confidence": 0.5105665326118469
+    },
+    {
+      "word": "for",
+      "start": 81.32,
+      "end": 81.5,
+      "confidence": 0.6880724430084229
+    },
+    {
+      "word": "money,",
+      "start": 81.5,
+      "end": 81.8,
+      "confidence": 0.9930116534233093
+    },
+    {
+      "word": "I",
+      "start": 81.96,
+      "end": 82.04,
+      "confidence": 0.9909262657165527
+    },
+    {
+      "word": "sent",
+      "start": 82.04,
+      "end": 82.24,
+      "confidence": 0.4515673518180847
+    },
+    {
+      "word": "some",
+      "start": 82.24,
+      "end": 82.56,
+      "confidence": 0.8855421543121338
+    },
+    {
+      "word": "Get",
+      "start": 82.56,
+      "end": 82.96,
+      "confidence": 0.8805065751075745
+    },
+    {
+      "word": "a",
+      "start": 82.96,
+      "end": 83.08,
+      "confidence": 0.5276100039482117
+    },
+    {
+      "word": "hand",
+      "start": 83.08,
+      "end": 83.28,
+      "confidence": 0.8828600645065308
+    },
+    {
+      "word": "of",
+      "start": 83.28,
+      "end": 83.5,
+      "confidence": 0.32139697670936584
+    },
+    {
+      "word": "nests",
+      "start": 83.5,
+      "end": 83.74,
+      "confidence": 0.27051975578069687
+    },
+    {
+      "word": "and",
+      "start": 83.74,
+      "end": 83.9,
+      "confidence": 0.5497743487358093
+    },
+    {
+      "word": "a",
+      "start": 83.9,
+      "end": 84.02,
+      "confidence": 0.9425597190856934
+    },
+    {
+      "word": "hip,",
+      "start": 84.02,
+      "end": 84.18,
+      "confidence": 0.44957974553108215
+    },
+    {
+      "word": "man",
+      "start": 84.36,
+      "end": 84.48,
+      "confidence": 0.9336485266685486
+    },
+    {
+      "word": "Out",
+      "start": 84.48,
+      "end": 84.86,
+      "confidence": 0.8146756887435913
+    },
+    {
+      "word": "of",
+      "start": 84.86,
+      "end": 84.94,
+      "confidence": 0.9365699887275696
+    },
+    {
+      "word": "trust,",
+      "start": 84.94,
+      "end": 85.1,
+      "confidence": 0.6492480635643005
+    },
+    {
+      "word": "BP,",
+      "start": 85.3,
+      "end": 85.48,
+      "confidence": 0.8082441091537476
+    },
+    {
+      "word": "we",
+      "start": 85.6,
+      "end": 85.74,
+      "confidence": 0.9819155931472778
+    },
+    {
+      "word": "got",
+      "start": 85.74,
+      "end": 85.86,
+      "confidence": 0.9759235978126526
+    },
+    {
+      "word": "10",
+      "start": 85.86,
+      "end": 86.14,
+      "confidence": 0.8314630389213562
+    },
+    {
+      "word": "on",
+      "start": 86.14,
+      "end": 86.36,
+      "confidence": 0.5761879086494446
+    },
+    {
+      "word": "When",
+      "start": 86.36,
+      "end": 86.74,
+      "confidence": 0.9037714600563049
+    },
+    {
+      "word": "you",
+      "start": 86.74,
+      "end": 86.86,
+      "confidence": 0.9748057723045349
+    },
+    {
+      "word": "talk",
+      "start": 86.86,
+      "end": 87.02,
+      "confidence": 0.6473580598831177
+    },
+    {
+      "word": "about",
+      "start": 87.02,
+      "end": 87.22,
+      "confidence": 0.766450047492981
+    },
+    {
+      "word": "a",
+      "start": 87.22,
+      "end": 87.34,
+      "confidence": 0.6490844488143921
+    },
+    {
+      "word": "real",
+      "start": 87.34,
+      "end": 87.52,
+      "confidence": 0.6116433143615723
+    },
+    {
+      "word": "and",
+      "start": 87.52,
+      "end": 87.7,
+      "confidence": 0.47463661432266235
+    },
+    {
+      "word": "I",
+      "start": 87.7,
+      "end": 87.8,
+      "confidence": 0.8992923498153687
+    },
+    {
+      "word": "been",
+      "start": 87.8,
+      "end": 88,
+      "confidence": 0.6087513566017151
+    },
+    {
+      "word": "one",
+      "start": 88,
+      "end": 88.28,
+      "confidence": 0.9392358064651489
+    },
+    {
+      "word": "If",
+      "start": 88.28,
+      "end": 88.68,
+      "confidence": 0.8577345013618469
+    },
+    {
+      "word": "you",
+      "start": 88.68,
+      "end": 88.78,
+      "confidence": 0.9876807928085327
+    },
+    {
+      "word": "point",
+      "start": 88.78,
+      "end": 88.98,
+      "confidence": 0.889542281627655
+    },
+    {
+      "word": "out,",
+      "start": 88.98,
+      "end": 89.16,
+      "confidence": 0.7716497182846069
+    },
+    {
+      "word": "I",
+      "start": 89.18,
+      "end": 89.4,
+      "confidence": 0.9373626112937927
+    },
+    {
+      "word": "buy",
+      "start": 89.4,
+      "end": 89.58,
+      "confidence": 0.3766211271286011
+    },
+    {
+      "word": "my",
+      "start": 89.58,
+      "end": 89.7,
+      "confidence": 0.9116764664649963
+    },
+    {
+      "word": "spin",
+      "start": 89.7,
+      "end": 89.92,
+      "confidence": 0.6608482003211975
+    },
+    {
+      "word": "one",
+      "start": 89.92,
+      "end": 90.16,
+      "confidence": 0.6357535123825073
+    },
+    {
+      "word": "We",
+      "start": 90.16,
+      "end": 90.56,
+      "confidence": 0.8976359367370605
+    },
+    {
+      "word": "get",
+      "start": 90.56,
+      "end": 90.7,
+      "confidence": 0.9695302248001099
+    },
+    {
+      "word": "volume",
+      "start": 90.7,
+      "end": 90.94,
+      "confidence": 0.20068204402923584
+    },
+    {
+      "word": "and",
+      "start": 90.94,
+      "end": 91.24,
+      "confidence": 0.5801135301589966
+    },
+    {
+      "word": "built,",
+      "start": 91.24,
+      "end": 91.36,
+      "confidence": 0.6807838678359985
+    },
+    {
+      "word": "nigga",
+      "start": 91.62,
+      "end": 91.62,
+      "confidence": 0.8844210505485535
+    },
+    {
+      "word": "then",
+      "start": 91.62,
+      "end": 91.8,
+      "confidence": 0.4509406089782715
+    },
+    {
+      "word": "some",
+      "start": 91.8,
+      "end": 92.2,
+      "confidence": 0.8735336065292358
+    },
+    {
+      "word": "Niggas",
+      "start": 92.2,
+      "end": 92.62,
+      "confidence": 0.7037140826384226
+    },
+    {
+      "word": "going",
+      "start": 92.62,
+      "end": 92.82,
+      "confidence": 0.7501189708709717
+    },
+    {
+      "word": "back",
+      "start": 92.82,
+      "end": 93,
+      "confidence": 0.9847962856292725
+    },
+    {
+      "word": "and",
+      "start": 93,
+      "end": 93.16,
+      "confidence": 0.9292027354240417
+    },
+    {
+      "word": "forth,",
+      "start": 93.16,
+      "end": 93.28,
+      "confidence": 0.9744008183479309
+    },
+    {
+      "word": "ain't",
+      "start": 93.36,
+      "end": 93.64,
+      "confidence": 0.8178423941135406
+    },
+    {
+      "word": "none",
+      "start": 93.64,
+      "end": 93.76,
+      "confidence": 0.8585213422775269
+    },
+    {
+      "word": "of",
+      "start": 93.76,
+      "end": 93.88,
+      "confidence": 0.9960830211639404
+    },
+    {
+      "word": "that",
+      "start": 93.88,
+      "end": 94.06,
+      "confidence": 0.9968345761299133
+    },
+    {
+      "word": "If",
+      "start": 94.06,
+      "end": 94.44,
+      "confidence": 0.34459662437438965
+    },
+    {
+      "word": "she",
+      "start": 94.44,
+      "end": 94.56,
+      "confidence": 0.7230696678161621
+    },
+    {
+      "word": "find",
+      "start": 94.56,
+      "end": 94.8,
+      "confidence": 0.2847912609577179
+    },
+    {
+      "word": "that",
+      "start": 94.8,
+      "end": 94.9,
+      "confidence": 0.524990975856781
+    },
+    {
+      "word": "she",
+      "start": 94.9,
+      "end": 95.06,
+      "confidence": 0.6096460223197937
+    },
+    {
+      "word": "fit,",
+      "start": 95.06,
+      "end": 95.28,
+      "confidence": 0.5917348861694336
+    },
+    {
+      "word": "I'm",
+      "start": 95.28,
+      "end": 95.52,
+      "confidence": 0.9730051457881927
+    },
+    {
+      "word": "a",
+      "start": 95.52,
+      "end": 95.52,
+      "confidence": 0.7425580620765686
+    },
+    {
+      "word": "double",
+      "start": 95.52,
+      "end": 95.72,
+      "confidence": 0.9335976243019104
+    },
+    {
+      "word": "tap",
+      "start": 95.72,
+      "end": 95.98,
+      "confidence": 0.7132183909416199
+    },
+    {
+      "word": "Put",
+      "start": 95.98,
+      "end": 96.4,
+      "confidence": 0.7900323271751404
+    },
+    {
+      "word": "a",
+      "start": 96.4,
+      "end": 96.5,
+      "confidence": 0.9621867537498474
+    },
+    {
+      "word": "switch",
+      "start": 96.5,
+      "end": 96.64,
+      "confidence": 0.9646245837211609
+    },
+    {
+      "word": "on",
+      "start": 96.64,
+      "end": 96.9,
+      "confidence": 0.9860975742340088
+    },
+    {
+      "word": "the",
+      "start": 96.9,
+      "end": 97,
+      "confidence": 0.9619484543800354
+    },
+    {
+      "word": "back,",
+      "start": 97,
+      "end": 97.18,
+      "confidence": 0.9880611896514893
+    },
+    {
+      "word": "got",
+      "start": 97.22,
+      "end": 97.36,
+      "confidence": 0.7836085557937622
+    },
+    {
+      "word": "a",
+      "start": 97.36,
+      "end": 97.44,
+      "confidence": 0.9712076783180237
+    },
+    {
+      "word": "double",
+      "start": 97.44,
+      "end": 97.64,
+      "confidence": 0.9924794435501099
+    },
+    {
+      "word": "tap",
+      "start": 97.64,
+      "end": 98,
+      "confidence": 0.9905113577842712
+    },
+    {
+      "word": "Get",
+      "start": 98,
+      "end": 98.32,
+      "confidence": 0.14961788058280945
+    },
+    {
+      "word": "a",
+      "start": 98.32,
+      "end": 98.36,
+      "confidence": 0.3967864215373993
+    },
+    {
+      "word": "smack,",
+      "start": 98.36,
+      "end": 98.53999999999999,
+      "confidence": 0.4170885384082794
+    },
+    {
+      "word": "turn",
+      "start": 98.72,
+      "end": 98.82,
+      "confidence": 0.9831779599189758
+    },
+    {
+      "word": "around,",
+      "start": 98.82,
+      "end": 99.02,
+      "confidence": 0.9681095480918884
+    },
+    {
+      "word": "give",
+      "start": 99.2,
+      "end": 99.26,
+      "confidence": 0.9810907244682312
+    },
+    {
+      "word": "it",
+      "start": 99.26,
+      "end": 99.36,
+      "confidence": 0.5887988805770874
+    },
+    {
+      "word": "spread",
+      "start": 99.36,
+      "end": 99.53999999999999,
+      "confidence": 0.09201755374670029
+    },
+    {
+      "word": "it",
+      "start": 99.53999999999999,
+      "end": 99.66,
+      "confidence": 0.8478395938873291
+    },
+    {
+      "word": "out",
+      "start": 99.66,
+      "end": 99.9,
+      "confidence": 0.9774523973464966
+    },
+    {
+      "word": "G",
+      "start": 99.9,
+      "end": 100.24,
+      "confidence": 0.44927212595939636
+    },
+    {
+      "word": "block",
+      "start": 100.24,
+      "end": 100.48,
+      "confidence": 0.8256360292434692
+    },
+    {
+      "word": "cut,",
+      "start": 100.48,
+      "end": 100.72,
+      "confidence": 0.8041157126426697
+    },
+    {
+      "word": "throw",
+      "start": 100.9,
+      "end": 100.98,
+      "confidence": 0.32448092103004456
+    },
+    {
+      "word": "what",
+      "start": 100.98,
+      "end": 101.16,
+      "confidence": 0.31373330950737
+    },
+    {
+      "word": "they",
+      "start": 101.16,
+      "end": 101.26,
+      "confidence": 0.7317054271697998
+    },
+    {
+      "word": "begging",
+      "start": 101.26,
+      "end": 101.52,
+      "confidence": 0.250055730342865
+    },
+    {
+      "word": "at",
+      "start": 101.52,
+      "end": 101.8,
+      "confidence": 0.8920453190803528
+    },
+    {
+      "word": "It's",
+      "start": 101.8,
+      "end": 102.16,
+      "confidence": 0.877461165189743
+    },
+    {
+      "word": "a",
+      "start": 102.16,
+      "end": 102.26,
+      "confidence": 0.43653199076652527
+    },
+    {
+      "word": "few",
+      "start": 102.26,
+      "end": 102.42,
+      "confidence": 0.9888351559638977
+    },
+    {
+      "word": "rap",
+      "start": 102.42,
+      "end": 102.68,
+      "confidence": 0.5368454456329346
+    },
+    {
+      "word": "niggas",
+      "start": 102.68,
+      "end": 102.98,
+      "confidence": 0.8697627186775208
+    },
+    {
+      "word": "that",
+      "start": 102.98,
+      "end": 103.1,
+      "confidence": 0.9698810577392578
+    },
+    {
+      "word": "I",
+      "start": 103.1,
+      "end": 103.24,
+      "confidence": 0.5349928736686707
+    },
+    {
+      "word": "never",
+      "start": 103.24,
+      "end": 103.42,
+      "confidence": 0.543447732925415
+    },
+    {
+      "word": "rap",
+      "start": 103.42,
+      "end": 103.66,
+      "confidence": 0.9340868592262268
+    },
+    {
+      "word": "I'm",
+      "start": 103.66,
+      "end": 104.22,
+      "confidence": 0.8756884038448334
+    },
+    {
+      "word": "one,",
+      "start": 104.22,
+      "end": 104.34,
+      "confidence": 0.9016692042350769
+    },
+    {
+      "word": "engineer,",
+      "start": 104.52,
+      "end": 104.64,
+      "confidence": 0.31906089186668396
+    },
+    {
+      "word": "this",
+      "start": 104.88,
+      "end": 104.92,
+      "confidence": 0.5089402198791504
+    },
+    {
+      "word": "way",
+      "start": 104.92,
+      "end": 105.03999999999999,
+      "confidence": 0.3698684275150299
+    },
+    {
+      "word": "you",
+      "start": 105.03999999999999,
+      "end": 105.2,
+      "confidence": 0.7598716616630554
+    },
+    {
+      "word": "credit",
+      "start": 105.2,
+      "end": 105.34,
+      "confidence": 0.6562010645866394
+    },
+    {
+      "word": "that",
+      "start": 105.34,
+      "end": 105.6,
+      "confidence": 0.5113268494606018
+    }
+  ],
+  "keyLyrics": [
+    {
+      "word": "shit,",
+      "start": 76.48,
+      "end": 76.84,
+      "confidence": 0.7914252281188965,
+      "type": "action"
+    },
+    {
+      "word": "rich,",
+      "start": 77.8,
+      "end": 77.98,
+      "confidence": 0.9071495532989502,
+      "type": "hype"
+    },
+    {
+      "word": "got",
+      "start": 85.74,
+      "end": 85.86,
+      "confidence": 0.9759235978126526,
+      "type": "action"
+    },
+    {
+      "word": "going",
+      "start": 92.62,
+      "end": 92.82,
+      "confidence": 0.7501189708709717,
+      "type": "action"
+    },
+    {
+      "word": "got",
+      "start": 97.22,
+      "end": 97.36,
+      "confidence": 0.7836085557937622,
+      "type": "action"
+    }
+  ],
+  "fullText": "All that type shit, by the Rory I'm rich, I ain't rent one I'm on counter while I get my 10, 9 If she asked for money, I sent some Get a hand of nests and a hip, man Out of trust, BP, we got 10 on When you talk about a real and I been one If you point out, I buy my spin one We get volume and built, nigga then some Niggas going back and forth, ain't none of that If she find that she fit, I'm a double tap Put a switch on the back, got a double tap Get a smack, turn around, give it spread it out G block cut, throw what they begging at It's a few rap niggas that I never rap I'm one, engineer, this way you credit that"
+}
