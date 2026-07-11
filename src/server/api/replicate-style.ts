@@ -6,7 +6,6 @@ import { buildSourcePlan } from "../director/source-orchestrator";
 import { compareReferenceTraceToEDL } from "../director/reference-similarity";
 import { scoreNewPipelineEDL } from "../lib/edl-scoring";
 import { enforceReferenceStyleOnEDL } from "../lib/reference-style-enforcer";
-import { injectReferenceColorGrades } from "../lib/reference-color-injector";
 import { enforceMotionContinuity } from "../director/shot-continuity";
 import { ensureBeatLocksForMusic } from "../lib/edl-scoring";
 
@@ -71,10 +70,6 @@ export async function handleReplicateStyle(request: Request, env: Env): Promise<
       edl = await humanizeSkeleton(edl, referenceStyle, ai);
 
       edl = enforceReferenceStyleOnEDL(edl, referenceStyle, referenceMode);
-      // Only inject color grades if reference actually uses effects
-      if ((referenceStyle.effects?.effectsFrequency ?? 0.5) > 0.05) {
-        edl = injectReferenceColorGrades(edl, referenceStyle);
-      }
       edl = enforceMotionContinuity(edl);
       edl = ensureBeatLocksForMusic(edl, rhythmMap, { maxDriftMs: 70, strict: referenceMode === "strict_replication" });
 

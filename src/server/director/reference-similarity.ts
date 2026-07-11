@@ -93,7 +93,8 @@ export function compareReferenceTraceToEDL(
   );
 
   // 4. Effect Density Similarity — compare effects per second
-  const effectCount = shots.reduce((sum, shot) => sum + (shot.effects?.length ?? 0), 0);
+  // Exclude color_grade (it's a global style, not a per-shot effect)
+  const effectCount = shots.reduce((sum, shot) => sum + (shot.effects?.filter(e => e.type !== "color_grade")?.length ?? 0), 0);
   const safeDuration = Math.max(totalDuration, 1);
   const edlEffectsPerSec = effectCount / safeDuration;
 
