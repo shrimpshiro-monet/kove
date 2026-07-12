@@ -137,3 +137,4 @@ workers/python-ai/.venv/
 workers/python-ai/.venv-beat/
 workers/python-audio/.venv/
 yolov8n.pt
+.worktrees/
