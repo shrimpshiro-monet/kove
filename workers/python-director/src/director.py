@@ -12,8 +12,33 @@ from .music_analyzer import MusicAnalyzer
 from .style_transfer import StyleDNA, StyleTransfer
 
 
+RECIPE_EFFECTS: dict[str, list[dict]] = {
+    'streetwear_reveal_v2': [
+        {'id': 'fx_glow', 'type': 'glow', 'targetStrength': 0.6, 'params': {'radius': 20}},
+        {'id': 'fx_shake', 'type': 'shake', 'targetStrength': 0.3, 'params': {}},
+        {'id': 'fx_rgb', 'type': 'rgb_split', 'targetStrength': 0.2, 'params': {}},
+    ],
+    'cinematic_slow_burn': [
+        {'id': 'fx_vignette', 'type': 'vignette', 'targetStrength': 0.4, 'params': {}},
+        {'id': 'fx_grain', 'type': 'film_grain', 'targetStrength': 0.2, 'params': {}},
+    ],
+    'fast_pace_montage': [
+        {'id': 'fx_color', 'type': 'color_grade', 'targetStrength': 0.7, 'params': {'preset': 'teal_orange'}},
+        {'id': 'fx_shake', 'type': 'shake', 'targetStrength': 0.4, 'params': {}},
+    ],
+    'dramatic_buildup': [
+        {'id': 'fx_zoom', 'type': 'zoom', 'targetStrength': 0.5, 'params': {}},
+        {'id': 'fx_vignette', 'type': 'vignette', 'targetStrength': 0.3, 'params': {}},
+    ],
+}
+
+DEFAULT_EFFECTS: list[dict] = [
+    {'id': 'fx_default', 'type': 'vignette', 'targetStrength': 0.3, 'params': {}},
+]
+
+
 class Director:
-    """Main orchestrator — prompt → EDL v5.1 pipeline."""
+    """Main orchestrator — prompt -> EDL v5.1 pipeline."""
 
     def __init__(self, api_key: Optional[str] = None) -> None:
         self.intent_decoder = IntentDecoder(api_key)
@@ -119,6 +144,8 @@ class Director:
             style_section["transitionStyle"] = style_dna.transitionStyle
             style_section["effectVocabulary"] = style_dna.effectVocabulary
 
+        runtime_tracks = self._build_runtime_tracks(plan, content, music)
+
         return {
             "version": "5.1",
             "id": edl_id,
@@ -145,7 +172,7 @@ class Director:
                     "fps": 30,
                     "duration": duration,
                 },
-                "tracks": [],
+                "tracks": runtime_tracks,
                 "colorScience": {
                     "workingSpace": "ACES2065-1",
                     "inputTransform": {
@@ -162,6 +189,62 @@ class Director:
             "dependencies": {},
             "analysis": {},
         }
+
+    # ------------------------------------------------------------------
+    # Runtime tracks
+    # ------------------------------------------------------------------
+
+    def _build_runtime_tracks(
+        self,
+        plan: CreativePlan,
+        content: dict[str, Any],
+        music: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Deterministically build runtime tracks from moments."""
+        clips = []
+
+        for moment in plan.moments:
+            moment_clips = moment.shots if moment.shots else []
+
+            if not moment_clips:
+                moment_clips = ['clip_0']
+
+            for i, clip_id in enumerate(moment_clips):
+                clip_duration = (moment.end - moment.start) / len(moment_clips)
+                clip_start = moment.start + (i * clip_duration)
+
+                if moment.recipes:
+                    recipe_effects = _get_recipe_effects(moment.recipes[0])
+                else:
+                    recipe_effects = [e.copy() for e in DEFAULT_EFFECTS]
+
+                clips.append({
+                    'id': f'{moment.id}_clip_{i}',
+                    'momentId': moment.id,
+                    'source': {
+                        'clipId': clip_id,
+                        'type': 'video',
+                        'in': 0,
+                        'out': clip_duration,
+                    },
+                    'timing': {
+                        'start': clip_start,
+                        'duration': clip_duration,
+                        'speed': 1.0,
+                    },
+                    'effects': recipe_effects,
+                    'transition': {
+                        'type': 'crossfade',
+                        'duration': 0.3,
+                    },
+                })
+
+        return [{
+            'id': 'track_v1',
+            'type': 'video',
+            'name': 'Main',
+            'clips': clips,
+        }]
 
     # ------------------------------------------------------------------
     # Helpers
@@ -184,3 +267,11 @@ class Director:
     ) -> dict[str, Any]:
         """Refine EDL based on critique — placeholder for future iteration."""
         return edl
+
+
+def _get_recipe_effects(recipe_id: str) -> list[dict]:
+    """Get effects from a recipe."""
+    effects = RECIPE_EFFECTS.get(recipe_id)
+    if effects:
+        return [e.copy() for e in effects]
+    return [e.copy() for e in DEFAULT_EFFECTS]

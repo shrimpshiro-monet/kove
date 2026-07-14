@@ -7,17 +7,33 @@ Goal: {{GOAL}}
 Genre: {{GENRE}}
 Music BPM: {{BPM}}
 
+Content analysis:
+{{CONTENT_SUMMARY}}
+
+Available clips (you MUST reference these by clipId):
+{{AVAILABLE_CLIPS}}
+
+Available recipes (you MUST assign one per moment):
+{{AVAILABLE_RECIPES}}
+
+IMPORTANT RULES:
+- shots must be an array of clipId values from available_clips. NEVER invent shot names.
+- recipes must be an array of recipe ids from available_recipes. Pick the best match for each moment's emotion.
+- energy must be 0-1.
+- start/end must fit within the total duration.
+- Each moment should be 2-5 seconds. Align moments to beat boundaries when possible.
+
 Return JSON with:
 - moments: array of moments, each with:
   - id: unique identifier (e.g., "moment_reveal")
-  - start: start time
-  - end: end time
+  - start: start time in seconds
+  - end: end time in seconds
   - purpose: what this moment achieves
   - emotion: emotional tone
   - energy: energy level (0-1)
-  - shots: which shot types this moment needs
-  - recipes: which editing recipes to apply (empty for now)
+  - shots: array of clipId values from available_clips
+  - recipes: array of recipe ids from available_recipes
   - aiPrompt: instruction for the AI director
+  - focusEntity: optional focus entity
+  - attention: optional attention dict
   - constraints: array of constraints
-
-Each moment should be 2-5 seconds. Align moments to beat boundaries when possible.

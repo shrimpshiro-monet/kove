@@ -40,8 +40,8 @@ MOCK_STORY_ARC = [
 MOCK_MOMENTS = [
     Moment(
         id="m1", start=0, end=3, purpose="establish",
-        emotion="calm", energy=0.2, shots=["wide"],
-        recipes=[], aiPrompt="Set the scene", constraints=[],
+        emotion="calm", energy=0.2, shots=["scene_0"],
+        recipes=["cinematic_slow_burn"], aiPrompt="Set the scene", constraints=[],
     ),
 ]
 
@@ -472,3 +472,222 @@ def test_director_sets_duration_from_moments(
 
     assert edl["duration"] == 3.0
     assert edl["runtime"]["timeline"]["duration"] == 3.0
+
+
+# ---------------------------------------------------------------------------
+# Runtime tracks (Issue 2 fix)
+# ---------------------------------------------------------------------------
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_runtime_tracks_not_empty(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    tracks = edl["runtime"]["tracks"]
+    assert len(tracks) == 1
+    assert tracks[0]["id"] == "track_v1"
+    assert tracks[0]["type"] == "video"
+    assert len(tracks[0]["clips"]) > 0
+
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_runtime_clips_have_correct_structure(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    clips = edl["runtime"]["tracks"][0]["clips"]
+    assert len(clips) == 1
+    clip = clips[0]
+    assert clip["id"] == "m1_clip_0"
+    assert clip["momentId"] == "m1"
+    assert clip["source"]["clipId"] == "scene_0"
+    assert clip["source"]["type"] == "video"
+    assert clip["timing"]["start"] == 0
+    assert clip["timing"]["duration"] == 3.0
+    assert "effects" in clip
+    assert "transition" in clip
+
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_recipe_effects_applied_to_clips(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    clips = edl["runtime"]["tracks"][0]["clips"]
+    clip = clips[0]
+    # cinematic_slow_burn recipe has vignette + film_grain
+    assert len(clip["effects"]) == 2
+    effect_types = [e["type"] for e in clip["effects"]]
+    assert "vignette" in effect_types
+    assert "film_grain" in effect_types
+
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_fallback_effects_when_no_recipe(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    # Moment with no recipes
+    plan_no_recipes = CreativePlan(
+        storyArc=MOCK_STORY_ARC,
+        moments=[Moment(
+            id="m1", start=0, end=3, purpose="establish",
+            emotion="calm", energy=0.2, shots=["scene_0"],
+            recipes=[], aiPrompt="Set the scene", constraints=[],
+        )],
+        emotionArc=MOCK_EMOTION_ARC,
+    )
+    mocks["plan"].plan.return_value = plan_no_recipes
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    clips = edl["runtime"]["tracks"][0]["clips"]
+    assert len(clips[0]["effects"]) == 1
+    assert clips[0]["effects"][0]["type"] == "vignette"
+
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_fallback_clip_when_no_shots(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    plan_no_shots = CreativePlan(
+        storyArc=MOCK_STORY_ARC,
+        moments=[Moment(
+            id="m1", start=0, end=3, purpose="establish",
+            emotion="calm", energy=0.2, shots=[],
+            recipes=[], aiPrompt="Set the scene", constraints=[],
+        )],
+        emotionArc=MOCK_EMOTION_ARC,
+    )
+    mocks["plan"].plan.return_value = plan_no_shots
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    clips = edl["runtime"]["tracks"][0]["clips"]
+    assert len(clips) == 1
+    assert clips[0]["source"]["clipId"] == "clip_0"
+
+
+@patch("src.director.StyleTransfer")
+@patch("src.director.MusicAnalyzer")
+@patch("src.director.ContentAnalyzer")
+@patch("src.director.Critic")
+@patch("src.director.CreativePlanner")
+@patch("src.director.IntentDecoder")
+def test_multiple_shots_split_duration(
+    mock_intent_cls, mock_plan_cls, mock_critic_cls,
+    mock_content_cls, mock_music_cls, mock_style_cls,
+):
+    mocks = _build_mock_map()
+    _wire_mocks(mocks)
+    mock_intent_cls.return_value = mocks["intent"]
+    mock_content_cls.return_value = mocks["content"]
+    mock_music_cls.return_value = mocks["music"]
+    mock_plan_cls.return_value = mocks["plan"]
+    mock_critic_cls.return_value = mocks["critic"]
+    mock_style_cls.return_value = mocks["style"]
+
+    plan_multi = CreativePlan(
+        storyArc=MOCK_STORY_ARC,
+        moments=[Moment(
+            id="m1", start=0, end=6, purpose="climax",
+            emotion="intense", energy=1.0, shots=["scene_0", "scene_1"],
+            recipes=["streetwear_reveal_v2"], aiPrompt="Fast cuts", constraints=[],
+        )],
+        emotionArc=MOCK_EMOTION_ARC,
+    )
+    mocks["plan"].plan.return_value = plan_multi
+
+    director = Director()
+    edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+    clips = edl["runtime"]["tracks"][0]["clips"]
+    assert len(clips) == 2
+    assert clips[0]["source"]["clipId"] == "scene_0"
+    assert clips[1]["source"]["clipId"] == "scene_1"
+    assert clips[0]["timing"]["start"] == 0
+    assert clips[0]["timing"]["duration"] == 3.0
+    assert clips[1]["timing"]["start"] == 3.0
+    assert clips[1]["timing"]["duration"] == 3.0

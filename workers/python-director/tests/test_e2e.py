@@ -1,4 +1,4 @@
-"""E2E integration test: full Director pipeline from prompt → EDL v5.1."""
+"""E2E integration test: full Director pipeline from prompt -> EDL v5.1."""
 from contextlib import contextmanager
 from unittest.mock import patch, MagicMock
 
@@ -57,26 +57,30 @@ MOCK_STORY_ARC = [
 MOCK_MOMENTS = [
     Moment(
         id="m1", start=0, end=2, purpose="establish",
-        emotion="anticipation", energy=0.3, shots=["wide", "medium"],
-        recipes=[], aiPrompt="Set the scene with a wide establishing shot",
+        emotion="anticipation", energy=0.3, shots=["scene_0"],
+        recipes=["cinematic_slow_burn"],
+        aiPrompt="Set the scene with a wide establishing shot",
         constraints=["keepSubjectVisible"],
     ),
     Moment(
         id="m2", start=2, end=4, purpose="build",
-        emotion="rising", energy=0.6, shots=["medium", "close"],
-        recipes=[], aiPrompt="Build energy with quick cuts",
+        emotion="rising", energy=0.6, shots=["scene_0", "scene_0"],
+        recipes=["dramatic_buildup"],
+        aiPrompt="Build energy with quick cuts",
         constraints=[],
     ),
     Moment(
         id="m3", start=4, end=5.5, purpose="peak",
-        emotion="intense", energy=1.0, shots=["close", "detail"],
-        recipes=[], aiPrompt="Climactic moment with fast edits",
+        emotion="intense", energy=1.0, shots=["scene_0", "scene_0"],
+        recipes=["fast_pace_montage"],
+        aiPrompt="Climactic moment with fast edits",
         constraints=["avoidFaceOcclusion"],
     ),
     Moment(
         id="m4", start=5.5, end=6, purpose="resolve",
-        emotion="satisfaction", energy=0.4, shots=["wide"],
-        recipes=[], aiPrompt="Slow down and resolve",
+        emotion="satisfaction", energy=0.4, shots=["scene_0"],
+        recipes=["cinematic_slow_burn"],
+        aiPrompt="Slow down and resolve",
         constraints=[],
     ),
 ]
@@ -137,8 +141,8 @@ def _build_director_with_mocks(**overrides):
 
 
 def test_full_pipeline_produces_valid_edl():
-    """Full pipeline: prompt → IntentDecoder → ContentAnalyzer → MusicAnalyzer
-    → CreativePlanner → _build_edl → Critic → final EDL."""
+    """Full pipeline: prompt -> IntentDecoder -> ContentAnalyzer -> MusicAnalyzer
+    -> CreativePlanner -> _build_edl -> Critic -> final EDL."""
     with _build_director_with_mocks() as (director, mocks):
         edl = director.direct("Make a hype TikTok edit", "/tmp/video.mp4", "/tmp/audio.mp3")
 
@@ -376,3 +380,64 @@ def test_runtime_timeline_structure():
 
         assert "colorScience" in edl["runtime"]
         assert "tracks" in edl["runtime"]
+
+
+# ---------------------------------------------------------------------------
+# Runtime tracks (Issue 2 + 4 fix)
+# ---------------------------------------------------------------------------
+
+def test_runtime_tracks_populated():
+    """Verify runtime.tracks is not empty after pipeline."""
+    with _build_director_with_mocks() as (director, _):
+        edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+        tracks = edl["runtime"]["tracks"]
+        assert len(tracks) == 1
+        assert tracks[0]["id"] == "track_v1"
+        assert tracks[0]["type"] == "video"
+        assert tracks[0]["name"] == "Main"
+
+
+def test_runtime_clips_match_moments():
+    """Verify clip count matches expected from moment shots."""
+    with _build_director_with_mocks() as (director, _):
+        edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+        clips = edl["runtime"]["tracks"][0]["clips"]
+        # m1: 1 shot, m2: 2 shots, m3: 2 shots, m4: 1 shot = 6 clips
+        assert len(clips) == 6
+
+
+def test_clip_timing_covers_timeline():
+    """Verify clip timing covers the full duration without gaps."""
+    with _build_director_with_mocks() as (director, _):
+        edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+        clips = edl["runtime"]["tracks"][0]["clips"]
+        starts = [c["timing"]["start"] for c in clips]
+        ends = [c["timing"]["start"] + c["timing"]["duration"] for c in clips]
+        assert min(starts) == 0
+        assert max(ends) == 6.0
+
+
+def test_recipe_effects_applied():
+    """Verify recipes from moments produce effects on clips."""
+    with _build_director_with_mocks() as (director, _):
+        edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+        clips = edl["runtime"]["tracks"][0]["clips"]
+        # m1 has cinematic_slow_burn -> vignette + film_grain
+        assert len(clips[0]["effects"]) == 2
+        effect_types = [e["type"] for e in clips[0]["effects"]]
+        assert "vignette" in effect_types
+        assert "film_grain" in effect_types
+
+
+def test_clip_source_has_clipid():
+    """Verify clip sources reference actual clipIds, not hallucinated shot types."""
+    with _build_director_with_mocks() as (director, _):
+        edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
+
+        clips = edl["runtime"]["tracks"][0]["clips"]
+        for clip in clips:
+            assert clip["source"]["clipId"].startswith("scene_") or clip["source"]["clipId"].startswith("clip_")
