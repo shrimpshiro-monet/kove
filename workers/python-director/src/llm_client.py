@@ -6,9 +6,16 @@ All use OpenAI-compatible API.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from openai import OpenAI
+
+# Load .env file from project root
+_env_path = Path(__file__).parent.parent / ".env"
+if _env_path.exists():
+    load_dotenv(_env_path)
 
 
 class LLMClient:
