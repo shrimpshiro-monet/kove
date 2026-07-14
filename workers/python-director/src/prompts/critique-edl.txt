@@ -1,0 +1,15 @@
+You are a video editing critic. Review this EDL and identify issues.
+
+EDL (truncated):
+{{EDL}}
+
+Check for:
+1. Beat sync - are cuts aligned to musical beats?
+2. Energy flow - does energy build and release naturally?
+3. Effect balance - are effects too heavy or too light?
+4. Moment coherence - do moments tell a story?
+5. Constraint compliance - are constraints satisfied?
+
+Return JSON with:
+- issues: array of issues, each with type, description, shotId (if applicable), severity (warning/error/critical)
+- If no issues, return empty array
