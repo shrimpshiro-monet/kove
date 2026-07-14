@@ -1,23 +1,4 @@
-export interface EDLInput {
-  runtime: {
-    timeline: {
-      resolution: { width: number; height: number }
-      fps: number
-      duration: number
-    }
-    tracks: Array<{
-      id: string
-      type: string
-      name: string
-      clips: Array<{
-        id: string
-        source: { clipId?: string; type: string; in?: number; out?: number }
-        timing: { start: number; duration: number; speed: number }
-        effects?: Array<{ id: string; type: string; targetStrength: number; params: Record<string, unknown> }>
-      }>
-    }>
-  }
-}
+import type { RuntimeLayer } from '@monet/edl-v2'
 
 function effectToFilter(effect: { type: string; targetStrength: number }): string | null {
   switch (effect.type) {
@@ -28,12 +9,13 @@ function effectToFilter(effect: { type: string; targetStrength: number }): strin
     case 'vignette':
       return `vignette=PI/${4 - effect.targetStrength * 2}`
     default:
+      console.warn(`[edl-to-ffmpeg] Unhandled effect type "${effect.type}" — skipping`)
       return null
   }
 }
 
-export function edlToFFmpegCommand(edl: EDLInput, inputPath: string, outputPath: string): string {
-  const { timeline, tracks } = edl.runtime
+export function edlToFFmpegCommand(edl: RuntimeLayer, inputPath: string, outputPath: string): string {
+  const { timeline, tracks } = edl
   const videoTrack = tracks.find((t) => t.type === 'video')
   if (!videoTrack) throw new Error('No video track')
 

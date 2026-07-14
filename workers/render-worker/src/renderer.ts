@@ -1,6 +1,7 @@
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
-import { edlToFFmpegCommand, type EDLInput } from './edl-to-ffmpeg'
+import { edlToFFmpegCommand } from './edl-to-ffmpeg'
+import type { RuntimeLayer } from '@monet/edl-v2'
 
 export interface RenderResult {
   success: boolean
@@ -10,7 +11,7 @@ export interface RenderResult {
 }
 
 export function renderEDL(
-  edl: EDLInput,
+  edl: RuntimeLayer,
   inputPath: string,
   outputPath: string,
 ): RenderResult {

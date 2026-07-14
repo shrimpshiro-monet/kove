@@ -1,7 +1,14 @@
 import type { Recipe, StyleTokens } from '../style'
 import { resolveStrength } from './strength-resolver'
 
+let effectCounter = 0
+
+export function resetEffectCounter(): void {
+  effectCounter = 0
+}
+
 export interface ExpandedEffect {
+  id: string
   type: string
   targetStrength: number
   params: Record<string, unknown>
@@ -25,7 +32,8 @@ export function expandRecipe(
     const aggressionContribution = (param.aggressionScale ?? 0) * aggression
     const raw = param.base * emotionScale + aggressionContribution
     const targetStrength = resolveStrength(raw, 'default')
-    return { type, targetStrength, params: {} }
+    const id = `fx_expanded_${++effectCounter}`
+    return { id, type, targetStrength, params: {} }
   })
 
   return {

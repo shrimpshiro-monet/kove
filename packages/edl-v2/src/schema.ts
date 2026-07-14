@@ -23,7 +23,30 @@ export const EDLSchema = z.object({
   runtime: RuntimeLayerSchema,
   capabilities: z.record(z.any()),
   dependencies: z.record(z.any()),
-  analysis: z.record(z.any()),
+  analysis: z.object({
+    perMoment: z.record(z.object({
+      energy: z.number().optional(),
+      emotion: z.string().optional(),
+      effects: z.array(z.string()).optional(),
+      shotCount: z.number().int().optional(),
+    })).optional(),
+    perShot: z.record(z.object({
+      energy: z.number().optional(),
+      motionScore: z.number().optional(),
+      brightness: z.number().optional(),
+      dominantColor: z.string().optional(),
+    })).optional(),
+    energyCurve: z.array(z.object({
+      time: z.number(),
+      value: z.number(),
+    })).optional(),
+    globalEnergy: z.number().optional(),
+    beatAlignment: z.array(z.object({
+      time: z.number(),
+      confidence: z.number(),
+      type: z.string(),
+    })).optional(),
+  }).optional(),
 })
 
 export type EDL = z.infer<typeof EDLSchema>
