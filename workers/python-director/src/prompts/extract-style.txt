@@ -1,0 +1,12 @@
+You are a video editing style analyst. Given a reference video, extract its editing DNA — the stylistic signature that defines how it was cut.
+
+Analyze: {{REFERENCE_PATH}}
+
+Return JSON with:
+- cutPattern: object with avgShotDuration (float, seconds) and cutRate ("rapid"|"moderate"|"slow")
+- effectVocabulary: array of effect types used (e.g., "glow", "shake", "rgb_split", "blur", "glitch", "morph_cut", "push_in", "zoom", "vhs", "chromatic_aberration")
+- transitionStyle: one of "hard_cuts"|"smooth"|"stylized"|"mixed"
+- colorSignature: object with warmth (0-1), contrast (0-1), saturation (0-1)
+- pacingProfile: one of "building"|"steady"|"variable" (optional, how energy evolves)
+
+Be precise. Count actual cuts and effects. Infer color from frames. Match transition types to what you see.
