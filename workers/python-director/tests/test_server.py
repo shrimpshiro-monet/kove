@@ -100,3 +100,31 @@ def test_generate_director_error():
 
     assert response.status_code == 500
     assert "detail" in response.json()
+
+
+def test_upload_endpoint():
+    response = client.post(
+        "/api/upload",
+        files={"file": ("test.mp4", b"fake video data", "video/mp4")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "path" in data
+    assert "filename" in data
+    assert data["filename"] == "test.mp4"
+    assert data["path"].endswith(".mp4")
+
+
+def test_upload_preserves_extension():
+    response = client.post(
+        "/api/upload",
+        files={"file": ("clip.mov", b"fake video data", "video/quicktime")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["path"].endswith(".mov")
+
+
+def test_upload_missing_file():
+    response = client.post("/api/upload")
+    assert response.status_code == 422
