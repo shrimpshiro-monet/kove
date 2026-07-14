@@ -1,4 +1,5 @@
 from src.models import ContentAnalysis, FaceDetection
+from src.semantic import SemanticUnderstanding
 
 
 def test_face_detection_creation():
@@ -37,11 +38,18 @@ def test_content_analysis_creation():
         brightness=[0.5],
         composition={},
         color_palette=[],
-        semantic="test",
+        semantic=SemanticUnderstanding(
+            description="test",
+            mood="calm",
+            setting="indoor",
+            action="standing",
+            confidence=0.8,
+        ),
     )
     assert len(analysis.faces) == 1
     assert analysis.faces[0].confidence == 0.98
-    assert analysis.semantic == "test"
+    assert analysis.semantic.description == "test"
+    assert analysis.semantic.mood == "calm"
 
 
 def test_content_analysis_empty():
@@ -54,7 +62,13 @@ def test_content_analysis_empty():
         brightness=[],
         composition={},
         color_palette=[],
-        semantic="no content",
+        semantic=SemanticUnderstanding(
+            description="no content",
+            mood="unknown",
+            setting="unknown",
+            action="unknown",
+            confidence=0.0,
+        ),
     )
     assert len(analysis.faces) == 0
-    assert analysis.semantic == "no content"
+    assert analysis.semantic.confidence == 0.0

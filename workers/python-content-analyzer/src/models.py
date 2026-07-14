@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from .semantic import SemanticUnderstanding
 
 
 class FaceDetection(BaseModel):
@@ -18,4 +19,4 @@ class ContentAnalysis(BaseModel):
     brightness: list[float]
     composition: dict
     color_palette: list[dict]
-    semantic: str
+    semantic: SemanticUnderstanding
