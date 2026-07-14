@@ -76,10 +76,11 @@ describe('edlToFFmpegCommand', () => {
     }
 
     const cmd = edlToFFmpegCommand(edl, '/input/clip_a.mp4', '/output/render.mp4')
-    expect(cmd).toContain('gblur=sigma=12')
+    expect(cmd).toContain('gblur=sigma=10')
+    expect(cmd).toContain('blend=all_mode=screen')
   })
 
-  it('includes blur effect as boxblur', () => {
+  it('includes blur effect as gblur', () => {
     const edl = {
       timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 3 },
       tracks: [{
@@ -95,7 +96,7 @@ describe('edlToFFmpegCommand', () => {
     }
 
     const cmd = edlToFFmpegCommand(edl, '/input/clip_a.mp4', '/output/render.mp4')
-    expect(cmd).toContain('boxblur=5')
+    expect(cmd).toContain('gblur=sigma=10')
   })
 
   it('includes vignette effect', () => {

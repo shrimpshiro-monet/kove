@@ -1,18 +1,5 @@
 import type { RuntimeLayer } from '@monet/edl-v2'
-
-function effectToFilter(effect: { type: string; targetStrength: number }): string | null {
-  switch (effect.type) {
-    case 'glow':
-      return `gblur=sigma=${Math.round(effect.targetStrength * 20)}`
-    case 'blur':
-      return `boxblur=${Math.round(effect.targetStrength * 10)}`
-    case 'vignette':
-      return `vignette=PI/${4 - effect.targetStrength * 2}`
-    default:
-      console.warn(`[edl-to-ffmpeg] Unhandled effect type "${effect.type}" — skipping`)
-      return null
-  }
-}
+import { effectToFilter } from './effects'
 
 export function edlToFFmpegCommand(edl: RuntimeLayer, inputPath: string, outputPath: string): string {
   const { timeline, tracks } = edl
