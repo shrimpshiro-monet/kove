@@ -78,7 +78,8 @@ class CreativePlanner:
         arc_str = "\n".join([f"- {p.phase}: {p.start}s-{p.end}s ({p.emotion})" for p in story_arc])
         prompt = template.replace("{{STORY_ARC}}", arc_str)\
                          .replace("{{GOAL}}", getattr(intent, "goal", ""))\
-                         .replace("{{GENRE}}", getattr(intent, "genre", ""))
+                         .replace("{{GENRE}}", getattr(intent, "genre", ""))\
+                         .replace("{{BPM}}", str(music.get("bpm", 120)))
 
         text = self.llm.generate(prompt)
 
