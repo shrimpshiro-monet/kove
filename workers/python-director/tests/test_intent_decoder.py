@@ -2,15 +2,21 @@ from unittest.mock import patch, MagicMock
 from src.intent_decoder import IntentDecoder
 
 
-@patch("src.intent_decoder.genai")
-def test_decode_intent_returns_structured(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+def _mock_response(text):
+    resp = MagicMock()
+    resp.choices = [MagicMock(message=MagicMock(content=text))]
+    return resp
+
+
+@patch("src.intent_decoder.OpenAI")
+def test_decode_intent_returns_structured(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '{"goal": "High-energy TikTok edit", "genre": "tiktok_edit", '
         '"platform": "tiktok", "style": {"aggression": 0.8, "energy": 0.9}, '
         '"constraints": ["keepSubjectVisible"]}'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     decoder = IntentDecoder()
     result = decoder.decode("Make a hype TikTok edit of my friend walking")
@@ -23,15 +29,15 @@ def test_decode_intent_returns_structured(mock_genai):
     assert result.constraints == ["keepSubjectVisible"]
 
 
-@patch("src.intent_decoder.genai")
-def test_decode_intent_extracts_mood(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+@patch("src.intent_decoder.OpenAI")
+def test_decode_intent_extracts_mood(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '{"goal": "Cinematic travel montage", "genre": "cinematic", '
         '"platform": "youtube", "style": {"cinematic": 0.9}, '
         '"constraints": [], "mood": "adventurous"}'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     decoder = IntentDecoder()
     result = decoder.decode("Create a cinematic travel video")
@@ -40,14 +46,14 @@ def test_decode_intent_extracts_mood(mock_genai):
     assert result.genre == "cinematic"
 
 
-@patch("src.intent_decoder.genai")
-def test_decode_intent_strips_markdown_fences(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+@patch("src.intent_decoder.OpenAI")
+def test_decode_intent_strips_markdown_fences(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '```json\n{"goal": "Test", "genre": "tiktok_edit", '
         '"platform": "tiktok", "style": {}, "constraints": []}\n```'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     decoder = IntentDecoder()
     result = decoder.decode("test prompt")
@@ -55,14 +61,14 @@ def test_decode_intent_strips_markdown_fences(mock_genai):
     assert result.goal == "Test"
 
 
-@patch("src.intent_decoder.genai")
-def test_decode_intent_applies_style_defaults(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+@patch("src.intent_decoder.OpenAI")
+def test_decode_intent_applies_style_defaults(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '{"goal": "Test", "genre": "tiktok_edit", '
         '"platform": "tiktok", "style": {"aggression": 0.7}, "constraints": []}'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     decoder = IntentDecoder()
     result = decoder.decode("test prompt")

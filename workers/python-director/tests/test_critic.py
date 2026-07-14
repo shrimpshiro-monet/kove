@@ -2,15 +2,21 @@ from unittest.mock import patch, MagicMock
 from src.critic import Critic, Issue, Critique
 
 
-@patch("src.critic.genai")
-def test_critic_returns_issues(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+def _mock_response(text):
+    resp = MagicMock()
+    resp.choices = [MagicMock(message=MagicMock(content=text))]
+    return resp
+
+
+@patch("src.critic.OpenAI")
+def test_critic_returns_issues(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '{"issues": [{"type": "beat_sync", "description": "Shot not aligned to beat", '
         '"shotId": "clip_1", "severity": "warning"}], '
         '"confidence": 0.85, "alternatives": []}'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {
@@ -28,11 +34,11 @@ def test_critic_returns_issues(mock_genai):
     assert result.issues[0].type == "beat_sync"
 
 
-@patch("src.critic.genai")
-def test_critic_detects_beat_sync_issues(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"issues": [], "confidence": 1.0, "alternatives": []}'
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch("src.critic.OpenAI")
+def test_critic_detects_beat_sync_issues(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response('{"issues": [], "confidence": 1.0, "alternatives": []}')
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {
@@ -59,11 +65,11 @@ def test_critic_detects_beat_sync_issues(mock_genai):
     assert beat_sync_issues[0].shotId == "clip_1"
 
 
-@patch("src.critic.genai")
-def test_critic_detects_duration_mismatch(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"issues": [], "confidence": 1.0, "alternatives": []}'
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch("src.critic.OpenAI")
+def test_critic_detects_duration_mismatch(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response('{"issues": [], "confidence": 1.0, "alternatives": []}')
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {
@@ -90,15 +96,15 @@ def test_critic_detects_duration_mismatch(mock_genai):
     assert duration_issues[0].severity == "error"
 
 
-@patch("src.critic.genai")
-def test_critic_confidence_decreases_with_issues(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+@patch("src.critic.OpenAI")
+def test_critic_confidence_decreases_with_issues(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '{"issues": [{"type": "energy_flow", "description": "Abrupt energy drop"}, '
         '{"type": "beat_sync", "description": "Off-beat cut"}], '
         '"confidence": 0.7, "alternatives": []}'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {
@@ -115,13 +121,13 @@ def test_critic_confidence_decreases_with_issues(mock_genai):
     assert len(result.issues) >= 2
 
 
-@patch("src.critic.genai")
-def test_critic_strips_markdown_fences(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = (
+@patch("src.critic.OpenAI")
+def test_critic_strips_markdown_fences(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
         '```json\n{"issues": [], "confidence": 0.95, "alternatives": []}\n```'
     )
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {
@@ -138,11 +144,11 @@ def test_critic_strips_markdown_fences(mock_genai):
     assert len(result.issues) == 0
 
 
-@patch("src.critic.genai")
-def test_critic_gracefully_handles_gemini_failure(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = Exception("API error")
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch("src.critic.OpenAI")
+def test_critic_gracefully_handles_llm_failure(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = Exception("API error")
+    mock_openai_cls.return_value = mock_client
 
     critic = Critic()
     edl = {

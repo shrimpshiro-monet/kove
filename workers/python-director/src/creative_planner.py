@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Optional
 
-import google.generativeai as genai
+from openai import OpenAI
 from pydantic import BaseModel
 
 from .intent_decoder import Intent
@@ -44,9 +45,11 @@ class CreativePlan(BaseModel):
 
 class CreativePlanner:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.5-flash")
+        self.client = OpenAI(
+            api_key=api_key or os.environ.get("GROQ_API_KEY"),
+            base_url="https://api.groq.com/openai/v1",
+        )
+        self.model = "llama-3.3-70b-versatile"
         self.story_arc_prompt = Path(__file__).parent / "prompts" / "generate-story-arc.txt"
         self.moments_prompt = Path(__file__).parent / "prompts" / "create-moments.txt"
 
@@ -67,8 +70,13 @@ class CreativePlanner:
             .replace("{{BPM}}", str(music.get("bpm", 120)))
         )
 
-        response = self.model.generate_content(prompt)
-        data = self._parse_json(response.text)
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=4096,
+        )
+        data = self._parse_json(response.choices[0].message.content)
         return [StoryPhase(**phase) for phase in data.get("story_arc", [])]
 
     def create_moments(
@@ -89,8 +97,13 @@ class CreativePlanner:
             .replace("{{BPM}}", str(music.get("bpm", 120)))
         )
 
-        response = self.model.generate_content(prompt)
-        data = self._parse_json(response.text)
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=4096,
+        )
+        data = self._parse_json(response.choices[0].message.content)
         return [Moment(**m) for m in data.get("moments", [])]
 
     def build_emotion_arc(self, story_arc: list[StoryPhase]) -> EmotionArc:

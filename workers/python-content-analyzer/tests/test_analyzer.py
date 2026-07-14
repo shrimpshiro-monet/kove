@@ -3,11 +3,19 @@ from src.analyzer import ContentAnalyzer
 from src.semantic import SemanticUnderstanding
 
 
-@patch('src.semantic.genai')
-def test_analyzer_returns_content_analysis(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"description": "A hallway scene", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
-    mock_genai.GenerativeModel.return_value = mock_model
+def _mock_response(text):
+    resp = MagicMock()
+    resp.choices = [MagicMock(message=MagicMock(content=text))]
+    return resp
+
+
+@patch('src.semantic.OpenAI')
+def test_analyzer_returns_content_analysis(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
+        '{"description": "A hallway scene", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
+    )
+    mock_openai_cls.return_value = mock_client
 
     analyzer = ContentAnalyzer()
     result = analyzer.analyze("fake_video_path.mp4")
@@ -17,11 +25,13 @@ def test_analyzer_returns_content_analysis(mock_genai):
     assert result.semantic.confidence == 0.9
 
 
-@patch('src.semantic.genai')
-def test_analyzer_returns_valid_content_analysis(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"description": "test", "mood": "calm", "setting": "outdoor", "action": "standing", "confidence": 0.7}'
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch('src.semantic.OpenAI')
+def test_analyzer_returns_valid_content_analysis(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
+        '{"description": "test", "mood": "calm", "setting": "outdoor", "action": "standing", "confidence": 0.7}'
+    )
+    mock_openai_cls.return_value = mock_client
 
     analyzer = ContentAnalyzer()
     result = analyzer.analyze("anything.mp4")

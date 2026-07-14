@@ -1,6 +1,8 @@
 import json
+import os
 from typing import Optional
-import google.generativeai as genai
+
+from openai import OpenAI
 from pydantic import BaseModel
 import numpy as np
 import cv2
@@ -16,13 +18,16 @@ class SemanticUnderstanding(BaseModel):
 
 class SemanticAnalyzer:
     def __init__(self, api_key: Optional[str] = None):
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.client = OpenAI(
+            api_key=api_key or os.environ.get("GROQ_API_KEY"),
+            base_url="https://api.groq.com/openai/v1",
+        )
+        self.model = "llama-3.3-70b-versatile"
 
     def analyze_frame(self, frame: np.ndarray) -> SemanticUnderstanding:
         _, buffer = cv2.imencode('.jpg', frame)
-        image_bytes = buffer.tobytes()
+        import base64
+        image_b64 = base64.b64encode(buffer).decode('utf-8')
 
         prompt = """Analyze this video frame. Return JSON with:
 - description: what's happening in the scene
@@ -31,12 +36,20 @@ class SemanticAnalyzer:
 - action: what the subject is doing
 - confidence: how confident you are (0-1)"""
 
-        response = self.model.generate_content([
-            prompt,
-            {"mime_type": "image/jpeg", "data": image_bytes}
-        ])
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}},
+                ],
+            }],
+            temperature=0.7,
+            max_tokens=4096,
+        )
 
-        text = response.text.strip()
+        text = response.choices[0].message.content.strip()
         if text.startswith('```'):
             text = text.split('\n', 1)[1].rsplit('```', 1)[0]
 

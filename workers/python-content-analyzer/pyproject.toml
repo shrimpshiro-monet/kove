@@ -9,7 +9,7 @@ description = "Content analyzer stub for Monet AI video editor"
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
-    "google-generativeai>=0.8.0",
+    "openai>=1.0.0",
     "opencv-python-headless>=4.0",
     "numpy>=1.24",
 ]

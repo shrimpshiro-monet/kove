@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Optional
 
-import google.generativeai as genai
+from openai import OpenAI
 from pydantic import BaseModel
 
 
@@ -38,9 +39,11 @@ _DEFAULT_STYLE = StyleDNA(
 
 class StyleTransfer:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.5-flash")
+        self.client = OpenAI(
+            api_key=api_key or os.environ.get("GROQ_API_KEY"),
+            base_url="https://api.groq.com/openai/v1",
+        )
+        self.model = "llama-3.3-70b-versatile"
         self.prompt_template = (
             Path(__file__).parent / "prompts" / "extract-style.txt"
         )
@@ -50,8 +53,13 @@ class StyleTransfer:
             template = self.prompt_template.read_text()
             prompt = template.replace("{{REFERENCE_PATH}}", reference_path)
 
-            response = self.model.generate_content(prompt)
-            data = self._parse_json(response.text)
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=4096,
+            )
+            data = self._parse_json(response.choices[0].message.content)
 
             return StyleDNA(
                 cutPattern=CutPattern(**data.get("cutPattern", {})),

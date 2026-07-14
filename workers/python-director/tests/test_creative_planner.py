@@ -15,6 +15,12 @@ MOCK_MOMENTS_RESPONSE = (
 )
 
 
+def _mock_response(text):
+    resp = MagicMock()
+    resp.choices = [MagicMock(message=MagicMock(content=text))]
+    return resp
+
+
 def _make_intent() -> Intent:
     return Intent(
         goal="High-energy TikTok edit",
@@ -52,23 +58,20 @@ def _make_music() -> dict:
     }
 
 
-@patch("src.creative_planner.genai")
-def test_plan_returns_creative_plan(mock_genai):
+@patch("src.creative_planner.OpenAI")
+def test_plan_returns_creative_plan(mock_openai_cls):
     call_count = 0
 
-    def side_effect(prompt):
+    def side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
-        resp = MagicMock()
         if call_count == 1:
-            resp.text = MOCK_STORY_ARC_RESPONSE
-        else:
-            resp.text = MOCK_MOMENTS_RESPONSE
-        return resp
+            return _mock_response(MOCK_STORY_ARC_RESPONSE)
+        return _mock_response(MOCK_MOMENTS_RESPONSE)
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = side_effect
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = side_effect
+    mock_openai_cls.return_value = mock_client
 
     planner = CreativePlanner()
     result = planner.plan(_make_intent(), _make_content(), _make_music())
@@ -80,23 +83,20 @@ def test_plan_returns_creative_plan(mock_genai):
     assert len(result.emotion_arc.timeline) == 2
 
 
-@patch("src.creative_planner.genai")
-def test_story_arc_phases_have_required_fields(mock_genai):
+@patch("src.creative_planner.OpenAI")
+def test_story_arc_phases_have_required_fields(mock_openai_cls):
     call_count = 0
 
-    def side_effect(prompt):
+    def side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
-        resp = MagicMock()
         if call_count == 1:
-            resp.text = MOCK_STORY_ARC_RESPONSE
-        else:
-            resp.text = MOCK_MOMENTS_RESPONSE
-        return resp
+            return _mock_response(MOCK_STORY_ARC_RESPONSE)
+        return _mock_response(MOCK_MOMENTS_RESPONSE)
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = side_effect
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = side_effect
+    mock_openai_cls.return_value = mock_client
 
     planner = CreativePlanner()
     result = planner.plan(_make_intent(), _make_content(), _make_music())
@@ -108,23 +108,20 @@ def test_story_arc_phases_have_required_fields(mock_genai):
         assert hasattr(phase, "emotion")
 
 
-@patch("src.creative_planner.genai")
-def test_moments_have_required_fields(mock_genai):
+@patch("src.creative_planner.OpenAI")
+def test_moments_have_required_fields(mock_openai_cls):
     call_count = 0
 
-    def side_effect(prompt):
+    def side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
-        resp = MagicMock()
         if call_count == 1:
-            resp.text = MOCK_STORY_ARC_RESPONSE
-        else:
-            resp.text = MOCK_MOMENTS_RESPONSE
-        return resp
+            return _mock_response(MOCK_STORY_ARC_RESPONSE)
+        return _mock_response(MOCK_MOMENTS_RESPONSE)
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = side_effect
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = side_effect
+    mock_openai_cls.return_value = mock_client
 
     planner = CreativePlanner()
     result = planner.plan(_make_intent(), _make_content(), _make_music())
@@ -140,23 +137,20 @@ def test_moments_have_required_fields(mock_genai):
         assert hasattr(moment, "aiPrompt")
 
 
-@patch("src.creative_planner.genai")
-def test_emotion_arc_derives_from_story_arc(mock_genai):
+@patch("src.creative_planner.OpenAI")
+def test_emotion_arc_derives_from_story_arc(mock_openai_cls):
     call_count = 0
 
-    def side_effect(prompt):
+    def side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
-        resp = MagicMock()
         if call_count == 1:
-            resp.text = MOCK_STORY_ARC_RESPONSE
-        else:
-            resp.text = MOCK_MOMENTS_RESPONSE
-        return resp
+            return _mock_response(MOCK_STORY_ARC_RESPONSE)
+        return _mock_response(MOCK_MOMENTS_RESPONSE)
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = side_effect
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = side_effect
+    mock_openai_cls.return_value = mock_client
 
     planner = CreativePlanner()
     result = planner.plan(_make_intent(), _make_content(), _make_music())
@@ -166,23 +160,20 @@ def test_emotion_arc_derives_from_story_arc(mock_genai):
         assert entry["emotion"] == result.story_arc[i].emotion
 
 
-@patch("src.creative_planner.genai")
-def test_plan_strips_markdown_fences(mock_genai):
+@patch("src.creative_planner.OpenAI")
+def test_plan_strips_markdown_fences(mock_openai_cls):
     call_count = 0
 
-    def side_effect(prompt):
+    def side_effect(**kwargs):
         nonlocal call_count
         call_count += 1
-        resp = MagicMock()
         if call_count == 1:
-            resp.text = '```json\n{"story_arc": [{"phase": "setup", "start": 0, "end": 3, "emotion": "calm"}]}\n```'
-        else:
-            resp.text = '```json\n{"moments": [{"id": "m1", "start": 0, "end": 3, "purpose": "intro", "emotion": "calm", "energy": 0.3, "shots": [], "recipes": [], "aiPrompt": "open", "constraints": []}]}\n```'
-        return resp
+            return _mock_response('```json\n{"story_arc": [{"phase": "setup", "start": 0, "end": 3, "emotion": "calm"}]}\n```')
+        return _mock_response('```json\n{"moments": [{"id": "m1", "start": 0, "end": 3, "purpose": "intro", "emotion": "calm", "energy": 0.3, "shots": [], "recipes": [], "aiPrompt": "open", "constraints": []}]}\n```')
 
-    mock_model = MagicMock()
-    mock_model.generate_content.side_effect = side_effect
-    mock_genai.GenerativeModel.return_value = mock_model
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = side_effect
+    mock_openai_cls.return_value = mock_client
 
     planner = CreativePlanner()
     result = planner.plan(_make_intent(), _make_content(), _make_music())

@@ -2,11 +2,19 @@ from unittest.mock import patch, MagicMock
 from src.semantic import SemanticAnalyzer, SemanticUnderstanding
 
 
-@patch('src.semantic.genai')
-def test_analyze_frame_returns_understanding(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"description": "A young man walking in a hallway", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
-    mock_genai.GenerativeModel.return_value = mock_model
+def _mock_response(text):
+    resp = MagicMock()
+    resp.choices = [MagicMock(message=MagicMock(content=text))]
+    return resp
+
+
+@patch('src.semantic.OpenAI')
+def test_analyze_frame_returns_understanding(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
+        '{"description": "A young man walking in a hallway", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
+    )
+    mock_openai_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np
@@ -20,26 +28,33 @@ def test_analyze_frame_returns_understanding(mock_genai):
     assert result.confidence == 0.9
 
 
-@patch('src.semantic.genai')
-def test_analyze_frame_calls_gemini_model(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"description": "sunset over ocean", "mood": "calm", "setting": "outdoor", "action": "waves crashing", "confidence": 0.85}'
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch('src.semantic.OpenAI')
+def test_analyze_frame_calls_groq_model(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
+        '{"description": "sunset over ocean", "mood": "calm", "setting": "outdoor", "action": "waves crashing", "confidence": 0.85}'
+    )
+    mock_openai_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np
     frame = np.zeros((720, 1280, 3), dtype=np.uint8)
 
     analyzer.analyze_frame(frame)
-    mock_genai.GenerativeModel.assert_called_with('gemini-2.5-flash')
-    mock_model.generate_content.assert_called_once()
+    mock_openai_cls.assert_called_with(
+        api_key=mock_openai_cls.call_args.kwargs.get('api_key'),
+        base_url='https://api.groq.com/openai/v1',
+    )
+    mock_client.chat.completions.create.assert_called_once()
 
 
-@patch('src.semantic.genai')
-def test_analyze_frames_samples_every_nth(mock_genai):
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value.text = '{"description": "test", "mood": "test", "setting": "test", "action": "test", "confidence": 0.5}'
-    mock_genai.GenerativeModel.return_value = mock_model
+@patch('src.semantic.OpenAI')
+def test_analyze_frames_samples_every_nth(mock_openai_cls):
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.return_value = _mock_response(
+        '{"description": "test", "mood": "test", "setting": "test", "action": "test", "confidence": 0.5}'
+    )
+    mock_openai_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np
@@ -49,8 +64,7 @@ def test_analyze_frames_samples_every_nth(mock_genai):
     assert len(results) == 3  # frames 0, 30, 60
 
 
-@patch('src.semantic.genai')
-def test_semantic_understanding_is_pydantic(mock_genai):
+def test_semantic_understanding_is_pydantic():
     data = {
         "description": "A person dancing",
         "mood": "energetic",
