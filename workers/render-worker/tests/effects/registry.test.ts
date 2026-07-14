@@ -78,6 +78,22 @@ describe('Effect Registry', () => {
     expect(result).toContain('colorize')
   })
 
+  it('glow produces valid filter (no blend without second input)', () => {
+    const result = effectToFilter({ type: 'glow', targetStrength: 0.6, params: {} })
+    expect(result).not.toContain('blend=all_mode')
+  })
+
+  it('shake respects input dimensions (no hardcoded 1920x1080)', () => {
+    const result = effectToFilter({ type: 'shake', targetStrength: 0.3, params: {} })
+    expect(result).not.toContain('1920')
+    expect(result).not.toContain('1080')
+  })
+
+  it('light_leak produces valid filter (no blend without second input)', () => {
+    const result = effectToFilter({ type: 'light_leak', targetStrength: 0.3, params: {} })
+    expect(result).not.toContain('blend=all_mode')
+  })
+
   it('returns null for unknown effects', () => {
     expect(effectToFilter({ type: 'unknown_effect', targetStrength: 0.5, params: {} })).toBeNull()
   })

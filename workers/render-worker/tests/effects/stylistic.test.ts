@@ -6,7 +6,8 @@ describe('Stylistic Effects', () => {
   it('generates glow', () => {
     const result = glow({ radius: 20, threshold: 0.7, color: '#FFD700' })
     expect(result).toContain('gblur')
-    expect(result).toContain('blend')
+    expect(result).toContain('colorbalance')
+    expect(result).not.toContain('blend=all_mode')
   })
 
   it('generates bloom', () => {
@@ -30,7 +31,7 @@ describe('Overlay Effects', () => {
   it('generates light leak', () => {
     const result = lightLeak({ position: 'left', color: '#FF6B35', intensity: 0.6 })
     expect(result).toContain('colorize')
-    expect(result).toContain('blend')
+    expect(result).not.toContain('blend=all_mode')
   })
 
   it('generates lens flare', () => {

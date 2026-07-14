@@ -16,7 +16,7 @@ export interface ParticleParams {
 }
 
 export function lightLeak(params: LightLeakParams): string {
-  return `colorize=cs=${params.color}:mix=${params.intensity},blend=all_mode=screen`
+  return `colorize=cs=${params.color}:mix=${params.intensity}`
 }
 
 export function lensFlare(params: LensFlareParams): string {

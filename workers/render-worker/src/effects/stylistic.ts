@@ -21,7 +21,7 @@ export interface HalftoneParams {
 
 export function glow(params: GlowParams): string {
   const sigma = params.radius * 0.5
-  return `gblur=sigma=${sigma},colorbalance=rs=${params.threshold * 0.1},blend=all_mode=screen`
+  return `gblur=sigma=${sigma},colorbalance=rs=${params.threshold * 0.1}`
 }
 
 export function bloom(params: BloomParams): string {

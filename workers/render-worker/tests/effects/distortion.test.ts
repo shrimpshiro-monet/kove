@@ -21,7 +21,11 @@ describe('Distortion Effects', () => {
   it('amplitude affects crop dimensions in shake', () => {
     const small = shake({ frequency: 30, amplitude: 2 })
     const large = shake({ frequency: 30, amplitude: 10 })
-    expect(small).toContain('1916')
-    expect(large).toContain('1900')
+    expect(small).toContain('iw-4')
+    expect(small).toContain('ih-4')
+    expect(large).toContain('iw-20')
+    expect(large).toContain('ih-20')
+    expect(small).not.toContain('1920')
+    expect(small).not.toContain('1080')
   })
 })

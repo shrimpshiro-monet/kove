@@ -14,9 +14,9 @@ export interface GlitchParams {
 }
 
 export function shake(params: ShakeParams): string {
-  const w = 1920 - params.amplitude * 2
-  const h = 1080 - params.amplitude * 2
-  return `crop=${w}:${h}:${params.amplitude}:${params.amplitude},scale=1920:1080`
+  const w = `iw-${params.amplitude * 2}`
+  const h = `ih-${params.amplitude * 2}`
+  return `crop=${w}:${h}:${params.amplitude}:${params.amplitude},scale=iw:ih`
 }
 
 export function rgbSplit(params: RGBSplitParams): string {

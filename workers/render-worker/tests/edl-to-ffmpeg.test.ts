@@ -77,7 +77,7 @@ describe('edlToFFmpegCommand', () => {
 
     const cmd = edlToFFmpegCommand(edl, '/input/clip_a.mp4', '/output/render.mp4')
     expect(cmd).toContain('gblur=sigma=10')
-    expect(cmd).toContain('blend=all_mode=screen')
+    expect(cmd).toContain('colorbalance')
   })
 
   it('includes blur effect as gblur', () => {
