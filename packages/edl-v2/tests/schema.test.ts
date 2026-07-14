@@ -93,3 +93,140 @@ describe('CreativeLayer', () => {
     expect(result.success).toBe(false)
   })
 })
+
+import { RuntimeLayerSchema } from '../src/runtime'
+
+describe('RuntimeLayer', () => {
+  it('validates a complete clip with effects and transitions', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 15 },
+      tracks: [{
+        id: 'track_v1', type: 'video', name: 'Main',
+        clips: [{
+          id: 'shot_1', momentId: 'moment_setup',
+          source: { clipId: 'clip_a', type: 'video', in: 0, out: 3 },
+          timing: { start: 0, duration: 3, speed: 1.0,
+            speedRamp: { keyframes: [{ time: 0, speed: 1.0, easing: 'linear' }] },
+          },
+          transform: {
+            position: { keyframes: [{ time: 0, value: [0, 0] }] },
+            scale: { keyframes: [{ time: 0, value: [1, 1] }] },
+            opacity: { keyframes: [{ time: 0, value: 1.0 }] },
+            anchor: [0.5, 0.5],
+          },
+          camera: { movement: 'dolly_in', intensity: 0.3 },
+          effects: [{ id: 'fx_1', type: 'glow', targetStrength: 0.6, params: { radius: 20 } }],
+          transition: { type: 'flash', duration: 0.15 },
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'ACES2065-1',
+        inputTransform: { source: 'camera_log', cameraProfile: 'Sony_SLog3' },
+        outputTransform: { target: 'Rec709', toneMapping: 'aces_filmic' },
+      },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('validates minimal clip without optional fields', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 540, height: 960 }, fps: 24, duration: 5 },
+      tracks: [{
+        id: 'track_v1', type: 'video', name: 'Main',
+        clips: [{
+          id: 'shot_1',
+          source: { type: 'video' },
+          timing: { start: 0, duration: 5, speed: 1.0 },
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'sRGB',
+        inputTransform: { source: 'srgb', cameraProfile: 'sRGB' },
+        outputTransform: { target: 'sRGB', toneMapping: 'none' },
+      },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects invalid track type', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 10 },
+      tracks: [{
+        id: 'track_v1', type: 'image', name: 'Bad',
+        clips: [{
+          id: 'shot_1',
+          source: { type: 'video' },
+          timing: { start: 0, duration: 5, speed: 1.0 },
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'sRGB',
+        inputTransform: { source: 'srgb', cameraProfile: 'sRGB' },
+        outputTransform: { target: 'sRGB', toneMapping: 'none' },
+      },
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects effect with strength outside 0-1', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 5 },
+      tracks: [{
+        id: 'track_v1', type: 'video', name: 'Main',
+        clips: [{
+          id: 'shot_1',
+          source: { type: 'video' },
+          timing: { start: 0, duration: 5, speed: 1.0 },
+          effects: [{ id: 'fx_1', type: 'glow', targetStrength: 1.5, params: {} }],
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'sRGB',
+        inputTransform: { source: 'srgb', cameraProfile: 'sRGB' },
+        outputTransform: { target: 'sRGB', toneMapping: 'none' },
+      },
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects camera intensity outside 0-1', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 5 },
+      tracks: [{
+        id: 'track_v1', type: 'video', name: 'Main',
+        clips: [{
+          id: 'shot_1',
+          source: { type: 'video' },
+          timing: { start: 0, duration: 5, speed: 1.0 },
+          camera: { movement: 'shake', intensity: -0.5 },
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'sRGB',
+        inputTransform: { source: 'srgb', cameraProfile: 'sRGB' },
+        outputTransform: { target: 'sRGB', toneMapping: 'none' },
+      },
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('validates audio track type', () => {
+    const result = RuntimeLayerSchema.safeParse({
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 10 },
+      tracks: [{
+        id: 'track_a1', type: 'audio', name: 'Music',
+        clips: [{
+          id: 'music_1',
+          source: { clipId: 'song_1', type: 'video' },
+          timing: { start: 0, duration: 10, speed: 1.0 },
+        }],
+      }],
+      colorScience: {
+        workingSpace: 'sRGB',
+        inputTransform: { source: 'srgb', cameraProfile: 'sRGB' },
+        outputTransform: { target: 'sRGB', toneMapping: 'none' },
+      },
+    })
+    expect(result.success).toBe(true)
+  })
+})
