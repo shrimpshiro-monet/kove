@@ -39,3 +39,57 @@ describe('StyleLayer', () => {
     expect(result.success).toBe(false)
   })
 })
+
+import { CreativeLayerSchema } from '../src/creative'
+
+describe('CreativeLayer', () => {
+  it('validates entities with bounding boxes', () => {
+    const result = CreativeLayerSchema.safeParse({
+      entities: {
+        subject_1: {
+          type: 'person', role: 'hero', description: 'Young man',
+          detectionFrames: [0, 30, 60],
+          boundingBoxes: { '0': [400, 200, 680, 900] },
+          depthMask: 'r2://masks/subject_1_depth.exr',
+        },
+      },
+      storyArc: [{ phase: 'setup', start: 0, end: 3, emotion: 'calm' }],
+      emotionArc: {
+        timeline: [{ time: 0, emotion: 'calm', intensity: 0.2 }],
+        autoApply: { enabled: true, affects: ['effects.strength'], strength: 0.8 },
+      },
+      moments: [{
+        id: 'moment_setup', start: 0, end: 3, purpose: 'establish',
+        emotion: 'calm', energy: 0.2, shots: ['shot_1'], recipes: [],
+        aiPrompt: 'Set the scene', attention: {}, constraints: [],
+      }],
+      intentChains: { global: 'High-energy edit', perMoment: {} },
+      generativeSlots: [],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects entity with invalid type', () => {
+    const result = CreativeLayerSchema.safeParse({
+      entities: { bad: { type: 'car', role: 'hero', description: 'test' } },
+      storyArc: [], emotionArc: { timeline: [], autoApply: { enabled: false, affects: [], strength: 0 } },
+      moments: [], intentChains: { global: '', perMoment: {} }, generativeSlots: [],
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects moment with energy outside 0-1', () => {
+    const result = CreativeLayerSchema.safeParse({
+      entities: {},
+      storyArc: [],
+      emotionArc: { timeline: [], autoApply: { enabled: false, affects: [], strength: 0 } },
+      moments: [{
+        id: 'bad', start: 0, end: 1, purpose: 'test', emotion: 'calm',
+        energy: 1.5, shots: [], recipes: [], aiPrompt: '', constraints: [],
+      }],
+      intentChains: { global: '', perMoment: {} },
+      generativeSlots: [],
+    })
+    expect(result.success).toBe(false)
+  })
+})
