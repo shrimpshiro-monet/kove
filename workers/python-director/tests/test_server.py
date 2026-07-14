@@ -128,3 +128,37 @@ def test_upload_preserves_extension():
 def test_upload_missing_file():
     response = client.post("/api/upload")
     assert response.status_code == 422
+
+
+def test_generate_with_invalid_input():
+    response = client.post("/api/generate", json={
+        "prompt": "",
+        "video_path": "/nonexistent.mp4",
+        "audio_path": "/nonexistent.mp3",
+    })
+    assert response.status_code == 422
+
+
+def test_generate_video_path_too_short():
+    response = client.post("/api/generate", json={
+        "prompt": "Make an edit",
+        "video_path": "",
+        "audio_path": "/tmp/test.mp3",
+    })
+    assert response.status_code == 422
+
+
+def test_generate_audio_path_too_short():
+    response = client.post("/api/generate", json={
+        "prompt": "Make an edit",
+        "video_path": "/tmp/test.mp4",
+        "audio_path": "",
+    })
+    assert response.status_code == 422
+
+
+def test_progress_endpoint_not_found():
+    response = client.get("/api/progress/test-job-id")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "not_found"

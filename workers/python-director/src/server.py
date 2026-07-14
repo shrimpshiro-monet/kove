@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from .director import Director
 
 UPLOAD_DIR = "/tmp/kove-uploads"
+progress_store: dict[str, dict] = {}
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(title="Kove Director API", version="2.0.0")
@@ -62,3 +63,8 @@ def generate_edl(request: GenerateRequest) -> dict:
         return edl
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/progress/{job_id}")
+def get_progress(job_id: str) -> dict[str, str]:
+    return progress_store.get(job_id, {"status": "not_found"})
