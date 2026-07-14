@@ -10,15 +10,17 @@ export function KoveApp() {
   const [prompt, setPrompt] = useState('')
   const [edl, setEdl] = useState<unknown>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleGenerate = async () => {
     if (!videoFile || !audioFile || !prompt) return
     setLoading(true)
+    setError(null)
     try {
       const result = await generateEDL(videoFile, audioFile, prompt)
       setEdl(result)
     } catch (err) {
-      console.error(err)
+      setError(err instanceof Error ? err.message : 'Generation failed')
     } finally {
       setLoading(false)
     }
@@ -41,6 +43,11 @@ export function KoveApp() {
       >
         {loading ? 'Generating...' : 'Generate Edit'}
       </button>
+      {error && (
+        <div style={{ marginTop: 10, padding: 10, background: '#fee', border: '1px solid #fcc', borderRadius: 4, color: '#c00' }}>
+          {error}
+        </div>
+      )}
       {edl && <ExportButton edl={edl} />}
       {edl && (
         <pre style={{ maxHeight: 400, overflow: 'auto', background: '#f5f5f5', padding: 10 }}>

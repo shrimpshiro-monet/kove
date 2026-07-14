@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import os
+import uuid
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .director import Director
+
+UPLOAD_DIR = "/tmp/kove-uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(title="Kove Director API", version="2.0.0")
 
@@ -29,6 +34,19 @@ class GenerateRequest(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)) -> dict[str, str]:
+    file_id = str(uuid.uuid4())
+    file_ext = os.path.splitext(file.filename or "upload")[1]
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}{file_ext}")
+
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    return {"path": file_path, "filename": file.filename or f"{file_id}{file_ext}"}
 
 
 @app.post("/api/generate")

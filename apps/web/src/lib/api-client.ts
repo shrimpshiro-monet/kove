@@ -2,20 +2,38 @@
 import type { ProjectEDL as MonetEDL } from "@monet/edl";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
+const DIRECTOR_API = import.meta.env.VITE_DIRECTOR_API || "http://localhost:8000";
 
-// ─── Kove v2 Minimal Generate (Task 23) ─────────────────────
+// ─── Kove v2 Generate (wired to Director API) ───────────────
+
+async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${DIRECTOR_API}/api/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
+  const data = await res.json();
+  return data.path;
+}
 
 export async function generateEDL(video: File, audio: File, prompt: string): Promise<unknown> {
-  // TODO: upload files and call director API
-  // For now, return mock
-  return {
-    version: '5.1',
-    id: 'mock_edl',
-    duration: 15,
-    style: { tokens: { aggression: 0.8, energy: 0.9 } },
-    creative: { moments: [{ id: 'm1', purpose: 'reveal', emotion: 'awe' }] },
-    runtime: { tracks: [] },
+  const [videoPath, audioPath] = await Promise.all([
+    uploadFile(video),
+    uploadFile(audio),
+  ]);
+
+  const res = await fetch(`${DIRECTOR_API}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, video_path: videoPath, audio_path: audioPath }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(body.detail || `Generation failed: ${res.status}`);
   }
+  return res.json();
 }
 
 // ─── Vibe Generate ───────────────────────────────────────────
