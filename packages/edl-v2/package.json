@@ -16,5 +16,13 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.1",
     "@types/node": "^22.15.2"
-  }
+  },
+  "version": "1.0.0",
+  "description": "",
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
