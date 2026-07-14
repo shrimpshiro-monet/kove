@@ -9,6 +9,8 @@ interface PreviewCanvasProps {
   audioUrl?: string
   width?: number
   height?: number
+  onStateChange?: (state: TimelineState) => void
+  seekTime?: number | null
 }
 
 export function PreviewCanvas({
@@ -17,6 +19,8 @@ export function PreviewCanvas({
   audioUrl,
   width = 1920,
   height = 1080,
+  onStateChange,
+  seekTime,
 }: PreviewCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const loaderRef = useRef<MediaLoader | null>(null)
@@ -29,6 +33,16 @@ export function PreviewCanvas({
     isPlaying: false,
     fps: 30,
   })
+
+  useEffect(() => {
+    onStateChange?.(state)
+  }, [state, onStateChange])
+
+  useEffect(() => {
+    if (seekTime != null && playerRef.current) {
+      playerRef.current.seekTo(seekTime)
+    }
+  }, [seekTime])
 
   useEffect(() => {
     if (!videoUrl || !audioUrl) return
