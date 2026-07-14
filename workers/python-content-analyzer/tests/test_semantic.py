@@ -2,19 +2,14 @@ from unittest.mock import patch, MagicMock
 from src.semantic import SemanticAnalyzer, SemanticUnderstanding
 
 
-def _mock_response(text):
-    resp = MagicMock()
-    resp.choices = [MagicMock(message=MagicMock(content=text))]
-    return resp
-
-
-@patch('src.semantic.OpenAI')
-def test_analyze_frame_returns_understanding(mock_openai_cls):
+@patch('src.semantic.LLMClient')
+def test_analyze_frame_returns_understanding(mock_llm_cls):
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _mock_response(
-        '{"description": "A young man walking in a hallway", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
+    mock_client.generate.return_value = (
+        '{"description": "A young man walking in a hallway", "mood": "confident", '
+        '"setting": "indoor", "action": "walking", "confidence": 0.9}'
     )
-    mock_openai_cls.return_value = mock_client
+    mock_llm_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np
@@ -28,33 +23,31 @@ def test_analyze_frame_returns_understanding(mock_openai_cls):
     assert result.confidence == 0.9
 
 
-@patch('src.semantic.OpenAI')
-def test_analyze_frame_calls_groq_model(mock_openai_cls):
+@patch('src.semantic.LLMClient')
+def test_analyze_frame_calls_groq_model(mock_llm_cls):
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _mock_response(
-        '{"description": "sunset over ocean", "mood": "calm", "setting": "outdoor", "action": "waves crashing", "confidence": 0.85}'
+    mock_client.generate.return_value = (
+        '{"description": "sunset over ocean", "mood": "calm", '
+        '"setting": "outdoor", "action": "waves crashing", "confidence": 0.85}'
     )
-    mock_openai_cls.return_value = mock_client
+    mock_llm_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np
     frame = np.zeros((720, 1280, 3), dtype=np.uint8)
 
     analyzer.analyze_frame(frame)
-    mock_openai_cls.assert_called_with(
-        api_key=mock_openai_cls.call_args.kwargs.get('api_key'),
-        base_url='https://api.groq.com/openai/v1',
-    )
-    mock_client.chat.completions.create.assert_called_once()
+    mock_client.generate.assert_called_once()
 
 
-@patch('src.semantic.OpenAI')
-def test_analyze_frames_samples_every_nth(mock_openai_cls):
+@patch('src.semantic.LLMClient')
+def test_analyze_frames_samples_every_nth(mock_llm_cls):
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _mock_response(
-        '{"description": "test", "mood": "test", "setting": "test", "action": "test", "confidence": 0.5}'
+    mock_client.generate.return_value = (
+        '{"description": "test", "mood": "test", "setting": "test", '
+        '"action": "test", "confidence": 0.5}'
     )
-    mock_openai_cls.return_value = mock_client
+    mock_llm_cls.return_value = mock_client
 
     analyzer = SemanticAnalyzer()
     import numpy as np

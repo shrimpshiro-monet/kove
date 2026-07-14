@@ -49,9 +49,9 @@ MOCK_EMOTION_ARC = EmotionArc(timeline=[
 ])
 
 MOCK_PLAN = CreativePlan(
-    story_arc=MOCK_STORY_ARC,
+    storyArc=MOCK_STORY_ARC,
     moments=MOCK_MOMENTS,
-    emotion_arc=MOCK_EMOTION_ARC,
+    emotionArc=MOCK_EMOTION_ARC,
 )
 
 MOCK_STYLE_DNA = StyleDNA(

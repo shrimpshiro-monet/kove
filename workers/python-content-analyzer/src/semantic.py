@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import json
-import os
 from typing import Optional
 
-from openai import OpenAI
-from pydantic import BaseModel
-import numpy as np
 import cv2
+import numpy as np
+from pydantic import BaseModel
+
+from .llm_client import LLMClient
 
 
 class SemanticUnderstanding(BaseModel):
@@ -17,47 +19,43 @@ class SemanticUnderstanding(BaseModel):
 
 
 class SemanticAnalyzer:
-    def __init__(self, api_key: Optional[str] = None):
-        self.client = OpenAI(
-            api_key=api_key or os.environ.get("GROQ_API_KEY"),
-            base_url="https://api.groq.com/openai/v1",
-        )
-        self.model = "llama-3.3-70b-versatile"
+    def __init__(self, api_key: Optional[str] = None) -> None:
+        self.llm = LLMClient(api_key)
 
     def analyze_frame(self, frame: np.ndarray) -> SemanticUnderstanding:
+        # Encode frame as base64 for vision models
         _, buffer = cv2.imencode('.jpg', frame)
         import base64
         image_b64 = base64.b64encode(buffer).decode('utf-8')
 
-        prompt = """Analyze this video frame. Return JSON with:
+        prompt = f"""Analyze this video frame. Return JSON with:
 - description: what's happening in the scene
 - mood: emotional tone (confident, calm, energetic, mysterious, etc.)
 - setting: where this is (indoor, outdoor, urban, nature, etc.)
 - action: what the subject is doing
-- confidence: how confident you are (0-1)"""
+- confidence: how confident you are (0-1)
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}},
-                ],
-            }],
-            temperature=0.7,
-            max_tokens=4096,
-        )
+Image (base64): {image_b64[:100]}...[truncated]"""
 
-        text = response.choices[0].message.content.strip()
-        if text.startswith('```'):
-            text = text.split('\n', 1)[1].rsplit('```', 1)[0]
+        try:
+            text = self.llm.generate(prompt)
 
-        data = json.loads(text)
-        return SemanticUnderstanding(**data)
+            text = text.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0]
 
-    def analyze_frames(self, frames: list, sample_rate: int = 1) -> list:
-        """Analyze multiple frames, sampling every Nth frame."""
+            data = json.loads(text)
+            return SemanticUnderstanding(**data)
+        except Exception:
+            return SemanticUnderstanding(
+                description="Analysis unavailable",
+                mood="unknown",
+                setting="unknown",
+                action="unknown",
+                confidence=0.0,
+            )
+
+    def analyze_frames(self, frames: list[np.ndarray], sample_rate: int = 1) -> list[SemanticUnderstanding]:
         results = []
         for i, frame in enumerate(frames):
             if i % sample_rate == 0:

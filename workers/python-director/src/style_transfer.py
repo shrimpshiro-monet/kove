@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
-from openai import OpenAI
 from pydantic import BaseModel
+
+from .llm_client import LLMClient
 
 
 class CutPattern(BaseModel):
@@ -29,38 +28,36 @@ class StyleDNA(BaseModel):
 
 
 _DEFAULT_STYLE = StyleDNA(
-    cutPattern=CutPattern(avgShotDuration=1.0, cutRate="moderate"),
-    effectVocabulary=[],
-    transitionStyle="smooth",
+    cutPattern=CutPattern(avgShotDuration=2.0, cutRate="moderate"),
+    effectVocabulary=["vignette", "color_grade"],
+    transitionStyle="crossfade",
     colorSignature=ColorSignature(warmth=0.5, contrast=0.5, saturation=0.5),
-    pacingProfile=None,
+    pacingProfile="steady",
 )
 
 
 class StyleTransfer:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        self.client = OpenAI(
-            api_key=api_key or os.environ.get("GROQ_API_KEY"),
-            base_url="https://api.groq.com/openai/v1",
-        )
-        self.model = "llama-3.3-70b-versatile"
-        self.prompt_template = (
-            Path(__file__).parent / "prompts" / "extract-style.txt"
-        )
+        self.llm = LLMClient(api_key)
 
     def extract_style(self, reference_path: str) -> StyleDNA:
+        prompt = f"""Analyze this reference video's editing style. Return JSON with:
+- cutPattern: {{"avgShotDuration": float, "cutRate": "rapid"|"moderate"|"slow"}}
+- effectVocabulary: array of effect types used (glow, shake, rgb_split, blur, etc.)
+- transitionStyle: "hard_cuts"|"smooth"|"stylized"|"mixed"
+- colorSignature: {{"warmth": 0-1, "contrast": 0-1, "saturation": 0-1}}
+- pacingProfile: "building"|"steady"|"variable"
+
+Reference video: {reference_path}"""
+
         try:
-            template = self.prompt_template.read_text()
-            prompt = template.replace("{{REFERENCE_PATH}}", reference_path)
+            text = self.llm.generate(prompt)
 
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=4096,
-            )
-            data = self._parse_json(response.choices[0].message.content)
+            text = text.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0]
 
+            data = json.loads(text)
             return StyleDNA(
                 cutPattern=CutPattern(**data.get("cutPattern", {})),
                 effectVocabulary=data.get("effectVocabulary", []),
@@ -70,10 +67,3 @@ class StyleTransfer:
             )
         except Exception:
             return _DEFAULT_STYLE.model_copy()
-
-    @staticmethod
-    def _parse_json(text: str) -> dict[str, Any]:
-        text = text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
-        return json.loads(text)

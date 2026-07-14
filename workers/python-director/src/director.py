@@ -128,8 +128,8 @@ class Director:
             "style": style_section,
             "creative": {
                 "entities": {},
-                "storyArc": [p.model_dump() for p in plan.story_arc],
-                "emotionArc": plan.emotion_arc.model_dump(),
+                "storyArc": [p.model_dump() for p in plan.storyArc],
+                "emotionArc": plan.emotionArc.model_dump(),
                 "moments": [m.model_dump() for m in plan.moments],
                 "intentChains": {"global": intent.goal, "perMoment": {}},
                 "generativeSlots": [],
@@ -171,8 +171,8 @@ class Director:
     def _compute_duration(plan: CreativePlan) -> float:
         if plan.moments:
             return max(m.end for m in plan.moments)
-        if plan.story_arc:
-            return max(p.end for p in plan.story_arc)
+        if plan.storyArc:
+            return max(p.end for p in plan.storyArc)
         return 15.0
 
     @staticmethod

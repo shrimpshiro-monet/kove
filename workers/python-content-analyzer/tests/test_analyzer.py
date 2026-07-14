@@ -3,19 +3,14 @@ from src.analyzer import ContentAnalyzer
 from src.semantic import SemanticUnderstanding
 
 
-def _mock_response(text):
-    resp = MagicMock()
-    resp.choices = [MagicMock(message=MagicMock(content=text))]
-    return resp
-
-
-@patch('src.semantic.OpenAI')
-def test_analyzer_returns_content_analysis(mock_openai_cls):
+@patch('src.semantic.LLMClient')
+def test_analyzer_returns_content_analysis(mock_llm_cls):
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _mock_response(
-        '{"description": "A hallway scene", "mood": "confident", "setting": "indoor", "action": "walking", "confidence": 0.9}'
+    mock_client.generate.return_value = (
+        '{"description": "A hallway scene", "mood": "confident", '
+        '"setting": "indoor", "action": "walking", "confidence": 0.9}'
     )
-    mock_openai_cls.return_value = mock_client
+    mock_llm_cls.return_value = mock_client
 
     analyzer = ContentAnalyzer()
     result = analyzer.analyze("fake_video_path.mp4")
@@ -25,13 +20,14 @@ def test_analyzer_returns_content_analysis(mock_openai_cls):
     assert result.semantic.confidence == 0.9
 
 
-@patch('src.semantic.OpenAI')
-def test_analyzer_returns_valid_content_analysis(mock_openai_cls):
+@patch('src.semantic.LLMClient')
+def test_analyzer_returns_valid_content_analysis(mock_llm_cls):
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = _mock_response(
-        '{"description": "test", "mood": "calm", "setting": "outdoor", "action": "standing", "confidence": 0.7}'
+    mock_client.generate.return_value = (
+        '{"description": "test", "mood": "calm", '
+        '"setting": "outdoor", "action": "standing", "confidence": 0.7}'
     )
-    mock_openai_cls.return_value = mock_client
+    mock_llm_cls.return_value = mock_client
 
     analyzer = ContentAnalyzer()
     result = analyzer.analyze("anything.mp4")

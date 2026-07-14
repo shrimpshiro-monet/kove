@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
-from openai import OpenAI
 from pydantic import BaseModel
+
+from .llm_client import LLMClient
 
 
 class IntentStyle(BaseModel):
@@ -28,25 +28,17 @@ class Intent(BaseModel):
 
 class IntentDecoder:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        self.client = OpenAI(
-            api_key=api_key or os.environ.get("GROQ_API_KEY"),
-            base_url="https://api.groq.com/openai/v1",
-        )
-        self.model = "llama-3.3-70b-versatile"
+        self.llm = LLMClient(api_key)
         self.prompt_template = Path(__file__).parent / "prompts" / "decode-intent.txt"
 
     def decode(self, prompt: str) -> Intent:
         template = self.prompt_template.read_text()
         full_prompt = template.replace("{{PROMPT}}", prompt)
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": full_prompt}],
-            temperature=0.7,
-            max_tokens=4096,
-        )
+        text = self.llm.generate(full_prompt)
 
-        text = response.choices[0].message.content.strip()
+        # Strip markdown fences if present
+        text = text.strip()
         if text.startswith("```"):
             text = text.split("\n", 1)[1].rsplit("```", 1)[0]
 
