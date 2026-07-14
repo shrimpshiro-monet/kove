@@ -128,10 +128,10 @@ class Director:
             "style": style_section,
             "creative": {
                 "entities": {},
-                "story_arc": [p.model_dump() for p in plan.story_arc],
-                "emotion_arc": plan.emotion_arc.model_dump(),
+                "storyArc": [p.model_dump() for p in plan.story_arc],
+                "emotionArc": plan.emotion_arc.model_dump(),
                 "moments": [m.model_dump() for m in plan.moments],
-                "intent_chains": {"global": intent.goal, "perMoment": {}},
+                "intentChains": {"global": intent.goal, "perMoment": {}},
                 "generativeSlots": [],
             },
             "editorial": {

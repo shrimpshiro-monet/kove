@@ -405,10 +405,10 @@ def test_director_populates_creative_section(
     edl = director.direct("test", "/tmp/v.mp4", "/tmp/a.mp3")
 
     creative = edl["creative"]
-    assert "story_arc" in creative
+    assert "storyArc" in creative
     assert "moments" in creative
-    assert "emotion_arc" in creative
-    assert len(creative["story_arc"]) == 2
+    assert "emotionArc" in creative
+    assert len(creative["storyArc"]) == 2
     assert len(creative["moments"]) == 1
 
 
