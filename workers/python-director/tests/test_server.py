@@ -1,0 +1,102 @@
+from unittest.mock import patch, MagicMock
+
+from fastapi.testclient import TestClient
+
+# ---------------------------------------------------------------------------
+# RED: These tests MUST fail before server.py exists
+# ---------------------------------------------------------------------------
+
+from src.server import app
+
+client = TestClient(app)
+
+
+def test_health_endpoint():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "version" in data
+
+
+def test_generate_edl_endpoint():
+    mock_edl = {
+        "version": "5.1",
+        "id": "edl_tiktok_edit_tiktok_abc123",
+        "style": {"tokens": {"aggression": 0.8}},
+        "creative": {"storyArc": [], "intentChains": {}},
+    }
+
+    with patch("src.server.Director") as MockDirector:
+        mock_instance = MagicMock()
+        mock_instance.direct.return_value = mock_edl
+        MockDirector.return_value = mock_instance
+
+        response = client.post("/api/generate", json={
+            "prompt": "Make a hype TikTok edit",
+            "video_path": "/tmp/test.mp4",
+            "audio_path": "/tmp/test.mp3",
+        })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["version"] == "5.1"
+    assert "style" in data
+    assert "creative" in data
+
+
+def test_generate_edl_with_reference():
+    mock_edl = {
+        "version": "5.1",
+        "id": "edl_tiktok_edit_tiktok_abc123",
+        "style": {"tokens": {"aggression": 0.8}},
+        "creative": {"storyArc": [], "intentChains": {}},
+    }
+
+    with patch("src.server.Director") as MockDirector:
+        mock_instance = MagicMock()
+        mock_instance.direct.return_value = mock_edl
+        MockDirector.return_value = mock_instance
+
+        response = client.post("/api/generate", json={
+            "prompt": "Match this style",
+            "video_path": "/tmp/test.mp4",
+            "audio_path": "/tmp/test.mp3",
+            "reference_path": "/tmp/ref.mp4",
+        })
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["version"] == "5.1"
+
+
+def test_generate_missing_prompt():
+    response = client.post("/api/generate", json={
+        "video_path": "/tmp/test.mp4",
+        "audio_path": "/tmp/test.mp3",
+    })
+    assert response.status_code == 422
+
+
+def test_generate_missing_video():
+    response = client.post("/api/generate", json={
+        "prompt": "Make an edit",
+        "audio_path": "/tmp/test.mp3",
+    })
+    assert response.status_code == 422
+
+
+def test_generate_director_error():
+    with patch("src.server.Director") as MockDirector:
+        mock_instance = MagicMock()
+        mock_instance.direct.side_effect = RuntimeError("Gemini API unavailable")
+        MockDirector.return_value = mock_instance
+
+        response = client.post("/api/generate", json={
+            "prompt": "Make an edit",
+            "video_path": "/tmp/test.mp4",
+            "audio_path": "/tmp/test.mp3",
+        })
+
+    assert response.status_code == 500
+    assert "detail" in response.json()
