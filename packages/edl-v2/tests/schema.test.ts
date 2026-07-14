@@ -230,3 +230,74 @@ describe('RuntimeLayer', () => {
     expect(result.success).toBe(true)
   })
 })
+
+import { EDLSchema } from '../src/schema'
+import { validateEDL } from '../src/validators'
+
+describe('EDL v5.1', () => {
+  const validEDL = {
+    version: '5.1' as const,
+    id: 'edl_test_001',
+    created: '2026-07-14T00:00:00Z',
+    duration: 3,
+    refs: { entities: {}, recipes: {}, detections: {} },
+    style: {
+      tokens: { aggression: 0.8, cinematic: 0.7, chaos: 0.4, luxury: 0.9, warmth: 0.6, nostalgia: 0.3, futurism: 0.5, intimacy: 0.7, epicness: 0.85, playfulness: 0.2, darkness: 0.3, energy: 0.9 },
+      tokenInfluence: {},
+      genre: { primary: 'tiktok_edit', platform: 'tiktok', styleProfile: { cutRate: 1.2, avgShotDuration: 1.2, effectDensity: 0.8, transitionStyle: 'stylized', colorMood: 0.8, textFrequency: 0.5, energyCurve: 'building' } },
+      constraints: { avoidFaceOcclusion: true, maxTextCoverage: 0.12, keepSubjectVisible: true, preserveMotionDirection: true, safeArea: true, avoidOverEditing: true, maxEffectsPerShot: 5, minShotDuration: 0.3, maxTransitionDuration: 1.5, preserveAudioSync: true, maintainColorConsistency: true },
+    },
+    creative: {
+      entities: {},
+      storyArc: [{ phase: 'setup', start: 0, end: 3, emotion: 'calm' }],
+      emotionArc: { timeline: [{ time: 0, emotion: 'calm', intensity: 0.2 }], autoApply: { enabled: false, affects: [], strength: 0 } },
+      moments: [{ id: 'm1', start: 0, end: 3, purpose: 'test', emotion: 'calm', energy: 0.2, shots: ['shot_1'], recipes: [], aiPrompt: 'test', constraints: [] }],
+      intentChains: { global: '', perMoment: {} },
+      generativeSlots: [],
+    },
+    editorial: { sequences: [], shotRelationships: [], rhythm: { pattern: 'building', musicalPhraseAlignment: [] } },
+    runtime: {
+      timeline: { resolution: { width: 1080, height: 1920 }, fps: 30, duration: 3 },
+      tracks: [{
+        id: 'track_v1', type: 'video' as const, name: 'Main',
+        clips: [{
+          id: 'shot_1', momentId: 'm1',
+          source: { clipId: 'clip_a', type: 'video' as const, in: 0, out: 3 },
+          timing: { start: 0, duration: 3, speed: 1 },
+        }],
+      }],
+      colorScience: { workingSpace: 'ACES2065-1', inputTransform: { source: 'camera_log', cameraProfile: 'Sony_SLog3' }, outputTransform: { target: 'Rec709', toneMapping: 'aces_filmic' } },
+    },
+    capabilities: { engines: {}, runtime: {}, renderNode: {} },
+    dependencies: {},
+    analysis: { perMoment: {}, perShot: {}, energyCurve: [] },
+  }
+
+  it('validates a complete EDL v5.1', () => {
+    const result = EDLSchema.safeParse(validEDL)
+    expect(result.success).toBe(true)
+  })
+
+  it('passes business rule validation', () => {
+    const errors = validateEDL(validEDL)
+    expect(errors).toHaveLength(0)
+  })
+
+  it('rejects overlapping shots', () => {
+    const edl = {
+      ...validEDL,
+      runtime: {
+        ...validEDL.runtime,
+        tracks: [{
+          id: 'track_v1', type: 'video' as const, name: 'Main',
+          clips: [
+            { id: 'shot_1', source: { type: 'video' as const }, timing: { start: 0, duration: 3, speed: 1 } },
+            { id: 'shot_2', source: { type: 'video' as const }, timing: { start: 2, duration: 3, speed: 1 } },
+          ],
+        }],
+      },
+    }
+    const errors = validateEDL(edl)
+    expect(errors.some(e => e.includes('overlap'))).toBe(true)
+  })
+})
