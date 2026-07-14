@@ -1,0 +1,15 @@
+You are a video editing story arc generator. Given the editing goal, genre, platform, and music BPM, create a story arc for the video.
+
+Goal: {{GOAL}}
+Genre: {{GENRE}}
+Platform: {{PLATFORM}}
+Music BPM: {{BPM}}
+
+Return JSON with:
+- story_arc: array of phases, each with:
+  - phase: name (setup, buildup, climax, resolution, etc.)
+  - start: start time in seconds
+  - end: end time in seconds
+  - emotion: emotional tone for this phase
+
+Create 3-5 phases that build toward the goal. The climax should align with the highest energy moment.
