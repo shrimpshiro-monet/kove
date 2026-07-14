@@ -3,6 +3,21 @@ import type { ProjectEDL as MonetEDL } from "@monet/edl";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
+// ─── Kove v2 Minimal Generate (Task 23) ─────────────────────
+
+export async function generateEDL(video: File, audio: File, prompt: string): Promise<unknown> {
+  // TODO: upload files and call director API
+  // For now, return mock
+  return {
+    version: '5.1',
+    id: 'mock_edl',
+    duration: 15,
+    style: { tokens: { aggression: 0.8, energy: 0.9 } },
+    creative: { moments: [{ id: 'm1', purpose: 'reveal', emotion: 'awe' }] },
+    runtime: { tracks: [] },
+  }
+}
+
 // ─── Vibe Generate ───────────────────────────────────────────
 
 export interface VibeGenerateStatus {
