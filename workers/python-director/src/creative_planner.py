@@ -169,18 +169,44 @@ class CreativePlanner:
             indent=2,
         )
 
+        beat_grid = self._format_beat_grid(music)
+
         prompt = template.replace("{{STORY_ARC}}", arc_str)\
                          .replace("{{GOAL}}", getattr(intent, "goal", ""))\
                          .replace("{{GENRE}}", getattr(intent, "genre", ""))\
                          .replace("{{BPM}}", str(music.get("bpm", 120)))\
                          .replace("{{CONTENT_SUMMARY}}", content_summary)\
                          .replace("{{AVAILABLE_CLIPS}}", clips_str)\
-                         .replace("{{AVAILABLE_RECIPES}}", recipes_str)
+                         .replace("{{AVAILABLE_RECIPES}}", recipes_str)\
+                         .replace("{{BEAT_GRID}}", beat_grid)
 
         text = self.llm.generate(prompt)
 
         data = extract_json(text)
         return [Moment(**m) for m in data.get("moments", [])]
+
+    def _format_beat_grid(self, music: dict) -> str:
+        """Format beat grid from music analysis for the moments prompt."""
+        beat_result = music.get("beat_result", {})
+        beats = beat_result.get("beats", [])
+        downbeats = beat_result.get("downbeats", [])
+        bpm = music.get("bpm", 120)
+
+        if not beats and not downbeats:
+            return f"No beat grid available (BPM: {bpm})"
+
+        parts = [f"BPM: {bpm}"]
+        if beats:
+            beat_times = ", ".join(f"{b:.2f}" for b in beats[:20])
+            parts.append(f"Beat times: [{beat_times}]")
+        if downbeats:
+            downbeat_times = ", ".join(f"{d:.2f}" for d in downbeats[:10])
+            parts.append(f"Downbeat times: [{downbeat_times}]")
+
+        beat_interval = 60.0 / bpm if bpm > 0 else 0.5
+        parts.append(f"Beat interval: {beat_interval:.3f}s")
+
+        return "\n".join(parts)
 
     def generate_emotion_arc(self, story_arc: list[StoryPhase], music: dict) -> EmotionArc:
         timeline = []

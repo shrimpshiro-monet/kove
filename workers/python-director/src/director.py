@@ -5,7 +5,7 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from .content_analyzer import ContentAnalyzer
-from .creative_planner import CreativePlan, CreativePlanner
+from .creative_planner import CreativePlan, CreativePlanner, Moment
 from .critic import Critic, Critique
 from .intent_decoder import Intent, IntentDecoder
 from .music_analyzer import MusicAnalyzer
@@ -201,9 +201,10 @@ class Director:
         music: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Deterministically build runtime tracks from moments."""
+        moments = close_gaps(plan.moments)
         clips = []
 
-        for moment in plan.moments:
+        for moment in moments:
             moment_clips = moment.shots if moment.shots else []
 
             if not moment_clips:
@@ -214,9 +215,11 @@ class Director:
                 clip_start = moment.start + (i * clip_duration)
 
                 if moment.recipes:
-                    recipe_effects = _get_recipe_effects(moment.recipes[0])
+                    recipe_effects, speed_ramp, transition = _get_recipe_effects(moment.recipes[0])
                 else:
                     recipe_effects = [e.copy() for e in DEFAULT_EFFECTS]
+                    speed_ramp = {'from': 1.0, 'to': 1.0}
+                    transition = {'type': 'crossfade', 'duration': 0.3}
 
                 clips.append({
                     'id': f'{moment.id}_clip_{i}',
@@ -233,10 +236,8 @@ class Director:
                         'speed': 1.0,
                     },
                     'effects': recipe_effects,
-                    'transition': {
-                        'type': 'crossfade',
-                        'duration': 0.3,
-                    },
+                    'speedRamp': speed_ramp,
+                    'transition': transition,
                 })
 
         return [{
@@ -269,9 +270,55 @@ class Director:
         return edl
 
 
-def _get_recipe_effects(recipe_id: str) -> list[dict]:
-    """Get effects from a recipe."""
-    effects = RECIPE_EFFECTS.get(recipe_id)
-    if effects:
-        return [e.copy() for e in effects]
-    return [e.copy() for e in DEFAULT_EFFECTS]
+def close_gaps(moments: list[Moment]) -> list[Moment]:
+    """Close gaps between moments by extending the previous moment's end time.
+
+    After sorting moments by start time, any gap between moment N's end and
+    moment N+1's start is filled by extending moment N's duration.
+    """
+    if not moments:
+        return moments
+
+    sorted_moments = sorted(moments, key=lambda m: m.start)
+    result = [sorted_moments[0]]
+
+    for next_moment in sorted_moments[1:]:
+        prev = result[-1]
+        if prev.end < next_moment.start:
+            prev.end = next_moment.start
+        result.append(next_moment)
+
+    return result
+
+
+# Recipes with speed ramp and transition metadata
+RECIPE_RAMP_TRANSITION: dict[str, dict] = {
+    'streetwear_reveal_v2': {
+        'speedRamp': {'from': 0.5, 'to': 1.2},
+        'transition': {'type': 'flash', 'duration': 0.15},
+    },
+    'cinematic_slow_burn': {
+        'speedRamp': {'from': 0.8, 'to': 1.0},
+        'transition': {'type': 'crossfade', 'duration': 0.3},
+    },
+    'fast_pace_montage': {
+        'speedRamp': {'from': 0.6, 'to': 1.5},
+        'transition': {'type': 'cut', 'duration': 0.0},
+    },
+    'dramatic_buildup': {
+        'speedRamp': {'from': 0.7, 'to': 1.1},
+        'transition': {'type': 'flash', 'duration': 0.1},
+    },
+}
+
+
+def _get_recipe_effects(recipe_id: str) -> tuple[list[dict], dict, dict]:
+    """Get effects, speed ramp, and transition from a recipe.
+
+    Returns (effects, speed_ramp, transition).
+    """
+    effects = RECIPE_EFFECTS.get(recipe_id, DEFAULT_EFFECTS)
+    ramp_entry = RECIPE_RAMP_TRANSITION.get(recipe_id, {})
+    speed_ramp = ramp_entry.get('speedRamp', {'from': 1.0, 'to': 1.0})
+    transition = ramp_entry.get('transition', {'type': 'crossfade', 'duration': 0.3})
+    return [e.copy() for e in effects], speed_ramp, transition

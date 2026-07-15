@@ -7,6 +7,9 @@ Goal: {{GOAL}}
 Genre: {{GENRE}}
 Music BPM: {{BPM}}
 
+Beat grid (align cuts to these beat times when possible):
+{{BEAT_GRID}}
+
 Content analysis:
 {{CONTENT_SUMMARY}}
 
@@ -21,13 +24,14 @@ IMPORTANT RULES:
 - recipes must be an array of recipe ids from available_recipes. Pick the best match for each moment's emotion.
 - energy must be 0-1.
 - start/end must fit within the total duration.
-- Each moment should be 2-5 seconds. Align moments to beat boundaries when possible.
+- Each moment should be 2-5 seconds. Align moment start/end times to beat boundaries when possible for tight music sync. Use the beat grid above to find the nearest beat time for each moment's start and end.
+- When creating cuts between moments, try to place transitions on downbeats or strong beats for maximum impact.
 
 Return JSON with:
 - moments: array of moments, each with:
   - id: unique identifier (e.g., "moment_reveal")
-  - start: start time in seconds
-  - end: end time in seconds
+  - start: start time in seconds (aligned to nearest beat when possible)
+  - end: end time in seconds (aligned to nearest beat when possible)
   - purpose: what this moment achieves
   - emotion: emotional tone
   - energy: energy level (0-1)
