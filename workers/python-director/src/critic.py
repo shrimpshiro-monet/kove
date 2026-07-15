@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from pydantic import BaseModel
+from .json_utils import extract_json
 
 from .llm_client import LLMClient
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from pydantic import BaseModel
+from .json_utils import extract_json
 
 from .llm_client import LLMClient
 
@@ -99,11 +100,14 @@ class CreativePlanner:
         """Summarize content analysis into a readable string for the LLM."""
         parts = []
         semantic = content.get('semantic', {})
-        if semantic.get('description') and semantic['description'] != 'no analysis':
-            parts.append(f"Description: {semantic['description']}")
-            parts.append(f"Mood: {semantic.get('mood', 'unknown')}")
-            parts.append(f"Setting: {semantic.get('setting', 'unknown')}")
-            parts.append(f"Action: {semantic.get('action', 'unknown')}")
+        if isinstance(semantic, dict):
+            if semantic.get('description') and semantic['description'] != 'no analysis':
+                parts.append(f"Description: {semantic['description']}")
+                parts.append(f"Mood: {semantic.get('mood', 'unknown')}")
+                parts.append(f"Setting: {semantic.get('setting', 'unknown')}")
+                parts.append(f"Action: {semantic.get('action', 'unknown')}")
+        elif isinstance(semantic, str) and semantic:
+            parts.append(f"Description: {semantic}")
 
         scenes = content.get('scenes', [])
         if scenes:
@@ -143,12 +147,7 @@ class CreativePlanner:
                          .replace("{{MUSIC_SUMMARY}}", music_summary)
 
         text = self.llm.generate(prompt)
-
-        text = text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
-
-        data = json.loads(text)
+        data = extract_json(text)
         return [StoryPhase(**phase) for phase in data.get("storyArc", [])]
 
     def create_moments(
@@ -180,11 +179,7 @@ class CreativePlanner:
 
         text = self.llm.generate(prompt)
 
-        text = text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
-
-        data = json.loads(text)
+        data = extract_json(text)
         return [Moment(**m) for m in data.get("moments", [])]
 
     def generate_emotion_arc(self, story_arc: list[StoryPhase], music: dict) -> EmotionArc:

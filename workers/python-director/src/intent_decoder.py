@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel
+from .json_utils import extract_json
 
 from .llm_client import LLMClient
 
@@ -38,11 +39,7 @@ class IntentDecoder:
         text = self.llm.generate(full_prompt)
 
         # Strip markdown fences if present
-        text = text.strip()
-        if text.startswith("```"):
-            text = text.split("\n", 1)[1].rsplit("```", 1)[0]
-
-        data = json.loads(text)
+        data = extract_json(text)
 
         style_data = data.get("style", {})
         style = IntentStyle(

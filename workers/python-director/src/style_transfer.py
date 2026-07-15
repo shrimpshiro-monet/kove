@@ -4,6 +4,7 @@ import json
 from typing import Optional
 
 from pydantic import BaseModel
+from .json_utils import extract_json
 
 from .llm_client import LLMClient
 
