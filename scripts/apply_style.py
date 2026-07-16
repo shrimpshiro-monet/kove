@@ -119,7 +119,7 @@ def reference_profile_to_dna(profile: dict) -> dict:
         },
         "shotTypes": {
             "distribution": shot_type_dist,
-            "dominantType": dominant_motion if dominant_motion in ("wide", "closeup", "medium") else "medium",
+            "dominantType": max(shot_type_dist, key=shot_type_dist.get) if shot_type_dist else "medium",
         },
         "effects": {
             "totalEffects": total_effects,
@@ -169,7 +169,7 @@ def reference_profile_to_dna(profile: dict) -> dict:
             },
             "shotTypes": {
                 "distribution": shot_type_dist,
-                "dominantType": dominant_motion if dominant_motion in ("wide", "closeup", "medium") else "medium",
+            "dominantType": max(shot_type_dist, key=shot_type_dist.get) if shot_type_dist else "medium",
             },
             "effects": {
                 "totalEffects": total_effects,
