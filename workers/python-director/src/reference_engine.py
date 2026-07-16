@@ -290,7 +290,32 @@ def extract_segment_color(video_path: str, start: float, duration: float) -> dic
     mean_lum = sum(lums) / n
     contrast = (sum((l - mean_lum) ** 2 for l in lums) / n) ** 0.5 / 255
 
-    return {'brightness': brightness, 'contrast': contrast}
+    # Saturation = mean of (max(RGB) - min(RGB)) / max(RGB) per pixel
+    sat_vals = []
+    for i in range(n):
+        r, g, b = pixels[i*3], pixels[i*3+1], pixels[i*3+2]
+        mx = max(r, g, b)
+        mn = min(r, g, b)
+        sat_vals.append((mx - mn) / mx if mx > 0 else 0)
+    saturation = sum(sat_vals) / n if sat_vals else 0.0
+
+    # Dominant hue (~warm/cool)
+    hues = []
+    for i in range(n):
+        r, g, b = pixels[i*3] / 255, pixels[i*3+1] / 255, pixels[i*3+2] / 255
+        mx = max(r, g, b)
+        mn = min(r, g, b)
+        if mx == mn:
+            continue
+        if mx == r:
+            h = (60 * (g - b) / (mx - mn)) % 360
+        elif mx == g:
+            h = (60 * (b - r) / (mx - mn) + 120) % 360
+        else:
+            h = (60 * (r - g) / (mx - mn) + 240) % 360
+        hues.append(h)
+
+    return {'brightness': brightness, 'contrast': contrast, 'saturation': saturation, 'hues': hues, 'n': n}
 
 
 def detect_camera_motion(
@@ -402,6 +427,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
 
     segments: list[SegmentStyle] = []
     shot_idx = 0
+    all_hues: list[float] = []
     for i in range(len(cut_times) - 1):
         seg_start = cut_times[i]
         seg_end = cut_times[i + 1]
@@ -412,6 +438,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
 
         # Color for this segment
         color_stats = extract_segment_color(video_path, seg_start, seg_duration)
+        all_hues.extend(color_stats.get("hues", []))
 
         # Camera motion (from pre-computed optical flow)
         camera_motion = detect_camera_motion(
@@ -440,7 +467,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
             duration=seg_duration,
             brightness=color_stats.get('brightness', 1.0),
             contrast=color_stats.get('contrast', 1.0),
-            saturation=1.0,
+            saturation=color_stats.get('saturation', 0.5),
             blur=eff_style.get("blur", 0.0),
             vignette=eff_style.get("vignette", 0.0),
             grain=eff_style.get("grain", 0.0),
@@ -477,14 +504,28 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
     if len(cuts) == 0:
         cut_alignment = "none"
 
-    # 10. Build energy curve
+    # 10. Build energy curve (40 buckets — cut density + audio RMS)
     energy = []
-    segment = duration / 10
-    for i in range(10):
-        start = i * segment
-        end = (i + 1) * segment
-        cuts_in_segment = len([c for c in cuts if start <= c.time < end])
-        energy.append(min(1.0, cuts_in_segment / 5))
+    buckets = 40
+    segment = duration / buckets
+    # Compute audio RMS energy per bucket
+    rms_energy = [0.0] * buckets
+    try:
+        y, sr = librosa.load(video_path, sr=22050, mono=True)
+        samples_per_bucket = max(1, int(len(y) / buckets))
+        for b in range(buckets):
+            chunk = y[b * samples_per_bucket : (b + 1) * samples_per_bucket]
+            if len(chunk) > 0:
+                rms_energy[b] = min(1.0, float(np.sqrt(np.mean(chunk ** 2))) * 5)
+    except Exception:
+        pass
+    for i in range(buckets):
+        s = i * segment
+        e = (i + 1) * segment
+        cuts_here = len([c for c in cuts if s <= c.time < e])
+        cut_density = min(1.0, cuts_here / 3)
+        combined = cut_density * 0.4 + rms_energy[i] * 0.6
+        energy.append(min(1.0, combined))
 
     # 11. Determine pacing
     if avg_shot < 1.0:
@@ -519,11 +560,30 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
     # 14. Build color signature
     all_brightness = [s.brightness for s in segments]
     all_contrast = [s.contrast for s in segments]
+    all_saturation = [s.saturation for s in segments]
+
+    # Classify color style from accumulated hue distribution
+    if len(all_hues) > 10:
+        warm = sum(1 for h in all_hues if 0 <= h < 60 or 300 <= h < 360)
+        cool = sum(1 for h in all_hues if 180 <= h < 270)
+        avg_sat = sum(all_saturation) / len(all_saturation) if all_saturation else 0.5
+        vintage = sum(1 for h in all_hues if 30 <= h < 90)
+        if warm > len(all_hues) * 0.5:
+            style_str = "warm"
+        elif cool > len(all_hues) * 0.4:
+            style_str = "cool"
+        elif vintage > len(all_hues) * 0.3 and avg_sat < 0.4:
+            style_str = "vintage"
+        else:
+            style_str = "neutral"
+    else:
+        style_str = "neutral"
 
     color_sig = ColorSignature(
         brightness=sum(all_brightness) / len(all_brightness) if all_brightness else 1.0,
         contrast=sum(all_contrast) / len(all_contrast) if all_contrast else 1.0,
-        saturation=1.0,
+        saturation=sum(all_saturation) / len(all_saturation) if all_saturation else 0.5,
+        style=style_str,
     )
 
     # 15. Camera motion distribution
@@ -551,7 +611,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         segments=segments,
         color_signature=color_sig,
         energy_curve=energy,
-        climax_position=energy.index(max(energy)) / 10 if energy else 0.7,
+        climax_position=energy.index(max(energy)) / len(energy) if energy else 0.7,
         pacing_type=pacing,
         effect_vocabulary=effect_vocab,
         transition_vocabulary=transition_vocab,
