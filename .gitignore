@@ -8,3 +8,59 @@ dist/
 coverage/
 .wrangler/
 .worktrees/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv-beat/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tool artifacts
+.aider*/
+.aiderignore
+.clineignore
+.geminiignore
+.kimiignore
+.rooignore
+.junie/
+.mimocode/
+.tanstack/
+.logs/
+.superpowers/
+*ignore
+
+# Temp / output
+output/
+test-renders/
+benchmark-outputs/
+testfiles/
+test/*.mp4
+test/*.MP4
+test/clips/
+test/sc-frames/
+unedited files/
+tree.txt
+
+# Secrets
+gcp-local-key*.json
+gcp-local-key*.txt
+monet-key.json
+prometheus.yml
+
+# Python workers
+workers/python-ai/.venv*/
+workers/python-audio/.venv*/
+workers/python-content-analyzer/.venv*/
+workers/python-director/.venv*/
+workers/python-music-analyzer/.venv*/
