@@ -493,11 +493,26 @@ def main():
 
         # ── global overlays ────────────────────────────────────────
         print("Adding global overlays (info bar, cut markers, energy curve)...")
-        ok = add_global_overlays(concat_out, analysis, args.output, info)
+        overlayed = os.path.join(tmpdir, "overlayed.mp4")
+        ok = add_global_overlays(concat_out, analysis, overlayed, info)
         if not ok:
             print("Warning: global overlay pass failed — using raw concat output",
                   file=sys.stderr)
-            shutil.copy2(concat_out, args.output)
+            overlayed = concat_out
+
+        # ── merge original audio ──────────────────────────────────
+        src = overlayed
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-i", src,
+            "-i", args.reference,
+            "-c:v", "copy",
+            "-c:a", "aac", "-b:a", "128k",
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-shortest",
+            args.output,
+        ], capture_output=True, check=True, timeout=120)
 
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)

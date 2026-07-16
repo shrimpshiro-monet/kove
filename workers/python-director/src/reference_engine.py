@@ -239,7 +239,7 @@ def get_video_info(path: str) -> dict:
     return json.loads(result.stdout)
 
 
-def detect_cuts(video_path: str, threshold: float = 0.1) -> list[CutPoint]:
+def detect_cuts(video_path: str, threshold: float = 0.3) -> list[CutPoint]:
     """Detect scene changes using FFmpeg."""
     cmd = [
         'ffmpeg', '-i', video_path,
@@ -265,29 +265,32 @@ def detect_cuts(video_path: str, threshold: float = 0.1) -> list[CutPoint]:
 
 
 def extract_segment_color(video_path: str, start: float, duration: float) -> dict:
-    """Extract color statistics from a segment."""
+    """Extract color statistics from a segment using a mid-frame sample."""
+    mid = start + duration / 2
     cmd = [
-        'ffmpeg', '-ss', str(start), '-t', str(duration),
-        '-i', video_path,
-        '-vf', 'signalstats=stat=totall',
-        '-f', 'null', '-'
+        'ffmpeg', '-ss', str(mid), '-i', video_path,
+        '-frames:v', '1',
+        '-vf', 'scale=64:64',
+        '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, timeout=30)
+    if result.returncode != 0 or len(result.stdout) < 64 * 64 * 3:
+        return {}
 
-    stats = {}
-    for line in result.stderr.split('\n'):
-        if 'YAVG' in line:
-            try:
-                stats['brightness'] = float(line.split('YAVG:')[1].split()[0]) / 255
-            except (IndexError, ValueError):
-                pass
-        if 'YDIF' in line:
-            try:
-                stats['contrast'] = float(line.split('YDIF:')[1].split()[0]) / 255
-            except (IndexError, ValueError):
-                pass
+    pixels = list(result.stdout)
+    n = len(pixels) // 3
+    if n == 0:
+        return {}
 
-    return stats
+    # Brightness = mean of all channels
+    brightness = sum(pixels) / (n * 3 * 255)
+
+    # Contrast = std of luminance (Y = 0.299R + 0.587G + 0.114B)
+    lums = [0.299 * pixels[i*3] + 0.587 * pixels[i*3+1] + 0.114 * pixels[i*3+2] for i in range(n)]
+    mean_lum = sum(lums) / n
+    contrast = (sum((l - mean_lum) ** 2 for l in lums) / n) ** 0.5 / 255
+
+    return {'brightness': brightness, 'contrast': contrast}
 
 
 def detect_camera_motion(
@@ -398,6 +401,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
     cut_times = [0] + cut_times + [duration]
 
     segments: list[SegmentStyle] = []
+    shot_idx = 0
     for i in range(len(cut_times) - 1):
         seg_start = cut_times[i]
         seg_end = cut_times[i + 1]
@@ -416,9 +420,10 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         )
 
         # Look up effect, text, and speed data for this shot index
-        shot_eff = per_shot_effects[i] if i < len(per_shot_effects) else {}
-        shot_txt = per_shot_text[i] if i < len(per_shot_text) else {}
-        shot_spd = per_shot_speed[i] if i < len(per_shot_speed) else {}
+        shot_eff = per_shot_effects[shot_idx] if shot_idx < len(per_shot_effects) else {}
+        shot_txt = per_shot_text[shot_idx] if shot_idx < len(per_shot_text) else {}
+        shot_spd = per_shot_speed[shot_idx] if shot_idx < len(per_shot_speed) else {}
+        shot_idx += 1
 
         # Map effects to SegmentStyle fields
         eff_style = _map_effects_to_style(shot_eff.get("effects", []))
