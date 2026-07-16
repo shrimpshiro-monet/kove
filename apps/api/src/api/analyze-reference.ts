@@ -61,7 +61,13 @@ export async function registerAnalyzeReferenceRoute(app: FastifyInstance): Promi
       fs.mkdirSync(tmpDir, { recursive: true });
 
       const refDst = path.join(tmpDir, "reference" + path.extname(files.reference.originalFilename));
-      fs.renameSync(files.reference.filepath, refDst);
+      try {
+        fs.renameSync(files.reference.filepath, refDst);
+      } catch (err: unknown) {
+        // rename fails across filesystems (EXDEV), fall back to copy+unlink
+        fs.copyFileSync(files.reference.filepath, refDst);
+        fs.unlinkSync(files.reference.filepath);
+      }
 
       const job: ReferenceJobStatus = {
         jobId,
@@ -187,6 +193,11 @@ function runAnalysisPipeline(job: ReferenceJobStatus, videoPath: string): void {
       job.status = "failed";
       job.message = `Failed to read analysis JSON: ${msg}`;
       job.error = msg;
+      // Cleanup
+      setTimeout(() => {
+        try { fs.rmSync(job.tmpDir, { recursive: true, force: true }); } catch {}
+        jobs.delete(job.jobId);
+      }, 3600_000);
       return;
     }
 

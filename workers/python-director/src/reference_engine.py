@@ -234,6 +234,8 @@ def get_video_info(path: str) -> dict:
         '-of', 'json', path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"ffprobe failed on {path}: {result.stderr[:200]}")
     return json.loads(result.stdout)
 
 
@@ -277,12 +279,12 @@ def extract_segment_color(video_path: str, start: float, duration: float) -> dic
         if 'YAVG' in line:
             try:
                 stats['brightness'] = float(line.split('YAVG:')[1].split()[0]) / 255
-            except:
+            except (IndexError, ValueError):
                 pass
         if 'YDIF' in line:
             try:
                 stats['contrast'] = float(line.split('YDIF:')[1].split()[0]) / 255
-            except:
+            except (IndexError, ValueError):
                 pass
 
     return stats
