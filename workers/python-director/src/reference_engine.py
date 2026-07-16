@@ -463,8 +463,9 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         variance = 0
 
     # 9. Classify cuts as beat-aligned
+    beat_set = set(round(b, 1) for b in beats)
     for cut in cuts:
-        cut.is_beat_aligned = any(abs(cut.time - b) < 0.1 for b in beats)
+        cut.is_beat_aligned = any(abs(cut.time - b) < 0.1 for b in beat_set)
 
     beat_aligned = sum(1 for c in cuts if c.is_beat_aligned)
     cut_alignment = "strict" if beat_aligned > len(cuts) * 0.7 else "loose"

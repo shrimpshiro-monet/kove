@@ -49,9 +49,12 @@ export async function registerApplyStyleRoute(app: FastifyInstance): Promise<voi
         }
       }
 
-      if (!files.profile || !files.footage) {
-        return res.status(400).send({ error: "profile and footage files are required" });
-      }
+    if (!files.profile || !files.footage) {
+      return res.status(400).send({ error: "profile and footage files are required" });
+    }
+    if (!files.profile.originalFilename?.endsWith(".json")) {
+      return res.status(400).send({ error: "profile must be a .json file" });
+    }
 
       const jobId = crypto.randomUUID();
       const tmpDir = path.join("/tmp", `kove-jobs`, jobId);
@@ -59,8 +62,18 @@ export async function registerApplyStyleRoute(app: FastifyInstance): Promise<voi
 
       const profileDst = path.join(tmpDir, "profile.json");
       const footageDst = path.join(tmpDir, "footage" + path.extname(files.footage.originalFilename));
-      fs.renameSync(files.profile.filepath, profileDst);
-      fs.renameSync(files.footage.filepath, footageDst);
+      try {
+        fs.renameSync(files.profile.filepath, profileDst);
+      } catch (err: unknown) {
+        fs.copyFileSync(files.profile.filepath, profileDst);
+        fs.unlinkSync(files.profile.filepath);
+      }
+      try {
+        fs.renameSync(files.footage.filepath, footageDst);
+      } catch (err: unknown) {
+        fs.copyFileSync(files.footage.filepath, footageDst);
+        fs.unlinkSync(files.footage.filepath);
+      }
 
       const job: ApplyStyleJobStatus = {
         jobId,

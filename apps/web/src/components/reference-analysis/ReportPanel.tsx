@@ -47,7 +47,8 @@ export function ReportPanel({ profile }: ReportPanelProps) {
     const step = Math.max(1, Math.floor(curve.length / 40))
     const sampled: number[] = []
     for (let i = 0; i < curve.length; i += step) {
-      sampled.push(curve[i])
+      const bucket = curve.slice(i, Math.min(i + step, curve.length))
+      sampled.push(Math.max(...bucket))
     }
     return sampled
   }, [profile.energy_curve])

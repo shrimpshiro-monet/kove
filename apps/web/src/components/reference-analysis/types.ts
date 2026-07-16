@@ -2,7 +2,7 @@ export interface ColorSignature {
   brightness: number
   contrast: number
   saturation: number
-  style: "neutral" | "warm" | "cool" | "vintage" | "cinematic" | "vibrant"
+  style: string
 }
 
 export interface SegmentStyle {

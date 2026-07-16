@@ -57,7 +57,7 @@ export function ReferencePreview({ onAnalysisComplete }: ReferencePreviewProps) 
 
     poll()
     return () => { cancelled = true }
-  }, [flow.phase === "analyzing" ? flow.jobId : null])
+  }, [flow.phase, flow.jobId])
 
   const handleFile = useCallback((f: File) => {
     setFile(f)
