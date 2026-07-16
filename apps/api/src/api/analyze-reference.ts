@@ -182,10 +182,11 @@ function runAnalysisPipeline(job: ReferenceJobStatus, videoPath: string): void {
     let report: Record<string, unknown>;
     try {
       report = JSON.parse(fs.readFileSync(analysisJsonPath, "utf-8"));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       job.status = "failed";
-      job.message = `Failed to read analysis JSON: ${err.message}`;
-      job.error = err.message;
+      job.message = `Failed to read analysis JSON: ${msg}`;
+      job.error = msg;
       return;
     }
 
@@ -245,10 +246,12 @@ function runOverlayGeneration(
         const destPath = path.join(UPLOAD_DIR, `overlay-${job.jobId}.mp4`);
         fs.copyFileSync(overlayPath, destPath);
         overlayVideoUrl = `/uploads/overlay-${job.jobId}.mp4`;
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         job.status = "failed";
-        job.message = `Overlay copy failed: ${err.message}`;
-        job.error = err.message;
+        job.message = `Overlay copy failed: ${msg}`;
+        job.error = msg;
+        return;
       }
     }
 
