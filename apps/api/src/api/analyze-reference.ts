@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const WORKSPACE = process.env.KOVE_WORKSPACE || path.resolve(__dirname, "../../../..");
-console.log("[api] WORKSPACE:", WORKSPACE);
+
 
 const ENGINE_PATH = path.join(WORKSPACE, "workers", "python-director", "src", "reference_engine.py");
 const VIZ_SCRIPT_PATH = path.join(WORKSPACE, "scripts", "visualize_reference_analysis.py");
@@ -79,9 +79,9 @@ export async function registerAnalyzeReferenceRoute(app: FastifyInstance): Promi
         jobId,
         status: "queued",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       req.log.error({ err }, "analyze-reference failed");
-      return res.status(500).send({ error: err.message });
+      return res.status(500).send({ error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -160,6 +160,10 @@ function runAnalysisPipeline(job: ReferenceJobStatus, videoPath: string): void {
       job.status = "failed";
       job.message = `Reference analysis failed (exit ${code})`;
       job.error = stderr.slice(0, 500);
+      setTimeout(() => {
+        try { fs.rmSync(job.tmpDir, { recursive: true, force: true }); } catch {}
+        jobs.delete(job.jobId);
+      }, 3600_000);
       return;
     }
 
@@ -167,6 +171,10 @@ function runAnalysisPipeline(job: ReferenceJobStatus, videoPath: string): void {
       job.status = "failed";
       job.message = "Analysis JSON not produced";
       job.error = "reference_engine.py did not write output";
+      setTimeout(() => {
+        try { fs.rmSync(job.tmpDir, { recursive: true, force: true }); } catch {}
+        jobs.delete(job.jobId);
+      }, 3600_000);
       return;
     }
 
@@ -238,7 +246,9 @@ function runOverlayGeneration(
         fs.copyFileSync(overlayPath, destPath);
         overlayVideoUrl = `/uploads/overlay-${job.jobId}.mp4`;
       } catch (err: any) {
-        job.message = `Overlay generated but failed to copy: ${err.message}`;
+        job.status = "failed";
+        job.message = `Overlay copy failed: ${err.message}`;
+        job.error = err.message;
       }
     }
 
