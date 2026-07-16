@@ -304,47 +304,10 @@ def detect_camera_motion(
         seg_data = [m for m in motion_data if start <= m['time'] <= start + duration]
         if len(seg_data) >= 3:
             return classify_camera_motion(seg_data, duration)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  Camera motion detection failed: {e}")
 
     return "static"
-
-
-def detect_transitions(
-    per_shot_effects: list[dict],
-    segments: list[SegmentStyle],
-) -> list[TransitionStyle]:
-    """Build transition list from effect detector per-shot results."""
-    transitions = []
-    for i, seg in enumerate(segments):
-        shot_eff = None
-        for se in per_shot_effects:
-            if abs(se.get("time", 0) - seg.start) < 0.15:
-                shot_eff = se
-                break
-
-        if shot_eff is None and i < len(per_shot_effects):
-            shot_eff = per_shot_effects[i]
-
-        trans_type = "cut"
-        trans_duration = 0.0
-
-        if shot_eff:
-            detected = shot_eff.get("transitions", [])
-            if detected:
-                trans_type = _pick_transition_type(detected)
-                if trans_type in ("crossfade", "wipe"):
-                    trans_duration = 0.3
-                elif trans_type in ("glitch", "blur"):
-                    trans_duration = 0.15
-
-        transitions.append(TransitionStyle(
-            type=trans_type,
-            duration=trans_duration,
-            intensity=1.0,
-        ))
-
-    return transitions
 
 
 def extract_beats(video_path: str) -> tuple[float, list[float]]:
