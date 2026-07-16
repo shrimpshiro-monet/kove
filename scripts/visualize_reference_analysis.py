@@ -10,6 +10,10 @@ Uses only stdlib + subprocess FFmpeg calls. Since drawtext is not available
 in this FFmpeg build, text rendering uses a bitmap font rendered to PPM
 images, composited via colorkey + overlay.
 
+NOTE: Semi-transparent text overlays require FFmpeg compiled with --enable-libfreetype
+(drawtext filter). This build lacks it, so text is rendered via bitmap font + PPM +
+colorkey overlay, which gives fully opaque text only.
+
 Usage:
   python scripts/visualize_reference_analysis.py <reference.mp4> <analysis.json> [-o overlay.mp4]
 """
@@ -17,6 +21,7 @@ Usage:
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -197,6 +202,10 @@ def extract_segment_with_overlays(video_path: str, seg: dict, idx: int,
 
     # ── build drawbox-only filters ────────────────────────────────
     db_parts = []
+
+    # NOTE: Text box position is center-of-frame by default. The ReferenceStyleProfile
+    # schema doesn't include per-shot text bounding boxes yet — when textPositions[]
+    # is added to SegmentStyle, replace this hardcoded box with data-driven ones.
 
     # text detection bounding box
     if seg.get("has_text", False):
@@ -413,6 +422,21 @@ def main():
     parser.add_argument("-o", "--output", default="overlay.mp4", help="Output path")
     args = parser.parse_args()
 
+    if not os.path.exists(args.reference):
+        print(f"Error: reference video not found: {args.reference}", file=sys.stderr)
+        sys.exit(1)
+
+    if not os.path.exists(args.analysis):
+        print(f"Error: analysis file not found: {args.analysis}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        subprocess.run(['ffprobe', '-version'], capture_output=True, check=True)
+    except FileNotFoundError:
+        print("Error: ffprobe not found on PATH. Install FFmpeg to use this tool.",
+              file=sys.stderr)
+        sys.exit(1)
+
     with open(args.analysis) as f:
         analysis = json.load(f)
 
@@ -473,11 +497,9 @@ def main():
         if not ok:
             print("Warning: global overlay pass failed — using raw concat output",
                   file=sys.stderr)
-            import shutil
             shutil.copy2(concat_out, args.output)
 
     finally:
-        import shutil
         shutil.rmtree(tmpdir, ignore_errors=True)
 
     out_size = os.path.getsize(args.output) / 1024 / 1024
