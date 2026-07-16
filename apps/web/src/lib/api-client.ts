@@ -1,5 +1,6 @@
 // Re-export refineEDL from root api-client with local type resolution
 import type { ProjectEDL as MonetEDL } from "@monet/edl";
+import type { AnalyzeReferenceStatus } from "../components/reference-analysis/types";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 const DIRECTOR_API = import.meta.env.VITE_DIRECTOR_API || "http://localhost:8000";
@@ -72,6 +73,26 @@ export async function generateVibeEdit(
 
 export async function getVibeGenerateStatus(jobId: string): Promise<VibeGenerateStatus> {
   const res = await fetch(`${API_BASE}/api/vibe-generate/status/${jobId}`);
+  if (!res.ok) throw new Error(`Status failed: ${res.status}`);
+  return res.json();
+}
+
+// ─── Analyze Reference ───────────────────────────────────────
+
+export async function analyzeReference(file: File): Promise<{ jobId: string }> {
+  const formData = new FormData();
+  formData.append("reference", file);
+
+  const res = await fetch(`${API_BASE}/api/analyze-reference`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`Analyze failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getAnalyzeReferenceStatus(jobId: string): Promise<AnalyzeReferenceStatus> {
+  const res = await fetch(`${API_BASE}/api/analyze-reference/status/${jobId}`);
   if (!res.ok) throw new Error(`Status failed: ${res.status}`);
   return res.json();
 }
