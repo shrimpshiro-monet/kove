@@ -11,6 +11,7 @@ type FlowState =
   | { phase: "idle" }
   | { phase: "uploading" }
   | { phase: "analyzing"; jobId: string }
+  | { phase: "generating"; status: AnalyzeReferenceStatus }
   | { phase: "complete"; status: AnalyzeReferenceStatus }
   | { phase: "error"; message: string }
 
@@ -40,6 +41,10 @@ export function ReferencePreview({ onAnalysisComplete }: ReferencePreviewProps) 
           if (status.status === "complete" && status.result?.report) {
             onAnalysisComplete?.(status.result.report)
           }
+          return
+        } else if (status.status === "generating_overlay") {
+          setFlow({ phase: "generating", status })
+          setTimeout(poll, 800)
           return
         }
 
@@ -97,20 +102,24 @@ export function ReferencePreview({ onAnalysisComplete }: ReferencePreviewProps) 
   const progress =
     flow.phase === "analyzing"
       ? undefined
-      : flow.phase === "complete"
+      : flow.phase === "generating"
         ? flow.status.progress
-        : 0
+        : flow.phase === "complete"
+          ? flow.status.progress
+          : 0
 
   const statusMessage =
     flow.phase === "analyzing"
       ? "Analyzing reference..."
-      : flow.phase === "uploading"
-        ? "Uploading..."
-        : flow.phase === "complete"
-          ? flow.status.message
-          : flow.phase === "error"
-            ? flow.message
-            : null
+      : flow.phase === "generating"
+        ? `Generating overlay... ${flow.status.progress}%`
+        : flow.phase === "uploading"
+          ? "Uploading..."
+          : flow.phase === "complete"
+            ? flow.status.message
+            : flow.phase === "error"
+              ? flow.message
+              : null
 
   const isProcessing = flow.phase === "uploading" || flow.phase === "analyzing"
 
@@ -196,12 +205,12 @@ export function ReferencePreview({ onAnalysisComplete }: ReferencePreviewProps) 
         </div>
       )}
 
-      {/* Complete with progress */}
-      {flow.phase === "complete" && flow.status.status === "analyzing" && (
+      {/* Generating overlay */}
+      {flow.phase === "generating" && (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-xs text-text-secondary font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span>{flow.status.message || "Processing..."}</span>
+          <div className="flex items-center gap-2 text-text-muted font-mono text-[11px]">
+            <div className="w-3 h-3 rounded-full bg-status-warning animate-pulse" />
+            <span>Generating overlay... {flow.status.progress}%</span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-background-tertiary overflow-hidden">
             <div
