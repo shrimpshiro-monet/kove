@@ -17,6 +17,7 @@ import { registerVibeGenerateRoute } from "./api/vibe-generate";
 import { registerVibeRefineRoute } from "./api/vibe-refine";
 import { registerDetectRoutes } from "./api/detect-routes";
 import { registerAnalyzeReferenceRoute } from "./api/analyze-reference";
+import { registerApplyStyleRoute } from "./api/apply-style";
 
 async function start(): Promise<void> {
   const app = fastify({
@@ -56,6 +57,7 @@ async function start(): Promise<void> {
   await registerVibeRefineRoute(app);
   await registerDetectRoutes(app);
   await registerAnalyzeReferenceRoute(app);
+  await registerApplyStyleRoute(app);
 
   app.get("/health", async () => ({
     status: "ok"
