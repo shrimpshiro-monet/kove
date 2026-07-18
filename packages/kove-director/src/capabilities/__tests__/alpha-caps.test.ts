@@ -65,6 +65,7 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "move-clip": { input: { clipId: "clip-1", newStartTime: 5.0 } },
   "speed-static": { input: { clipId: "clip-1", speed: 0.5 } },
   "speed-ramp": { input: { clipId: "clip-1", fromSpeed: 1, toSpeed: 0.3, duration: 2 } },
+  "freeze-frame": { input: { clipId: "clip-1", atTime: 2, holdDuration: 1 } },
   "beat-cut": { input: { clipId: "clip-1" } },
 
   // Effects
@@ -198,7 +199,7 @@ assert(crossCap?.id === "crossfade", "crossfade: correct id (no U prefix)");
 
 console.log("\n=== Beta/Planned Throw on Compile ===\n");
 
-const betaIds = ["freeze-frame", "posterize-time", "undo-redo", "background-blur", "player-glow"];
+const betaIds = ["posterize-time", "undo-redo", "background-blur", "player-glow"];
 let throwCount = 0;
 for (const id of betaIds) {
   const cap = lookupCapability(id);

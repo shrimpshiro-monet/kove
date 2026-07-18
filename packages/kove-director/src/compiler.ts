@@ -205,6 +205,7 @@ function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
         "context_shake": "shake",
         "impact_flash": "flash",
         "whip_pan": "whip-pan",
+        "freeze_frame": "freeze-frame",
       };
       if (effectTypeMap[params.effectType]) return effectTypeMap[params.effectType];
     }
