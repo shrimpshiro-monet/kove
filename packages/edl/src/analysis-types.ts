@@ -61,6 +61,8 @@ export interface SubjectTrackFrame {
   bbox: SubjectBBox;
   source: string;
   confidence: number;
+  trackId: number;
+  label: "face" | "person" | "unknown";
 }
 
 export interface SubjectTrackAnalysis {
@@ -74,6 +76,38 @@ export interface SubjectTrackAnalysis {
     trackedFrames: number;
     coverage: number;
   };
+}
+
+export interface SubjectTrack {
+  clipId: string;
+  sourceAssetId: string;
+  model: "mediapipe" | "headless";
+  mediapipeVersion?: string;
+  createdAt: number;
+  duration: number;
+  fps: number;
+  detections: SubjectTrackFrame[];
+  gapPolicy: "hold-last" | "interpolate" | "decay-to-center";
+}
+
+export interface CropRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface SmoothCfg {
+  minCutoff: number;
+  beta: number;
+  dCutoff: number;
+  gapDecayMs: number;
+}
+
+export interface ReframeParams {
+  targetRatio: "9:16" | "1:1" | "4:5" | "16:9";
+  lockSubject: "center" | "face" | "motion";
+  lockedTrackId?: number;
 }
 
 export interface SourceMediaInput {
