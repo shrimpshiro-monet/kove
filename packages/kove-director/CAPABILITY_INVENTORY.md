@@ -139,10 +139,10 @@
 | Capability | Status | Code Location | Action Verb | Notes |
 |-----------|--------|---------------|-------------|-------|
 | Multi-Track Timeline | alpha | `packages/edl/src/schemas.ts:40` (5 track types) + `compiler.ts:151` | `timeline.build` | EDL supports video/audio/text/fx/mask tracks. Compiler creates video-main + audio-music. AudioTimelineEngine reads all audio tracks. |
-| Split Screen | planned | `src/server/lib/effect-vocabulary.ts:34,387,440` | None | Defined as `EffectType` in vocabulary extraction. Priority 1.5 multiplier. **No rendering implementation.** |
+| Split Screen | alpha | `packages/kove-director/src/capabilities/composition/split-screen.ts` | `effect.custom` with `split_screen` | Zod-validated capability. Horizontal/vertical/quad layouts with configurable gaps. Mapped via compiler.ts effectTypeMap. |
 | B-Roll | planned | — | None | Not implemented. Single `video-main` track. No cutaway logic. |
-| Multi-Cam | planned | — | None | Not implemented. No angle selection or multi-cam sync. |
-| Picture-in-Picture | planned | `src/server/lib/engine-capabilities.ts:79` | None | Mentioned as MLT capability. No implementation. |
+| Multi-Cam | alpha | `packages/kove-director/src/capabilities/composition/multi-cam.ts` | `effect.custom` with `multi_cam` | Zod-validated capability. Angle grouping with audio waveform/timecode/manual sync. Mapped via compiler.ts effectTypeMap. |
+| Picture-in-Picture | alpha | `packages/kove-director/src/capabilities/composition/pip.ts` | `effect.custom` with `pip` | Zod-validated capability. Configurable position, size, and border. Mapped via compiler.ts effectTypeMap. |
 | Mask Compositing | planned | `packages/edl/src/effect-types.ts:8` + `contract.ts:64` | `clip.mask` (declared, not compiled) | `mask_composite` effect type + `"mask"` track type in EDL. No renderer. |
 | Subject Isolation | planned | `src/lib/engines/registry.ts:148` (sam-vfx engine) | None | Engine declares `subject_isolation`, `bg_dim`, `bg_blur`. No SAM 2 integration found. |
 | Depth Parallax | planned | `apps/web/src/engine/depth/depth-runtime.ts` + `feature-registry:173` | None | Runtime file exists. Feature registered v-beta-2. Actual depth estimation status unknown. |
@@ -160,8 +160,8 @@
 | Audio | 6 | 0 | 3 |
 | Transitions | 19 | 1 | 1 |
 | Camera | 1 | 0 | 4 |
-| Composition | 1 | 0 | 7 |
-| **Total** | **59** | **5** | **24** |
+| Composition | 4 | 0 | 5 |
+| **Total** | **62** | **5** | **22** |
 
 ---
 

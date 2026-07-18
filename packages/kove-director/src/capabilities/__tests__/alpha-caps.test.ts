@@ -107,6 +107,9 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
 
   // Composition
   "multi-track": { input: { trackType: "audio", name: "Audio" } },
+  "split-screen": { input: { clipId: "clip-1", layout: "horizontal", clipIndex: 0, gap: 4 } },
+  "pip": { input: { clipId: "clip-2", position: "bottom-right", width: 25, height: 25, borderWidth: 2, borderColor: "#ffffff" } },
+  "multi-cam": { input: { clipId: "clip-1", angleName: "Wide Shot", syncMethod: "audio-waveform" } },
 
   // Overlays
   "text-overlay": { input: { text: "Hello World" } },
