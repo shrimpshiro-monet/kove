@@ -103,12 +103,17 @@ function checkDockerRunning(): boolean {
   }
 }
 
-function runEditlyRender(
+function parseRatio(s: string): { w: number; h: number } {
+  const [w, h] = s.split(":").map(Number);
+  return { w, h };
+}
+
+async function runEditlyRender(
   job: RenderJob,
   edl: unknown,
   footagePath: string,
   musicPath: string | null
-): void {
+): Promise<void> {
   if (!checkDockerRunning()) {
     job.status = "failed";
     job.error = "Docker not running. Start Docker Desktop and try again.";
@@ -124,6 +129,59 @@ function runEditlyRender(
 
   const outputTmp = path.join("/tmp", `render-output-${job.renderJobId}.mp4`);
 
+  // Subject-tracked reframe support
+  const cropsTmp = path.join("/tmp", `crops-${job.renderJobId}.f64`);
+  const cropsMetaTmp = path.join("/tmp", `crops-${job.renderJobId}.json`);
+
+  try {
+    const edlObj = typeof edl === "string" ? JSON.parse(edl) : edl;
+    for (const track of edlObj.timeline?.tracks ?? []) {
+      for (const clip of track.clips ?? []) {
+        if (clip.reframe && clip.reframe.lockSubject !== "center") {
+          const sourceAssetId = clip.sourceAssetId ?? clip.mediaId ?? clip.id;
+          const trackResponse = await fetch(`http://localhost:${process.env.PORT ?? 3000}/api/subject-track/${encodeURIComponent(sourceAssetId)}`);
+
+          if (trackResponse.ok) {
+            const subjectTrack = await trackResponse.json();
+            const { buildPath, resolvePath, DEFAULT_SMOOTH_CFG } = await import("@monet/edl");
+
+            const ratio = parseRatio(clip.reframe.targetRatio ?? "9:16");
+            const path = buildPath(subjectTrack, ratio, DEFAULT_SMOOTH_CFG, clip.reframe.lockedTrackId);
+
+            const totalDuration = edlObj.timeline.duration ?? 60;
+            const fps = 30;
+            const frameCount = Math.ceil(totalDuration * fps);
+            const crops = new Float64Array(frameCount * 4);
+
+            for (let i = 0; i < frameCount; i++) {
+              const t = i / fps;
+              const crop = resolvePath(path, t, fps);
+              if (crop) {
+                crops[i * 4] = crop.x;
+                crops[i * 4 + 1] = crop.y;
+                crops[i * 4 + 2] = crop.width;
+                crops[i * 4 + 3] = crop.height;
+              }
+            }
+
+            fs.writeFileSync(cropsTmp, Buffer.from(crops.buffer));
+            fs.writeFileSync(cropsMetaTmp, JSON.stringify({
+              schema: "crops.v1",
+              fps,
+              frameCount,
+              sourceAssetId,
+              targetRatio: clip.reframe.targetRatio,
+              lockSubject: clip.reframe.lockSubject,
+            }, null, 2));
+          }
+          break; // only one clip with reframe for now
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[vibe-render] Subject track fetch failed, rendering center-crop:", e);
+  }
+
   // Use the monet_pipeline.py render_native via a small wrapper
   const renderScript = `
 import json, sys
@@ -137,9 +195,15 @@ print("RENDER_RESULT:", "OK" if success else "FAIL")
   const scriptTmp = path.join("/tmp", `render-script-${job.renderJobId}.py`);
   fs.writeFileSync(scriptTmp, renderScript);
 
+  const env = { ...process.env };
+  if (fs.existsSync(cropsTmp)) {
+    env.CROPS_PATH = cropsTmp;
+    env.CROPS_META_PATH = cropsMetaTmp;
+  }
   const proc = spawn("python3", [scriptTmp], {
     cwd: WORKSPACE,
     stdio: ["ignore", "pipe", "pipe"],
+    env,
   });
 
   proc.stdout?.on("data", (chunk: Buffer) => {
@@ -153,6 +217,8 @@ print("RENDER_RESULT:", "OK" if success else "FAIL")
     // Cleanup temp files
     try { fs.unlinkSync(edlTmp); } catch {}
     try { fs.unlinkSync(scriptTmp); } catch {}
+    try { fs.unlinkSync(cropsTmp); } catch {}
+    try { fs.unlinkSync(cropsMetaTmp); } catch {}
 
     if (code !== 0 || !fs.existsSync(outputTmp)) {
       job.status = "failed";
