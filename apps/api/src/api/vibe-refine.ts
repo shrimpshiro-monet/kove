@@ -37,7 +37,38 @@ const RefineStatusParamsSchema = z.object({
   jobId: z.string().uuid(),
 });
 
+const STALE_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function sweepStaleJobs(): void {
+  const baseDir = "/tmp/kove-refine-jobs";
+  try {
+    if (!fs.existsSync(baseDir)) return;
+    const entries = fs.readdirSync(baseDir);
+    let swept = 0;
+    for (const entry of entries) {
+      const entryPath = path.join(baseDir, entry);
+      try {
+        const stat = fs.statSync(entryPath);
+        if (stat.isDirectory() && Date.now() - stat.mtimeMs > STALE_THRESHOLD_MS) {
+          fs.rmSync(entryPath, { recursive: true, force: true });
+          swept++;
+        }
+      } catch {
+        // Skip entries we can't stat
+      }
+    }
+    if (swept > 0) {
+      console.log(`[vibe-refine] swept ${swept} stale job directories`);
+    }
+  } catch {
+    // Non-fatal — log and continue
+  }
+}
+
 export async function registerVibeRefineRoute(app: FastifyInstance): Promise<void> {
+  // GAP-007: Sweep orphaned refine job dirs older than 24h on startup
+  sweepStaleJobs();
+
   // POST /api/vibe-refine — start a refinement job
   app.post("/api/vibe-refine", async (req, res) => {
     try {

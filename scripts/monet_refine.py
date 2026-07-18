@@ -162,13 +162,15 @@ def load_capabilities_manifest() -> str:
 def compile_actions_to_edl(actions: list[dict], current_edl: dict) -> dict:
     """
     Apply Nemotron's actions to the current EDL.
-    Simple merge: apply speed/effect changes to targeted clips.
+    Handles clip-level and track-level operations.
     """
     edl = json.loads(json.dumps(current_edl))  # deep copy
 
-    # Build clip index
+    # Build clip index and track index
     clip_index = {}
+    track_index = {}
     for track in edl.get("timeline", {}).get("tracks", []):
+        track_index[track["id"]] = track
         for clip in track.get("clips", []):
             clip_index[clip["id"]] = clip
 
@@ -176,7 +178,60 @@ def compile_actions_to_edl(actions: list[dict], current_edl: dict) -> dict:
         action_type = action.get("type", "")
         params = action.get("params", {})
 
-        if action_type == "clip.speed":
+        # --- Track-level operations ---
+
+        if action_type == "track/create":
+            track_id = params.get("trackId")
+            if track_id and track_id not in track_index:
+                new_track = {
+                    "id": track_id,
+                    "type": params.get("trackType", "video"),
+                    "name": params.get("name", track_id),
+                    "clips": [],
+                }
+                edl["timeline"]["tracks"].append(new_track)
+                track_index[track_id] = new_track
+
+        elif action_type == "track/remove":
+            track_id = params.get("trackId")
+            if track_id and track_id in track_index:
+                edl["timeline"]["tracks"] = [
+                    t for t in edl["timeline"]["tracks"] if t["id"] != track_id
+                ]
+                del track_index[track_id]
+
+        # --- Clip-level operations ---
+
+        elif action_type == "clip/add":
+            clip_id = params.get("clipId")
+            track_id = params.get("trackId", "video-main")
+            if clip_id and track_id in track_index:
+                new_clip = {
+                    "id": clip_id,
+                    "mediaId": params.get("mediaId", ""),
+                    "startTime": params.get("startTime", 0),
+                    "duration": params.get("duration", 5),
+                    "inPoint": params.get("inPoint", 0),
+                    "outPoint": params.get("outPoint", 5),
+                    "speed": params.get("speed", 1),
+                }
+                track_index[track_id]["clips"].append(new_clip)
+                clip_index[clip_id] = new_clip
+
+        elif action_type == "clip/remove":
+            clip_id = params.get("clipId")
+            if clip_id and clip_id in clip_index:
+                for track in edl["timeline"]["tracks"]:
+                    track["clips"] = [c for c in track["clips"] if c["id"] != clip_id]
+                del clip_index[clip_id]
+
+        elif action_type == "clip.reorder":
+            clip_id = params.get("clipId")
+            new_start = params.get("newStartTime")
+            if clip_id and clip_id in clip_index and new_start is not None:
+                clip_index[clip_id]["startTime"] = new_start
+
+        elif action_type == "clip.speed":
             clip_id = params.get("clipId")
             speed = params.get("speed")
             if clip_id and clip_id in clip_index and speed is not None:
@@ -263,7 +318,16 @@ def main():
 
     scope = None
     if args.scope and os.path.exists(args.scope):
-        scope = load_json(args.scope)
+        raw_scope = load_json(args.scope)
+        # GAP-005: Re-validate scope against current EDL clip IDs
+        all_clip_ids = set()
+        for track in current_edl.get("timeline", {}).get("tracks", []):
+            for clip in track.get("clips", []):
+                all_clip_ids.add(clip["id"])
+        if isinstance(raw_scope, list):
+            scope = [cid for cid in raw_scope if cid in all_clip_ids]
+        else:
+            scope = None
 
     emit_progress(20, "Loading capabilities manifest...")
 
