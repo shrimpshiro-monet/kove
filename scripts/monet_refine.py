@@ -34,6 +34,85 @@ def emit_progress(progress: int, message: str) -> None:
     print(f"progress:{progress}:{message}", flush=True)
 
 
+def _load_dev_vars():
+    """Load .dev.vars into os.environ."""
+    if os.environ.get("NVIDIA_API_KEY") or os.environ.get("NVIDIA_NIM_API_KEY"):
+        return
+    for parent in Path(__file__).resolve().parents:
+        dev_vars = parent / ".dev.vars"
+        if dev_vars.exists():
+            with open(dev_vars) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip('"').strip("'")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+            break
+
+
+def call_nemotron(prompt: str, timeout: int = 60) -> Optional[list]:
+    """Call Nemotron via NVIDIA NIM API to get refinement actions."""
+    _load_dev_vars()
+
+    api_key = os.environ.get("NVIDIA_NIM_API_KEY") or os.environ.get("NVIDIA_API_KEY")
+    if not api_key:
+        return None
+
+    try:
+        import urllib.request
+        import urllib.error
+
+        body = {
+            "model": "nvidia/llama-3.3-nemotron-super-49b-v1",
+            "messages": [
+                {"role": "system", "content": "You are a JSON-only API. Return ONLY a valid JSON array of actions. No explanation text, no markdown, no code fences."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.3,
+            "max_tokens": 4096,
+            "response_format": {"type": "json_object"},
+        }
+
+        req = urllib.request.Request(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            data=json.dumps(body).encode(),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+        )
+
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            result = json.loads(resp.read().decode())
+
+        content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            return None
+
+        # Parse JSON — try direct parse, then extract array from object
+        parsed = json.loads(content)
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict):
+            # Try common wrapper keys
+            for key in ["actions", "edl_actions", "result", "output"]:
+                if key in parsed and isinstance(parsed[key], list):
+                    return parsed[key]
+            # If it has type/params, wrap it as single action
+            if "type" in parsed and "params" in parsed:
+                return [parsed]
+        return None
+
+    except Exception as e:
+        print(f"[monet_refine] Nemotron call failed: {e}", file=sys.stderr)
+        return None
+
+
 def build_refine_prompt(edl: dict, prompt: str, scope: Optional[List[str]], capabilities_md: str) -> str:
     """Build the Nemotron prompt for refinement."""
     # Mark clips as editable or locked based on scope
@@ -194,11 +273,15 @@ def main():
 
     system_prompt = build_refine_prompt(current_edl, prompt, scope, capabilities_md)
 
-    emit_progress(40, "Querying Nemotron for refinement actions...")
+    emit_progress(40, "Querying AI for refinement actions...")
 
-    # For now, use a simple rule-based refinement
-    # In production, this would call Nemotron via the AI service
-    actions = apply_rule_based_refinement(current_edl, prompt, scope)
+    # Try Nemotron first, fall back to rule-based if unavailable
+    actions = call_nemotron(system_prompt)
+    if actions:
+        emit_progress(60, f"Nemotron returned {len(actions)} actions")
+    else:
+        emit_progress(50, "Nemotron unavailable, using rule-based refinement")
+        actions = apply_rule_based_refinement(current_edl, prompt, scope)
 
     emit_progress(70, "Applying refinement actions...")
 
