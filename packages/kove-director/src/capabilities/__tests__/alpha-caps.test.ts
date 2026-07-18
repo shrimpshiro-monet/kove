@@ -112,6 +112,8 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
 
   // Camera
   "crop": { input: { clipId: "clip-1", x: 0, y: 0.1, width: 1, height: 0.9 } },
+  "stabilize": { input: { clipId: "clip-1", strength: 0.6, cropMode: "auto" } },
+  "reframe": { input: { clipId: "clip-1", targetRatio: "9:16", lockSubject: "center" } },
   "ken-burns-pan": { input: { clipId: "clip-1", startX: 30, startY: 40, endX: 60, endY: 50, zoomStart: 1, zoomEnd: 1.3 } },
 
   // Composition
