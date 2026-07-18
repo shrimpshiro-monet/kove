@@ -1,5 +1,5 @@
 import { createDemuxer } from "./demuxer.js";
-import { normalizeMediaPipeFace, iou } from "@monet/edl";
+import { iou } from "@monet/edl";
 import type { SubjectTrack, SubjectTrackFrame, SubjectBBox } from "@monet/edl";
 
 let faceDetector: any = null;
@@ -137,8 +137,6 @@ function assignTrackIds(
   const assignment = hungarianAssign(costMatrix);
   const newTracks: ActiveTrack[] = [];
   const frames: SubjectTrackFrame[] = [];
-  const usedDetections = new Set<number>();
-
   for (let di = 0; di < detections.length; di++) {
     const assignedTrackIdx = assignment[di];
     const d = detections[di];
@@ -148,7 +146,6 @@ function assignTrackIds(
       track.lastBbox = d.bbox;
       track.lastTime = frameIndex;
       track.framesSinceMatch = 0;
-      usedDetections.add(di);
       frames.push({
         time: frameIndex,
         frame: frameIndex,
@@ -166,7 +163,6 @@ function assignTrackIds(
         lastTime: frameIndex,
         framesSinceMatch: 0,
       });
-      usedDetections.add(di);
       frames.push({
         time: frameIndex,
         frame: frameIndex,
@@ -188,17 +184,78 @@ function assignTrackIds(
 }
 
 const SAMPLE_INTERVAL = 10;
-const LOW_CONF_INTERVAL = 3;
 const HIGH_CONF_INTERVAL = 15;
 
 self.onmessage = async (e: MessageEvent<WorkerInput>) => {
   if (e.data.type !== "analyze") return;
 
-  const { clipId, sourceAssetId, mediaUrl, duration } = e.data;
+  const { clipId, sourceAssetId, mediaUrl, fps, duration } = e.data;
   const detections: SubjectTrackFrame[] = [];
   let activeTracks: ActiveTrack[] = [];
   let frameCount = 0;
   let currentInterval = SAMPLE_INTERVAL;
+
+  async function processDecodedFrame(frame: VideoFrame) {
+    frameCount++;
+
+    if (frameCount % fps === 0) self.postMessage({ type: "progress", percent: Math.round((frameCount / (duration * fps)) * 100) });
+
+    if (frameCount % currentInterval !== 0) {
+      frame.close();
+      return;
+    }
+
+    try {
+      const bitmap = await createImageBitmap(frame, { resizeWidth: 640, resizeHeight: 360 });
+      const result = await faceDetector.detect(bitmap);
+      bitmap.close();
+
+      let bestConfidence = 0;
+      for (const face of result.detections) {
+        const score = face.categories?.[0]?.score ?? 0;
+        bestConfidence = Math.max(bestConfidence, score);
+      }
+
+      if (bestConfidence < 0.3 && currentInterval > 1) {
+        currentInterval = Math.max(1, currentInterval - 2);
+      } else if (bestConfidence > 0.7 && currentInterval < HIGH_CONF_INTERVAL) {
+        currentInterval = Math.min(HIGH_CONF_INTERVAL, currentInterval + 1);
+      }
+
+      const frameDetections = result.detections.map((face: any) => {
+        const rawBbox = face.boundingBox;
+        return {
+          bbox: {
+            x: (rawBbox?.originX ?? 0) / 640,
+            y: (rawBbox?.originY ?? 0) / 360,
+            width: (rawBbox?.width ?? 0) / 640,
+            height: (rawBbox?.height ?? 0) / 360,
+            centerX: ((rawBbox?.originX ?? 0) + (rawBbox?.width ?? 0) / 2) / 640,
+            centerY: ((rawBbox?.originY ?? 0) + (rawBbox?.height ?? 0) / 2) / 360,
+          },
+          confidence: face.categories?.[0]?.score ?? 0,
+        };
+      });
+
+      const result2 = assignTrackIds(frameDetections, activeTracks, frameCount);
+      detections.push(...result2.detections);
+      activeTracks = result2.tracks;
+    } catch (e) {
+      console.error("[analysis-worker] frame error:", e);
+    }
+
+    frame.close();
+  }
+
+  async function processFrameQueue() {
+    if (processing) return;
+    processing = true;
+    while (frameQueue.length > 0) {
+      const frame = frameQueue.shift()!;
+      await processDecodedFrame(frame);
+    }
+    processing = false;
+  }
 
   try {
     await loadMediaPipe();
@@ -208,67 +265,22 @@ self.onmessage = async (e: MessageEvent<WorkerInput>) => {
   }
 
   let videoDecoder: VideoDecoder | null = null;
-  let resolveDecoder: (() => void) | null = null;
-  let decoderDone = new Promise<void>((r) => { resolveDecoder = r; });
+  let abortPipeline = false;
+  const frameQueue: VideoFrame[] = [];
+  let processing = false;
 
   const demuxer = createDemuxer({
     onReady: (config) => {
       if (typeof VideoDecoder === "undefined") {
+        abortPipeline = true;
         self.postMessage({ type: "fallback", reason: "VideoDecoder not available" });
         return;
       }
 
       videoDecoder = new VideoDecoder({
-        output: async (frame: VideoFrame) => {
-          frameCount++;
-
-          if (frameCount % 30 === 0) self.postMessage({ type: "progress", percent: Math.round((frameCount / (duration * 30)) * 100) });
-
-          if (frameCount % currentInterval !== 0) {
-            frame.close();
-            return;
-          }
-
-          try {
-            const bitmap = await (frame as any).createImageBitmap({ resizeWidth: 640, resizeHeight: 360 });
-            const result = await faceDetector.detect(bitmap);
-            bitmap.close();
-
-            let bestConfidence = 0;
-            for (const face of result.detections) {
-              const score = face.categories?.[0]?.score ?? 0;
-              bestConfidence = Math.max(bestConfidence, score);
-            }
-
-            if (bestConfidence < 0.3 && currentInterval > 1) {
-              currentInterval = Math.max(1, currentInterval - 2);
-            } else if (bestConfidence > 0.7 && currentInterval < HIGH_CONF_INTERVAL) {
-              currentInterval = Math.min(HIGH_CONF_INTERVAL, currentInterval + 1);
-            }
-
-            const frameDetections = result.detections.map((face: any) => {
-              const rawBbox = face.boundingBox;
-              return {
-                bbox: {
-                  x: (rawBbox?.originX ?? 0) / 640,
-                  y: (rawBbox?.originY ?? 0) / 360,
-                  width: (rawBbox?.width ?? 0) / 640,
-                  height: (rawBbox?.height ?? 0) / 360,
-                  centerX: ((rawBbox?.originX ?? 0) + (rawBbox?.width ?? 0) / 2) / 640,
-                  centerY: ((rawBbox?.originY ?? 0) + (rawBbox?.height ?? 0) / 2) / 360,
-                },
-                confidence: face.categories?.[0]?.score ?? 0,
-              };
-            });
-
-            const result2 = assignTrackIds(frameDetections, activeTracks, frameCount);
-            detections.push(...result2.detections);
-            activeTracks = result2.tracks;
-          } catch (e) {
-            console.error("[analysis-worker] frame error:", e);
-          }
-
-          frame.close();
+        output: (frame: VideoFrame) => {
+          frameQueue.push(frame);
+          processFrameQueue();
         },
         error: (e) => {
           self.postMessage({ type: "error", reason: e.message });
@@ -301,16 +313,18 @@ self.onmessage = async (e: MessageEvent<WorkerInput>) => {
     return;
   }
 
-  const reader = response.body.getReader();
-  let offset = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const buf = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
-    demuxer.appendBuffer(buf, offset);
-    offset += value.byteLength;
+  if (!abortPipeline) {
+    const reader = response.body.getReader();
+    let offset = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const buf = value.buffer.slice(value.byteOffset, value.byteOffset + value.byteLength);
+      demuxer.appendBuffer(buf, offset);
+      offset += value.byteLength;
+    }
+    demuxer.flush();
   }
-  demuxer.flush();
 
   if (videoDecoder) {
     const dec = videoDecoder as unknown as VideoDecoder;
@@ -325,7 +339,7 @@ self.onmessage = async (e: MessageEvent<WorkerInput>) => {
     mediapipeVersion: "1.0",
     createdAt: Date.now(),
     duration,
-    fps: 30,
+    fps,
     detections: detections.sort((a, b) => a.time - b.time),
     gapPolicy: "hold-last",
   };
