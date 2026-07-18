@@ -791,6 +791,52 @@ def export_to_openreel(edl: dict, output_path: str) -> bool:
     print(f"  OpenReel project saved: {output_path}")
     return True
 
+
+def apply_subject_crops(edl, output_path, crops_path=None, crops_meta_path=None):
+    """Read subject-tracked crops binary and return per-frame crop array.
+
+    Reads crops.f64 (float64[ N ][4]) and its crops.json metadata.
+    Returns the crops array for use in the FFmpeg render loop, or None
+    if no crops data is available (caller falls back to center-crop).
+
+    Paths resolve from arguments, then from env vars CROPS_PATH and
+    CROPS_META_PATH (set by vibe-render.ts).
+
+    Args:
+        edl: MonetEDL dict (unused, for API consistency).
+        output_path: Output render path (unused, for API consistency).
+        crops_path: Path to crops.f64 binary artifact.
+        crops_meta_path: Path to crops.json metadata.
+
+    Returns:
+        np.ndarray of shape (N, 4) with columns
+        [cropX, cropY, cropW, cropH] each normalized 0–1,
+        or None if no crops data exists.
+    """
+    import json
+    import os
+
+    crops_path = crops_path or os.environ.get("CROPS_PATH")
+    crops_meta_path = crops_meta_path or os.environ.get("CROPS_META_PATH")
+
+    if crops_path is None or not os.path.exists(crops_path):
+        return None
+
+    with open(crops_meta_path) as f:
+        meta = json.load(f)
+
+    schema = meta.get("schema")
+    if schema != "crops.v1":
+        raise ValueError(
+            f"Unknown crop schema: {schema!r}. Expected 'crops.v1'."
+        )
+
+    import numpy as np
+
+    crops = np.fromfile(crops_path, dtype=np.float64).reshape(-1, 4)
+    return crops
+
+
 def render_with_editly(edl: dict, output_path: str, music_path: Optional[str] = None) -> bool:
     """
     Render EDL to video.
@@ -895,13 +941,38 @@ def render_native(edl: dict, output_path: str, music_path: Optional[str] = None)
         footage_path = edl["assets"]["media"]["footage-main"]["path"]
         clips = edl["timeline"]["tracks"][0]["clips"]
         
+        # Load subject crops if available
+        crops = apply_subject_crops(edl, output_path)
+        fps = edl["meta"]["fps"]
+        
         # Extract segments
         segment_files = []
         for i, clip in enumerate(clips):
             seg_file = os.path.join(tmpdir, f"seg_{i:03d}.mp4")
             
-            # Build filter chain
-            vf_parts = ["scale=576:576:force_original_aspect_ratio=decrease,pad=576:576:(ow-iw)/2:(oh-ih)/2"]
+            # Build filter chain — subject crop or fallback center-crop
+            if crops is not None:
+                start_frame = int(clip["inPoint"] * fps)
+                end_frame = int(min(
+                    (clip["inPoint"] + clip["duration"]) * fps,
+                    len(crops)
+                ))
+                clip_crops = crops[start_frame:end_frame]
+                if len(clip_crops) > 0:
+                    avg = clip_crops.mean(axis=0)
+                    c_x, c_y, c_w, c_h = avg
+                    c_w = max(0.1, min(1.0, c_w))
+                    c_h = max(0.1, min(1.0, c_h))
+                    c_x = max(0.0, min(1.0 - c_w, c_x))
+                    c_y = max(0.0, min(1.0 - c_h, c_y))
+                    vf_parts = [
+                        f"crop=iw*{c_w}:ih*{c_h}:iw*{c_x}:ih*{c_y}",
+                        "scale=576:576",
+                    ]
+                else:
+                    vf_parts = ["scale=576:576:force_original_aspect_ratio=decrease,pad=576:576:(ow-iw)/2:(oh-ih)/2"]
+            else:
+                vf_parts = ["scale=576:576:force_original_aspect_ratio=decrease,pad=576:576:(ow-iw)/2:(oh-ih)/2"]
             
             # Add effects (deduplicate, cap at 1 per clip)
             unique_effects = list(dict.fromkeys([e.get("type", "") for e in clip.get("effects", []) if e.get("type", "") != "cut"]))[:1]
