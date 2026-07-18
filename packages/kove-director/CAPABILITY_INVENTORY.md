@@ -22,7 +22,7 @@
 | Move/Reorder Clip | alpha | `apps/web/src/components/editor/TimelineEditor.tsx:73` (drag-and-drop) | `clip.reorder` (declared, not compiled) | Full pointer-based drag with beat snapping (0.2s threshold) and overlap detection. |
 | Clip Speed (static) | alpha | `apps/web/src/components/editor/ClipInspector.tsx:256` + `project-store.ts` | `clip.speed` | Dropdown: 0.25x–4x. `timeline-resolver.ts:55` applies speed multiplier. |
 | Speed Ramp (keyframed) | alpha | `apps/web/src/lib/executors/monet-action-executor.ts:388` + `effect-control-registry.ts:72` + `packages/kove-director/src/capabilities/edit/speed-ramp.ts` | `clip.speed-ramp` | Zod-validated capability with compile() emitting V-shaped `playbackSpeed` keyframes. Registered in compiler.ts via direct map. |
-| Freeze Frame | beta | `apps/web/src/lib/executors/monet-action-executor.ts:686` | None | Executor pushes `freezeFrame` effect with `atTime` + `holdDuration`. No Director verb. No UI toggle in ClipInspector. |
+| Freeze Frame | alpha | `apps/web/src/lib/executors/monet-action-executor.ts:686` + `packages/kove-director/src/capabilities/edit/freeze-frame.ts` | `effect.custom` with `freeze_frame` | Zod-validated capability. Compile emits `effect/apply` with effectType `freeze_frame`. Mapped via effectTypeMap in compiler.ts. |
 | Beat Cut | alpha | `apps/web/src/lib/executors/monet-action-executor.ts:203,699` | Implicit in EDL generation | Hard cut at beat boundary. No-op at clip level (already implicit in shot timing). |
 | Posterize Time | beta | `apps/web/src/components/editor/ClipInspector.tsx:665` | None | "Lock FPS" toggle with target FPS slider (1–60). Wired in ClipInspector only. |
 | Ripple Delete | planned | — | None | Not implemented. `deleteClip` removes without gap-closing. |
@@ -154,14 +154,14 @@
 
 | Category | Alpha | Beta | Planned |
 |----------|-------|------|---------|
-| Edit | 6 | 3 | 1 |
+| Edit | 7 | 2 | 1 |
 | Effects | 6 | 14 | 4 |
 | Overlays | 1 | 4 | 4 |
 | Audio | 4 | 2 | 3 |
 | Transitions | 19 | 1 | 1 |
 | Camera | 1 | 0 | 4 |
 | Composition | 1 | 0 | 7 |
-| **Total** | **38** | **24** | **24** |
+| **Total** | **39** | **23** | **24** |
 
 ---
 
@@ -172,10 +172,8 @@ These are the highest-impact beta features — real code, real user value, just 
 ### ~~1. Speed Ramp (keyframed slow-mo)~~ ✅ DONE
 **Status:** Alpha. Flipped from beta → alpha in commit `4bb391a`. Zod-validated capability with compile() emitting V-shaped `playbackSpeed` keyframes. Registered in compiler.ts via direct map.
 
-### 2. Freeze Frame
-**Why:** "Hold that moment" is the second most common creative request after speed ramps. The executor already pushes `freezeFrame` effects with `atTime` + `holdDuration`. Missing: Director verb + ClipInspector UI toggle.
-
-**Effort:** ~3 hours. Add `freeze.frame` action to contract + compiler. Add toggle in ClipInspector.
+### ~~2. Freeze Frame~~ ✅ DONE
+**Status:** Alpha. Flipped from beta → alpha in commit `0fc8ba3`. Zod-validated capability emitting `effect/apply` with `freeze_frame` effectType. Mapped via compiler.ts effectTypeMap.
 
 ### 3. Background Blur (subject isolation lite)
 **Why:** "Blur the background" is a top-3 TikTok editing request. ClipInspector already has toggle + blur radius slider (2–30). Missing: Director verb. The blur effect is already wired to the render pipeline.
