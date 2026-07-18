@@ -105,6 +105,8 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "ducking": { input: { musicTrackId: "audio-music", duckAmount: 0.3 } },
   "audio-mixing": { input: { musicTrackId: "music-1", musicVolume: 0.6, voiceVolume: 1 } },
   "sfx-synthesis": { input: { clipId: "clip-1", sfxType: "whoosh", volume: 0.8 } },
+  "audio-eq": { input: { clipId: "audio-1", lowGain: 3, midGain: -2, highGain: 1, midFrequency: 1000 } },
+  "audio-dynamics": { input: { clipId: "audio-1", compressor: 0.5, limiter: 0.3, noiseGate: 0.2 } },
 
   // Camera
   "crop": { input: { clipId: "clip-1", x: 0, y: 0.1, width: 1, height: 0.9 } },

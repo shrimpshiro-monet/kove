@@ -232,6 +232,8 @@ function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
         "color_lut": "color-lut",
         "color_curves": "color-curves",
         "color_wheels": "color-wheels",
+        "audio_eq": "audio-eq",
+        "audio_dynamics": "audio-dynamics",
       };
       if (effectTypeMap[params.effectType]) return effectTypeMap[params.effectType];
     }
