@@ -77,6 +77,9 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "whip-pan-effect": { input: { clipId: "clip-1", intensity: 0.6 } },
   "background-blur": { input: { clipId: "clip-1", blur: 15 } },
   "color-grade": { input: { target: "timeline", preset: "warm" }, context: TEST_CONTEXT },
+  "color-lut": { input: { clipId: "clip-1", preset: "cinematic", intensity: 0.9 } },
+  "color-curves": { input: { clipId: "clip-1", shadows: -0.2, midtones: 0.1, highlights: 0.15 } },
+  "color-wheels": { input: { clipId: "clip-1", lift: -0.1, gamma: 0.05, gain: 0.1 } },
 
   // Effects (newly alpha — beta→alpha flip)
   "color-pulse": { input: { clipId: "clip-1", intensity: 0.8, duration: 0.3 } },

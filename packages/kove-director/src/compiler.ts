@@ -229,6 +229,9 @@ function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
         "split_screen": "split-screen",
         "pip": "pip",
         "multi_cam": "multi-cam",
+        "color_lut": "color-lut",
+        "color_curves": "color-curves",
+        "color_wheels": "color-wheels",
       };
       if (effectTypeMap[params.effectType]) return effectTypeMap[params.effectType];
     }

@@ -1,18 +1,57 @@
+import { z } from "zod";
 import { registerCapability } from "../registry";
 import type { Capability } from "../types";
 
-export const UcolorUcurvesCapability: Capability = {
+const Params = z.object({
+  clipId: z.string().describe("ID of the clip to apply curves to"),
+  shadows: z.number().min(-1).max(1).default(0).describe("Shadows adjustment (-1 = darken, 1 = lighten)"),
+  midtones: z.number().min(-1).max(1).default(0).describe("Midtones adjustment"),
+  highlights: z.number().min(-1).max(1).default(0).describe("Highlights adjustment"),
+});
+
+type P = z.infer<typeof Params>;
+
+export const ColorCurvesCapability: Capability<P> = {
   id: "color-curves",
   category: "effects",
-  status: "planned",
-  version: "0.0.0",
-  description: "Planned: color-curves. Not yet implemented.",
-  triggerPhrases: ["color-curves"],
-  params: {},
-  compile: () => {
-    throw new Error("capability color-curves is status=planned, not yet callable");
-  },
-  examples: [],
+  status: "alpha",
+  version: "1.0.0",
+  description: "Adjust color curves for shadows, midtones, and highlights. Maps through OpenReel's existing curves engine for precise tonal control.",
+  triggerPhrases: [
+    "color curves",
+    "adjust curves",
+    "tonal adjustment",
+    "shadows highlights",
+    "lift gamma gain",
+  ],
+  params: Params,
+  compile: (input) => [
+    {
+      type: "effect/apply",
+      id: `curves-${Date.now()}`,
+      timestamp: Date.now(),
+      params: {
+        target: "clip",
+        targetId: input.clipId,
+        kind: "custom",
+        effectType: "color_curves",
+        params: { shadows: input.shadows, midtones: input.midtones, highlights: input.highlights },
+      },
+    },
+  ],
+  examples: [
+    {
+      input: { clipId: "clip-1", shadows: -0.2, midtones: 0.1, highlights: 0.15 },
+      output: [
+        {
+          type: "effect/apply",
+          id: "ex-1",
+          timestamp: 0,
+          params: { target: "clip", targetId: "clip-1", kind: "custom", effectType: "color_curves", params: { shadows: -0.2, midtones: 0.1, highlights: 0.15 } },
+        },
+      ],
+    },
+  ],
 };
 
-registerCapability(UcolorUcurvesCapability);
+registerCapability(ColorCurvesCapability);
