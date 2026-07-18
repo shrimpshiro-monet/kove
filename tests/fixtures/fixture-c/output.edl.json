@@ -1,0 +1,329 @@
+{
+  "version": 1,
+  "id": "edl_517065ec0cc5",
+  "meta": {
+    "createdAt": 1784307494,
+    "updatedAt": 1784307494,
+    "aspectRatio": "16:9",
+    "fps": 30.0,
+    "sampleRate": 44100,
+    "analysisId": "fixture-c-profile"
+  },
+  "timeline": {
+    "duration": 15.022982,
+    "tracks": [
+      {
+        "id": "video_main",
+        "type": "video",
+        "clips": [
+          {
+            "id": "clip_0000",
+            "mediaId": "footage_001",
+            "startTime": 0.0,
+            "duration": 3.023,
+            "inPoint": 0.0,
+            "outPoint": 3.023,
+            "speed": 0.63,
+            "shake": 2.7,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "hard_cut"
+            }
+          },
+          {
+            "id": "clip_0001",
+            "mediaId": "footage_001",
+            "startTime": 6.023,
+            "duration": 3.0,
+            "inPoint": 6.023,
+            "outPoint": 9.023,
+            "speed": 1.39,
+            "shake": 0.0,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "hard_cut"
+            }
+          },
+          {
+            "id": "clip_0002",
+            "mediaId": "footage_001",
+            "startTime": 12.098,
+            "duration": 0.672,
+            "inPoint": 12.098,
+            "outPoint": 12.77,
+            "speed": 1.55,
+            "shake": 0.0,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "hard_cut"
+            }
+          },
+          {
+            "id": "clip_0003",
+            "mediaId": "footage_001",
+            "startTime": 12.77,
+            "duration": 0.75,
+            "inPoint": 12.77,
+            "outPoint": 13.52,
+            "speed": 1.95,
+            "shake": 0.0,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "hard_cut"
+            }
+          },
+          {
+            "id": "clip_0004",
+            "mediaId": "footage_001",
+            "startTime": 13.514,
+            "duration": 0.756,
+            "inPoint": 13.514,
+            "outPoint": 14.27,
+            "speed": 1.94,
+            "shake": 0.0,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "hard_cut"
+            }
+          },
+          {
+            "id": "clip_0005",
+            "mediaId": "footage_001",
+            "startTime": 14.27,
+            "duration": 0.753,
+            "inPoint": 14.27,
+            "outPoint": 15.023,
+            "speed": 1.66,
+            "shake": 0.0,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0,
+                  "easing": "linear"
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1,
+                  "easing": "linear"
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0,
+                  "easing": "linear"
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": [],
+            "meta": {
+              "cut_type": "crossfade"
+            }
+          }
+        ],
+        "order": 0,
+        "locked": false,
+        "hidden": false
+      },
+      {
+        "id": "audio_main",
+        "type": "audio",
+        "clips": [
+          {
+            "id": "audio_main_clip",
+            "mediaId": "footage_001",
+            "startTime": 0,
+            "duration": 15.022982,
+            "inPoint": 0,
+            "outPoint": 15.022982,
+            "speed": 1,
+            "transforms": {
+              "position": [
+                {
+                  "time": 0,
+                  "x": 0,
+                  "y": 0
+                }
+              ],
+              "scale": [
+                {
+                  "time": 0,
+                  "value": 1
+                }
+              ],
+              "rotation": [
+                {
+                  "time": 0,
+                  "value": 0
+                }
+              ]
+            },
+            "audio": {
+              "gain": 1.0
+            },
+            "effects": []
+          }
+        ],
+        "order": 0,
+        "locked": false,
+        "hidden": false
+      }
+    ],
+    "markers": []
+  },
+  "assets": {
+    "media": {
+      "footage_001": {
+        "id": "footage_001",
+        "path": "/Users/hamza/Desktop/reserves/monet-ai-story/tests/fixtures/fixture-c/footage.mp4",
+        "duration": 15.022982,
+        "width": 640,
+        "height": 360
+      }
+    },
+    "audio": {},
+    "overlays": {}
+  }
+}

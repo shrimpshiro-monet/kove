@@ -5,8 +5,33 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const PROMPT_DIR = path.dirname(__filename);
+function resolvePromptDirectory(): string {
+  const candidates: string[] = [];
+
+  if (typeof import.meta !== "undefined" && typeof import.meta.url === "string") {
+    try {
+      candidates.push(path.dirname(fileURLToPath(import.meta.url)));
+    } catch {
+      // Fall back to cwd-based resolution below.
+    }
+  }
+
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
+    candidates.push(path.resolve(process.cwd(), "src/server/prompts"));
+  }
+
+  candidates.push(path.resolve("src/server/prompts"));
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return candidates[0] ?? path.resolve("src/server/prompts");
+}
+
+const PROMPT_DIR = resolvePromptDirectory();
 
 const PROMPT_FILES = [
   "analyze-footage.txt",

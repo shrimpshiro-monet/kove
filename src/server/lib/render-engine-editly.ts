@@ -8,6 +8,7 @@ import os from "node:os";
 import type { MonetEDL } from "../types/edl";
 import type { Env } from "../types/env";
 import { monetEDLToEditlySpec } from "./edl-to-editly";
+import { postProcessEditlyRender } from "./post-process-render";
 
 export interface RenderJob {
   jobId: string;
@@ -83,8 +84,17 @@ export async function renderWithEditly(params: RenderJob): Promise<RenderResult>
     // @ts-ignore
     await editly(spec);
 
-    // 4. Upload
-    await env.MONET_RENDERS.put(r2OutputKey, await fs.readFile(outPath), {
+    // 4. Post-processing: apply LUT, ASS subtitles, subject mask
+    const postResult = await postProcessEditlyRender(outPath, tempDir, edl, env);
+    const finalOutputPath = postResult.outputPath;
+    if (postResult.filtersApplied.length > 0) {
+      console.info(`[render] Post-processing applied: ${postResult.filtersApplied.join(", ")}`, {
+        durationMs: postResult.durationMs,
+      });
+    }
+
+    // 5. Upload final output to R2
+    await env.MONET_RENDERS.put(r2OutputKey, await fs.readFile(finalOutputPath), {
       httpMetadata: { contentType: "video/mp4" }
     });
 

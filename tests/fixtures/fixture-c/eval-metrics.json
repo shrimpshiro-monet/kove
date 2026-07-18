@@ -1,0 +1,52 @@
+{
+  "generated": "tests/fixtures/fixture-c/output.mp4",
+  "metrics": {
+    "cut_point_f1": {
+      "precision": 0.2,
+      "recall": 0.5,
+      "f1": 0.2857,
+      "tp": 1,
+      "fp": 4,
+      "fn": 1,
+      "tolerance_s": 0.05,
+      "matches": [
+        {
+          "generated": 3.0,
+          "reference": 3.0,
+          "offset_ms": 0.0
+        }
+      ]
+    },
+    "beat_alignment": {
+      "aligned": 1,
+      "total": 5,
+      "rate": 0.2,
+      "bpm": 123.0,
+      "tolerance_s": 0.05,
+      "mean_offset_ms": 105.73,
+      "median_offset_ms": 76.19
+    }
+  },
+  "generated_cuts": 5,
+  "reference_cuts": 2,
+  "regression": {
+    "baseline": "tests/fixtures/baselines/fixture-c.json",
+    "current": {
+      "cut_point_f1": 0.2857,
+      "beat_alignment_rate": 0.2,
+      "vmaf": null,
+      "psnr": null,
+      "ssim": null
+    },
+    "regressions": {
+      "cut_point_f1": {
+        "before": 0.5,
+        "now": 0.2857,
+        "delta": -0.2143,
+        "threshold": 0.05,
+        "regressed": true
+      }
+    },
+    "passed": false
+  }
+}

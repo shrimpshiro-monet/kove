@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "description": "Monet AI Editor — Reference Edit Catalog. Analyzed from 16 real edit videos.",
-  "analyzedAt": "2026-06-23",
+  "version": "2.0.0",
+  "description": "Monet AI Editor — Reference Edit Catalog. CORRECTED with FFmpeg ground truth analysis (v2). All cut rates, effect vocabularies, and pacing descriptions verified against actual footage.",
+  "analyzedAt": "2026-07-14",
   "videos": [
     {
       "id": "spiderman-important",
@@ -13,9 +13,9 @@
       "aspectRatio": "9:16",
       "fps": 30,
       "codec": "h264",
-      "cuts": 34,
-      "cutRate": 0.73,
-      "avgShotDuration": 1.37,
+      "cuts": 12,
+      "cutRate": 0.24,
+      "avgShotDuration": 3.88,
       "colorProfile": {
         "avgRGB": [42, 49, 83],
         "brightness": 23,
@@ -25,13 +25,14 @@
       },
       "editCharacteristics": {
         "pacing": "moderate",
-        "effects": ["comic_halftone", "ink_edges", "frame_stutter", "chromatic_glitch", "impact_flash"],
-        "transitions": ["cut", "whip_pan", "flash"],
+        "effects": ["glitch", "chromatic_aberration"],
+        "transitions": ["hard_cut"],
         "colorGrade": "hyper_neon",
         "vfxIntensity": "high",
-        "referenceStyle": "spiderverse_action"
+        "referenceStyle": "spiderverse_action",
+        "notes": "HEAVY VFX. Glitch text overlays, chromatic fringing. Black flash frames between scenes. Source material has comic book effects (halftone, panel splits) that are amplified."
       },
-      "tags": ["spider-verse", "comic", "superhero", "halftone", "ink", "animation_style"]
+      "tags": ["spider-verse", "comic", "superhero", "glitch", "neon", "animation_style"]
     },
     {
       "id": "spiderman-same",
@@ -55,13 +56,14 @@
       },
       "editCharacteristics": {
         "pacing": "moderate_fast",
-        "effects": ["impact_flash", "vignette_punch", "zoom_blur"],
-        "transitions": ["cut", "zoom-blur"],
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "desaturated_natural",
-        "vfxIntensity": "medium",
-        "referenceStyle": "sports_highlight_tiktok"
+        "vfxIntensity": "low",
+        "referenceStyle": "sports_highlight_tiktok",
+        "notes": "Minimal VFX. Broadcast sports footage with hard cuts. Energy comes from cut timing, not effects."
       },
-      "tags": ["sports", "football", "sidemen", "tiktok", "square_format", "instagram"]
+      "tags": ["sports", "football", "sidemen", "tiktok", "square_format"]
     },
     {
       "id": "2nd-important",
@@ -73,9 +75,9 @@
       "aspectRatio": "0.89:1",
       "fps": 24,
       "codec": "h264",
-      "cuts": 114,
-      "cutRate": 1.44,
-      "avgShotDuration": 0.70,
+      "cuts": 44,
+      "cutRate": 0.54,
+      "avgShotDuration": 1.80,
       "colorProfile": {
         "avgRGB": [82, 68, 64],
         "brightness": 28,
@@ -84,14 +86,15 @@
         "classification": "DARK_WARM"
       },
       "editCharacteristics": {
-        "pacing": "fast",
-        "effects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan", "bw_toggle"],
-        "transitions": ["cut", "whip_pan"],
+        "pacing": "moderate",
+        "effects": ["vignette"],
+        "transitions": ["hard_cut"],
         "colorGrade": "warm_dark",
-        "vfxIntensity": "high",
-        "referenceStyle": "tv_drama_edit"
+        "vfxIntensity": "low",
+        "referenceStyle": "tv_drama_edit",
+        "notes": "Cinematic letterboxing. Desaturated cool palette with warm accent lighting (golden windows). Subtle vignette on close-ups. Subtitle text overlays. Cut-on-action editing. Prestige TV feel."
       },
-      "tags": ["tv_drama", "game_of_thrones", "dialogue", "fast_cuts", "warm_tones"]
+      "tags": ["tv_drama", "game_of_thrones", "dialogue", "cinematic", "warm_tones"]
     },
     {
       "id": "3rd-important",
@@ -103,9 +106,9 @@
       "aspectRatio": "1:1",
       "fps": 30,
       "codec": "h264",
-      "cuts": 300,
-      "cutRate": 4.65,
-      "avgShotDuration": 0.21,
+      "cuts": 68,
+      "cutRate": 1.04,
+      "avgShotDuration": 0.95,
       "colorProfile": {
         "avgRGB": [174, 154, 137],
         "brightness": 61,
@@ -114,14 +117,15 @@
         "classification": "BRIGHT_WARM"
       },
       "editCharacteristics": {
-        "pacing": "extreme_fast",
-        "effects": ["impact_flash", "color_pulse", "speed_ramp", "chromatic_burst", "context_shake"],
-        "transitions": ["cut", "flash"],
-        "colorGrade": "bright_warm",
-        "vfxIntensity": "very_high",
-        "referenceStyle": "anime_amv"
+        "pacing": "moderate_fast",
+        "effects": [],
+        "transitions": ["hard_cut"],
+        "colorGrade": "clean_anime",
+        "vfxIntensity": "minimal",
+        "referenceStyle": "anime_amv",
+        "notes": "MINIMAL ADDED VFX. The 'effects' (purple energy, speed lines) are from the source anime, not post-production. Subtitle text overlays for dialogue. Edit is about moment curation and pacing, not heavy processing."
       },
-      "tags": ["anime", "jujutsu_kaisen", "amv", "rapid_cuts", "extreme_fast", "purple"]
+      "tags": ["anime", "jujutsu_kaisen", "amv", "narrative", "character_moments"]
     },
     {
       "id": "4th-important",
@@ -133,9 +137,9 @@
       "aspectRatio": "1:1",
       "fps": 30,
       "codec": "h264",
-      "cuts": 66,
-      "cutRate": 0.98,
-      "avgShotDuration": 1.02,
+      "cuts": 31,
+      "cutRate": 0.45,
+      "avgShotDuration": 2.17,
       "colorProfile": {
         "avgRGB": [84, 64, 57],
         "brightness": 27,
@@ -145,13 +149,14 @@
       },
       "editCharacteristics": {
         "pacing": "moderate",
-        "effects": ["glitch", "speed_ramp", "multi_exposure"],
-        "transitions": ["cut", "glitch"],
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "warm_dark",
-        "vfxIntensity": "medium",
-        "referenceStyle": "fancam_character_tribute"
+        "vfxIntensity": "low",
+        "referenceStyle": "fancam_character_tribute",
+        "notes": "Warm rich tones, high saturation on navy suits. Text overlays with yellow highlighted keywords. No glitch/shake/speed ramps. Clean edit. Confident slick aesthetic."
       },
-      "tags": ["fancam", "suits", "character_tribute", "warm", "dark", "moderate_cuts"]
+      "tags": ["fancam", "suits", "character_tribute", "warm", "text_overlay"]
     },
     {
       "id": "tiktok-unknown-1",
@@ -163,9 +168,9 @@
       "aspectRatio": "1:1",
       "fps": 30,
       "codec": "h264",
-      "cuts": 22,
-      "cutRate": 0.91,
-      "avgShotDuration": 1.10,
+      "cuts": 7,
+      "cutRate": 0.25,
+      "avgShotDuration": 3.44,
       "colorProfile": {
         "avgRGB": [45, 49, 49],
         "brightness": 19,
@@ -174,14 +179,15 @@
         "classification": "DARK_DESATURATED"
       },
       "editCharacteristics": {
-        "pacing": "moderate",
-        "effects": ["impact_flash", "vignette_punch"],
-        "transitions": ["cut"],
+        "pacing": "slow",
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "dark_desaturated",
-        "vfxIntensity": "low_medium",
-        "referenceStyle": "tiktok_dynamic"
+        "vfxIntensity": "minimal",
+        "referenceStyle": "tiktok_dynamic",
+        "notes": "Very slow, moody edit. Only 7 shots in 24 seconds. Dark desaturated look."
       },
-      "tags": ["tiktok", "dark", "moody", "square", "instagram"]
+      "tags": ["tiktok", "dark", "moody", "slow"]
     },
     {
       "id": "harvey",
@@ -193,9 +199,9 @@
       "aspectRatio": "1:1",
       "fps": 24,
       "codec": "h264",
-      "cuts": 66,
-      "cutRate": 0.89,
-      "avgShotDuration": 1.12,
+      "cuts": 32,
+      "cutRate": 0.42,
+      "avgShotDuration": 2.32,
       "colorProfile": {
         "avgRGB": [87, 91, 100],
         "brightness": 36,
@@ -205,13 +211,14 @@
       },
       "editCharacteristics": {
         "pacing": "moderate",
-        "effects": ["vignette_pro", "flash_white"],
-        "transitions": ["cut", "flash"],
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "cool_desaturated",
         "vfxIntensity": "low",
-        "referenceStyle": "tv_drama_fan_edit"
+        "referenceStyle": "tv_drama_fan_edit",
+        "notes": "Cool blue tones dominate. Tight close-ups. Neon blue bar scene. Slight film grain. Text overlays. Most aggressive close-up work of all references."
       },
-      "tags": ["tv_drama", "suits", "fan_edit", "cool_tones", "dialogue", "moderate_pacing"]
+      "tags": ["tv_drama", "suits", "fan_edit", "cool_tones", "close_ups"]
     },
     {
       "id": "lewis-hamilton",
@@ -223,9 +230,9 @@
       "aspectRatio": "4:3",
       "fps": 30,
       "codec": "h264",
-      "cuts": 68,
-      "cutRate": 3.22,
-      "avgShotDuration": 0.31,
+      "cuts": 17,
+      "cutRate": 0.76,
+      "avgShotDuration": 1.24,
       "colorProfile": {
         "avgRGB": [116, 105, 103],
         "brightness": 42,
@@ -234,14 +241,15 @@
         "classification": "MID_TONE_NEUTRAL"
       },
       "editCharacteristics": {
-        "pacing": "very_fast",
-        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan"],
-        "transitions": ["cut", "whip_pan", "flash"],
-        "colorGrade": "neutral_desaturated",
-        "vfxIntensity": "very_high",
-        "referenceStyle": "sports_highlight"
+        "pacing": "moderate_fast",
+        "effects": [],
+        "transitions": ["hard_cut"],
+        "colorGrade": "desaturated_moody",
+        "vfxIntensity": "low",
+        "referenceStyle": "sports_highlight",
+        "notes": "Primarily B&W or heavily desaturated. Dark moody noir aesthetic. Heavy typography (GELONADE, Lewis HAMILTON, Mercedes). Motion blur on F1 shots. Rain/particle effects from source footage. NOT glitch-heavy."
       },
-      "tags": ["f1", "racing", "formula1", "extreme_fast", "neutral_tones"]
+      "tags": ["f1", "racing", "formula1", "cinematic", "typography", "moody"]
     },
     {
       "id": "new-york",
@@ -253,9 +261,9 @@
       "aspectRatio": "16:9",
       "fps": 30,
       "codec": "hevc",
-      "cuts": 67,
-      "cutRate": 3.46,
-      "avgShotDuration": 0.29,
+      "cuts": 24,
+      "cutRate": 1.19,
+      "avgShotDuration": 0.81,
       "colorProfile": {
         "avgRGB": [111, 109, 92],
         "brightness": 41,
@@ -264,14 +272,15 @@
         "classification": "MID_TONE_WARM"
       },
       "editCharacteristics": {
-        "pacing": "very_fast",
-        "effects": ["push_in", "impact_flash", "speed_ramp", "chromatic_burst"],
-        "transitions": ["cut", "whip_pan"],
+        "pacing": "moderate_fast",
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "warm_cinematic",
-        "vfxIntensity": "high",
-        "referenceStyle": "lifestyle_cinematic"
+        "vfxIntensity": "minimal",
+        "referenceStyle": "lifestyle_cinematic",
+        "notes": "Warm golden hour tones. Wide establishing shots dominate (skyline, bridges). Single text overlay 'LIVING THE MOMENT'. No glitch/shake/speed ramps. Most professional looking. Cinematic travelogue feel."
       },
-      "tags": ["lifestyle", "nyc", "city", "cinematic", "fast_cuts", "travel"]
+      "tags": ["lifestyle", "nyc", "city", "cinematic", "travel", "warm_golden"]
     },
     {
       "id": "steph-curry",
@@ -283,9 +292,9 @@
       "aspectRatio": "1:1",
       "fps": 30,
       "codec": "hevc",
-      "cuts": 27,
-      "cutRate": 1.41,
-      "avgShotDuration": 0.71,
+      "cuts": 8,
+      "cutRate": 0.37,
+      "avgShotDuration": 2.39,
       "colorProfile": {
         "avgRGB": [58, 51, 55],
         "brightness": 21,
@@ -294,14 +303,15 @@
         "classification": "DARK_COOL"
       },
       "editCharacteristics": {
-        "pacing": "fast",
-        "effects": ["impact_flash", "speed_ramp", "context_shake", "chromatic_burst"],
-        "transitions": ["cut", "whip_pan"],
+        "pacing": "slow",
+        "effects": ["bw_toggle"],
+        "transitions": ["hard_cut"],
         "colorGrade": "cool_dark",
-        "vfxIntensity": "high",
-        "referenceStyle": "sports_highlight"
+        "vfxIntensity": "minimal",
+        "referenceStyle": "sports_highlight",
+        "notes": "LOW-EFFECT edit. Two sections: (A) raw NBA broadcast footage, (B) high-contrast B&W portrait tribute. The B&W is the primary 'effect.' Casual meme-style text overlay. NO glitch/chromatic/shake/speed ramps."
       },
-      "tags": ["basketball", "steph_curry", "warriors", "sports", "fast_cuts", "dark_cool"]
+      "tags": ["basketball", "steph_curry", "warriors", "bw_filter", "tribute"]
     },
     {
       "id": "tyler-the-creator",
@@ -313,9 +323,9 @@
       "aspectRatio": "1.39:1",
       "fps": 24,
       "codec": "hevc",
-      "cuts": 32,
-      "cutRate": 0.57,
-      "avgShotDuration": 1.74,
+      "cuts": 12,
+      "cutRate": 0.20,
+      "avgShotDuration": 4.64,
       "colorProfile": {
         "avgRGB": [144, 81, 54],
         "brightness": 36,
@@ -324,14 +334,15 @@
         "classification": "VIBRANT_WARM"
       },
       "editCharacteristics": {
-        "pacing": "moderate",
-        "effects": ["push_in", "color_pulse", "vignette_punch", "bloom_highlights"],
-        "transitions": ["cut", "dissolve"],
+        "pacing": "slow",
+        "effects": ["push_in", "vignette"],
+        "transitions": ["hard_cut"],
         "colorGrade": "vibrant_warm",
-        "vfxIntensity": "medium",
-        "referenceStyle": "music_video_vibrant"
+        "vfxIntensity": "low",
+        "referenceStyle": "music_video_vibrant",
+        "notes": "Slowest reference. Only 12 cuts in 55 seconds. Vibrant warm saturated colors. Let shots breathe. Push-in on key moments. Vignette for focus. Most cinematic of all references."
       },
-      "tags": ["music_video", "tyler_the_creator", "vibrant", "warm", "creative", "colorful"]
+      "tags": ["music_video", "tyler_the_creator", "vibrant", "warm", "cinematic", "slow"]
     },
     {
       "id": "tiktok-unknown-2",
@@ -343,9 +354,9 @@
       "aspectRatio": "16:9",
       "fps": 30,
       "codec": "h264",
-      "cuts": 138,
-      "cutRate": 2.98,
-      "avgShotDuration": 0.34,
+      "cuts": 38,
+      "cutRate": 0.80,
+      "avgShotDuration": 1.22,
       "colorProfile": {
         "avgRGB": [89, 91, 100],
         "brightness": 37,
@@ -354,12 +365,13 @@
         "classification": "DARK_COOL"
       },
       "editCharacteristics": {
-        "pacing": "very_fast",
-        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
-        "transitions": ["cut", "whip_pan"],
+        "pacing": "moderate_fast",
+        "effects": ["impact_flash"],
+        "transitions": ["hard_cut"],
         "colorGrade": "cool_dark",
-        "vfxIntensity": "high",
-        "referenceStyle": "tiktok_dynamic"
+        "vfxIntensity": "low_medium",
+        "referenceStyle": "tiktok_dynamic",
+        "notes": "Cool dark tones. Impact flash on beat drops. Mostly hard cuts. Moderate effects."
       },
       "tags": ["tiktok", "fast_cuts", "dynamic", "cool", "dark"]
     },
@@ -373,9 +385,9 @@
       "aspectRatio": "2.4:1",
       "fps": 30,
       "codec": "h264",
-      "cuts": 76,
-      "cutRate": 1.14,
-      "avgShotDuration": 0.87,
+      "cuts": 37,
+      "cutRate": 0.54,
+      "avgShotDuration": 1.80,
       "colorProfile": {
         "avgRGB": [126, 127, 122],
         "brightness": 49,
@@ -384,12 +396,13 @@
         "classification": "MID_TONE_NEUTRAL"
       },
       "editCharacteristics": {
-        "pacing": "moderate_fast",
-        "effects": ["push_in", "impact_flash", "speed_ramp"],
-        "transitions": ["cut"],
+        "pacing": "moderate",
+        "effects": ["push_in"],
+        "transitions": ["hard_cut"],
         "colorGrade": "neutral",
-        "vfxIntensity": "medium",
-        "referenceStyle": "tiktok_dynamic"
+        "vfxIntensity": "low",
+        "referenceStyle": "tiktok_dynamic",
+        "notes": "Ultrawide format. Neutral desaturated. Push-in zooms. Very clean, minimal effects."
       },
       "tags": ["tiktok", "ultrawide", "neutral", "moderate_cuts"]
     },
@@ -403,9 +416,9 @@
       "aspectRatio": "0.89:1",
       "fps": 24,
       "codec": "h264",
-      "cuts": 148,
-      "cutRate": 2.19,
-      "avgShotDuration": 0.46,
+      "cuts": 45,
+      "cutRate": 0.65,
+      "avgShotDuration": 1.50,
       "colorProfile": {
         "avgRGB": [47, 37, 38],
         "brightness": 16,
@@ -414,14 +427,15 @@
         "classification": "DARK_WARM"
       },
       "editCharacteristics": {
-        "pacing": "fast",
-        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
-        "transitions": ["cut", "whip_pan"],
+        "pacing": "moderate",
+        "effects": ["impact_flash"],
+        "transitions": ["hard_cut"],
         "colorGrade": "dark_warm",
-        "vfxIntensity": "high",
-        "referenceStyle": "tiktok_dynamic"
+        "vfxIntensity": "low_medium",
+        "referenceStyle": "tiktok_dynamic",
+        "notes": "Dark warm tones. Impact flash on cuts. Moderate pace."
       },
-      "tags": ["tiktok", "dark", "warm", "fast_cuts", "energetic"]
+      "tags": ["tiktok", "dark", "warm", "moderate_cuts"]
     },
     {
       "id": "tiktok-unknown-5",
@@ -433,9 +447,9 @@
       "aspectRatio": "16:9",
       "fps": 30,
       "codec": "h264",
-      "cuts": 2,
-      "cutRate": 0.08,
-      "avgShotDuration": 12.54,
+      "cuts": 1,
+      "cutRate": 0.00,
+      "avgShotDuration": 25.08,
       "colorProfile": {
         "avgRGB": [89, 17, 12],
         "brightness": 15,
@@ -445,11 +459,12 @@
       },
       "editCharacteristics": {
         "pacing": "very_slow",
-        "effects": ["color_pulse", "vignette_punch", "bloom_highlights"],
-        "transitions": ["dissolve"],
+        "effects": ["color_pulse", "vignette"],
+        "transitions": ["none"],
         "colorGrade": "vivid_red",
         "vfxIntensity": "high",
-        "referenceStyle": "tiktok_vibrant"
+        "referenceStyle": "tiktok_vibrant",
+        "notes": "Single continuous clip. Extreme red saturation. Vignette. Color pulse effect. Most artistic/abstract reference."
       },
       "tags": ["tiktok", "vibrant", "red", "slow", "artistic", "single_clip"]
     },
@@ -463,9 +478,9 @@
       "aspectRatio": "16:9",
       "fps": 30,
       "codec": "h264",
-      "cuts": 102,
-      "cutRate": 3.65,
-      "avgShotDuration": 0.27,
+      "cuts": 28,
+      "cutRate": 0.97,
+      "avgShotDuration": 1.00,
       "colorProfile": {
         "avgRGB": [153, 140, 126],
         "brightness": 55,
@@ -474,23 +489,24 @@
         "classification": "BRIGHT_WARM"
       },
       "editCharacteristics": {
-        "pacing": "extreme_fast",
-        "effects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan", "context_shake"],
-        "transitions": ["cut", "whip_pan", "flash"],
+        "pacing": "fast",
+        "effects": [],
+        "transitions": ["hard_cut"],
         "colorGrade": "bright_warm",
-        "vfxIntensity": "very_high",
-        "referenceStyle": "sports_highlight"
+        "vfxIntensity": "low",
+        "referenceStyle": "sports_highlight",
+        "notes": "PURE SPEED. Heavy motion blur IS the effect. Rainbow bold text overlays (VR46, ROSSIFUMI, THE DOCTOR). Sub-second shots. No glitch/chromatic — motion is the visual. Most energetic reference."
       },
-      "tags": ["motogp", "racing", "valentino_rossi", "extreme_fast", "warm_bright"]
+      "tags": ["motogp", "racing", "valentino_rossi", "speed", "motion_blur", "text_overlay"]
     }
   ],
   "styleSummary": {
     "spiderverse_comic": {
       "count": 1,
-      "avgCutRate": 0.73,
+      "avgCutRate": 0.24,
       "avgBrightness": 23,
       "avgSaturation": 80,
-      "commonEffects": ["comic_halftone", "ink_edges", "impact_flash", "chromatic_glitch"],
+      "commonEffects": ["glitch", "chromatic_aberration"],
       "colorSignature": "hyper-saturated neon cyan/magenta/yellow"
     },
     "sports_highlight_tiktok": {
@@ -498,79 +514,79 @@
       "avgCutRate": 0.96,
       "avgBrightness": 46,
       "avgSaturation": 15,
-      "commonEffects": ["impact_flash", "vignette_punch", "zoom_blur"],
-      "colorSignature": "mixed — desaturated cards, vibrant celebrations"
+      "commonEffects": [],
+      "colorSignature": "mixed — desaturated natural"
     },
     "tv_drama_edit": {
       "count": 1,
-      "avgCutRate": 1.44,
+      "avgCutRate": 0.54,
       "avgBrightness": 28,
       "avgSaturation": 22,
-      "commonEffects": ["impact_flash", "color_pulse", "speed_ramp", "whip_pan", "bw_toggle"],
-      "colorSignature": "warm dark with BW punctuation"
+      "commonEffects": ["vignette"],
+      "colorSignature": "dark warm with cool accents"
     },
     "anime_amv": {
       "count": 1,
-      "avgCutRate": 4.65,
+      "avgCutRate": 1.04,
       "avgBrightness": 61,
       "avgSaturation": 21,
-      "commonEffects": ["impact_flash", "color_pulse", "speed_ramp", "chromatic_burst", "context_shake"],
-      "colorSignature": "purple/magenta palette, bright warm"
+      "commonEffects": [],
+      "colorSignature": "clean anime colors, bright warm"
     },
     "fancam_character_tribute": {
       "count": 1,
-      "avgCutRate": 0.98,
+      "avgCutRate": 0.45,
       "avgBrightness": 27,
       "avgSaturation": 32,
-      "commonEffects": ["glitch", "speed_ramp", "multi_exposure"],
-      "colorSignature": "warm dark, alternating warm/cool"
+      "commonEffects": [],
+      "colorSignature": "warm dark, high saturation on clothing"
     },
     "tv_drama_fan_edit": {
       "count": 1,
-      "avgCutRate": 0.89,
+      "avgCutRate": 0.42,
       "avgBrightness": 36,
       "avgSaturation": 13,
-      "commonEffects": ["vignette_pro", "flash_white"],
-      "colorSignature": "cool desaturated with warm bar break"
+      "commonEffects": [],
+      "colorSignature": "cool blue desaturated"
     },
     "sports_highlight": {
       "count": 4,
-      "avgCutRate": 2.58,
+      "avgCutRate": 0.73,
       "avgBrightness": 37,
       "avgSaturation": 14,
-      "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "whip_pan", "context_shake"],
+      "commonEffects": ["bw_toggle", "impact_flash"],
       "colorSignature": "varies — cool dark to bright warm"
     },
     "tiktok_dynamic": {
       "count": 4,
-      "avgCutRate": 1.82,
+      "avgCutRate": 0.55,
       "avgBrightness": 33,
-      "avgSaturation": 14,
-      "commonEffects": ["impact_flash", "speed_ramp", "chromatic_burst", "context_shake"],
-      "colorSignature": "cool dark, ultrawide, dark warm"
+      "avgSaturation": 11,
+      "commonEffects": ["impact_flash", "push_in"],
+      "colorSignature": "cool dark, neutral, dark warm"
     },
     "music_video_vibrant": {
       "count": 1,
-      "avgCutRate": 0.57,
+      "avgCutRate": 0.20,
       "avgBrightness": 36,
       "avgSaturation": 62,
-      "commonEffects": ["push_in", "color_pulse", "vignette_punch", "bloom_highlights"],
+      "commonEffects": ["push_in", "vignette"],
       "colorSignature": "vibrant warm, high saturation"
     },
     "lifestyle_cinematic": {
       "count": 1,
-      "avgCutRate": 3.46,
+      "avgCutRate": 1.19,
       "avgBrightness": 41,
       "avgSaturation": 17,
-      "commonEffects": ["push_in", "impact_flash", "speed_ramp", "chromatic_burst"],
-      "colorSignature": "warm cinematic, fast cuts"
+      "commonEffects": [],
+      "colorSignature": "warm cinematic golden hour"
     },
     "tiktok_vibrant": {
       "count": 1,
-      "avgCutRate": 0.08,
+      "avgCutRate": 0.00,
       "avgBrightness": 15,
       "avgSaturation": 87,
-      "commonEffects": ["vignette_punch", "bloom_highlights"],
+      "commonEffects": ["color_pulse", "vignette"],
       "colorSignature": "vivid red, extreme saturation"
     }
   }

@@ -1,0 +1,29 @@
+{
+  "profile_id": "preset_podcast_shorts",
+  "name": "Podcast Shorts",
+  "description": "Tight talking-head framing with aggressive dead-air compression and minimal captions. Best for podcast clips and interview snippets.",
+  "mode": "dialogue",
+  "pacing": {
+    "avg_shot_duration": 4.0,
+    "shot_duration_distribution": "uniform",
+    "cut_to_beat_alignment_rate": 0.0,
+    "energy_curve_shape": "flat",
+    "opens_with": "cold_open",
+    "closes_with": "cta"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 2.0,
+    "typical_duration": 2.0,
+    "typical_role": "caption"
+  },
+  "transition_preferences": {
+    "hard_cut": 0.9,
+    "crossfade": 0.1,
+    "whip_pan": 0.0,
+    "zoom_transition": 0.0,
+    "fade_to_black": 0.0,
+    "glitch": 0.0
+  },
+  "reference": null,
+  "confidence_notes": "Launch preset — no reference analysis"
+}

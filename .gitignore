@@ -45,10 +45,7 @@ output/
 test-renders/
 benchmark-outputs/
 testfiles/
-test/*.mp4
-test/*.MP4
-test/clips/
-test/sc-frames/
+test/
 unedited files/
 tree.txt
 

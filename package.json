@@ -15,7 +15,13 @@
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down",
     "python:audio": "cd workers/python-audio && python -m uvicorn app:app --host 0.0.0.0 --port 8101",
-    "python:ai": "cd workers/python-ai && python -m uvicorn app:app --host 0.0.0.0 --port 8102"
+    "python:ai": "cd workers/python-ai && python -m uvicorn app:app --host 0.0.0.0 --port 8102",
+    "eval": "bash scripts/run-eval.sh",
+    "eval:save": "bash scripts/run-eval.sh --save-baseline",
+    "eval:list": "bash scripts/run-eval.sh --list",
+    "eval:dialogue": "KMP_DUPLICATE_LIB_OK=TRUE python3 scripts/eval_dialogue.py",
+    "eval:dialogue:save": "KMP_DUPLICATE_LIB_OK=TRUE python3 scripts/eval_dialogue.py --save-baseline",
+    "eval:dialogue:list": "python3 scripts/eval_dialogue.py --list"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260703.1",
@@ -51,8 +57,10 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
+    "@clerk/backend": "^1.21.0",
     "@remotion/cli": "^4.0.484",
     "@remotion/player": "^4.0.484",
+    "@sentry/node": "^8.0.0",
     "aws4fetch": "^1.0.20",
     "ffmpeg": "^0.0.4",
     "fluent-ffmpeg": "^2.1.3",

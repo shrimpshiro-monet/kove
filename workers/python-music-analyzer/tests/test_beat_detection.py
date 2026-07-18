@@ -1,5 +1,4 @@
 import numpy as np
-from unittest.mock import patch, MagicMock
 from src.beat_detection import BeatDetector
 
 def test_detect_beats_with_click_track():

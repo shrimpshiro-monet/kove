@@ -1,17 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Type, Loader2, StickyNote, Upload } from "lucide-react";
-import { UpgradePrompt, type UpgradeCta } from "@/components/chat/UpgradePrompt";
+import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Loader2, StickyNote, Upload, Undo2, Redo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChatThreads, cryptoId, type ChatMessage, type ChatAttachment, type ChatThread } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { VideoUploader, type UploadedFile } from "@/components/chat/VideoUploader";
-import { ThinkingPanel, type ThinkingStage } from "@/components/chat/ThinkingPanel";
+import { InteractiveThinkingPanel } from "@/components/chat/InteractiveThinkingPanel";
+import type { ThinkingStage } from "@/components/chat/ThinkingPanel";
 import { BlueprintPreview } from "@/components/chat/BlueprintPreview";
 import { VideoPreview } from "@/components/chat/VideoPreview";
 import { TextTimeline } from "@/components/chat/TextTimeline";
-import { uploadFileDirect, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, generateCompositionOverlay, persistStudioProject, submitDirectorFeedback, pollDirectorRender } from "@/lib/api-client";
+import { AnalysisPanel } from "@/components/chat/AnalysisPanel";
+import { CreativeBriefPanel } from "@/components/chat/CreativeBriefPanel";
+import { uploadFileDirect, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, persistStudioProject } from "@/lib/api-client";
 import { runGenerationPipeline, refineProject, exportProject, type PipelineStage } from "../../apps/web/src/lib/kove-generation-pipeline";
 import type { ReferenceStyle } from "@/server/types/reference-style";
 import type { TimelineAnnotation } from "@/server/types/annotation";
@@ -91,12 +93,15 @@ function ChatPage() {
   const [transcript, setTranscript] = useState<TranscriptResult | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showTextTimeline, setShowTextTimeline] = useState(false);
+  const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [creativeBrief, setCreativeBrief] = useState<any>(null);
+  const [thinkingThoughts, setThinkingThoughts] = useState<any[]>([]);
+  const [thinkingQuestions, setThinkingQuestions] = useState<any[]>([]);
   const [previewTimeMs, setPreviewTimeMs] = useState(0);
   const [seekToMs, setSeekToMs] = useState<number | undefined>(undefined);
-  const [isAnalyzingReference, setIsAnalyzingReference] = useState(false);
   const [isAutoTrackingFace, setIsAutoTrackingFace] = useState(false);
   const [compositionHtml, setCompositionHtml] = useState<string | null>(null);
-  const [directorJobId, setDirectorJobId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
 
@@ -220,10 +225,10 @@ function ChatPage() {
       referenceSimilarity: score,
     });
   }, [currentEDL, referenceStyle]);
+  const [directorJobId, setDirectorJobId] = useState<string | null>(null);
   const [directorRenderStatus, setDirectorRenderStatus] = useState<string | null>(null);
   const [directorPreviewUrl, setDirectorPreviewUrl] = useState<string | null>(null);
   const [patchSummary, setPatchSummary] = useState<string | null>(null);
-  const [upgradeCta, setUpgradeCta] = useState<UpgradeCta | null>(null);
   const lastPersistedStudioSnapshotRef = useRef<string | null>(null);
   const chatUiStorageKey = `monet.chat.ui.${threadId}`;
 
@@ -1101,13 +1106,13 @@ function ChatPage() {
                 {/* Show thinking panel during generation */}
                 {isGenerating && (
                   <div className="mt-6">
-                    <ThinkingPanel
-                      stage={thinkingStage}
-                      intentConfidence={thinkingData.intentConfidence}
-                      edlShots={thinkingData.edlShots}
-                      scores={thinkingData.scores}
-                      usedFallback={thinkingData.usedFallback}
-                      error={thinkingData.error}
+                    <InteractiveThinkingPanel
+                      thoughts={thinkingThoughts}
+                      questions={thinkingQuestions}
+                      isThinking={isGenerating}
+                      onQuestionAnswer={(id, answer) => {
+                        console.log(`[thinking] question ${id}: ${answer}`);
+                      }}
                     />
                   </div>
                 )}
@@ -1344,6 +1349,26 @@ function ChatPage() {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
+                        onClick={() => useProjectStore.getState().undo()}
+                        disabled={!useProjectStore.getState().canUndo()}
+                        title="Undo"
+                      >
+                        <Undo2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => useProjectStore.getState().redo()}
+                        disabled={!useProjectStore.getState().canRedo()}
+                        title="Redo"
+                      >
+                        <Redo2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
                         onClick={handleExport}
                         disabled={isExporting}
                         title="Export MP4"
@@ -1369,6 +1394,16 @@ function ChatPage() {
                     creativeDensity={(thinkingData as any).creativeDensity}
                     referenceSimilarity={(thinkingData as any).referenceSimilarity}
                   />
+
+                  {/* Music Analysis (BeatSync) */}
+                  {analysisData?.music && (
+                    <AnalysisPanel analysis={analysisData.music} />
+                  )}
+
+                  {/* Creative Brief */}
+                  {creativeBrief && (
+                    <CreativeBriefPanel brief={creativeBrief} />
+                  )}
 
                   {/* Video player */}
                   {previewReady ? (

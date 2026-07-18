@@ -89,6 +89,7 @@ export class MonetRenderer {
   private heldFrameCanvas: HTMLCanvasElement | null = null;
   private framesSinceHeldUpdate = 0;
   private heldUpdateInterval = 2;  // hold every 2 frames (animTiming=2 default)
+  private warnedFailedAssets = new Set<string>();
 
   constructor() {
     this.mediaLoader = SHARED_MEDIA_LOADER;
@@ -136,6 +137,7 @@ export class MonetRenderer {
     }
 
     this.edl = normalizeEDLForPreview(edl);
+    this.warnedFailedAssets.clear();
     
     summarizeEDLFeatures(this.edl, "normalized");
 
@@ -405,9 +407,15 @@ export class MonetRenderer {
     }
 
     if (asset.failed) {
-      console.warn("[MonetRenderer] FALLBACK BRANCH C: asset.failed = true", {
-        clipId: activeShot.source.clipId, asset,
-      });
+      if (!this.warnedFailedAssets.has(activeShot.source.clipId)) {
+        this.warnedFailedAssets.add(activeShot.source.clipId);
+        console.warn("[MonetRenderer] asset failed to load:", {
+          clipId: activeShot.source.clipId,
+          url: asset.url,
+          error: asset.error,
+          type: asset.type,
+        });
+      }
       drawSimplePreviewFallback(ctx, this.edl, {
         reason: `Asset failed to load: ${activeShot.id}`,
         currentTime: timelineTime, width, height,
@@ -1073,16 +1081,32 @@ function getVideoRotation(video: HTMLVideoElement): number {
   }
 
   // Check if the browser applies rotation via CSS transform
-  // (Safari, Chrome apply this for MP4/MOV rotation metadata)
   try {
     const computedStyle = window.getComputedStyle(video);
     const transform = computedStyle.transform || video.style.transform || "";
+
+    // Try rotate() syntax (Safari)
     const rotateMatch = transform.match(/rotate\((\d+)deg\)/);
     if (rotateMatch) {
       const deg = parseInt(rotateMatch[1], 10);
       if (deg === 90 || deg === 180 || deg === 270) {
         (video as any).__monetRotationCached = deg;
         return deg;
+      }
+    }
+
+    // Try matrix() syntax (Chrome) — extract rotation from transform matrix
+    const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
+    if (matrixMatch) {
+      const vals = matrixMatch[1].split(",").map(Number);
+      if (vals.length >= 4) {
+        const [a, b] = vals;
+        const angle = Math.round((Math.atan2(b, a) * 180) / Math.PI);
+        const deg = ((angle % 360) + 360) % 360;
+        if (deg === 90 || deg === 180 || deg === 270) {
+          (video as any).__monetRotationCached = deg;
+          return deg;
+        }
       }
     }
   } catch {}

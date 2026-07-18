@@ -1,0 +1,29 @@
+{
+  "profile_id": "preset_cinematic_travel",
+  "name": "Cinematic Travel",
+  "description": "Slow-burn editing with long shots, crossfades, and gentle pacing. Best for travel vlogs, cinematic montages, and atmosphere-driven content.",
+  "mode": "montage",
+  "pacing": {
+    "avg_shot_duration": 4.0,
+    "shot_duration_distribution": "uniform",
+    "cut_to_beat_alignment_rate": 0.4,
+    "energy_curve_shape": "steady_build",
+    "opens_with": "wide_establishing",
+    "closes_with": "fade_to_black"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 0.5,
+    "typical_duration": 3.0,
+    "typical_role": "location_label"
+  },
+  "transition_preferences": {
+    "hard_cut": 0.3,
+    "crossfade": 0.5,
+    "whip_pan": 0.05,
+    "zoom_transition": 0.1,
+    "fade_to_black": 0.05,
+    "glitch": 0.0
+  },
+  "reference": null,
+  "confidence_notes": "Launch preset — no reference analysis"
+}

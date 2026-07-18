@@ -322,7 +322,8 @@ export type EffectType =
   | "roughen-edges"
   | "strobe_light"
   | "strobeLight"
-  | "strobe-light";
+  | "strobe-light"
+  | "color_grade";
 
 export type TransitionType =
   | "cut"

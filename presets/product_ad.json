@@ -1,0 +1,29 @@
+{
+  "profile_id": "preset_product_ad",
+  "name": "Product Ad",
+  "description": "Punchy product-focused editing with speed ramps on key features and punch-ins on product shots. Best for product demos and advertisements.",
+  "mode": "montage",
+  "pacing": {
+    "avg_shot_duration": 2.0,
+    "shot_duration_distribution": "right_skewed_short",
+    "cut_to_beat_alignment_rate": 0.7,
+    "energy_curve_shape": "spike_then_release",
+    "opens_with": "problem_statement",
+    "closes_with": "logo_sting"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 3.0,
+    "typical_duration": 2.0,
+    "typical_role": "feature_label"
+  },
+  "transition_preferences": {
+    "hard_cut": 0.5,
+    "crossfade": 0.1,
+    "whip_pan": 0.15,
+    "zoom_transition": 0.15,
+    "fade_to_black": 0.1,
+    "glitch": 0.0
+  },
+  "reference": null,
+  "confidence_notes": "Launch preset — no reference analysis"
+}

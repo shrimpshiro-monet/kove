@@ -37,8 +37,9 @@ for _p in [str(_SCRIPTS_DIR), str(_ANALYZERS_DIR)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from analyzers import effect_detector, speed_ramp_detector, text_detector
+from analyzers import effect_detector, speed_ramp_detector, text_detector, composite_detector
 from analyzers.motion_analyzer import analyze_motion, classify_camera_motion
+from analyzers.edit_events_analyzer import analyze_edit_events
 
 
 # ── Effect-to-SegmentStyle field mapping ──────────────────────
@@ -143,6 +144,12 @@ class SegmentStyle(BaseModel):
     # Text overlay
     has_text: bool = False
     text_confidence: float = 0.0
+    text_content: list[dict] = []  # OCR results: {text, confidence, bbox, fontSize, placement, color}
+
+    # Composite layout
+    has_composite: bool = False
+    composite_layout: str = "single"  # single, 2panel_h, 2panel_v, 3panel_h, 3panel_v, grid
+    composite_confidence: float = 0.0
 
 
 class TransitionStyle(BaseModel):
@@ -175,6 +182,15 @@ class ColorSignature(BaseModel):
     style: str = "neutral"  # neutral, warm, cool, vintage, cinematic, vibrant
 
 
+class AudioEvent(BaseModel):
+    """A detected audio event (SFX hit, bass drop, etc.)."""
+    time: float
+    type: str  # punch_impact, bass_drop, beat_accent, sfx_hit, vocal_emphasis
+    confidence: float
+    energy: float  # RMS energy at this point (0-1)
+    spectral_centroid: float  # Hz, lower = more bass
+
+
 class ReferenceStyleProfile(BaseModel):
     """Complete editing DNA extracted from a reference video."""
 
@@ -191,6 +207,9 @@ class ReferenceStyleProfile(BaseModel):
     bpm: float
     beats: list[float]
     cut_alignment: str  # strict, loose, none
+
+    # Audio events (SFX, impacts, drops)
+    audio_events: list[AudioEvent] = []
 
     # Segments
     segments: list[SegmentStyle]
@@ -219,6 +238,12 @@ class ReferenceStyleProfile(BaseModel):
 
     # Post-analysis overlay video path (set after analysis)
     post_analysis_video_path: str = ""
+
+    # Edit events (transitions, speed ramps, keyframes)
+    edit_events: dict = {}
+
+    # Text overlay aggregate
+    text_overlay_summary: dict = {}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -360,6 +385,104 @@ def extract_beats(video_path: str) -> tuple[float, list[float]]:
         return 120.0, []
 
 
+def extract_audio_events(video_path: str, beats: list[float]) -> list[AudioEvent]:
+    """Detect SFX hits, punch impacts, bass drops from audio.
+
+    Uses percussive/harmonic separation so punches and drum hits stand out
+    clearly from the music bed. Classifies each onset by spectral profile.
+    """
+    try:
+        import librosa
+        import numpy as np
+
+        y, sr = librosa.load(video_path, sr=22050, mono=True)
+
+        # ── Percussive / harmonic separation ──
+        y_harm, y_perc = librosa.effects.hpss(y)
+
+        # ── Onsets on percussive component ──
+        onset_frames = librosa.onset.onset_detect(y=y_perc, sr=sr, backtrack=False)
+        if len(onset_frames) < 3:
+            return [
+                AudioEvent(time=b, type="beat_accent", confidence=0.5, energy=0.3, spectral_centroid=500.0)
+                for b in beats if 0 < b < len(y) / sr
+            ]
+
+        onset_times = librosa.frames_to_time(onset_frames, sr=sr)
+        onset_strength = librosa.onset.onset_strength(y=y_perc, sr=sr)
+        onset_str_values = onset_strength[onset_frames].copy()
+
+        # ── Full-mix STFT for spectral features ──
+        stft = np.abs(librosa.stft(y))
+        freqs = librosa.fft_frequencies(sr=sr)
+        spectral_centroids = librosa.feature.spectral_centroid(S=stft, sr=sr)[0]
+        onset_spec_cent = spectral_centroids[onset_frames]
+
+        # ── Mid-band energy (300-3000 Hz) catches punch transients ──
+        # Punches are wideband but most distinct from drums in the midrange
+        mid_mask = (freqs > 300) & (freqs < 3000)
+        mid_energy = np.sqrt(np.sum(stft[mid_mask] ** 2, axis=0)) if mid_mask.any() else np.zeros(stft.shape[1])
+        onset_mid = mid_energy[onset_frames]
+
+        # ── Sub-bass energy (<200 Hz) for bass drops ──
+        sub_mask = freqs < 200
+        sub_energy = np.sqrt(np.sum(stft[sub_mask] ** 2, axis=0)) if sub_mask.any() else np.zeros(stft.shape[1])
+        onset_sub = sub_energy[onset_frames]
+
+        # ── Percussive RMS (how sharp the hit is) ──
+        rms_perc = librosa.feature.rms(y=y_perc)[0]
+        onset_rms = rms_perc[onset_frames]
+
+        # ── Normalise ──
+        norm_mid = onset_mid / max(onset_mid.max(), 1e-6)
+        norm_str = onset_str_values / max(onset_str_values.max(), 1e-6)
+        norm_sub = onset_sub / max(sub_energy.max(), 1e-6)
+
+        beat_set = set(round(b, 2) for b in beats)
+
+        events = []
+        for t, sc, mid, s, sub in zip(
+            onset_times, onset_spec_cent, norm_mid, norm_str, norm_sub,
+        ):
+            if t < 0.5 or t > len(y) / sr - 0.5:
+                continue
+
+            is_on_beat = round(t, 2) in beat_set or any(abs(t - b) < 0.08 for b in beats)
+            event_type = "sfx_hit"
+            conf = min(1.0, 0.3 + mid * 0.3 + s * 0.4)
+
+            # Punch impact: strong mid-band transient + sharp onset + midrange centroid
+            if mid > 0.5 and s > 0.5 and 300 < sc < 4000:
+                event_type = "punch_impact"
+                conf = min(1.0, 0.4 + mid * 0.3 + s * 0.3)
+            # Bass drop: sub-bass energy surge, low centroid
+            elif sub > 0.6 and sc < 2000:
+                event_type = "bass_drop"
+                conf = min(1.0, 0.4 + sub * 0.3 + (1 - min(sc, 2000) / 2000) * 0.2)
+            # Beat accent: on-beat, moderate percussive energy
+            elif is_on_beat and s > 0.3:
+                event_type = "beat_accent"
+                conf = min(1.0, 0.4 + s * 0.3)
+
+            events.append(AudioEvent(
+                time=t, type=event_type, confidence=round(conf, 3),
+                energy=round(float(mid), 3),
+                spectral_centroid=round(float(sc), 1),
+            ))
+
+        print(f"  Audio events: {len(events)} total")
+        type_counts = {}
+        for e in events:
+            type_counts[e.type] = type_counts.get(e.type, 0) + 1
+        for t, c in sorted(type_counts.items(), key=lambda x: -x[1]):
+            print(f"    {t}: {c}")
+
+        return events
+    except Exception as e:
+        print(f"Audio event detection failed: {e}")
+        return []
+
+
 def build_shots_from_cuts(cuts: list[CutPoint], duration: float) -> list[dict]:
     """Build the shots list format expected by analyzers.
 
@@ -380,18 +503,84 @@ def build_shots_from_cuts(cuts: list[CutPoint], duration: float) -> list[dict]:
     return shots
 
 
-def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
-    """Complete analysis of a reference video's editing style."""
+def detect_edit_zone(cuts: list[CutPoint], duration: float) -> tuple[float, float]:
+    """Auto-detect the edit zone — the contiguous region with real editing.
 
+    Uses sliding window cut density and merges any gap < 3s. Returns (start, end).
+    If no dense zone found, returns (0, duration).
+    """
+    if len(cuts) < 3:
+        return (0.0, duration)
+
+    cut_times = [c.time for c in cuts]
+    window = 5.0
+    stride = 0.5
+    densities = []
+    pos = 0.0
+    while pos + window <= duration:
+        count = sum(1 for t in cut_times if pos <= t < pos + window)
+        densities.append((pos + window / 2, count / window))
+        pos += stride
+
+    if not densities:
+        return (0.0, duration)
+
+    # Find peak density
+    peak_density = max(d for _, d in densities)
+    # Threshold: 40% of peak or 0.3 cuts/sec, whichever is higher
+    threshold = max(0.4 * peak_density, 0.3)
+
+    # Mark windows above threshold
+    hot = [t for t, d in densities if d >= threshold]
+    if not hot:
+        return (0.0, duration)
+
+    # Merge hot regions with gaps < 3s
+    zones = []
+    zone_start = hot[0] - window / 2
+    zone_end = hot[0] + window / 2
+    for t in hot[1:]:
+        if t - zone_end < 3.0:
+            zone_end = t + window / 2
+        else:
+            zones.append((max(0, zone_start), min(duration, zone_end)))
+            zone_start = t - window / 2
+            zone_end = t + window / 2
+    zones.append((max(0, zone_start), min(duration, zone_end)))
+
+    # Pick the longest zone
+    zone = max(zones, key=lambda z: z[1] - z[0])
+    return zone
+
+
+def analyze_reference_style(
+    video_path: str,
+    trim_start: Optional[float] = None,
+    trim_end: Optional[float] = None,
+) -> ReferenceStyleProfile:
+    """Complete analysis of a reference video's editing style.
+
+    Args:
+        video_path: Path to the reference video
+        trim_start: Trim start in seconds (None = auto-detect)
+        trim_end: Trim end in seconds (None = auto-detect)
+    """
     print(f"Analyzing: {video_path}")
 
     # 1. Get video info
     info = get_video_info(video_path)
     duration = float(info['format']['duration'])
-    fps_parts = info['streams'][0]['r_frame_rate'].split('/')
-    fps = float(fps_parts[0]) / float(fps_parts[1])
-    width = int(info['streams'][0]['width'])
-    height = int(info['streams'][0]['height'])
+    # Find the video stream (not audio — audio has 0/0 r_frame_rate)
+    video_stream = info['streams'][0]
+    for s in info['streams']:
+        if s.get('width'):
+            video_stream = s
+            break
+    fps_str = video_stream.get('r_frame_rate', '30/1')
+    fps_num, fps_den = (int(x) for x in fps_str.split('/'))
+    fps = float(fps_num) / float(fps_den) if fps_den else 30.0
+    width = int(video_stream['width'])
+    height = int(video_stream['height'])
 
     print(f"  Duration: {duration:.1f}s, FPS: {fps:.1f}, Resolution: {width}x{height}")
 
@@ -399,57 +588,84 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
     cuts = detect_cuts(video_path)
     print(f"  Cuts detected: {len(cuts)}")
 
-    # 3. Build shots list for analyzers
-    shots = build_shots_from_cuts(cuts, duration)
-    print(f"  Shots (segments): {len(shots)}")
+    # 3. Trim pre/post-roll padding
+    if trim_start is None or trim_end is None:
+        auto_start, auto_end = detect_edit_zone(cuts, duration)
+        if trim_start is None:
+            trim_start = auto_start
+        if trim_end is None:
+            trim_end = auto_end
 
-    # 4. Run analyzer detection passes
+    # 4. Build shots from all cuts, then filter to trim window
+    shots = build_shots_from_cuts(cuts, duration)
+    # Filter shots to the active edit zone
+    shots = [s for s in shots if s["end"] > trim_start and s["start"] < trim_end]
+    for i, s in enumerate(shots):
+        s["index"] = i
+    print(f"  Shots (segments) in edit zone [{trim_start:.1f}s–{trim_end:.1f}s]: {len(shots)}")
+    print(f"    (trimmed from {len(cuts)} cuts over {duration:.1f}s)")
+
+    # 5. Run analyzer detection passes
     # These each extract frames independently — acceptable for analysis,
     # not for real-time.
     per_shot_effects = effect_detector.detect_effects(video_path, shots)
     per_shot_text = text_detector.detect_text(video_path, shots)
     per_shot_speed = speed_ramp_detector.detect_speed_ramps(video_path, shots)
+    per_shot_composite = composite_detector.detect_composites(video_path, shots)
+    composites_found = sum(1 for c in per_shot_composite if c.get("hasComposite"))
     print(f"  Effects: {sum(e['effectCount'] for e in per_shot_effects)}")
     print(f"  Text shots: {sum(1 for t in per_shot_text if t['hasText'])}")
     print(f"  Speed ramps: {sum(1 for s in per_shot_speed if s.get('hasRamp', False))}")
+    print(f"  Composites: {composites_found} segments with multi-clip layouts")
 
-    # 5. Run global motion analysis (once, used by all segments)
+    # 5. Run edit events analysis (transitions + speed ramps + keyframes)
+    # Only analyze cuts within the edit zone
+    zone_cuts = [c for c in cuts if trim_start <= c.time <= trim_end]
+    cut_dicts = [{"time": c.time} for c in zone_cuts]
+    edit_events = analyze_edit_events(video_path, cut_dicts, shots, fps)
+    print(f"  Edit events: {edit_events['total_events']} total")
+    for te in edit_events["transitions"]:
+        if te["type"] != "cut":
+            print(f"    transition: {te['type']} @ {te['time']:.2f}s")
+
+    # 6. Run global motion analysis (once, used by all segments)
     print("  Running optical flow analysis...")
     motion_data = analyze_motion(video_path, fps=10.0)
 
-    # 6. Extract beats
+    # 7. Extract beats
     bpm, beats = extract_beats(video_path)
     print(f"  BPM: {bpm:.0f}, Beats: {len(beats)}")
 
-    # 7. Build segment list with full detection data
-    cut_times = [c.time for c in cuts]
-    cut_times = [0] + cut_times + [duration]
+    # 7b. Extract audio events (SFX, impacts, drops)
+    audio_events = extract_audio_events(video_path, beats)
 
+    # 8. Build segment list with full detection data
     segments: list[SegmentStyle] = []
     shot_idx = 0
     all_hues: list[float] = []
-    for i in range(len(cut_times) - 1):
-        seg_start = cut_times[i]
-        seg_end = cut_times[i + 1]
-        seg_duration = seg_end - seg_start
+    for s in shots:
+        seg_start_abs = s["start"]
+        seg_end_abs = s["end"]
+        seg_duration = s["duration"]
 
         if seg_duration < 0.1:
             continue
 
-        # Color for this segment
-        color_stats = extract_segment_color(video_path, seg_start, seg_duration)
+        # Color for this segment (ffmpeg uses absolute timestamps)
+        color_stats = extract_segment_color(video_path, seg_start_abs, seg_duration)
         all_hues.extend(color_stats.get("hues", []))
 
         # Camera motion (from pre-computed optical flow)
         camera_motion = detect_camera_motion(
-            video_path, seg_start, seg_duration,
+            video_path, seg_start_abs, seg_duration,
             global_motion_data=motion_data,
         )
 
-        # Look up effect, text, and speed data for this shot index
+        # Look up effect, text, speed, and composite data for this shot index
         shot_eff = per_shot_effects[shot_idx] if shot_idx < len(per_shot_effects) else {}
         shot_txt = per_shot_text[shot_idx] if shot_idx < len(per_shot_text) else {}
         shot_spd = per_shot_speed[shot_idx] if shot_idx < len(per_shot_speed) else {}
+        shot_comp = per_shot_composite[shot_idx] if shot_idx < len(per_shot_composite) else {}
         shot_idx += 1
 
         # Map effects to SegmentStyle fields
@@ -461,9 +677,13 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         if detected_transitions:
             transition_type = _pick_transition_type(detected_transitions)
 
+        # Store relative times (shifted by trim_start)
+        rel_start = seg_start_abs - trim_start
+        rel_end = seg_end_abs - trim_start
+
         seg = SegmentStyle(
-            start=seg_start,
-            end=seg_end,
+            start=rel_start,
+            end=rel_end,
             duration=seg_duration,
             brightness=color_stats.get('brightness', 1.0),
             contrast=color_stats.get('contrast', 1.0),
@@ -480,6 +700,10 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
             speed=shot_spd.get("avgSpeed", 1.0),
             has_text=shot_txt.get("hasText", False),
             text_confidence=shot_txt.get("confidence", 0.0),
+            text_content=shot_txt.get("textContent", []),
+            has_composite=shot_comp.get("hasComposite", False),
+            composite_layout=shot_comp.get("layout", "single"),
+            composite_confidence=shot_comp.get("confidence", 0.0),
         )
         segments.append(seg)
 
@@ -607,6 +831,7 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         shot_duration_variance=variance,
         bpm=bpm,
         beats=beats,
+        audio_events=audio_events,
         cut_alignment=cut_alignment,
         segments=segments,
         color_signature=color_sig,
@@ -619,7 +844,51 @@ def analyze_reference_style(video_path: str) -> ReferenceStyleProfile:
         camera_motion_distribution=motion_dist,
         avg_speed=avg_speed_val,
         speed_variance=speed_var,
+        edit_events=edit_events,
+        text_overlay_summary=text_detector.aggregate_text_results(per_shot_text),
     )
+
+    # 17. LLM deep analysis (auto-selects provider: Groq → Cerebras → NVIDIA)
+    try:
+        from analyzers.llm_analyzer import analyze_with_llm
+        profile_dict = {
+            "metadata": {
+                "duration": duration, "width": width, "height": height,
+                "fps": fps, "cuts": len(cuts),
+            },
+            "audio": {
+                "bpm": bpm,
+                "beats": len(beats),
+                "events": [
+                    {"time": e.time, "type": e.type, "confidence": e.confidence}
+                    for e in audio_events
+                ],
+            },
+            "edit_events": edit_events,
+            "segments": [
+                {
+                    "start": s.start, "duration": s.duration,
+                    "text_content": s.text_content,
+                    "camera_motion": s.camera_motion,
+                }
+                for s in segments
+            ],
+            "motion": {
+                "dominantDirection": "unknown",
+                "avgMagnitude": float(np.mean([m.get("magnitude", 0) for m in motion_data])) if motion_data else 0,
+                "variance": float(np.var([m.get("magnitude", 0) for m in motion_data])) if motion_data else 0,
+            },
+            "effects": [{"type": e} for e in effect_vocab],
+            "energyCurve": energy,
+        }
+        llm_analysis = analyze_with_llm(profile_dict)
+        if llm_analysis:
+            profile._llm_analysis = llm_analysis
+            timeline = llm_analysis.get("timeline", [])
+            print(f"  [llm] Style DNA: {llm_analysis.get('styleDNA', {}).get('editingPhilosophy', 'n/a')}")
+            print(f"  [llm] Timeline: {len(timeline)} segments analyzed")
+    except Exception as e:
+        print(f"  [llm] Skipped: {e}")
 
     return profile
 

@@ -1,0 +1,20 @@
+{
+  "profile_id": "fixture-c-profile",
+  "pacing": {
+    "avg_shot_duration": 2.0,
+    "cut_to_beat_alignment_rate": 0.6,
+    "energy_curve_shape": "steady_build"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 0.0,
+    "typical_duration": 0.0,
+    "typical_role": "none"
+  },
+  "transition_preferences": {
+    "hard_cut": 0.7,
+    "crossfade": 0.2,
+    "whip_pan": 0.05,
+    "zoom_transition": 0.05,
+    "fade_to_black": 0.0
+  }
+}

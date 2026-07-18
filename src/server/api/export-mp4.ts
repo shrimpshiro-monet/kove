@@ -1,7 +1,10 @@
 import type { Env } from "../types/env";
 import { FFmpegRenderer } from "../services/ffmpeg-renderer";
 import { assessQuality } from "../lib/vmaf-quality-gate";
+import { postProcessRender } from "../lib/post-process-render";
 import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
 
 export async function handleExportMP4(
   request: Request,
@@ -56,14 +59,45 @@ export async function handleExportMP4(
     try {
       const result = await renderer.render({ edl, mediaUrls });
 
-      const quality = await assessQuality(result.filePath);
+      // Post-processing: apply LUT, ASS subtitles, subject mask if present
+      const postOptions = {
+        lutKey: edl?.metadata?.lutKey || edl?.globalEffects?.lutKey,
+        assContent: edl?.metadata?.assContent,
+        assKey: edl?.metadata?.assKey,
+        maskKey: edl?.metadata?.maskKey,
+        blurStrength: edl?.metadata?.blurStrength,
+      };
+
+      let finalFilePath = result.filePath;
+      if (postOptions.lutKey || postOptions.assContent || postOptions.assKey || postOptions.maskKey) {
+        const tempDir = path.join(os.tmpdir(), `post-${Date.now()}`);
+        await fs.mkdir(tempDir, { recursive: true });
+
+        try {
+          const postResult = await postProcessRender(
+            result.filePath,
+            path.join(tempDir, "final.mp4"),
+            postOptions,
+            env,
+            tempDir,
+          );
+          finalFilePath = postResult.outputPath;
+          console.log("[export-mp4] post-processing applied:", postResult.filtersApplied.join(", "), {
+            durationMs: postResult.durationMs,
+          });
+        } finally {
+          await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+        }
+      }
+
+      const quality = await assessQuality(finalFilePath);
       if (!quality.pass) {
         console.warn("[export-mp4] Quality gate WARNING:", quality.details);
       } else {
         console.log("[export-mp4] Quality gate PASSED:", quality.details);
       }
 
-      const fileBuffer = await fs.readFile(result.filePath);
+      const fileBuffer = await fs.readFile(finalFilePath);
 
       renderer.cleanup().catch(() => {});
 

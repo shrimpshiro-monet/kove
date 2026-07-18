@@ -446,25 +446,37 @@ export class MediaLoader {
           try {
             const el = video as any;
 
-            // Method 1: Some browsers (Safari, Chrome) set a CSS transform on the video
             const computedStyle = window.getComputedStyle(video);
             const transform = computedStyle.transform || video.style.transform || "";
+
+            // Try rotate() syntax first (Safari)
             const rotateMatch = transform.match(/rotate\((\d+)deg\)/);
             if (rotateMatch) {
               const deg = parseInt(rotateMatch[1], 10);
               if (deg === 90 || deg === 180 || deg === 270) {
                 el.__monetRotationCached = deg;
-                console.log("[media-loader] detected browser-applied rotation:", deg + "°");
+                console.log("[media-loader] detected browser-applied rotation:", deg + "° (rotate syntax)");
                 return;
               }
             }
 
-            // Method 2: Check video dimensions vs natural orientation
-            // Phone videos shot in portrait have videoWidth < videoHeight.
-            // If the browser reports swapped dimensions, it already applied 90° rotation.
-            // For 180°, we need to detect inverted content.
-            const w = video.videoWidth;
-            const h = video.videoHeight;
+            // Try matrix() syntax (Chrome) — extract rotation angle from transform matrix
+            // matrix(a, b, c, d, e, f) where rotation = atan2(b, a)
+            const matrixMatch = transform.match(/matrix\(([^)]+)\)/);
+            if (matrixMatch) {
+              const vals = matrixMatch[1].split(",").map(Number);
+              if (vals.length >= 4) {
+                const [a, b] = vals;
+                const angle = Math.round((Math.atan2(b, a) * 180) / Math.PI);
+                // Normalize to 0-360
+                const deg = ((angle % 360) + 360) % 360;
+                if (deg === 90 || deg === 180 || deg === 270) {
+                  el.__monetRotationCached = deg;
+                  console.log("[media-loader] detected browser-applied rotation:", deg + "° (matrix syntax)");
+                  return;
+                }
+              }
+            }
 
             // Default: no rotation needed
             el.__monetRotationCached = 0;

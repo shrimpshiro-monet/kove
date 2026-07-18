@@ -33,6 +33,13 @@ import { getAIService } from "./server/services/ai-service";
 import { getEngineCapabilityContract } from "./server/lib/engine-capabilities";
 import { putLocalMedia } from "./server/lib/local-media-cache";
 import { runFreeCutPipeline } from "@monet/engine-freecut";
+import { generateLUT, applyLUTToVideo } from "./server/lib/lut-generator";
+import { generateASSFile, wordsToASS, generateWordHighlightASS } from "./server/lib/ass-text-generator";
+import { generateSubjectMask, applyMaskedBlur } from "./server/lib/subject-mask";
+import { clerkAuthMiddleware, createUnauthorizedResponse } from "./server/middleware/clerk-auth";
+import { authGuard, createRedirectResponse } from "./server/middleware/auth-guard";
+import { initSentry, trackException, trackRenderJob } from "./server/lib/sentry-init";
+import { createJobStore, type JobStore } from "./server/lib/job-store";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -449,9 +456,7 @@ interface RefineJob {
   error?: string;
 }
 
-const refineJobs = new Map<string, RefineJob>();
-
-async function handleVibeRefine(request: Request): Promise<Response> {
+async function handleVibeRefine(request: Request, env: Env): Promise<Response> {
   try {
     const body = await request.json() as Record<string, unknown>;
     const { currentEdl, prompt, scopeClipIds } = body as {
@@ -465,6 +470,7 @@ async function handleVibeRefine(request: Request): Promise<Response> {
     }
 
     const jobId = crypto.randomUUID();
+    const jobStore = createJobStore(env);
     const job: RefineJob = {
       jobId,
       status: "queued",
@@ -472,20 +478,23 @@ async function handleVibeRefine(request: Request): Promise<Response> {
       message: "Queued",
       startTime: Date.now(),
     };
-    refineJobs.set(jobId, job);
+    await jobStore.set(jobId, job);
 
     // Run refinement inline (no Python dependency — use AI service directly)
+    // Use env from the request (Cloudflare Workers provide it per-request)
+    const refineEnv = env;
     (async () => {
       try {
         job.status = "analyzing";
         job.progress = 10;
         job.message = "Analyzing current edit...";
+        await jobStore.set(jobId, job);
 
-        const env = getDevEnv({}) as Env;
-        const ai = getAIService(env);
+        const ai = getAIService(refineEnv);
 
         job.progress = 30;
         job.message = "Generating refined EDL...";
+        await jobStore.set(jobId, job);
 
         const refinementPrompt = `You are a video editing AI. Refine this EDL based on the user's feedback.
 
@@ -559,10 +568,12 @@ Return ONLY valid JSON. No markdown fences. No commentary. No text outside the J
         job.progress = 100;
         job.message = "Refinement complete";
         job.result = { edl: refined };
+        await jobStore.set(jobId, job);
       } catch (err: any) {
         job.status = "failed";
         job.message = err.message || "Refinement failed";
         job.error = err.message;
+        await jobStore.set(jobId, job);
       }
     })();
 
@@ -572,12 +583,13 @@ Return ONLY valid JSON. No markdown fences. No commentary. No text outside the J
   }
 }
 
-function handleVibeRefineStatus(request: Request): Response {
+async function handleVibeRefineStatus(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const jobId = url.pathname.split("/api/vibe-refine/status/")[1];
   if (!jobId) return apiError("MISSING_JOB_ID", "Missing jobId", 400);
 
-  const job = refineJobs.get(jobId);
+  const jobStore = createJobStore(env);
+  const job = await jobStore.get(jobId);
   if (!job) return apiError("NOT_FOUND", "Job not found", 404);
 
   return jsonResponse({
@@ -588,6 +600,306 @@ function handleVibeRefineStatus(request: Request): Response {
     ...(job.result ? { result: job.result } : {}),
     ...(job.error ? { error: job.error } : {}),
   });
+}
+
+// ------------------------------------------------------------------
+// FRAME-LEVEL PRECISION HANDLERS
+// ------------------------------------------------------------------
+
+const LUTGenerateSchema = z.object({
+  sourceVideoUrl: z.string().url(),
+  referenceFrameUrl: z.string().url(),
+  size: z.number().int().min(2).max(64).optional(),
+});
+
+async function handleGenerateLUT(request: Request, env: Env) {
+  try {
+    const parsed = LUTGenerateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { sourceVideoUrl, referenceFrameUrl, size } = parsed.data;
+
+    // Download source video and reference frame to temp
+    const tempDir = path.join(os.tmpdir(), `lut-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const sourcePath = path.join(tempDir, "source.mp4");
+    const refPath = path.join(tempDir, "reference.jpg");
+    const outputPath = path.join(tempDir, "grade.cube");
+
+    // Fetch files
+    const [sourceResp, refResp] = await Promise.all([
+      fetch(sourceVideoUrl),
+      fetch(referenceFrameUrl),
+    ]);
+
+    if (!sourceResp.ok || !refResp.ok) {
+      return apiError("FETCH_FAILED", "Failed to download source files", 502);
+    }
+
+    await Promise.all([
+      fs.writeFile(sourcePath, Buffer.from(await sourceResp.arrayBuffer())),
+      fs.writeFile(refPath, Buffer.from(await refResp.arrayBuffer())),
+    ]);
+
+    const result = await generateLUT(sourcePath, refPath, outputPath, { size });
+
+    // Upload .cube file to R2
+    const cubeContent = await fs.readFile(outputPath);
+    const r2Key = `luts/${Date.now()}.cube`;
+    await env.MONET_RENDERS.put(r2Key, cubeContent, {
+      httpMetadata: { contentType: "application/octet-stream" },
+    });
+
+    // Cleanup
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+    return jsonResponse({
+      success: true,
+      lutKey: r2Key,
+      size: result.size,
+      gridPoints: result.gridPoints,
+      durationMs: result.durationMs,
+    });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleGenerateLUT" } });
+    return apiError("LUT_ERROR", err.message || "Failed to generate LUT", 500);
+  }
+}
+
+const LUTApplySchema = z.object({
+  videoUrl: z.string().url(),
+  lutUrl: z.string().url(),
+});
+
+async function handleApplyLUT(request: Request, env: Env) {
+  try {
+    const parsed = LUTApplySchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { videoUrl, lutUrl } = parsed.data;
+
+    const tempDir = path.join(os.tmpdir(), `lut-apply-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const videoPath = path.join(tempDir, "input.mp4");
+    const lutPath = path.join(tempDir, "grade.cube");
+    const outputPath = path.join(tempDir, "output.mp4");
+
+    const [videoResp, lutResp] = await Promise.all([
+      fetch(videoUrl),
+      fetch(lutUrl),
+    ]);
+
+    await Promise.all([
+      fs.writeFile(videoPath, Buffer.from(await videoResp.arrayBuffer())),
+      fs.writeFile(lutPath, Buffer.from(await lutResp.arrayBuffer())),
+    ]);
+
+    await applyLUTToVideo(videoPath, lutPath, outputPath);
+
+    const outputBuffer = await fs.readFile(outputPath);
+    const r2Key = `renders/lut-${Date.now()}.mp4`;
+    await env.MONET_RENDERS.put(r2Key, outputBuffer, {
+      httpMetadata: { contentType: "video/mp4" },
+    });
+
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+    return jsonResponse({ success: true, outputKey: r2Key });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleApplyLUT" } });
+    return apiError("LUT_APPLY_ERROR", err.message || "Failed to apply LUT", 500);
+  }
+}
+
+const SubjectMaskSchema = z.object({
+  videoUrl: z.string().url(),
+  smoothness: z.number().min(0).max(1).optional(),
+  invert: z.boolean().optional(),
+});
+
+async function handleSubjectMask(request: Request, env: Env) {
+  try {
+    const parsed = SubjectMaskSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { videoUrl, smoothness, invert } = parsed.data;
+
+    const tempDir = path.join(os.tmpdir(), `mask-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const inputPath = path.join(tempDir, "input.mp4");
+    const maskPath = path.join(tempDir, "mask.mp4");
+
+    const videoResp = await fetch(videoUrl);
+    await fs.writeFile(inputPath, Buffer.from(await videoResp.arrayBuffer()));
+
+    const result = await generateSubjectMask(inputPath, maskPath, {
+      smoothness,
+      invert,
+      tempDir: path.join(tempDir, "frames"),
+    });
+
+    const maskBuffer = await fs.readFile(maskPath);
+    const r2Key = `masks/${Date.now()}.mp4`;
+    await env.MONET_RENDERS.put(r2Key, maskBuffer, {
+      httpMetadata: { contentType: "video/mp4" },
+    });
+
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+    return jsonResponse({
+      success: true,
+      maskKey: r2Key,
+      frameCount: result.frameCount,
+      format: result.format,
+      durationMs: result.durationMs,
+    });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleSubjectMask" } });
+    return apiError("MASK_ERROR", err.message || "Failed to generate mask", 500);
+  }
+}
+
+const SubjectBlurSchema = z.object({
+  videoUrl: z.string().url(),
+  maskUrl: z.string().url(),
+  blurStrength: z.number().min(1).max(50).optional(),
+});
+
+async function handleSubjectBlur(request: Request, env: Env) {
+  try {
+    const parsed = SubjectBlurSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { videoUrl, maskUrl, blurStrength } = parsed.data;
+
+    const tempDir = path.join(os.tmpdir(), `blur-${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const inputPath = path.join(tempDir, "input.mp4");
+    const maskPath = path.join(tempDir, "mask.mp4");
+    const outputPath = path.join(tempDir, "output.mp4");
+
+    const [videoResp, maskResp] = await Promise.all([
+      fetch(videoUrl),
+      fetch(maskUrl),
+    ]);
+
+    await Promise.all([
+      fs.writeFile(inputPath, Buffer.from(await videoResp.arrayBuffer())),
+      fs.writeFile(maskPath, Buffer.from(await maskResp.arrayBuffer())),
+    ]);
+
+    await applyMaskedBlur(inputPath, maskPath, outputPath, blurStrength ?? 15);
+
+    const outputBuffer = await fs.readFile(outputPath);
+    const r2Key = `renders/blur-${Date.now()}.mp4`;
+    await env.MONET_RENDERS.put(r2Key, outputBuffer, {
+      httpMetadata: { contentType: "video/mp4" },
+    });
+
+    await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+
+    return jsonResponse({ success: true, outputKey: r2Key });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleSubjectBlur" } });
+    return apiError("BLUR_ERROR", err.message || "Failed to apply masked blur", 500);
+  }
+}
+
+const ASSGenerateSchema = z.object({
+  entries: z.array(z.object({
+    text: z.string(),
+    startTime: z.number().min(0),
+    endTime: z.number().min(0),
+    x: z.number().min(0).max(1).optional(),
+    y: z.number().min(0).max(1).optional(),
+    fontSize: z.number().int().min(8).max(200).optional(),
+    color: z.string().optional(),
+    bold: z.boolean().optional(),
+    fadeIn: z.number().min(0).optional(),
+    fadeOut: z.number().min(0).optional(),
+  })).min(1),
+  width: z.number().int().min(1).max(7680).optional(),
+  height: z.number().int().min(1).max(4320).optional(),
+  fontName: z.string().optional(),
+  fontSize: z.number().int().min(8).max(200).optional(),
+  fontColor: z.string().optional(),
+  outlineColor: z.string().optional(),
+  outlineWidth: z.number().min(0).max(10).optional(),
+});
+
+async function handleGenerateASS(request: Request, env: Env) {
+  try {
+    const parsed = ASSGenerateSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { entries, width, height, fontName, fontSize, fontColor, outlineColor, outlineWidth } = parsed.data;
+
+    const assContent = generateASSFile(entries, {
+      width,
+      height,
+      fontName,
+      fontSize,
+      fontColor,
+      outlineColor,
+      outlineWidth,
+    });
+
+    return jsonResponse({
+      success: true,
+      ass: assContent,
+      entryCount: entries.length,
+    });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleGenerateASS" } });
+    return apiError("ASS_ERROR", err.message || "Failed to generate ASS file", 500);
+  }
+}
+
+const WordHighlightSchema = z.object({
+  words: z.array(z.object({
+    word: z.string(),
+    start: z.number().min(0),
+    end: z.number().min(0),
+  })).min(1),
+  width: z.number().int().min(1).max(7680).optional(),
+  height: z.number().int().min(1).max(4320).optional(),
+  fontName: z.string().optional(),
+  fontSize: z.number().int().min(8).max(200).optional(),
+});
+
+async function handleWordHighlightASS(request: Request, env: Env) {
+  try {
+    const parsed = WordHighlightSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return apiError("INVALID_REQUEST", `Invalid request: ${parsed.error.issues.map(i => i.message).join(", ")}`, 400);
+    }
+    const { words, width, height, fontName, fontSize } = parsed.data;
+
+    const assContent = generateWordHighlightASS(words, {
+      width,
+      height,
+      fontName,
+      fontSize,
+    });
+
+    return jsonResponse({
+      success: true,
+      ass: assContent,
+      wordCount: words.length,
+    });
+  } catch (err: any) {
+    trackException(err, { tags: { handler: "handleWordHighlightASS" } });
+    return apiError("ASS_ERROR", err.message || "Failed to generate word highlight ASS", 500);
+  }
 }
 
 // ------------------------------------------------------------------
@@ -697,11 +1009,19 @@ const apiRoutes: ApiRoute[] = [
   { method: "GET", path: "/api/export", handler: handleGetExportStatus },
 
   // Vibe Refine
-  { method: "POST", path: "/api/vibe-refine", handler: handleVibeRefine },
-  { method: "GET", path: /^\/api\/vibe-refine\/status\//, handler: handleVibeRefineStatus },
+  { method: "POST", path: "/api/vibe-refine", handler: (req, env) => handleVibeRefine(req, env) },
+  { method: "GET", path: /^\/api\/vibe-refine\/status\//, handler: (req, env) => handleVibeRefineStatus(req, env) },
 
   // Style Replication
   { method: "POST", path: "/api/replicate-style", handler: handleReplicateStyle },
+
+  // Frame-Level Precision Tools
+  { method: "POST", path: "/api/lut/generate", handler: handleGenerateLUT },
+  { method: "POST", path: "/api/lut/apply", handler: handleApplyLUT },
+  { method: "POST", path: "/api/subject/mask", handler: handleSubjectMask },
+  { method: "POST", path: "/api/subject/blur", handler: handleSubjectBlur },
+  { method: "POST", path: "/api/text/ass", handler: handleGenerateASS },
+  { method: "POST", path: "/api/text/word-ass", handler: handleWordHighlightASS },
 ];
 
 // ------------------------------------------------------------------
@@ -783,6 +1103,25 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
+// ------------------------------------------------------------------
+// SENTRY INITIALIZATION (runs once)
+// ------------------------------------------------------------------
+
+let sentryBootstrapped = false;
+
+function bootstrapSentry(env: Env) {
+  if (sentryBootstrapped) return;
+  if ((env as any).SENTRY_DSN) {
+    initSentry({
+      dsn: (env as any).SENTRY_DSN,
+      environment: (env as any).SENTRY_ENVIRONMENT || (env as any).ENVIRONMENT || "development",
+      release: (env as any).SENTRY_RELEASE || "monet@0.1.0",
+      tracesSampleRate: 0.1,
+    });
+    sentryBootstrapped = true;
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
@@ -792,6 +1131,9 @@ export default {
       (ctx as any)?.env || 
       env
     ) as Env;
+
+    // Bootstrap Sentry on first request
+    bootstrapSentry(typedEnv);
 
     const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
@@ -813,6 +1155,21 @@ export default {
           });
         }
 
+        // Clerk auth middleware — check protected routes
+        const clerkKey = (typedEnv as any).CLERK_PUBLISHABLE_KEY;
+        const clerkSecret = (typedEnv as any).CLERK_SECRET_KEY;
+        if (clerkKey && clerkSecret) {
+          const authResult = await clerkAuthMiddleware(request, {
+            publishableKey: clerkKey,
+            secretKey: clerkSecret,
+            jwtKey: (typedEnv as any).CLERK_JWT_KEY,
+          });
+
+          if (!authResult.success && authResult.error) {
+            return createUnauthorizedResponse(authResult.error);
+          }
+        }
+
         // Registry Route Matching
         for (const route of apiRoutes) {
           const methodMatch = route.method === request.method;
@@ -828,12 +1185,27 @@ export default {
         return apiError("NOT_FOUND", "Not found", 404);
       } catch (error) {
         console.error("API error:", error);
+        trackException(error, { tags: { path: pathname, method: request.method } });
         return apiError("INTERNAL_ERROR", error instanceof Error ? error.message : "Internal server error", 500);
       }
     }
 
-    // SSR routes
+    // SSR routes — check auth guard for protected pages
     try {
+      const clerkKey = (typedEnv as any).CLERK_PUBLISHABLE_KEY;
+      const clerkSecret = (typedEnv as any).CLERK_SECRET_KEY;
+      if (clerkKey && clerkSecret) {
+        const guardResult = await authGuard(request, {
+          publishableKey: clerkKey,
+          secretKey: clerkSecret,
+          jwtKey: (typedEnv as any).CLERK_JWT_KEY,
+        });
+
+        if (!guardResult.allowed && guardResult.redirectTo) {
+          return createRedirectResponse(guardResult.redirectTo);
+        }
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

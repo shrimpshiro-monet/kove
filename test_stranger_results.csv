@@ -1,0 +1,12 @@
+name,mode,category,passed,num_shots,output_duration,elapsed_s
+montage_steph_highlights,montage,montage,True,19,40.0,38.6
+montage_hamilton_clip,montage,montage,True,20,40.0,138.4
+montage_vertical_clip,montage,vertical,True,3,5.0,3.6
+edge_portrait_spiderman,montage,edge,True,20,40.0,102.7
+edge_square_1x1,montage,edge,True,12,24.1,28.6
+edge_lowres_640x360,montage,edge,True,5,10.0,21.7
+dialogue_mike_ross,dialogue,dialogue,True,29,65.1,295.5
+dialogue_youtube_fixture,dialogue,dialogue,True,3,11.5,47.9
+dialogue_hamilton,dialogue,dialogue,True,27,76.7,167.4
+auto_steph_highlights,auto,auto,True,19,40.0,37.6
+auto_mike_ross,auto,auto,True,29,65.1,289.2

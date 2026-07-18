@@ -11,7 +11,10 @@
 		"#tanstack-start-plugin-adapters": "./src/stubs/tanstack-adapters.ts",
 		"#tanstack-router-entry": "./src/stubs/tanstack-entry.ts",
 		"tanstack-start-manifest:v": "./src/stubs/tanstack-manifest.ts",
-		"tanstack-start-injected-head-scripts:v": "./src/stubs/tanstack-head.ts"
+		"tanstack-start-injected-head-scripts:v": "./src/stubs/tanstack-head.ts",
+		"tailwindcss": "./node_modules/tailwindcss/index.css",
+		"tw-animate-css": "./node_modules/tw-animate-css/dist/tw-animate.css",
+		"editly": "./src/stubs/editly.ts"
 	},
 	"vars": {
 		"ENVIRONMENT": "development",

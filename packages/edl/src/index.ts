@@ -1,6 +1,6 @@
 export * from "./monet-edl.js";
 export * from "./schemas.js";
-export { MonetEDL, Shot, EditDNA, Act, CharacterFocus, SegmentRef, EditIntent, MotionTrack, PlanarTrack, MaskAsset, TextOverlay, Effect, EasingType, TransitionType, ColorGradePreset, Keyframe, Keyframeable } from "./monet-ai-edl.js";
+export type { MonetEDL, Shot, EditDNA, Act, CharacterFocus, SegmentRef, EditIntent, MotionTrack, PlanarTrack, MaskAsset, TextOverlay, Effect, EasingType, TransitionType, ColorGradePreset, Keyframe, Keyframeable, BlendMode, EffectType } from "./monet-ai-edl.js";
 export * from "./validators.js";
 export * from "./normalizers.js";
 export * from "./analysis-types.js";

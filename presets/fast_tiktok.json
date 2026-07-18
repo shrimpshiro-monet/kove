@@ -1,0 +1,29 @@
+{
+  "profile_id": "preset_fast_tiktok",
+  "name": "Fast TikTok",
+  "description": "High-energy, fast cuts, heavy beat sync, glitch transitions. Best for short-form viral content.",
+  "mode": "montage",
+  "pacing": {
+    "avg_shot_duration": 1.2,
+    "shot_duration_distribution": "right_skewed_short",
+    "cut_to_beat_alignment_rate": 0.9,
+    "energy_curve_shape": "spike_then_release",
+    "opens_with": "hook",
+    "closes_with": "logo_sting"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 4.0,
+    "typical_duration": 1.5,
+    "typical_role": "caption"
+  },
+  "transition_preferences": {
+    "hard_cut": 0.3,
+    "crossfade": 0.05,
+    "whip_pan": 0.25,
+    "zoom_transition": 0.15,
+    "fade_to_black": 0.05,
+    "glitch": 0.2
+  },
+  "reference": null,
+  "confidence_notes": "Launch preset — no reference analysis"
+}

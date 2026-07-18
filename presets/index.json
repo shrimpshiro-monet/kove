@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "presets": [
+    {
+      "id": "fast_tiktok",
+      "name": "Fast TikTok",
+      "file": "presets/fast_tiktok.json",
+      "mode": "montage",
+      "tags": ["short-form", "viral", "high-energy", "music-driven"],
+      "description": "High-energy, fast cuts, heavy beat sync, glitch transitions."
+    },
+    {
+      "id": "clean_youtube",
+      "name": "Clean YouTube",
+      "file": "presets/clean_youtube.json",
+      "mode": "dialogue",
+      "tags": ["long-form", "tutorial", "talking-head", "polished"],
+      "description": "Polished talking-head editing with sentence-boundary cuts."
+    },
+    {
+      "id": "podcast_shorts",
+      "name": "Podcast Shorts",
+      "file": "presets/podcast_shorts.json",
+      "mode": "dialogue",
+      "tags": ["podcast", "interview", "clips", "minimal"],
+      "description": "Tight framing with aggressive dead-air compression."
+    },
+    {
+      "id": "founder_launch",
+      "name": "Founder Launch Video",
+      "file": "presets/founder_launch.json",
+      "mode": "dialogue",
+      "tags": ["startup", "launch", "pitch", "professional"],
+      "description": "Polished, professional editing for launch videos."
+    },
+    {
+      "id": "product_ad",
+      "name": "Product Ad",
+      "file": "presets/product_ad.json",
+      "mode": "montage",
+      "tags": ["product", "ad", "demo", "punchy"],
+      "description": "Punchy product-focused editing with speed ramps."
+    },
+    {
+      "id": "cinematic_travel",
+      "name": "Cinematic Travel",
+      "file": "presets/cinematic_travel.json",
+      "mode": "montage",
+      "tags": ["travel", "cinematic", "slow-burn", "atmosphere"],
+      "description": "Slow-burn editing with long shots and crossfades."
+    }
+  ]
+}

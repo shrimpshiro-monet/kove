@@ -1,0 +1,20 @@
+{
+  "profile_id": "youtube_dialogue",
+  "pacing": {
+    "avg_shot_duration": 5.0,
+    "cut_to_beat_alignment_rate": 0.0,
+    "energy_curve_shape": "flat"
+  },
+  "text_overlay": {
+    "frequency_per_minute": 0.0,
+    "typical_duration": 0.0,
+    "typical_role": "none"
+  },
+  "transition_preferences": {
+    "hard_cut": 1.0,
+    "crossfade": 0.0,
+    "whip_pan": 0.0,
+    "zoom_transition": 0.0,
+    "fade_to_black": 0.0
+  }
+}

@@ -69,6 +69,16 @@ export interface Env {
 
   // Render queue — server-side export fallback for non-WebCodecs browsers
   RENDER_QUEUE?: Queue;
+
+  // Clerk authentication
+  CLERK_PUBLISHABLE_KEY?: string;
+  CLERK_SECRET_KEY?: string;
+  CLERK_JWT_KEY?: string;
+
+  // Sentry error tracking
+  SENTRY_DSN?: string;
+  SENTRY_ENVIRONMENT?: string;
+  SENTRY_RELEASE?: string;
 }
 
 // Helper to generate unique IDs
