@@ -155,13 +155,13 @@
 | Category | Alpha | Beta | Planned |
 |----------|-------|------|---------|
 | Edit | 7 | 2 | 1 |
-| Effects | 19 | 1 | 4 |
+| Effects | 20 | 1 | 3 |
 | Overlays | 5 | 1 | 4 |
 | Audio | 6 | 0 | 3 |
 | Transitions | 19 | 1 | 1 |
 | Camera | 1 | 0 | 4 |
 | Composition | 4 | 0 | 5 |
-| **Total** | **62** | **5** | **22** |
+| **Total** | **65** | **5** | **20** |
 
 ---
 

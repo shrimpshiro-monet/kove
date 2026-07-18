@@ -311,26 +311,6 @@ export function createAudioTimelineEngine(
         source.playbackRate.value = scheduledClip.speed;
         gainNode.gain.value = scheduledClip.gain;
 
-        // Apply fade-in envelope
-        if (scheduledClip.fadeIn > 0) {
-          const fadeStartTime = contextWhen;
-          gainNode.gain.setValueAtTime(0, fadeStartTime);
-          gainNode.gain.linearRampToValueAtTime(
-            scheduledClip.gain,
-            fadeStartTime + scheduledClip.fadeIn
-          );
-        }
-
-        // Apply fade-out envelope
-        if (scheduledClip.fadeOut > 0) {
-          const fadeOutStart = contextWhen + Math.max(0, remainingDuration - scheduledClip.fadeOut);
-          gainNode.gain.setValueAtTime(scheduledClip.gain, fadeOutStart);
-          gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + scheduledClip.fadeOut);
-        }
-
-        source.connect(gainNode);
-        gainNode.connect(masterGain);
-
         const clipElapsed = Math.max(0, nowTimeline - scheduledClip.startTime);
         const remainingDuration = Math.max(0.001, scheduledClip.duration - clipElapsed);
         const sourceOffset = clampNumber(
@@ -343,6 +323,27 @@ export function createAudioTimelineEngine(
           context.currentTime,
           contextStartTime + scheduledClip.startTime
         );
+
+        // Apply fade-in envelope
+        if (scheduledClip.fadeIn > 0 && scheduledClip.fadeIn < remainingDuration) {
+          gainNode.gain.setValueAtTime(0, contextWhen);
+          gainNode.gain.linearRampToValueAtTime(
+            scheduledClip.gain,
+            contextWhen + scheduledClip.fadeIn
+          );
+        }
+
+        // Apply fade-out envelope (guard against overlap with fade-in)
+        if (scheduledClip.fadeOut > 0 && scheduledClip.fadeOut < remainingDuration) {
+          const fadeOutStart = Math.max(
+            contextWhen + scheduledClip.fadeIn,
+            contextWhen + Math.max(0, remainingDuration - scheduledClip.fadeOut)
+          );
+          gainNode.gain.setValueAtTime(scheduledClip.gain, fadeOutStart);
+          gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + scheduledClip.fadeOut);
+        }
+
+        source.connect(gainNode);
 
         const key = `${scheduledClip.clip.id}:${scheduledClip.startTime}:${scheduledClip.inPoint}`;
 

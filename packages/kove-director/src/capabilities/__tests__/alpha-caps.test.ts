@@ -1,5 +1,5 @@
 /**
- * alpha-caps.test.ts — Smoke tests for all 38 alpha capabilities.
+ * alpha-caps.test.ts — Smoke tests for all 64 alpha capabilities.
  *
  * For each alpha cap: builds plausible input + context, calls compile(),
  * asserts the returned actions are structurally valid.
@@ -73,7 +73,7 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "pull-out": { input: { clipId: "clip-1", intensity: 0.7 } },
   "shake": { input: { clipId: "clip-1", intensity: 0.4 } },
   "flash": { input: { clipId: "clip-1", intensity: 0.8 } },
-  "whip-pan": { input: { clipId: "clip-1", intensity: 0.6 } },
+  "whip-pan-effect": { input: { clipId: "clip-1", intensity: 0.6 } },
   "background-blur": { input: { clipId: "clip-1", blur: 15 } },
   "color-grade": { input: { target: "timeline", preset: "warm" }, context: TEST_CONTEXT },
 
