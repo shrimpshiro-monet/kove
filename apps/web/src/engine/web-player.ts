@@ -4,6 +4,7 @@ import type { AudioTimelineEngine } from "./audio/audio-types";
 import { createBeatEngine } from "./audio/beat-engine";
 import { runLayeredEffects } from "./effects/layered-effect-runner";
 import { resolveFrame } from "./timeline-resolver";
+import { resolveClipKeyframes } from "./keyframes/clip-keyframes";
 
 export interface PlayerControls {
   load(): Promise<{ success: boolean; error?: any }>;
@@ -199,10 +200,10 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
         }
       }
       if (playing && entry.video.paused && entry.ready) {
-        entry.video.playbackRate = speed;
+        entry.video.playbackRate = clipProps.playbackSpeed * speed;
         entry.video.play().catch(() => {});
       } else if (entry.ready) {
-        entry.video.playbackRate = speed;
+        entry.video.playbackRate = clipProps.playbackSpeed * speed;
       }
     }
 
@@ -216,7 +217,60 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
       beatEngine,
     });
     layers.runBackground();
+
+    // Resolve clip-level keyframes (push_in, pull_out, shake, color_pulse, etc.)
+    const clipProps = resolveClipKeyframes(frame.clip, frame.localTime);
+
+    ctx.save();
+
+    // Apply transform keyframes
+    if (clipProps.scaleX !== 1 || clipProps.scaleY !== 1 || clipProps.x !== 0 || clipProps.y !== 0 || clipProps.rotation !== 0) {
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((clipProps.rotation * Math.PI) / 180);
+      ctx.scale(clipProps.scaleX, clipProps.scaleY);
+      ctx.translate(clipProps.x, clipProps.y);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    }
+
+    // Apply opacity
+    if (clipProps.opacity < 1) {
+      ctx.globalAlpha = clipProps.opacity;
+    }
+
+    // Apply color saturation/brightness via CSS filter
+    if (clipProps.saturation !== 1 || clipProps.brightness !== 0) {
+      const satStr = `saturate(${clipProps.saturation})`;
+      const brightStr = clipProps.brightness !== 0 ? ` brightness(${1 + clipProps.brightness})` : "";
+      ctx.filter = `${satStr}${brightStr}`;
+    }
+
     drawVideoFrame(entry.video, frame.clip.transforms?.crop?.[0]);
+
+    // Apply vignette
+    if (clipProps.vignetteAmount > 0) {
+      const gradient = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+        canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      );
+      gradient.addColorStop(0, "rgba(0,0,0,0)");
+      gradient.addColorStop(1, `rgba(0,0,0,${clipProps.vignetteAmount})`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Apply chromatic aberration
+    if (clipProps.chromaticAberration > 0) {
+      const offset = clipProps.chromaticAberration;
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.3;
+      ctx.drawImage(canvas, -offset, 0);
+      ctx.drawImage(canvas, offset, 0);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+
     if (detectTaint(entry)) {
       console.warn("[WebPlayer] canvas tainted — CORS missing on", asset.path);
     }
