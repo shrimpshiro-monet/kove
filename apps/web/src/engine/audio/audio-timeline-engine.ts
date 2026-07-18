@@ -98,6 +98,8 @@ function buildScheduledAudioClips(edl: MonetEDL): ActionResult<ScheduledAudioCli
           inPoint: Math.max(0, clip.inPoint),
           outPoint: Math.max(clip.inPoint, clip.outPoint),
           speed: clampNumber(clip.speed || 1, 0.25, 4),
+          fadeIn: Math.max(0, clip.audio?.fadeIn ?? 0),
+          fadeOut: Math.max(0, clip.audio?.fadeOut ?? 0),
         });
       }
     }
@@ -308,6 +310,23 @@ export function createAudioTimelineEngine(
         source.buffer = buffer;
         source.playbackRate.value = scheduledClip.speed;
         gainNode.gain.value = scheduledClip.gain;
+
+        // Apply fade-in envelope
+        if (scheduledClip.fadeIn > 0) {
+          const fadeStartTime = contextWhen;
+          gainNode.gain.setValueAtTime(0, fadeStartTime);
+          gainNode.gain.linearRampToValueAtTime(
+            scheduledClip.gain,
+            fadeStartTime + scheduledClip.fadeIn
+          );
+        }
+
+        // Apply fade-out envelope
+        if (scheduledClip.fadeOut > 0) {
+          const fadeOutStart = contextWhen + Math.max(0, remainingDuration - scheduledClip.fadeOut);
+          gainNode.gain.setValueAtTime(scheduledClip.gain, fadeOutStart);
+          gainNode.gain.linearRampToValueAtTime(0, fadeOutStart + scheduledClip.fadeOut);
+        }
 
         source.connect(gainNode);
         gainNode.connect(masterGain);

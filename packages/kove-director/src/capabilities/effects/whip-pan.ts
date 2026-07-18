@@ -10,7 +10,7 @@ const WhipPanParams = z.object({
 type WhipPanParams = z.infer<typeof WhipPanParams>;
 
 export const WhipPanCapability: Capability<WhipPanParams> = {
-  id: "whip-pan",
+  id: "whip-pan-effect",
   category: "effects",
   status: "alpha",
   version: "1.0.0",

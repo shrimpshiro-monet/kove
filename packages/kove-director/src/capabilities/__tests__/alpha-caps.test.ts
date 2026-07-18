@@ -68,7 +68,7 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "freeze-frame": { input: { clipId: "clip-1", atTime: 2, holdDuration: 1 } },
   "beat-cut": { input: { clipId: "clip-1" } },
 
-  // Effects
+  // Effects (existing alpha)
   "push-in": { input: { clipId: "clip-1", intensity: 0.7 } },
   "pull-out": { input: { clipId: "clip-1", intensity: 0.7 } },
   "shake": { input: { clipId: "clip-1", intensity: 0.4 } },
@@ -77,11 +77,30 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "background-blur": { input: { clipId: "clip-1", blur: 15 } },
   "color-grade": { input: { target: "timeline", preset: "warm" }, context: TEST_CONTEXT },
 
+  // Effects (newly alpha — beta→alpha flip)
+  "color-pulse": { input: { clipId: "clip-1", intensity: 0.8, duration: 0.3 } },
+  "vignette-punch": { input: { clipId: "clip-1", intensity: 0.9, duration: 0.5 } },
+  "chromatic-burst": { input: { clipId: "clip-1", intensity: 0.8, duration: 0.1 } },
+  "echo": { input: { clipId: "clip-1", decay: 0.6, duration: 1 } },
+  "gaussian-blur": { input: { clipId: "clip-1", blurriness: 8, dimensions: "both" } },
+  "sharpen": { input: { clipId: "clip-1", amount: 1.5 } },
+  "invert-color": { input: { clipId: "clip-1", blend: 1, channel: "all" } },
+  "camera-blur": { input: { clipId: "clip-1", radius: 8 } },
+  "directional-blur": { input: { clipId: "clip-1", angle: 45, length: 12 } },
+  "unsharp-mask": { input: { clipId: "clip-1", radius: 3, amount: 2 } },
+  "player-glow": { input: { clipId: "clip-1", color: "#ff00ff", blur: 10 } },
+  "parallax-3d": { input: { clipId: "clip-1", intensity: 0.6 } },
+  "interlace-flicker": { input: { clipId: "clip-1", softness: 0.6 } },
+  "speed-ramp-effect": { input: { clipId: "clip-1", from: 1, to: 0.3, easing: "easeInOut" } },
+  "gl-transition-effect": { input: { clipId: "clip-1", preset: "whip", duration: 0.5 } },
+
   // Audio
   "volume": { input: { clipId: "clip-1", volume: 0.5 } },
   "audio-fade": { input: { clipId: "clip-1", fadeIn: 1, fadeOut: 0 } },
   "beat-sync": { input: { clipId: "clip-1", mode: "cuts", sensitivity: 0.5 } },
   "ducking": { input: { musicTrackId: "audio-music", duckAmount: 0.3 } },
+  "audio-mixing": { input: { musicTrackId: "music-1", musicVolume: 0.6, voiceVolume: 1 } },
+  "sfx-synthesis": { input: { clipId: "clip-1", sfxType: "whoosh", volume: 0.8 } },
 
   // Camera
   "crop": { input: { clipId: "clip-1", x: 0, y: 0.1, width: 1, height: 0.9 } },
@@ -91,6 +110,10 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
 
   // Overlays
   "text-overlay": { input: { text: "Hello World" } },
+  "kinetic-caption": { input: { clipId: "clip-1", style: "word-highlight", language: "en" } },
+  "title-card": { input: { clipId: "clip-1", text: "My Video", style: "fade-in" } },
+  "lower-third": { input: { clipId: "clip-1", text: "John Doe", subtitle: "Director" } },
+  "subtitle-auto": { input: { clipId: "clip-1", style: "word-highlight", language: "en" } },
 
   // Transitions (all 19)
   "crossfade": { input: { clipAId: "prev", clipBId: "next", duration: 0.5 } },
@@ -200,7 +223,7 @@ assert(crossCap?.id === "crossfade", "crossfade: correct id (no U prefix)");
 
 console.log("\n=== Beta/Planned Throw on Compile ===\n");
 
-const betaIds = ["posterize-time", "undo-redo", "player-glow"];
+const betaIds = ["posterize-time", "undo-redo", "ripple-delete"];
 let throwCount = 0;
 for (const id of betaIds) {
   const cap = lookupCapability(id);

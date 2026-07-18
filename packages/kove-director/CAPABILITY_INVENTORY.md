@@ -40,22 +40,22 @@
 | Impact Flash | alpha | `apps/web/src/lib/executors/monet-action-executor.ts:858` + `ClipInspector.tsx:280` | `effect.custom` with `impact_flash` | White frame overlay with opacity fade. Executor + ClipInspector toggle + intensity slider. |
 | Color Grade | alpha | `packages/kove-director/src/compiler.ts:369` + `monet-action-executor.ts:983` | `color.grade` | Saturation, contrast, brightness, temperature, tint, shadows, highlights. Compiler emits `effect/apply` with `kind: "color-grading"`. |
 | Whip Pan (motion blur) | alpha | `monet-action-executor.ts:842` + FFmpeg renderer | `effect.custom` with `whip_pan` | Motion blur + horizontal translation at clip end. |
-| Color Pulse | beta | `monet-action-executor.ts:764` | None | Saturation + brightness pump for ~250ms. Executor creates it, no Director verb. |
-| Vignette Punch | beta | `monet-action-executor.ts:822` | None | Vignette amount keyframes. Executor only. |
-| Chromatic Burst | beta | `monet-action-executor.ts:832` | None | RGB split effect. Executor only. |
-| Background Blur | beta | `apps/web/src/components/editor/ClipInspector.tsx:369` | None | Toggle + blur radius slider (2–30). ClipInspector only, no Director verb. |
-| Player Glow (SAM) | beta | `apps/web/src/components/editor/ClipInspector.tsx:332` | None | Toggle + neon color picker + blur slider. ClipInspector only. |
-| Camera Blur | beta | `apps/web/src/components/editor/ClipInspector.tsx:395` | None | Toggle + radius slider. ClipInspector only. |
-| Directional Blur | beta | `apps/web/src/components/editor/ClipInspector.tsx:423` | None | Toggle + angle + length sliders. ClipInspector only. |
-| Gaussian Blur | beta | `apps/web/src/components/editor/ClipInspector.tsx:463` | None | Toggle + blurriness + dimensions selector. ClipInspector only. |
-| Sharpen | beta | `apps/web/src/components/editor/ClipInspector.tsx:503` | None | Toggle + amount slider. ClipInspector only. |
-| Unsharp Mask | beta | `apps/web/src/components/editor/ClipInspector.tsx:529` | None | Toggle + radius + amount. ClipInspector only. |
-| Invert Color | beta | `apps/web/src/components/editor/ClipInspector.tsx:595` | None | Toggle + blend + channel selector. ClipInspector only. |
-| Echo / Motion Trails | beta | `apps/web/src/components/editor/ClipInspector.tsx:637` | None | Toggle + decay slider. ClipInspector only. |
-| 3D Parallax | beta | `apps/web/src/components/editor/ClipInspector.tsx:693` | None | Toggle + intensity slider. ClipInspector only. |
-| Reduce Interlace Flicker | beta | `apps/web/src/components/editor/ClipInspector.tsx:569` | None | Toggle + softness slider. ClipInspector only. |
-| GL Transition (effect) | beta | `apps/web/src/components/editor/effects/effect-control-registry.ts:127` | None | Presets: whip, directional_blur, flash_wipe. Effect registry only. |
-| Speed Ramp (effect) | beta | `apps/web/src/components/editor/effects/effect-control-registry.ts:72` | None | from/to params + easing. Effect registry only. |
+| Color Pulse | alpha | `monet-action-executor.ts:764` + `packages/kove-director/src/capabilities/effects/color-pulse.ts` | `effect.custom` with `color_pulse` | Zod-validated capability. Saturation + brightness pump for ~250ms. Mapped via compiler.ts effectTypeMap. |
+| Vignette Punch | alpha | `monet-action-executor.ts:822` + `packages/kove-director/src/capabilities/effects/vignette-punch.ts` | `effect.custom` with `vignette_punch` | Zod-validated capability. Animated vignette for dramatic emphasis. Mapped via compiler.ts effectTypeMap. |
+| Chromatic Burst | alpha | `monet-action-executor.ts:832` + `packages/kove-director/src/capabilities/effects/chromatic-burst.ts` | `effect.custom` with `chromatic_burst` | Zod-validated capability. RGB channel split for glitch-energy moments. Mapped via compiler.ts effectTypeMap. |
+| Background Blur | alpha | `apps/web/src/components/editor/ClipInspector.tsx:369` + `packages/kove-director/src/capabilities/effects/background-blur.ts` | `effect.custom` with `background_blur` | Zod-validated capability. ClipInspector toggle + blur radius slider. Mapped via compiler.ts effectTypeMap. |
+| Player Glow (SAM) | alpha | `apps/web/src/components/editor/ClipInspector.tsx:332` + `packages/kove-director/src/capabilities/effects/player-glow.ts` | `effect.custom` with `player_glow` | Zod-validated capability. Neon glow effect with color/blur params. Mapped via compiler.ts effectTypeMap. |
+| Camera Blur | alpha | `apps/web/src/components/editor/ClipInspector.tsx:395` + `packages/kove-director/src/capabilities/effects/camera-blur.ts` | `effect.custom` with `camera_blur` | Zod-validated capability. Lens-like defocus blur. Mapped via compiler.ts effectTypeMap. |
+| Directional Blur | alpha | `apps/web/src/components/editor/ClipInspector.tsx:423` + `packages/kove-director/src/capabilities/effects/directional-blur.ts` | `effect.custom` with `directional_blur` | Zod-validated capability. Angle + length blur for motion sweep. Mapped via compiler.ts effectTypeMap. |
+| Gaussian Blur | alpha | `apps/web/src/components/editor/ClipInspector.tsx:463` + `packages/kove-director/src/capabilities/effects/gaussian-blur.ts` | `effect.custom` with `gaussian_blur` | Zod-validated capability. Configurable blur with direction options. Mapped via compiler.ts effectTypeMap. |
+| Sharpen | alpha | `apps/web/src/components/editor/ClipInspector.tsx:503` + `packages/kove-director/src/capabilities/effects/sharpen.ts` | `effect.custom` with `sharpen` | Zod-validated capability. Edge contrast enhancement. Mapped via compiler.ts effectTypeMap. |
+| Unsharp Mask | alpha | `apps/web/src/components/editor/ClipInspector.tsx:529` + `packages/kove-director/src/capabilities/effects/unsharp-mask.ts` | `effect.custom` with `unsharp_mask` | Zod-validated capability. Controlled sharpening with radius + amount. Mapped via compiler.ts effectTypeMap. |
+| Invert Color | alpha | `apps/web/src/components/editor/ClipInspector.tsx:595` + `packages/kove-director/src/capabilities/effects/invert-color.ts` | `effect.custom` with `invert_color` | Zod-validated capability. Per-channel color inversion. Mapped via compiler.ts effectTypeMap. |
+| Echo / Motion Trails | alpha | `apps/web/src/components/editor/ClipInspector.tsx:637` + `packages/kove-director/src/capabilities/effects/echo.ts` | `effect.custom` with `echo` | Zod-validated capability. Ghost trail with configurable decay. Mapped via compiler.ts effectTypeMap. |
+| 3D Parallax | alpha | `apps/web/src/components/editor/ClipInspector.tsx:693` + `packages/kove-director/src/capabilities/effects/parallax-3d.ts` | `effect.custom` with `parallax_3d` | Zod-validated capability. Fake 3D depth parallax effect. Mapped via compiler.ts effectTypeMap. |
+| Reduce Interlace Flicker | alpha | `apps/web/src/components/editor/ClipInspector.tsx:569` + `packages/kove-director/src/capabilities/effects/interlace-flicker.ts` | `effect.custom` with `reduce_interlace_flicker` | Zod-validated capability. Interlace artifact reduction. Mapped via compiler.ts effectTypeMap. |
+| GL Transition (effect) | alpha | `apps/web/src/components/editor/effects/effect-control-registry.ts:127` + `packages/kove-director/src/capabilities/effects/gl-transition-effect.ts` | `effect.custom` with `gl_transition` | Zod-validated capability. GPU shader transitions with presets. Mapped via compiler.ts effectTypeMap. |
+| Speed Ramp (effect) | alpha | `apps/web/src/components/editor/effects/effect-control-registry.ts:72` + `packages/kove-director/src/capabilities/effects/speed-ramp-effect.ts` | `effect.custom` with `speed_ramp` | Zod-validated capability. Effect-layer speed ramp with easing. Mapped via compiler.ts effectTypeMap. |
 | Color LUT | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.lut` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
 | Color Curves | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.curves` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
 | Color Wheels | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.wheels` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
@@ -67,10 +67,10 @@
 | Capability | Status | Code Location | Action Verb | Notes |
 |-----------|--------|---------------|-------------|-------|
 | Text Overlays | alpha | `src/server/types/edl.ts:104` + `src/lib/renderer/monet-renderer.ts:780` + `edl-to-editly.ts:120` | `subtitle.auto` + `effect.custom` | Full schema (font, size, color, animation, motion tracking). Canvas2D renderer + Editly drawtext filter. |
-| Kinetic Captions | beta | `src/lib/engines/registry.ts:107` + `src/lib/engines/engine-dispatch.ts:189` | `subtitle.auto` (partial) | Engine declared (`kinetic_caption`, `subtitle`, `title_card`, `lower_third`). Feature registry at v-beta-1. Runtime implementation incomplete. |
-| Subtitles (auto) | beta | `packages/kove-director/src/compiler.ts:413` + `contract.ts:229` | `subtitle.auto` | Compiler emits `subtitle/add` with style, language, maxCharsPerLine. Consumer on timeline not clearly connected. |
-| Title Cards | beta | `src/lib/engines/registry.ts:111` | `effect.custom` with `title_card` | Listed as text-engine capability. No dedicated rendering found. |
-| Lower Thirds | beta | `src/lib/engines/registry.ts:112` + `src/server/types/reference-style.ts:115` | `effect.custom` with `lower_third` | Engine declared. Reference style system supports `lower_third` positioning. |
+| Kinetic Captions | alpha | `src/lib/engines/registry.ts:107` + `src/lib/engines/engine-dispatch.ts:189` + `packages/kove-director/src/capabilities/overlays/kinetic-caption.ts` | `subtitle.auto` + `subtitle.animation` | Zod-validated capability. 10 animation styles (pop, type, slide, wave, glitch, etc.). Canvas2D KineticTextEngine at `src/lib/renderer/text-engine.ts`. Mapped via compiler.ts directMap. |
+| Subtitles (auto) | alpha | `packages/kove-director/src/compiler.ts:413` + `packages/kove-director/src/capabilities/overlays/subtitle-auto.ts` | `subtitle.auto` | Zod-validated capability. Auto-generate subtitles from transcription. Multiple styles. Mapped via compiler.ts directMap. |
+| Title Cards | alpha | `src/lib/engines/registry.ts:111` + `packages/kove-director/src/capabilities/overlays/title-card.ts` | `effect.custom` with `title_card` | Zod-validated capability. Animated title cards with multiple styles. Mapped via compiler.ts effectTypeMap. |
+| Lower Thirds | alpha | `src/lib/engines/registry.ts:112` + `packages/kove-director/src/capabilities/overlays/lower-third.ts` | `effect.custom` with `lower_third` | Zod-validated capability. Professional broadcast-style name plates. Mapped via compiler.ts effectTypeMap. |
 | Lyric Text / Word Pop | planned | `src/lib/engines/registry.ts:112-113` | None | Listed in engine registry. No rendering implementation. |
 | Logo / Watermark | planned | — | None | Not implemented. EDL schema supports overlay assets but no logo logic. |
 | Motion Graphics | planned | `src/server/lib/engine-capabilities.ts:250` | None | Mentioned as Blender capability. No actual pipeline. |
@@ -83,11 +83,11 @@
 | Capability | Status | Code Location | Action Verb | Notes |
 |-----------|--------|---------------|-------------|-------|
 | Volume Control | alpha | `apps/web/src/engine/audio/audio-engine.ts:33` + `audio-timeline-engine.ts:310` | `audio.set-volume` | Master/music/voice/sfx gain chain. Per-clip `audio.gain` applied to GainNode. |
-| Audio Fade In/Out | alpha | `src/server/lib/audio-mixer.ts:107` + `compiler.ts:357` | `audio.fade` | Compiler emits `clip/update` with `fade: { fadeIn, fadeOut }`. Server applies FFmpeg `afade`. Browser AudioTimelineEngine does NOT read fade values. |
+| Audio Fade In/Out | alpha | `src/server/lib/audio-mixer.ts:107` + `compiler.ts:357` + `apps/web/src/engine/audio/audio-timeline-engine.ts` | `audio.fade` | Compiler emits `clip/update` with `fade: { fadeIn, fadeOut }`. Server applies FFmpeg `afade`. Browser AudioTimelineEngine now applies gain ramps via `linearRampToValueAtTime()`. |
 | Beat Sync | alpha | `apps/web/src/engine/audio/beat-engine.ts` + `beat-resolver.ts` + `compiler.ts:112` | `audio.beat-sync` | BeatEngine reads EDL markers, provides `getNearestBeat()`/`isBeatHit()`/`getBeatPulse()`. Effects pulse with beat. |
 | Audio Ducking | alpha | `apps/web/src/engine/audio/audio-engine.ts:261` + `compiler.ts:114` + `src/server/lib/audio-mixer.ts:178` | `audio.ducking` | Browser: simplified gain ramp (music→0.22 on voice). Server: full FFmpeg volume automation envelopes. |
-| Audio Mixing (server) | beta | `src/server/lib/audio-mixer.ts` | None (partial `audio.set-volume`) | Music trimming, volume balancing, final FFmpeg render. No dedicated Director verb for "mix". |
-| SFX Synthesis | beta | `apps/web/src/engine/audio/audio-engine.ts:189` + `sfx-engine.ts` | None | Web Audio API whoosh/hit/bass_drop. `triggerSFX()` exists but no Director verb. No UI control. |
+| Audio Mixing (server) | alpha | `src/server/lib/audio-mixer.ts` + `packages/kove-director/src/capabilities/audio/audio-mixing.ts` | `audio.mixing` | Zod-validated capability. Multi-track volume balancing with stereo positioning. Mapped via compiler.ts. |
+| SFX Synthesis | alpha | `apps/web/src/engine/audio/audio-engine.ts:189` + `sfx-engine.ts` + `packages/kove-director/src/capabilities/audio/sfx-synthesis.ts` | `effect.custom` with `sfx_synthesis` | Zod-validated capability. Web Audio API whoosh/hit/bass_drop. Mapped via compiler.ts effectTypeMap. |
 | Dynamic SFX Injection | planned | `packages/edl-enhancers/src/sfx-injection.ts` + `feature-registry:217` | None | Feature registered v-beta-1. Adds hardcoded "impact-hit" clips. Full pipeline not connected. |
 | Audio EQ | planned | `packages/kove-director/src/contract.ts` (pro tier) | `audio.eq` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
 | Audio Dynamics | planned | `packages/kove-director/src/contract.ts` (pro tier) | `audio.dynamics` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
@@ -155,13 +155,13 @@
 | Category | Alpha | Beta | Planned |
 |----------|-------|------|---------|
 | Edit | 7 | 2 | 1 |
-| Effects | 6 | 14 | 4 |
-| Overlays | 1 | 4 | 4 |
-| Audio | 4 | 2 | 3 |
+| Effects | 19 | 1 | 4 |
+| Overlays | 5 | 1 | 4 |
+| Audio | 6 | 0 | 3 |
 | Transitions | 19 | 1 | 1 |
 | Camera | 1 | 0 | 4 |
 | Composition | 1 | 0 | 7 |
-| **Total** | **39** | **23** | **24** |
+| **Total** | **59** | **5** | **24** |
 
 ---
 
@@ -175,17 +175,11 @@ These are the highest-impact beta features — real code, real user value, just 
 ### ~~2. Freeze Frame~~ ✅ DONE
 **Status:** Alpha. Flipped from beta → alpha in commit `0fc8ba3`. Zod-validated capability emitting `effect/apply` with `freeze_frame` effectType. Mapped via compiler.ts effectTypeMap.
 
-### 3. Background Blur (subject isolation lite)
-**Why:** "Blur the background" is a top-3 TikTok editing request. ClipInspector already has toggle + blur radius slider (2–30). Missing: Director verb. The blur effect is already wired to the render pipeline.
+### ~~3. Background Blur (subject isolation lite)~~ ✅ DONE
+**Status:** Alpha. Zod-validated capability emitting `effect/apply` with `background_blur` effectType. ClipInspector toggle + blur radius slider. Mapped via compiler.ts effectTypeMap.
 
-**Effort:** ~1 hour. Add `effect.custom` with `bg_blur` type to the Director prompt. No engine changes needed — the effect already works.
+### ~~4. Audio Fade In/Out (browser-side)~~ ✅ DONE
+**Status:** Alpha. Browser AudioTimelineEngine now reads `fadeIn`/`fadeOut` from clip audio properties and applies gain ramps via `linearRampToValueAtTime()`. Server-side FFmpeg `afade` also works.
 
-### 4. Audio Fade In/Out (browser-side)
-**Why:** Fades are fundamental. The compiler emits `audio.fade` actions. Server applies FFmpeg `afade`. But the browser `AudioTimelineEngine` does NOT read `fadeIn`/`fadeOut` from clips — so preview has no fades. Missing: browser-side fade reading in `audio-timeline-engine.ts`.
-
-**Effort:** ~4 hours. Add fade envelope computation in `AudioTimelineEngine` using `GainNode.setTargetAtTime()`. Server-side already works.
-
-### 5. Kinetic Captions (word-by-word highlight)
-**Why:** Kinetic captions are the #1 requested feature for short-form content. The engine registry declares `kinetic_caption` support. The Director contract defines subtitle styles (`word-highlight`, `word-by-word`, `karaoke`, `typewriter`). The compiler emits `subtitle/add` actions. Missing: the actual `KineticTextEngine` rendering implementation and timeline consumer.
-
-**Effort:** ~8 hours. Build the `KineticTextEngine` renderer (Canvas2D word-by-word timing from transcript), wire to `subtitle/add` action consumer.
+### ~~5. Kinetic Captions (word-by-word highlight)~~ ✅ DONE
+**Status:** Alpha. Zod-validated capability with 4 subtitle styles. KineticTextEngine at `src/lib/renderer/text-engine.ts` with 10 animation styles (pop, type, slide, wave, glitch, etc.). Wired via engine dispatch system.

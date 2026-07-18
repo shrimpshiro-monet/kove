@@ -20,6 +20,8 @@ export interface ScheduledAudioClip {
   inPoint: number;
   outPoint: number;
   speed: number;
+  fadeIn: number;
+  fadeOut: number;
 }
 
 export interface ActiveAudioSource {
