@@ -110,6 +110,7 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
 
   // Camera
   "crop": { input: { clipId: "clip-1", x: 0, y: 0.1, width: 1, height: 0.9 } },
+  "ken-burns-pan": { input: { clipId: "clip-1", startX: 30, startY: 40, endX: 60, endY: 50, zoomStart: 1, zoomEnd: 1.3 } },
 
   // Composition
   "multi-track": { input: { trackType: "audio", name: "Audio" } },
@@ -122,7 +123,8 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "kinetic-caption": { input: { clipId: "clip-1", style: "word-highlight", language: "en" } },
   "title-card": { input: { clipId: "clip-1", text: "My Video", style: "fade-in" } },
   "lower-third": { input: { clipId: "clip-1", text: "John Doe", subtitle: "Director" } },
-  "subtitle-auto": { input: { clipId: "clip-1", style: "word-highlight", language: "en" } },
+  "subtitle-auto": { input: { clipId: "clip-1", style: "word-highlight", language: "en", maxCharsPerLine: 40 } },
+  "logo-watermark": { input: { clipId: "clip-1", logoUrl: "/logo.png", position: "bottom-right", size: 10, opacity: 0.8 } },
 
   // Transitions (all 19)
   "crossfade": { input: { clipAId: "prev", clipBId: "next", duration: 0.5 } },

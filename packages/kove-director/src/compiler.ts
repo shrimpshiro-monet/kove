@@ -234,6 +234,8 @@ function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
         "color_wheels": "color-wheels",
         "audio_eq": "audio-eq",
         "audio_dynamics": "audio-dynamics",
+        "logo_watermark": "logo-watermark",
+        "ken_burns_pan": "ken-burns-pan",
       };
       if (effectTypeMap[params.effectType]) return effectTypeMap[params.effectType];
     }
