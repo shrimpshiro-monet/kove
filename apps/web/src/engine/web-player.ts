@@ -1,10 +1,11 @@
-import type { ProjectEDL as MonetEDL } from "@monet/edl";
+import type { CropRect, ProjectEDL as MonetEDL } from "@monet/edl";
 import { createAudioTimelineEngine } from "./audio/audio-timeline-engine";
 import type { AudioTimelineEngine } from "./audio/audio-types";
 import { createBeatEngine } from "./audio/beat-engine";
 import { runLayeredEffects } from "./effects/layered-effect-runner";
 import { resolveFrame } from "./timeline-resolver";
 import { resolveClipKeyframes } from "./keyframes/clip-keyframes";
+import { getCropForFrame, ensureTrack } from "./reframe/reframe-applier";
 
 export interface PlayerControls {
   load(): Promise<{ success: boolean; error?: any }>;
@@ -141,7 +142,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   }
 
-  function render(timestamp: number): void {
+  async function render(timestamp: number): Promise<void> {
     if (!playing || disposed) return;
     animationFrameId = requestAnimationFrame(render);
 
@@ -244,7 +245,30 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
       ctx.filter = `${satStr}${brightStr}`;
     }
 
-    drawVideoFrame(entry.video, frame.clip.transforms?.crop?.[0]);
+    // Subject-tracked reframe
+    let reframeCrop: CropRect | undefined;
+    const reframeParams = (frame.clip as any).reframe;
+    if (reframeParams) {
+      try {
+        const crop = await getCropForFrame(
+          (frame.clip as any).sourceAssetId ?? frame.clip.id,
+          reframeParams.targetRatio,
+          frame.localTime,
+          reframeParams.lockedTrackId,
+        );
+        if (crop) {
+          reframeCrop = crop;
+        }
+      } catch {
+        // reframe failure → render as-is
+      }
+    }
+
+    if (reframeCrop) {
+      drawVideoFrame(entry.video, reframeCrop);
+    } else {
+      drawVideoFrame(entry.video, frame.clip.transforms?.crop?.[0]);
+    }
 
     // Apply vignette
     if (clipProps.vignetteAmount > 0) {
@@ -281,6 +305,21 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
   return {
     async load() {
       pruneVideos();
+
+      // Kick off subject-track analysis for clips with reframe params
+      for (const track of edl.timeline.tracks) {
+        for (const clip of track.clips) {
+          const reframe = (clip as any).reframe;
+          if (reframe && reframe.lockSubject !== "center") {
+            const mediaId = (clip as any).sourceAssetId ?? clip.mediaId ?? (clip as any).assetId;
+            const mediaAsset = edl.assets.media[mediaId];
+            if (mediaAsset) {
+              ensureTrack(mediaId, clip.id, mediaAsset.path ?? "", mediaAsset.duration);
+            }
+          }
+        }
+      }
+
       return { success: true };
     },
 
