@@ -206,6 +206,7 @@ function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
         "impact_flash": "flash",
         "whip_pan": "whip-pan",
         "freeze_frame": "freeze-frame",
+        "background_blur": "background-blur",
       };
       if (effectTypeMap[params.effectType]) return effectTypeMap[params.effectType];
     }

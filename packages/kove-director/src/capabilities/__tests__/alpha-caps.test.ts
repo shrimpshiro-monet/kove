@@ -74,6 +74,7 @@ const ALPHA_INPUTS: Record<string, { input: Record<string, unknown>; context?: C
   "shake": { input: { clipId: "clip-1", intensity: 0.4 } },
   "flash": { input: { clipId: "clip-1", intensity: 0.8 } },
   "whip-pan": { input: { clipId: "clip-1", intensity: 0.6 } },
+  "background-blur": { input: { clipId: "clip-1", blur: 15 } },
   "color-grade": { input: { target: "timeline", preset: "warm" }, context: TEST_CONTEXT },
 
   // Audio
@@ -199,7 +200,7 @@ assert(crossCap?.id === "crossfade", "crossfade: correct id (no U prefix)");
 
 console.log("\n=== Beta/Planned Throw on Compile ===\n");
 
-const betaIds = ["posterize-time", "undo-redo", "background-blur", "player-glow"];
+const betaIds = ["posterize-time", "undo-redo", "player-glow"];
 let throwCount = 0;
 for (const id of betaIds) {
   const cap = lookupCapability(id);
