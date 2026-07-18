@@ -1,115 +1,94 @@
-# AGENTS.md — Monet AI Video Director
+# AGENTS.md — Monet AI Director
 
-## What this repo is
+## Two pipelines, one repo
 
-AI video editor with **two coexisting pipelines**:
+Two codebases coexist. **Not obvious from layout, but critical:**
+- **Monet v1** (root `src/`) — Cloudflare Worker, TanStack Start, Gemini-driven EDL generation. Entry: `src/server.ts` (1217-line `fetch` handler with inline `{method, path, handler}[]` route registry).
+- **Kove v2** (`apps/api/`) — Fastify server, reference-driven pipeline, BullMQ/Redis. Entry: `apps/api/src/server.ts`.
 
-1. **Monet v1 (Core Loop)** — Prompt-driven. User describes what they want → Gemini reasons about edit → Canvas2D preview → FFmpeg export. Runs on Cloudflare Workers. Entry: `src/server.ts`.
-2. **Kove v2 (Vibe Edit)** — Reference-driven. User provides footage + reference video → Python analyzes both → extracts editing DNA → applies style → Editly/FFmpeg render. Runs on local Fastify API. Entry: `apps/api/src/server.ts`.
+Two schemas: `packages/edl/` (v1, integrated) and `packages/edl-v2/` (v5.1, not wired).
 
-The **MonetEDL** is the shared source of truth. Schema in `packages/edl/src/`.
+## Root src/ vs apps/*/src/ — NOT a mistake
 
-## Commands
+- `src/` = the TanStack Start app (Cloudflare Worker, v1 code)
+- `apps/api/src/` = Kove v2 Fastify server
+- `apps/worker-node/src/` = BullMQ render workers (requires Redis)
+- `apps/web/src/` = standalone Vite web UI (`@monet/web`)
+
+## Commands (non-obvious ones)
 
 ```bash
-pnpm install                # install (pnpm, not npm; uses workspace from pnpm-workspace.yaml)
-bun run dev                 # starts 3 parallel processes: Vite (port 8787) + API (port 3000) + Worker
-pnpm dev:api                # apps/api Fastify server solo
-pnpm dev:web                # apps/web solo
-pnpm dev:worker             # apps/worker-node solo
-pnpm typecheck              # turbo run typecheck across all packages
-pnpm lint                   # turbo run lint
-pnpm test                   # turbo run test
-pnpm infra:up               # docker compose -f infra/docker-compose.yml up -d (Redis)
-pnpm infra:down
-pnpm python:audio           # workers/python-audio on port 8101
-pnpm python:ai              # workers/python-ai (Whisper) on port 8102
+pnpm install          # pnpm@9.15.4 workspace; .npmrc has shamefully-hoist=true
+bun run dev           # parallel: Vite :8787 + API :3000 + Worker (not pnpm)
+pnpm dev:api          # solo Fastify (tsx watch)
+pnpm dev:web          # solo Vite web app
+pnpm dev:worker       # solo BullMQ consumer
+pnpm test             # turborepo test pipeline
+pnpm infra:up         # docker compose Redis (required for Kove v2/workers)
+pnpm python:audio     # uvicorn workers/python-audio :8101
+pnpm python:ai        # uvicorn workers/python-ai :8102
 ```
 
-## Repo structure gotchas
+No CI workflows `.github/workflows/` exist. No `opencode.json`.
 
-**Two `src/` directories exist. This is NOT a mistake:**
-- **Root `src/`** — the main TanStack Start app (Cloudflare Worker). Routes, server APIs, services, prompts, lib, components. **v1 Monet code.**
-- **`apps/*/src/`** — separate monorepo packages with their own tsconfig. **`apps/api/` is the v2 Kove Fastify server.**
+## Gotchas that will waste time
 
-**Don't touch these (vendored/forked):**
-- `editly/` — local fork of the editly npm package
-- `external/*/` — forked or pinned projects (hyperframes, openreel-video, pyscenedetect, etc.)
-- `hyperframes/` — its own independent repo (has its own AGENTS.md)
+- **`routeTree.gen.ts`** is auto-generated (in `.prettierignore`). Never edit by hand.
+- **Vite config** uses `@lovable.dev/vite-tanstack-config` — do NOT manually add `tanstackStart`, `viteReact`, `tailwindcss`, or `tsConfigPaths` plugins. The wrapper includes them.
+- **Wrangler stubs** (`src/stubs/`) alias `editly`, `tailwindcss`, TanStack modules for Cloudflare Worker build. Don't remove.
+- **`bunfig.toml`** has `minimumReleaseAge = 86400` (24h supply-chain guard). New deps <24h old may fail to install.
+- **Clerk auth** is optional — only activates if `CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY` env vars are present.
+- **Sentry** bootstraps on first request, not at module load.
+- **Formatting** goes through eslint (`eslint-plugin-prettier/recommended`), not a standalone prettier command.
+- **No filesystem in Workers.** Media → R2, metadata → D1, ephemeral → KV. Dev uses `os.tmpdir()` media cache but won't work in production.
 
-**Monorepo packages** (`packages/`):
-- `edl` — MonetEDL schema (source of truth, used by both pipelines)
-- `edl-v2` — New EDL schema v5.1 (Kove v2, not integrated into main pipeline yet)
-- `edl-enhancers` — EDL post-processing
-- `kove-director` — AI Director contract, capability registry, EDL→actions compiler
-- `openreel-adapter` — MonetEDL ↔ OpenReel project conversion
-- `engine-freecut` — alternative edit engine
-- `render-adapters` — render backend abstraction
-- `feature-registry` — effect/transition registry
-- `job-contracts` — BullMQ job type definitions
+## D1 migrations
 
-**Workspace includes** `external/openreel-video/packages/*` in addition to `apps/*`, `packages/*`, `workers/*`.
+`src/server/migrations/NNN_description.sql`. Append-only, idempotent (`IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`).
 
-**TanStack stubs** in `src/stubs/` exist because `editly`, `tailwindcss`, and certain TanStack modules must be stubbed for the Cloudflare Worker build. Don't remove them.
+## Key packages
 
-## AI provider setup
-
-Priority chain: Azure Foundry → Azure OpenAI → Vertex AI → Gemini API.
-Add to `.dev.vars` (loaded by `vite.config.ts`, not wrangler):
-```
-GEMINI_API_KEY=your_key_here
-```
-See `.dev.vars.example` for all options (Vertex AI, Groq, NVIDIA NIM, etc.).
-
-## Cloudflare bindings (production)
-
-| Binding | Type | Purpose |
+| Workspace | Path | Purpose |
 |---|---|---|
-| `MONET_MEDIA` | R2 | Footage, music, reference uploads |
-| `MONET_RENDERS` | R2 | Exported MP4 renders |
-| `DB` | D1 | Intents, analyses, EDLs, reference styles |
-| `MONET_KV` | KV | Job status, upload tokens |
-| `RENDER_QUEUE` | Queue | Async render jobs |
+| `@monet/edl` | `packages/edl/` | MonetEDL schema, validators, Zod — shared source of truth |
+| `@monet/edl-enhancers` | `packages/edl-enhancers/` | EDL post-processing |
+| `@kove/director` | `packages/kove-director/` | AI Director contract, capability registry |
+| `@monet/openreel-adapter` | `packages/openreel-adapter/` | MonetEDL ↔ OpenReel |
+| `@monet/engine-freecut` | `packages/engine-freecut/` | Alternative edit engine |
+| `@monet/job-contracts` | `packages/job-contracts/` | BullMQ job type definitions |
 
-**No filesystem access in Workers.** Everything through R2/D1/KV. The v1 pipeline uses `os.tmpdir()` as local media cache for dev but this won't work in production Workers.
+Capabilities **auto-register** via side-effect imports in `packages/kove-director/src/capabilities/index.ts` — never import individual capability files.
 
-## Key conventions
+## AI provider priority
 
-- **Gemini prompts are .txt files** in `src/server/prompts/` — never inline strings
-- **No `any`** — use `unknown` + narrowing or design the type
-- **No empty catch blocks** — handle or rethrow with context
+Azure Foundry → Azure OpenAI → Vertex AI → Gemini API.
+Envs in `.dev.vars` (loaded by vite.config.ts, NOT wrangler).
+
+Prompts use `gemini-2.5-flash` with `responseSchema`. Prompts are `.txt` files in `src/server/prompts/`, loaded at runtime via `prompts/index.ts`. Never inline.
+
+## Don't touch these
+
+- `editly/` — local fork
+- `external/*` — forked/pinned projects
+- `openreel-video/` — wrapped, not extracted
+- `hyperframes/` — independent repo
+
+## Existing instruction files to read first
+
+- **`GEMINI.md`** (529 lines) — architecture, code quality, Gemini rules, EDL mandates, performance targets
+- **`.github/copilot-instructions.md`** (201 lines) — quality bar, scoring, pacing, genre defaults, refinement rules
+- `.github/instructions/` — 5 files (backend, edl-quality, gemini-prompts, renderer, studio-portability), each with `applyTo` globs
+- `packages/kove-director/CAPABILITY_INVENTORY.md` — auto-generated capability audit
+- `docs/agents/domain.md` — doc layout convention (CONTEXT.md + ADRs)
+
+## What "professional" means here (hard constraints from GEMINI.md)
+
+- **No `any`** — design the type or use `unknown`
+- **No empty catch** — handle or rethrow
 - **No raw `fetch` in UI** — use `src/lib/api-client.ts`
-- **Zod on every API boundary** — request bodies, Gemini responses, EDL from D1
-- **`Result<T, E>` pattern** for async operations that can fail at API boundaries
-- **Server routes** registered in `src/server.ts` as `{method, path, handler}` array
-- **EDL validation** via `validateEDL()` on every generated EDL. Reject and retry if it fails
-- **Prompts use `gemini-2.5-flash`** with `responseSchema` for structured output. Never parse free-form
-- **Capabilities auto-register** via side-effect imports in `packages/kove-director/src/capabilities/index.ts` — don't import individual capability files
-
-## Test locations
-
-```bash
-pnpm test                   # turbo test across workspace
-vitest run                  # runs from vitest.config.ts
-```
-- Unit/integration tests: `src/server/lib/__tests__/*.test.ts` + `tests/*.{test,ts,tsx}`
-- Python pipeline tests: `tests/test_*.py`
-- Shell smoke scripts: `test-intent.sh`, `test-full-pipeline.sh`, `test-real-analysis.sh`, `test-resilience.sh`, `test-hardened-intent.sh`
-
-## Reference videos
-
-Three folders at repo root (style analysis only, never loaded as EDL footage):
-- `monet-reference-edits/` — 6 short edits (576x576)
-- `reference-edits-2/` — 11 videos (Curry, Tyler, Hamilton, etc.)
-- `longer-reference-videos-for-youtube/` — 3 YouTube videos with ANALYSIS.md
-
-## Existing instruction files (read these first)
-
-- **`GEMINI.md`** — 529-line ground truth: architecture, code quality, API design, Gemini rules, EDL quality, rendering, performance targets
-- **`.github/copilot-instructions.md`** — 201-line agent instructions covering architecture, scoring, pacing, genre defaults, Cloudflare constraints, quality rules, known negatives, and remaining gaps
-- `.github/instructions/` — 5 focused instruction files: backend, edl-quality, gemini-prompts, renderer, studio-portability
-- `packages/kove-director/CAPABILITY_INVENTORY.md` — Auto-generated audit of every editing feature with status and verb mapping
-- `MONET-CORE-LOOP.md` — Pipeline architecture walkthrough
-- `PRODUCTION-RESILIENCE.md` — Deterministic fallback, caching, retry logic
-- `RENDERER-COMPLETE.md` — Canvas2D renderer architecture and status
-- `docs/agents/domain.md` — single-context documentation layout and ADR pattern
+- **Zod on every API boundary** — request bodies, Gemini responses, all EDL reads
+- **`Result<T,E>` pattern** for async operations at API boundaries
+- **`validateEDL()`** on every generated EDL — reject and retry on failure
+- **Beat sync >80%**, refinement <3s, frame render <100ms
+- **Segment selection**: prefer `overall > 0.7`, minimum `> 0.6`
+- **Cuts >80%**, effects on <30% of shots, one effect per shot max
