@@ -32,14 +32,17 @@ export function createDemuxer(events: DemuxerEvents) {
     const trak = mp4box.getTrackById(track.id);
     let description: ArrayBuffer | null = null;
     try {
-      const stsd = (trak as any)?.mdia?.minf?.stbl?.stsd;
-      if (stsd?.entries?.[0]?.avcC) {
-        description = stsd.entries[0].avcC.buffer;
-      } else if (stsd?.entries?.[0]?.hvcC) {
-        description = stsd.entries[0].hvcC.buffer;
+      const stsd = trak?.mdia?.minf?.stbl?.stsd;
+      const entry = stsd?.entries?.[0] as
+        | { avcC?: { buffer: ArrayBuffer }; hvcC?: { buffer: ArrayBuffer } }
+        | undefined;
+      if (entry?.avcC) {
+        description = entry.avcC.buffer;
+      } else if (entry?.hvcC) {
+        description = entry.hvcC.buffer;
       }
-    } catch {
-      // description may be unavailable
+    } catch (e) {
+      console.warn("[demuxer] could not extract codec description", e);
     }
 
     events.onReady({
