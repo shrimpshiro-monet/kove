@@ -146,6 +146,8 @@ async function runEditlyRender(
             const { buildPath, resolvePath, DEFAULT_SMOOTH_CFG } = await import("@monet/edl");
 
             const ratio = parseRatio(clip.reframe.targetRatio ?? "9:16");
+            // TODO: pass sourceAspectRatio from clip/source dimensions once available in export pipeline
+            // Default 16/9 is used as most user content is landscape
             const path = buildPath(subjectTrack, ratio, DEFAULT_SMOOTH_CFG, clip.reframe.lockedTrackId);
 
             const totalDuration = edlObj.timeline.duration ?? 60;

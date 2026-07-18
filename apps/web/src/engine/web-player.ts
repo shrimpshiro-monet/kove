@@ -1,4 +1,4 @@
-import type { CropRect, ProjectEDL as MonetEDL } from "@monet/edl";
+import type { ProjectEDL as MonetEDL } from "@monet/edl";
 import { createAudioTimelineEngine } from "./audio/audio-timeline-engine";
 import type { AudioTimelineEngine } from "./audio/audio-types";
 import { createBeatEngine } from "./audio/beat-engine";
@@ -65,6 +65,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
   let lastRenderMs = 0;
   let animationFrameId: number | null = null;
   let currentClipId: string | null = null;
+  let lastCropResult: { key: string; crop: { x: number; y: number; width: number; height: number } | null } | null = null;
 
   const timeListeners = new Set<(t: number) => void>();
 
@@ -93,7 +94,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
           entry.video.pause();
           entry.video.removeAttribute("src");
           entry.video.load();
-        } catch {}
+        } catch { /* Video may already be disposed */ }
         videos.delete(id);
       }
     }
@@ -142,7 +143,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   }
 
-  async function render(timestamp: number): Promise<void> {
+  function render(timestamp: number): void {
     if (!playing || disposed) return;
     animationFrameId = requestAnimationFrame(render);
 
@@ -246,21 +247,23 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
     }
 
     // Subject-tracked reframe
-    let reframeCrop: CropRect | undefined;
+    let reframeCrop: { x: number; y: number; width: number; height: number } | undefined;
     const reframeParams = (frame.clip as any).reframe;
     if (reframeParams) {
-      try {
-        const crop = await getCropForFrame(
+      const cropKey = `${frame.clip.id}:${frame.localTime.toFixed(3)}`;
+      if (lastCropResult?.key === cropKey) {
+        reframeCrop = lastCropResult.crop ?? undefined;
+      } else {
+        getCropForFrame(
           (frame.clip as any).sourceAssetId ?? frame.clip.id,
           reframeParams.targetRatio,
           frame.localTime,
           reframeParams.lockedTrackId,
-        );
-        if (crop) {
-          reframeCrop = crop;
-        }
-      } catch {
-        // reframe failure → render as-is
+        ).then((crop) => {
+          lastCropResult = { key: cropKey, crop };
+        }).catch(() => {
+          lastCropResult = { key: cropKey, crop: null };
+        });
       }
     }
 
@@ -314,7 +317,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
             const mediaId = (clip as any).sourceAssetId ?? clip.mediaId ?? (clip as any).assetId;
             const mediaAsset = edl.assets.media[mediaId];
             if (mediaAsset) {
-              ensureTrack(mediaId, clip.id, mediaAsset.path ?? "", mediaAsset.duration);
+              ensureTrack(mediaId, clip.id, mediaAsset.path ?? "", mediaAsset.duration).catch(() => {});
             }
           }
         }
@@ -353,7 +356,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
       }
       for (const e of videos.values()) {
         e.video.pause();
-        try { e.video.currentTime = 0; } catch {}
+        try { e.video.currentTime = 0; } catch { /* Video may not be ready */ }
       }
       currentClipId = null;
       if (animationFrameId !== null) {
@@ -400,7 +403,7 @@ export function createWebPlayer(canvas: HTMLCanvasElement, edl: MonetEDL): Playe
           e.video.pause();
           e.video.removeAttribute("src");
           e.video.load();
-        } catch {}
+        } catch { /* Video may already be disposed */ }
       }
       videos.clear();
       timeListeners.clear();

@@ -9,7 +9,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "mp4box": "^2.4.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
