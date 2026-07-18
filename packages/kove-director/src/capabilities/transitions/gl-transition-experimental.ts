@@ -9,7 +9,9 @@ export const GlTransitionExperimentalCapability: Capability = {
   description: "Experimental GL shader transitions (cube, mosaic, ripple, swirl, dreamy, etc).",
   triggerPhrases: ["cube transition", "mosaic transition", "ripple transition"],
   params: { type: "string", duration: "number" },
-  compile: () => [],
+  compile: () => {
+    throw new Error("capability gl-transition-experimental is status=beta, not yet callable");
+  },
   examples: [],
 };
 registerCapability(GlTransitionExperimentalCapability);
