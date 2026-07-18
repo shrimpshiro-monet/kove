@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,22 +25,28 @@ const jobs = new Map<string, RefineJobStatus>();
 const TIMEOUT_MS = 120_000;
 const CLEANUP_MS = 3_600_000;
 
+const RefineRequestSchema = z.object({
+  currentEdl: z.unknown(),
+  prompt: z.string().min(1),
+  scopeClipIds: z.array(z.string()).optional(),
+  projectName: z.string().optional(),
+  referenceDnaPath: z.string().optional(),
+});
+
+const RefineStatusParamsSchema = z.object({
+  jobId: z.string().uuid(),
+});
+
 export async function registerVibeRefineRoute(app: FastifyInstance): Promise<void> {
   // POST /api/vibe-refine — start a refinement job
   app.post("/api/vibe-refine", async (req, res) => {
     try {
-      const body = req.body as {
-        currentEdl?: unknown;
-        prompt?: string;
-        scopeClipIds?: string[];
-        projectName?: string;
-        referenceDnaPath?: string;
-      };
-
-      if (!body.currentEdl || !body.prompt) {
-        return res.status(400).send({ error: "currentEdl and prompt are required" });
+      const parsed = RefineRequestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).send({ error: "Invalid request body", details: parsed.error.flatten() });
       }
 
+      const body = parsed.data;
       const projectName = body.projectName || `refine-${Date.now()}`;
       const jobId = crypto.randomUUID();
       const tmpDir = path.join("/tmp", "kove-refine-jobs", jobId);
@@ -69,15 +76,20 @@ export async function registerVibeRefineRoute(app: FastifyInstance): Promise<voi
       runRefinement(job, projectName);
 
       return res.send({ jobId, status: "queued" });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       req.log.error({ err }, "vibe-refine failed");
-      return res.status(500).send({ error: err.message });
+      return res.status(500).send({ error: message });
     }
   });
 
   // GET /api/vibe-refine/status/:jobId — poll job status
   app.get("/api/vibe-refine/status/:jobId", async (req, res) => {
-    const { jobId } = req.params as { jobId: string };
+    const paramsParsed = RefineStatusParamsSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).send({ error: "Invalid jobId" });
+    }
+    const { jobId } = paramsParsed.data;
     const job = jobs.get(jobId);
     if (!job) return res.status(404).send({ error: "Job not found" });
 
@@ -91,10 +103,11 @@ export async function registerVibeRefineRoute(app: FastifyInstance): Promise<voi
           job.progress = 100;
           job.message = "Done";
           job.result = { edl };
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
           job.status = "failed";
-          job.message = `Failed to read output: ${err.message}`;
-          job.error = err.message;
+          job.message = `Failed to read output: ${msg}`;
+          job.error = msg;
         }
       } else {
         job.status = "failed";
@@ -166,10 +179,11 @@ function runRefinement(job: RefineJobStatus, projectName: string): void {
         job.progress = 100;
         job.message = "Refinement complete";
         job.result = { edl };
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         job.status = "failed";
-        job.message = `Failed to parse refined EDL: ${err.message}`;
-        job.error = err.message;
+        job.message = `Failed to parse refined EDL: ${msg}`;
+        job.error = msg;
       }
     } else {
       job.status = "failed";
