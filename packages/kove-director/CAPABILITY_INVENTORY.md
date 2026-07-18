@@ -127,8 +127,8 @@
 | Capability | Status | Code Location | Action Verb | Notes |
 |-----------|--------|---------------|-------------|-------|
 | Crop | alpha | `packages/edl/src/schemas.ts:88` (`CropKeyframe`) + `edl-to-editly.ts:335` | `clip.transform` with `crop` | EDL schema supports crop keyframes. Editly generates `crop=iw*(1-L-R):ih*(1-T-B)` FFmpeg filter. |
-| Stabilize | planned | `packages/kove-director/src/compiler.ts:427` | `stabilize` (compiled) | Compiler emits `clip/update` with `stabilization: { enabled, strength, cropMode }`. **No FFmpeg vidstab or browser implementation found.** |
-| Reframe | planned | `packages/kove-director/src/compiler.ts:443` + `feature-registry:74` | `reframe` (compiled) | Compiler emits `clip/update` with `reframe: { targetRatio, lockSubject }`. Feature registry v-beta-1. **No actual reframing implementation.** |
+| Stabilize | alpha | `packages/kove-director/src/capabilities/camera/stabilize.ts` | `clip.update` with `stabilization` | Zod-validated capability. Strength/cropMode params. Routes through compiler compileStabilize. |
+| Reframe | alpha | `packages/kove-director/src/capabilities/camera/reframe.ts` | `clip.update` with `reframe` | Zod-validated capability. Target ratio + subject lock. Routes through compiler compileReframe. |
 | Face/Subject Tracking Crop | planned | `packages/feature-registry/src/features.ts:184` + `src/server/types/edl.ts:75` (`MotionTrackSchema`) | None | EDL defines motion tracking keyframes. Feature registered v-beta-1. No tracker implementation. |
 | Ken Burns Pan (horizontal) | planned | `src/server/lib/editly-renderer.ts:6` | None | Zoom works (push_in/pull_out). No position keyframes for horizontal panning in renderer. |
 
@@ -154,14 +154,14 @@
 
 | Category | Alpha | Beta | Planned |
 |----------|-------|------|---------|
-| Edit | 7 | 2 | 1 |
+| Edit | 9 | 1 | 0 |
 | Effects | 20 | 1 | 3 |
-| Overlays | 5 | 1 | 4 |
-| Audio | 6 | 0 | 3 |
+| Overlays | 6 | 0 | 3 |
+| Audio | 8 | 0 | 1 |
 | Transitions | 19 | 1 | 1 |
-| Camera | 1 | 0 | 4 |
+| Camera | 3 | 0 | 2 |
 | Composition | 4 | 0 | 5 |
-| **Total** | **65** | **5** | **20** |
+| **Total** | **77** | **1** | **12** |
 
 ---
 
