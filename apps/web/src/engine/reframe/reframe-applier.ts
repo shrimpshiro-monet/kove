@@ -1,5 +1,5 @@
 import { buildPath, resolvePath, DEFAULT_SMOOTH_CFG } from "@monet/edl";
-import type { SubjectTrack, CropRect, SmoothCfg } from "@monet/edl";
+import type { CropRect, SmoothCfg } from "@monet/edl";
 import { TrackCache } from "./track-cache";
 
 const trackCache = new TrackCache();
@@ -19,6 +19,18 @@ export async function ensureTrack(
   await trackCache.ensureTrack(key, clipId, sourceAssetId, mediaUrl, duration);
 }
 
+/**
+ * @param sourceAssetId - The source asset ID
+ * @param targetRatio - Target aspect ratio string (e.g. "9:16")
+ * @param localTime - Time in seconds within the clip
+ * @param lockedTrackId - Optional subject track ID to lock onto
+ * @param cfg - Smoothing configuration
+ * @returns Crop rect or null if no track available
+ *
+ * Note: The first call for a new (targetRatio, cfg, lockedTrackId) combo triggers
+ * a lazy `buildPath()` (~1800-step Float64Array math, <5ms). This is a one-time
+ * cost per unique combo — subsequent calls hit the path cache.
+ */
 export async function getCropForFrame(
   sourceAssetId: string,
   targetRatio: string,

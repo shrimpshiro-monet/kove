@@ -22,6 +22,7 @@ export class TrackCache {
   private dbPromise: Promise<IDBDatabase> | null = null;
   private memCache = new Map<string, SubjectTrack>();
   private pendingJobs = new Map<string, Promise<void>>();
+  onProgress?: (percent: number) => void;
 
   private async db(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
@@ -50,7 +51,8 @@ export class TrackCache {
         };
         req.onerror = () => reject(req.error);
       });
-    } catch {
+    } catch (e) {
+      console.warn("[track-cache] IndexedDB read failed:", e);
       return null;
     }
   }
@@ -61,8 +63,8 @@ export class TrackCache {
       const db = await this.db();
       const tx = db.transaction(STORE_NAME, "readwrite");
       tx.objectStore(STORE_NAME).put(track, key);
-    } catch {
-      // IndexedDB write failure is non-fatal
+    } catch (e) {
+      console.warn("[track-cache] IndexedDB write failed:", e);
     }
   }
 
@@ -113,8 +115,8 @@ export class TrackCache {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(msg.track),
               });
-            } catch {
-              // Server persistence is best-effort
+            } catch (e) {
+              console.warn("[track-cache] Server persist failed:", e);
             }
             worker.terminate();
             resolve();
@@ -125,7 +127,7 @@ export class TrackCache {
             resolve();
             break;
           case "progress":
-            self.postMessage({ type: "reframe-progress", percent: msg.percent });
+            this.onProgress?.(msg.percent as number);
             break;
         }
       };
