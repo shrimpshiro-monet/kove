@@ -477,7 +477,13 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
         for (const track of draft.edl.timeline.tracks) {
           const idx = track.clips.findIndex((c) => c.id === clipId);
           if (idx !== -1) {
+            const removedClip = track.clips[idx];
+            const removedDuration = removedClip.duration;
             track.clips.splice(idx, 1);
+            // Ripple delete: shift subsequent clips earlier to close the gap
+            for (let i = idx; i < track.clips.length; i++) {
+              track.clips[i].startTime = Math.max(0, track.clips[i].startTime - removedDuration);
+            }
             break;
           }
         }

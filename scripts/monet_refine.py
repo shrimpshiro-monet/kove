@@ -220,9 +220,19 @@ def compile_actions_to_edl(actions: list[dict], current_edl: dict) -> dict:
 
         elif action_type == "clip/remove":
             clip_id = params.get("clipId")
+            ripple = params.get("ripple", False)
             if clip_id and clip_id in clip_index:
+                removed_clip = clip_index[clip_id]
+                removed_duration = removed_clip.get("duration", 0)
                 for track in edl["timeline"]["tracks"]:
-                    track["clips"] = [c for c in track["clips"] if c["id"] != clip_id]
+                    idx = next((i for i, c in enumerate(track["clips"]) if c["id"] == clip_id), None)
+                    if idx is not None:
+                        track["clips"].pop(idx)
+                        # Ripple: shift subsequent clips earlier
+                        if ripple:
+                            for i in range(idx, len(track["clips"])):
+                                track["clips"][i]["startTime"] = max(0, track["clips"][i]["startTime"] - removed_duration)
+                        break
                 del clip_index[clip_id]
 
         elif action_type == "clip.reorder":
