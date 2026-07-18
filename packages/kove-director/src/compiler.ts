@@ -182,6 +182,7 @@ function compileAction(da: DirectorAction, context?: CapabilityContext): Action 
 function mapActionTypeToCapabilityId(da: DirectorAction): string | null {
   // Direct mappings for specific action types
   const directMap: Record<string, string> = {
+    "clip.speed-ramp": "speed-ramp",
     "audio.beat-sync": "beat-sync",
     "audio.ducking": "ducking",
     "audio.set-volume": "volume",
