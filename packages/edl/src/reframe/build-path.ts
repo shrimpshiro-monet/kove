@@ -39,6 +39,7 @@ export function buildPath(
   targetRatio: { w: number; h: number },
   cfg: SmoothCfg = DEFAULT_SMOOTH_CFG,
   lockedTrackId?: number,
+  sourceAspectRatio: number = 16 / 9,
 ): Float64Array {
   const sorted = [...track.detections].sort((a, b) => a.time - b.time);
   if (sorted.length === 0) {
@@ -64,12 +65,11 @@ export function buildPath(
     ch: { prevValue: 1, prevDerivative: 0, prevTime: 0 },
   };
 
-  let lastDetectionTime = -1;
   let lastCx = 0.5;
   let lastCy = 0.5;
   let gapStartTime = -1;
 
-  const srcAspect = 16 / 9;
+  const srcAspect = sourceAspectRatio;
   const dstAspect = targetRatio.w / targetRatio.h;
 
   const findDetectionAt = (t: number) => {
@@ -98,12 +98,13 @@ export function buildPath(
     const detection = findDetectionAt(t);
     const idx = frameIdx * 4;
 
-    if (!detection.found || detection.confidence !== undefined && detection.confidence! < 0.3) {
-      if (gapStartTime < 0) gapStartTime = t;
-      const gapDuration = t - gapStartTime;
+    if (!detection.found || detection.confidence !== undefined && detection.confidence < 0.3) {
+      if (gapStartTime < 0) gapStartTime = t * 1000;
+      const gapDuration = t * 1000 - gapStartTime;
 
-      if (gapDuration * 1000 > cfg.gapDecayMs) {
-        const decay = Math.min(gapDuration / (cfg.gapDecayMs / 1000), 1);
+      if (gapDuration > cfg.gapDecayMs) {
+        const holdThreshold = cfg.gapDecayMs;
+        const decay = Math.min(Math.max((gapDuration - holdThreshold) / holdThreshold, 0), 1);
         const cx = lastCx + (0.5 - lastCx) * decay;
         const cy = lastCy + (0.5 - lastCy) * decay;
         const cw = Math.min(1, track.detections[0]?.bbox.width ?? 1);
@@ -134,7 +135,6 @@ export function buildPath(
 
     lastCx = smoothCx;
     lastCy = smoothCy;
-    lastDetectionTime = t;
 
     let cropW: number;
     let cropH: number;
