@@ -14,9 +14,9 @@ type P = z.infer<typeof Params>;
 export const ColorCurvesCapability: Capability<P> = {
   id: "color-curves",
   category: "effects",
-  status: "beta",
-  version: "1.0.0",
-  description: "Adjust color curves for shadows, midtones, and highlights. Emits effect/apply action — render-side curves processing not yet wired to OpenReel's ColorGradingEngine.",
+  status: "alpha",
+  version: "1.1.0",
+  description: "Adjust color curves for shadows, midtones, and highlights. Uses OpenReel's native color-grading action.",
   triggerPhrases: [
     "color curves",
     "adjust curves",
@@ -33,9 +33,12 @@ export const ColorCurvesCapability: Capability<P> = {
       params: {
         target: "clip",
         targetId: input.clipId,
-        kind: "custom",
-        effectType: "color_curves",
-        params: { shadows: input.shadows, midtones: input.midtones, highlights: input.highlights },
+        kind: "color-grading",
+        adjustments: {
+          shadows: input.shadows,
+          midtones: input.midtones,
+          highlights: input.highlights,
+        },
       },
     },
   ],
@@ -47,7 +50,11 @@ export const ColorCurvesCapability: Capability<P> = {
           type: "effect/apply",
           id: "ex-1",
           timestamp: 0,
-          params: { target: "clip", targetId: "clip-1", kind: "custom", effectType: "color_curves", params: { shadows: -0.2, midtones: 0.1, highlights: 0.15 } },
+          params: {
+            target: "clip", targetId: "clip-1",
+            kind: "color-grading",
+            adjustments: { shadows: -0.2, midtones: 0.1, highlights: 0.15 },
+          },
         },
       ],
     },

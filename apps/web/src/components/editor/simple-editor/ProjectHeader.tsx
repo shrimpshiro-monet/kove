@@ -7,9 +7,10 @@ interface ProjectHeaderProps {
   stage: EditorStage;
   mode: "simple" | "studio";
   onModeChange: (mode: "simple" | "studio") => void;
+  hasEdit: boolean;
 }
 
-export function ProjectHeader({ projectName, onNameChange, stage, mode, onModeChange }: ProjectHeaderProps) {
+export function ProjectHeader({ projectName, onNameChange, stage, mode, onModeChange, hasEdit }: ProjectHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(projectName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,13 +98,16 @@ export function ProjectHeader({ projectName, onNameChange, stage, mode, onModeCh
         </button>
         <button
           onClick={() => onModeChange("studio")}
+          disabled={!hasEdit}
           className={`px-3 py-1 rounded-[4px] text-[11px] font-medium transition-all duration-200 ${
             mode === "studio"
               ? "bg-primary text-primary-foreground"
-              : "text-text-muted hover:text-text-secondary"
+              : hasEdit
+                ? "text-text-muted hover:text-text-secondary"
+                : "text-text-muted/30 cursor-not-allowed"
           }`}
         >
-          Studio
+          Open in Studio
         </button>
       </div>
     </header>

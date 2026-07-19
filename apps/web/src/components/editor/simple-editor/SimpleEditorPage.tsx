@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useProjectStore, useEDL, useDuration } from "../../../stores/project-store";
 import { useRefineEDL } from "../../../hooks/useRefineEDL";
+import { useRouterStore } from "../../../stores/router-store";
 import { runGenerationPipeline, type PipelineStage } from "../../../lib/kove-generation-pipeline";
 import { ProjectHeader } from "./ProjectHeader";
 import { VideoPreview } from "./VideoPreview";
@@ -48,7 +49,7 @@ export function SimpleEditorPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [projectName, setProjectName] = useState("Untitled cut");
   const [scope, setScope] = useState<{ from: number; to: number } | null>(null);
-  const [mode, setMode] = useState<"simple" | "studio">("simple");
+  const navigate = useRouterStore((s) => s.navigate);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const projectIdRef = useRef(`proj-${Date.now()}`);
@@ -183,10 +184,9 @@ export function SimpleEditorPage() {
 
   const handleModeChange = useCallback((newMode: "simple" | "studio") => {
     if (newMode === "studio") {
-      window.location.href = "/editor";
+      navigate("/editor");
     }
-    setMode(newMode);
-  }, []);
+  }, [navigate]);
 
   const handleSuggestion = useCallback((prompt: string) => {
     setChatInput(prompt);
@@ -202,8 +202,9 @@ export function SimpleEditorPage() {
         projectName={projectName}
         onNameChange={setProjectName}
         stage={stage}
-        mode={mode}
+        mode="simple"
         onModeChange={handleModeChange}
+        hasEdit={hasEdit}
       />
 
       <div className="flex-1 flex overflow-hidden">

@@ -14,9 +14,9 @@ type P = z.infer<typeof Params>;
 export const ColorWheelsCapability: Capability<P> = {
   id: "color-wheels",
   category: "effects",
-  status: "beta",
-  version: "1.0.0",
-  description: "Professional color wheels (lift/gamma/gain) for precise color correction. Emits effect/apply action — render-side wheels processing not yet wired to OpenReel's ColorGradingEngine.",
+  status: "alpha",
+  version: "1.1.0",
+  description: "Professional color wheels (lift/gamma/gain) for precise color correction. Mapped to OpenReel's native color-grading shadows/midtones/highlights.",
   triggerPhrases: [
     "color wheels",
     "lift gamma gain",
@@ -33,9 +33,12 @@ export const ColorWheelsCapability: Capability<P> = {
       params: {
         target: "clip",
         targetId: input.clipId,
-        kind: "custom",
-        effectType: "color_wheels",
-        params: { lift: input.lift, gamma: input.gamma, gain: input.gain },
+        kind: "color-grading",
+        adjustments: {
+          shadows: input.lift,
+          midtones: input.gamma,
+          highlights: input.gain,
+        },
       },
     },
   ],
@@ -47,7 +50,11 @@ export const ColorWheelsCapability: Capability<P> = {
           type: "effect/apply",
           id: "ex-1",
           timestamp: 0,
-          params: { target: "clip", targetId: "clip-1", kind: "custom", effectType: "color_wheels", params: { lift: -0.1, gamma: 0.05, gain: 0.1 } },
+          params: {
+            target: "clip", targetId: "clip-1",
+            kind: "color-grading",
+            adjustments: { shadows: -0.1, midtones: 0.05, highlights: 0.1 },
+          },
         },
       ],
     },

@@ -7,17 +7,15 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useEDL } from "../../stores/project-store";
+import { useRouterStore } from "../../stores/router-store";
 
 const OPENREEL_URL = import.meta.env.VITE_OPENREEL_URL || "http://localhost:5173";
 
-interface AdvancedEditorProps {
-  onBack?: () => void;
-}
-
-export function AdvancedEditor({ onBack }: AdvancedEditorProps) {
+export function AdvancedEditor() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const edl = useEDL();
   const [ready, setReady] = useState(false);
+  const navigate = useRouterStore((s) => s.navigate);
 
   useEffect(() => {
     if (!ready || !edl || !iframeRef.current) return;
@@ -40,26 +38,24 @@ export function AdvancedEditor({ onBack }: AdvancedEditorProps) {
   return (
     <div className="h-screen w-screen bg-background overflow-hidden">
       {/* Minimal back button — floats top-left over the editor */}
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="fixed top-3 left-3 z-[9999] w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 transition-all duration-200"
-          aria-label="Back to Simple Editor"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-        </button>
-      )}
+      <button
+        onClick={() => navigate("/simple-editor")}
+        className="fixed top-3 left-3 z-[9999] w-8 h-8 rounded-lg bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-black/80 transition-all duration-200"
+        aria-label="Back to Simple Editor"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+      </button>
 
       {/* Mode toggle — floats top-right */}
       <div className="fixed top-3 right-3 z-[9999] flex bg-background-secondary/80 backdrop-blur-sm rounded-[4px] p-0.5 border border-border">
-        <a
-          href="/simple-editor"
+        <button
+          onClick={() => navigate("/simple-editor")}
           className="px-3 py-1 rounded-[4px] text-[11px] font-medium text-text-muted hover:text-text-secondary transition-colors"
         >
           Director
-        </a>
+        </button>
         <span className="px-3 py-1 rounded-[4px] text-[11px] font-medium bg-primary text-primary-foreground">
           Studio Preview
         </span>

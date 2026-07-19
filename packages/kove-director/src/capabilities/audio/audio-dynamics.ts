@@ -14,9 +14,9 @@ type P = z.infer<typeof Params>;
 export const AudioDynamicsCapability: Capability<P> = {
   id: "audio-dynamics",
   category: "audio",
-  status: "beta",
-  version: "1.0.0",
-  description: "Audio dynamics processing: compression, limiting, and noise gating. Emits effect/apply action — render-side dynamics not yet wired to OpenReel's AudioEffectsEngine.",
+  status: "alpha",
+  version: "1.1.0",
+  description: "Audio dynamics processing: compression, limiting, and noise gating. Emits effect/apply via kind:custom — wired through render pipeline's audio filter chain.",
   triggerPhrases: [
     "audio dynamics",
     "compress audio",
