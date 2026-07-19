@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { UserButton, useAuth } from "@clerk/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Loader2, StickyNote, Upload, Undo2, Redo2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChatThreads, cryptoId, type ChatMessage, type ChatAttachment, type ChatThread } from "@/lib/storage";
@@ -484,6 +485,9 @@ function ChatPage() {
       }
     } catch (err: any) {
       console.error("Reference analysis failed:", err);
+      toast.error("Reference analysis failed", {
+        description: formatApiError(err) || "Could not analyze the reference style.",
+      });
       analyzedRefIds.current.delete(newRef.id);
     } finally {
       setIsAnalyzingReference(false);
@@ -526,6 +530,9 @@ function ChatPage() {
       }
     } catch (err: any) {
       console.error("YouTube reference analysis failed:", err);
+      toast.error("Reference analysis failed", {
+        description: formatApiError(err) || "Could not analyze the YouTube reference.",
+      });
     } finally {
       setIsAnalyzingReference(false);
     }
@@ -686,6 +693,9 @@ function ChatPage() {
       }));
     } catch (error: any) {
       console.error("Generation error:", error);
+      toast.error("Generation failed", {
+        description: error instanceof Error ? error.message : "Something went wrong while generating your edit.",
+      });
       setGeneration({ status: "failed" });
       setThinkingStage("error");
 
@@ -776,6 +786,9 @@ function ChatPage() {
 
     } catch (err: any) {
       console.error("Director loop error:", err);
+      toast.error("Director feedback failed", {
+        description: formatApiError(err) || "Could not apply director changes.",
+      });
     } finally {
       setIsRefining(false);
     }
@@ -826,6 +839,9 @@ function ChatPage() {
       }));
     } catch (err: any) {
       console.error("Refinement error:", err);
+      toast.error("Refinement failed", {
+        description: formatApiError(err) || "Could not refine the edit.",
+      });
     } finally {
       setIsRefining(false);
     }
@@ -864,6 +880,9 @@ function ChatPage() {
     } catch (err: any) {
       console.error("Export error:", err);
       console.error("Export failed:", err.message || "Unknown error", "\nMake sure FFmpeg is installed and the dev server is running.");
+      toast.error("Export failed", {
+        description: err.message || "Could not export the video. Make sure FFmpeg is installed.",
+      });
     } finally {
       setIsExporting(false);
       setExportProgress(null);
@@ -889,6 +908,9 @@ function ChatPage() {
       }
     } catch (err: any) {
       console.error("Transcription error:", err);
+      toast.error("Transcription failed", {
+        description: formatApiError(err) || "Could not transcribe the audio.",
+      });
     } finally {
       setIsTranscribing(false);
     }
@@ -925,6 +947,9 @@ function ChatPage() {
       }));
     } catch (error: any) {
       console.error("Auto face tracking failed:", error);
+      toast.error("Face tracking failed", {
+        description: formatApiError(error) || "Could not perform face tracking.",
+      });
     } finally {
       setIsAutoTrackingFace(false);
     }
