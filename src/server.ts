@@ -27,6 +27,13 @@ import { handleSpecialistIsolate } from "./server/api/specialist-isolate";
 import { handleSpecialistDepth } from "./server/api/specialist-depth";
 import { handleSpecialistSlowmo } from "./server/api/specialist-slowmo";
 import { handleReplicateStyle } from "./server/api/replicate-style";
+import {
+  handleCreateCheckout,
+  handleCustomerPortal,
+  handleBillingWebhook,
+  handleGetUsage,
+  handleIncrementUsage,
+} from "./server/api/billing";
 import { getDevEnv } from "./server/lib/dev-env";
 import { runSandboxTestsJSON } from "./server/lib/test-engines-sandbox";
 import { getAIService } from "./server/services/ai-service";
@@ -1022,6 +1029,13 @@ const apiRoutes: ApiRoute[] = [
   { method: "POST", path: "/api/subject/blur", handler: handleSubjectBlur },
   { method: "POST", path: "/api/text/ass", handler: handleGenerateASS },
   { method: "POST", path: "/api/text/word-ass", handler: handleWordHighlightASS },
+
+  // Billing (Paddle)
+  { method: "POST", path: "/api/billing/checkout", handler: handleCreateCheckout },
+  { method: "POST", path: "/api/billing/checkout/customer-portal", handler: handleCustomerPortal },
+  { method: "POST", path: "/api/billing/webhook", handler: handleBillingWebhook },
+  { method: "GET", path: "/api/billing/usage", handler: handleGetUsage },
+  { method: "POST", path: "/api/billing/usage/increment", handler: handleIncrementUsage },
 ];
 
 // ------------------------------------------------------------------

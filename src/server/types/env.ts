@@ -75,6 +75,11 @@ export interface Env {
   CLERK_SECRET_KEY?: string;
   CLERK_JWT_KEY?: string;
 
+  // Paddle Billing (v2)
+  PADDLE_API_KEY?: string;
+  PADDLE_WEBHOOK_SECRET?: string;
+  PADDLE_ENV?: string; // "sandbox" or "production"
+
   // Sentry error tracking
   SENTRY_DSN?: string;
   SENTRY_ENVIRONMENT?: string;

@@ -37,6 +37,14 @@ export const ApiErrorCode = {
   EDLGenerationFailed: "EDL_GENERATION_FAILED",
   EDLValidationFailed: "EDL_VALIDATION_FAILED",
   InternalError: "INTERNAL_ERROR",
+
+  // Billing
+  Unauthorized: "UNAUTHORIZED",
+  ConfigurationError: "CONFIGURATION_ERROR",
+  CheckoutFailed: "CHECKOUT_FAILED",
+  NoSubscription: "NO_SUBSCRIPTION",
+  PortalFailed: "PORTAL_FAILED",
+  UsageLimitExceeded: "USAGE_LIMIT_EXCEEDED",
 } as const;
 
 export type ApiErrorCode = (typeof ApiErrorCode)[keyof typeof ApiErrorCode];
