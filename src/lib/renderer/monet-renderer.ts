@@ -31,7 +31,7 @@ import {
   resolvePreviewTime,
   computeSpeedRampSourceTime,
 } from "./monet-edl-preview-normalizer";
-import { cubicBezier } from "../../server/lib/bezier-velocity";
+import { cubicBezier } from "../math/bezier";
 import type { RenderContext, RenderFrame } from "./types";
 import { MediaLoader } from "./media-loader";
 import { EffectsEngine } from "./effects";
