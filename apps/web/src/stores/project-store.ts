@@ -19,6 +19,24 @@ export type GenerationStatus = "idle" | "generating" | "ready" | "failed";
 export type StudioLoadStatus = "idle" | "loading" | "loaded" | "failed";
 export type AnalysisMode = "ai_director" | "fast_planner" | "v3_director";
 
+// --- AI Panel Context Types ---
+
+export type EditorSection = "chat" | "clip-inspector" | "effect-inspector" | "timeline" | "history" | "preview" | "studio";
+
+export interface AISuggestion {
+  id: string;
+  label: string;
+  prompt: string;
+  section: EditorSection;
+}
+
+export interface AIPanelContext {
+  activeSection: EditorSection;
+  selectedClipId: string | null;
+  availableSections: EditorSection[];
+  suggestions: AISuggestion[];
+}
+
 export interface FootageAsset {
   id: string;
   fileName: string;
@@ -145,6 +163,7 @@ interface ProjectStoreState {
   history: Project[];
   historyIndex: number;
   timelineDirty: boolean;
+  isProcessing: boolean;
 
   // ProjectContext fields
   assets: ProjectAssets;
@@ -154,6 +173,15 @@ interface ProjectStoreState {
   studioPreview: ProjectStudioPreview;
   truth: ProjectTruth;
   director: { messages: DirectorMessage[] };
+
+  // AI Panel Context
+  aiPanelContext: AIPanelContext;
+
+  // AI Panel Context actions
+  setActiveSection: (section: EditorSection) => void;
+  setSelectedClipId: (clipId: string | null) => void;
+  addSuggestion: (suggestion: AISuggestion) => void;
+  clearSuggestions: () => void;
 
   // Getters
   getDuration: () => number;
@@ -178,6 +206,7 @@ interface ProjectStoreState {
   setPrompt: (prompt: Partial<ProjectPrompt>) => void;
   setAnalysis: (analysis: Partial<ProjectAnalysis>) => void;
   setGeneration: (generation: Partial<ProjectGeneration>) => void;
+  setProcessing: (processing: boolean) => void;
   setStudioPreview: (preview: Partial<ProjectStudioPreview>) => void;
   setTruth: (truth: Partial<ProjectTruth>) => void;
   addDirectorMessage: (msg: DirectorMessage) => void;
@@ -267,6 +296,7 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
   history: [],
   historyIndex: -1,
   timelineDirty: false,
+  isProcessing: false,
 
   assets: { ...defaultAssets },
   prompt: { ...defaultPrompt },
@@ -275,6 +305,13 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
   studioPreview: { ...defaultStudioPreview },
   truth: { ...defaultTruth },
   director: { messages: [] },
+
+  aiPanelContext: {
+    activeSection: "chat",
+    selectedClipId: null,
+    availableSections: ["chat", "timeline", "preview"],
+    suggestions: [],
+  },
 
   getDuration: () => get().project?.edl.timeline.duration ?? 0,
   getTracks: () => get().project?.edl.timeline.tracks ?? [],
@@ -328,7 +365,17 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
     set((s) => ({ analysis: { ...s.analysis, ...analysis } })),
 
   setGeneration: (generation) =>
-    set((s) => ({ generation: { ...s.generation, ...generation } })),
+    set((s) => {
+      const status = generation.status ?? s.generation.status;
+      const isProcessing = status === "generating";
+      return {
+        generation: { ...s.generation, ...generation },
+        isProcessing,
+      };
+    }),
+
+  setProcessing: (processing) =>
+    set({ isProcessing: processing }),
 
   setStudioPreview: (preview) =>
     set((s) => ({ studioPreview: { ...s.studioPreview, ...preview } })),
@@ -339,6 +386,18 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
   addDirectorMessage: (msg) =>
     set((s) => ({ director: { messages: [...s.director.messages, msg] } })),
 
+  setActiveSection: (section) =>
+    set((s) => ({ aiPanelContext: { ...s.aiPanelContext, activeSection: section } })),
+
+  setSelectedClipId: (clipId) =>
+    set((s) => ({ aiPanelContext: { ...s.aiPanelContext, selectedClipId: clipId } })),
+
+  addSuggestion: (suggestion) =>
+    set((s) => ({ aiPanelContext: { ...s.aiPanelContext, suggestions: [...s.aiPanelContext.suggestions, suggestion] } })),
+
+  clearSuggestions: () =>
+    set((s) => ({ aiPanelContext: { ...s.aiPanelContext, suggestions: [] } })),
+
   resetProjectContext: () =>
     set({
       assets: { ...defaultAssets },
@@ -348,6 +407,12 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
       studioPreview: { ...defaultStudioPreview },
       truth: { ...defaultTruth },
       director: { messages: [] },
+      aiPanelContext: {
+        activeSection: "chat",
+        selectedClipId: null,
+        availableSections: ["chat", "timeline", "preview"],
+        suggestions: [],
+      },
     }),
 
   // --- Core actions ---
@@ -537,6 +602,8 @@ export const useTracks = () => useProjectStore((s) => s.project?.edl.timeline.tr
 export const useDuration = () => useProjectStore((s) => s.project?.edl.timeline.duration ?? 0);
 
 // ProjectContext selectors
+export const useIsProcessing = () => useProjectStore((s) => s.isProcessing);
+
 export const useAssets = () => useProjectStore((s) => s.assets);
 export const usePrompt = () => useProjectStore((s) => s.prompt);
 export const useAnalysis = () => useProjectStore((s) => s.analysis);
@@ -544,3 +611,8 @@ export const useGeneration = () => useProjectStore((s) => s.generation);
 export const useStudioPreview = () => useProjectStore((s) => s.studioPreview);
 export const useTruth = () => useProjectStore((s) => s.truth);
 export const useDirector = () => useProjectStore((s) => s.director);
+
+// AI Panel Context selectors
+export const useAIPanelContext = () => useProjectStore((s) => s.aiPanelContext);
+export const useActiveSection = () => useProjectStore((s) => s.aiPanelContext.activeSection);
+export const useSuggestions = () => useProjectStore((s) => s.aiPanelContext.suggestions);

@@ -1,5 +1,6 @@
 import React from "react";
 import { EffectParamDefinition } from "./effect-control-registry";
+import { useIsProcessing } from "../../../stores/project-store";
 
 interface EffectParamControlProps {
   definition: EffectParamDefinition;
@@ -12,6 +13,7 @@ export function EffectParamControl({
   value,
   onChange,
 }: EffectParamControlProps): React.JSX.Element {
+  const isProcessing = useIsProcessing();
   if (definition.kind === "number") {
     const numericValue =
       typeof value === "number" && Number.isFinite(value)
@@ -30,7 +32,8 @@ export function EffectParamControl({
           max={definition.max}
           step={definition.step ?? 1}
           value={numericValue}
-          onChange={(event) => {
+           onChange={(event) => {
+            if (isProcessing) return;
             const nextValue = Number(event.currentTarget.value);
 
             if (!Number.isFinite(nextValue)) {
@@ -58,7 +61,10 @@ export function EffectParamControl({
         <input
           type="checkbox"
           checked={checked}
-          onChange={(event) => onChange(event.currentTarget.checked)}
+           onChange={(event) => {
+            if (isProcessing) return;
+            onChange(event.currentTarget.checked);
+          }}
         />
       </label>
     );
@@ -79,7 +85,10 @@ export function EffectParamControl({
         <select
           className="rounded border bg-background px-2 py-1"
           value={stringValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
+           onChange={(event) => {
+            if (isProcessing) return;
+            onChange(event.currentTarget.value);
+          }}
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -105,7 +114,10 @@ export function EffectParamControl({
         className="rounded border bg-background px-2 py-1"
         type="text"
         value={textValue}
-        onChange={(event) => onChange(event.currentTarget.value)}
+        onChange={(event) => {
+          if (isProcessing) return;
+          onChange(event.currentTarget.value);
+        }}
       />
     </label>
   );

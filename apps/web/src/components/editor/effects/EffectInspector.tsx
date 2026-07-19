@@ -4,6 +4,7 @@ import {
   type EffectBlock as MonetEffectBlock,
 } from "@monet/edl";
 import type { Project } from "../../../stores/project-store";
+import { useIsProcessing } from "../../../stores/project-store";
 import { EffectParamControl } from "./EffectParamControl";
 import {
   createDefaultEffect,
@@ -31,6 +32,7 @@ export function EffectInspector({
 }: EffectInspectorProps): React.JSX.Element {
   const [pendingEffectType, setPendingEffectType] =
     useState<MonetEffectBlock["type"]>("impact_flash");
+  const isProcessing = useIsProcessing();
 
   const selectedClip = useMemo(() => {
     if (!selectedClipId) return null;
@@ -105,6 +107,7 @@ export function EffectInspector({
           className="rounded bg-primary px-3 py-2 text-xs text-primary-foreground"
           type="button"
           onClick={async () => {
+            if (isProcessing) return;
             const effect = createDefaultEffect(
               pendingEffectType,
               selectedClip.clip.startTime
@@ -151,6 +154,7 @@ function EffectCard({
   onUpsertEffect,
   onRemoveEffect,
 }: EffectCardProps): React.JSX.Element {
+  const isProcessing = useIsProcessing();
   const definition = getEffectDefinition(effect.type);
 
   if (!definition) {
@@ -161,7 +165,10 @@ function EffectCard({
           <button
             className="rounded border px-2 py-1 text-xs"
             type="button"
-            onClick={async () => onRemoveEffect(clipId, effect.id)}
+            onClick={async () => {
+              if (isProcessing) return;
+              await onRemoveEffect(clipId, effect.id);
+            }}
           >
             Remove
           </button>
@@ -182,7 +189,10 @@ function EffectCard({
         <button
           className="rounded border px-2 py-1 text-xs"
           type="button"
-          onClick={async () => onRemoveEffect(clipId, effect.id)}
+          onClick={async () => {
+            if (isProcessing) return;
+            await onRemoveEffect(clipId, effect.id);
+          }}
         >
           Remove
         </button>
@@ -197,6 +207,7 @@ function EffectCard({
           step={0.01}
           value={effect.start}
           onChange={async (event) => {
+            if (isProcessing) return;
             const nextStart = Number(event.currentTarget.value);
 
             if (!Number.isFinite(nextStart) || nextStart < 0) {
@@ -220,6 +231,7 @@ function EffectCard({
           step={0.01}
           value={effect.duration}
           onChange={async (event) => {
+            if (isProcessing) return;
             const nextDuration = Number(event.currentTarget.value);
 
             if (!Number.isFinite(nextDuration) || nextDuration < 0) {
@@ -241,6 +253,7 @@ function EffectCard({
             definition={paramDefinition}
             value={effect.params[paramDefinition.key]}
             onChange={async (nextValue) => {
+              if (isProcessing) return;
               await onUpsertEffect(clipId, {
                 ...effect,
                 params: {

@@ -1,7 +1,7 @@
 // apps/web/src/components/editor/ClipInspector.tsx
 
 import React from "react";
-import { useProjectStore } from "../../stores/project-store";
+import { useProjectStore, useIsProcessing } from "../../stores/project-store";
 
 interface ClipInspectorProps {
   selectedClipId: string | null;
@@ -11,6 +11,7 @@ interface ClipInspectorProps {
 export function ClipInspector({ selectedClipId, onClose }: ClipInspectorProps) {
   const project = useProjectStore((s: any) => s.project);
   const setStore = useProjectStore.setState;
+  const isProcessing = useIsProcessing();
 
   if (!selectedClipId || !project) return null;
 
@@ -39,6 +40,7 @@ export function ClipInspector({ selectedClipId, onClose }: ClipInspectorProps) {
 
   // Update helper
   function updateClipField(field: string, value: any) {
+    if (isProcessing) return;
     const updatedProject = structuredClone(project);
     for (const track of updatedProject.timeline.tracks) {
       for (const clip of track.clips) {
@@ -69,6 +71,7 @@ export function ClipInspector({ selectedClipId, onClose }: ClipInspectorProps) {
   }
 
   function updateEffectParam(effectId: string, paramName: string, value: any) {
+    if (isProcessing) return;
     const updatedProject = structuredClone(project);
     const updateEffectsInClips = (clips: any[]) => {
       for (const clip of clips) {
@@ -100,6 +103,7 @@ export function ClipInspector({ selectedClipId, onClose }: ClipInspectorProps) {
   }
 
   function toggleEffect(effectType: string) {
+    if (isProcessing) return;
     const updatedProject = structuredClone(project);
     const toggleInClips = (clips: any[]) => {
       for (const clip of clips) {

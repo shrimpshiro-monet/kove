@@ -7,6 +7,7 @@ import { ProjectHeader } from "./ProjectHeader";
 import { VideoPreview } from "./VideoPreview";
 import { ChatStream } from "./ChatStream";
 import { ChatInputDock } from "./ChatInputDock";
+import { AIPromptSuggestions } from "./AIPromptSuggestions";
 import type { ChatMessage, UploadedFile, EditorStage } from "./types";
 
 const QUICK_TAGS = [
@@ -49,11 +50,14 @@ export function SimpleEditorPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [projectName, setProjectName] = useState("Untitled cut");
   const [scope, setScope] = useState<{ from: number; to: number } | null>(null);
+  const [selectedClipId, setSelectedClipId] = useState<string | null>(null);
   const navigate = useRouterStore((s) => s.navigate);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const projectIdRef = useRef(`proj-${Date.now()}`);
   const { start: startRefine, cancel: cancelRefine, streaming, partial } = useRefineEDL();
+  const setActiveSection = useProjectStore((s) => s.setActiveSection);
+  const storeSetSelectedClipId = useProjectStore((s) => s.setSelectedClipId);
 
   const hasEdit = (edl?.timeline?.tracks?.flatMap((t: any) => t.clips ?? []).length ?? 0) > 0;
   const isGenerating = stage === "uploading" || stage === "analyzing" || stage === "generating" || stage === "regenerating";
@@ -73,6 +77,22 @@ export function SimpleEditorPage() {
       setStage("ready");
     }
   }, [streaming, stage]);
+
+  // Track active section for AI context
+  useEffect(() => {
+    if (selectedClipId) {
+      setActiveSection("clip-inspector");
+    } else if (hasEdit) {
+      setActiveSection("timeline");
+    } else {
+      setActiveSection("chat");
+    }
+  }, [selectedClipId, hasEdit, setActiveSection]);
+
+  // Sync local selectedClipId to store
+  useEffect(() => {
+    storeSetSelectedClipId(selectedClipId);
+  }, [selectedClipId, storeSetSelectedClipId]);
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev, msg]);
@@ -241,6 +261,9 @@ export function SimpleEditorPage() {
             isGenerating={isGenerating}
           />
 
+          {hasEdit && !streaming && (
+            <AIPromptSuggestions onSelect={handleSuggestion} />
+          )}
           <ChatInputDock
             input={chatInput}
             onInputChange={setChatInput}
