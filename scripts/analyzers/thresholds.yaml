@@ -32,7 +32,7 @@ generic:
   text:
     ocr_confidence: 50
   color:
-    bw_saturation: 15
+    bw_saturation: 20
     desaturated_saturation: 35
     dark_luminance: 60
     bright_luminance: 200
