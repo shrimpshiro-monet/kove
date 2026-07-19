@@ -1,17 +1,23 @@
 """
-DigitalOcean Inference LLM Provider
-Routes all LLM calls through a single vendor with two models:
-  - nemotron-nano-12b-v2-vl (vision) — for frames
-  - mimo-v2.5                (text)   — for DNA-to-text tasks
+Unified LLM Provider with multi-vendor fallback chain.
 
-Requires DIGITALOCEAN_API_KEY env var.
+Priority: Cerebras → Groq → NVIDIA NIM → DigitalOcean
+
+Two modes:
+  - Vision: prompt + images (for frame analysis, reference classification)
+  - Text:   prompt only (for DNA-to-text, semantic analysis)
+
+Requires at least one of: CEREBRAS_API_KEY, GROQ_API_KEY,
+NVIDIA_NIM_API_KEY, DIGITALOCEAN_API_KEY env var.
 Auto-loads from .dev.vars if not already set.
 """
 
 import base64
+import io
 import json
 import logging
 import os
+import re
 import ssl
 import time
 import urllib.error
@@ -19,19 +25,33 @@ import urllib.request
 from pathlib import Path
 from typing import List, Optional
 
+try:
+    from openai import OpenAI
+    _HAS_OPENAI = True
+except ImportError:
+    _HAS_OPENAI = False
+
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Env loading
+# ---------------------------------------------------------------------------
 
 _loaded_env = False
 
 
 def _load_dev_vars():
-    """Load .dev.vars into os.environ (no-op if key already set)."""
+    """Load .dev.vars into os.environ (no-op if any key already set)."""
     global _loaded_env
     if _loaded_env:
         return
     _loaded_env = True
 
-    if os.environ.get("DIGITALOCEAN_API_KEY"):
+    # Already have at least one key — nothing to load
+    if any(os.environ.get(k) for k in (
+        "CEREBRAS_API_KEY", "GROQ_API_KEY",
+        "NVIDIA_NIM_API_KEY", "DIGITALOCEAN_API_KEY",
+    )):
         return
 
     # Walk up from this file to find .dev.vars at repo root
@@ -51,24 +71,162 @@ def _load_dev_vars():
                             os.environ[k] = v
             break
 
-logger = logging.getLogger(__name__)
 
-DO_ENDPOINT = "https://inference.do-ai.run/v1/chat/completions"
-VISION_MODEL = "nemotron-nano-12b-v2-vl"
-TEXT_MODEL = "mimo-v2.5"
+# ---------------------------------------------------------------------------
+# Provider registry — order = priority (first available wins)
+# ---------------------------------------------------------------------------
+
 MAX_IMAGE_SIZE = 512
-REQUEST_TIMEOUT = 120
 MAX_IMAGES = 5
+REQUEST_TIMEOUT = 120
+
+_THINK_RE = re.compile(r"<think>[\s\S]*?</think>", re.DOTALL)
 
 
-def _get_api_key() -> Optional[str]:
-    _load_dev_vars()
-    key = os.environ.get("DIGITALOCEAN_API_KEY", "").strip()
-    if not key:
-        logger.warning("DO API key missing — using heuristic fallback")
-        return None
-    return key
+def _strip_think(text: str) -> str:
+    """Remove <think>...</thinking> blocks some models emit."""
+    return _THINK_RE.sub("", text).strip()
 
+
+def _build_providers():
+    """Return [(name, base_url, api_key, text_model, vision_model), ...] in priority order."""
+    return [
+        (
+            "Cerebras",
+            "https://api.cerebras.ai/v1",
+            os.environ.get("CEREBRAS_API_KEY"),
+            "llama-3.3-70b",
+            "llama-3.3-70b",  # Cerebras vision via same model
+        ),
+        (
+            "Groq",
+            "https://api.groq.com/openai/v1",
+            os.environ.get("GROQ_API_KEY"),
+            "llama-3.3-70b-versatile",
+            "llama-3.3-70b-versatile",  # Groq vision via same model
+        ),
+        (
+            "NVIDIA NIM",
+            "https://integrate.api.nvidia.com/v1",
+            os.environ.get("NVIDIA_NIM_API_KEY"),
+            os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.6"),
+            "nvidia/llama-3.3-nemotron-super-49b-v1",
+        ),
+        (
+            "DigitalOcean",
+            "https://inference.do-ai.run/v1",
+            os.environ.get("DIGITALOCEAN_API_KEY"),
+            "mimo-v2.5",
+            "nemotron-nano-12b-v2-vl",
+        ),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Client cache (one per mode)
+# ---------------------------------------------------------------------------
+
+_text_client = None
+_text_model: str = ""
+_text_provider: str = ""
+_text_base_url: str = ""
+_text_api_key: str = ""
+
+_vision_client = None
+_vision_model: str = ""
+_vision_provider: str = ""
+_vision_base_url: str = ""
+_vision_api_key: str = ""
+
+
+def _make_client(base_url: str, api_key: str):
+    """Create OpenAI client if SDK available, else return None (urllib fallback)."""
+    if _HAS_OPENAI:
+        return OpenAI(base_url=base_url, api_key=api_key, timeout=REQUEST_TIMEOUT)
+    return None
+
+
+def _get_text_config() -> Optional[tuple]:
+    """Return (client_or_None, model, provider_name, base_url, api_key) for text mode."""
+    global _text_client, _text_model, _text_provider, _text_base_url, _text_api_key
+    if _text_model:
+        return _text_client, _text_model, _text_provider, _text_base_url, _text_api_key
+
+    for name, base_url, api_key, text_model, _ in _build_providers():
+        if not api_key:
+            continue
+        _text_client = _make_client(base_url, api_key)
+        _text_model = text_model
+        _text_provider = name
+        _text_base_url = base_url
+        _text_api_key = api_key
+        logger.info(f"Text LLM: {name} ({text_model})")
+        print(f"  [llm] Text: {name} ({text_model})")
+        return _text_client, _text_model, _text_provider, _text_base_url, _text_api_key
+
+    logger.warning("No text LLM API key configured")
+    return None
+
+
+def _get_vision_config() -> Optional[tuple]:
+    """Return (client_or_None, model, provider_name, base_url, api_key) for vision mode."""
+    global _vision_client, _vision_model, _vision_provider, _vision_base_url, _vision_api_key
+    if _vision_model:
+        return _vision_client, _vision_model, _vision_provider, _vision_base_url, _vision_api_key
+
+    for name, base_url, api_key, _, vision_model in _build_providers():
+        if not api_key:
+            continue
+        _vision_client = _make_client(base_url, api_key)
+        _vision_model = vision_model
+        _vision_provider = name
+        _vision_base_url = base_url
+        _vision_api_key = api_key
+        logger.info(f"Vision LLM: {name} ({vision_model})")
+        print(f"  [llm] Vision: {name} ({vision_model})")
+        return _vision_client, _vision_model, _vision_provider, _vision_base_url, _vision_api_key
+
+    logger.warning("No vision LLM API key configured")
+    return None
+
+
+def _urllib_post(base_url: str, api_key: str, body: dict,
+                 timeout: int = REQUEST_TIMEOUT) -> Optional[str]:
+    """Fallback POST using urllib when openai SDK is unavailable."""
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+    data = json.dumps(body).encode("utf-8")
+
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    url = f"{base_url}/chat/completions"
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                text = result["choices"][0]["message"].get("content") or ""
+                return _strip_think(text) or None
+        except urllib.error.HTTPError as e:
+            code = e.code
+            if code in (401, 403, 402, 404):
+                return None
+            if code == 429 or 500 <= code < 600:
+                time.sleep(1 * (2 ** attempt))
+                continue
+            return None
+        except Exception:
+            return None
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Image utilities
+# ---------------------------------------------------------------------------
 
 def _resize_image(path: str) -> str:
     """Downscale image to MAX_IMAGE_SIZE, return base64 JPEG data URL."""
@@ -79,8 +237,6 @@ def _resize_image(path: str) -> str:
     if img.mode == "RGBA":
         img = img.convert("RGB")
 
-    import io
-
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=85)
     b64 = base64.b64encode(buf.getvalue()).decode("ascii")
@@ -89,8 +245,7 @@ def _resize_image(path: str) -> str:
 
 def _mosaic_images(paths: List[str]) -> str:
     """Combine multiple images into a labeled mosaic grid, return base64 data URL."""
-    from PIL import Image, ImageDraw, ImageFont
-    import io
+    from PIL import Image, ImageDraw
 
     imgs = []
     for p in paths:
@@ -130,132 +285,103 @@ def _mosaic_images(paths: List[str]) -> str:
     return f"data:image/jpeg;base64,{b64}"
 
 
-def _post(body: dict, api_key: str, timeout: int = REQUEST_TIMEOUT) -> Optional[str]:
-    """POST to DigitalOcean Inference with retry on 429/5xx."""
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}",
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def call_text_llm(prompt: str, max_tokens: int = 2048,
+                  system_prompt: Optional[str] = None) -> Optional[str]:
+    """
+    Call the best available text LLM with a text-only prompt.
+
+    Tries Cerebras → Groq → NVIDIA NIM → DigitalOcean.
+    Returns response text or None on failure.
+    """
+    _load_dev_vars()
+    cfg = _get_text_config()
+    if not cfg:
+        return None
+    client, model, provider, base_url, api_key = cfg
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    body = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.3,
+        "max_tokens": max_tokens,
     }
-    data = json.dumps(body).encode("utf-8")
 
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    try:
+        t0 = time.time()
+        if client is not None:
+            response = client.chat.completions.create(**body)
+            content = response.choices[0].message.content or ""
+            content = _strip_think(content)
+        else:
+            content = _urllib_post(base_url, api_key, body) or ""
+        elapsed = time.time() - t0
+        print(f"  [llm] Text ({provider}): {len(content)} chars ({elapsed:.1f}s)")
+        return content or None
 
-    last_error = None
-    for attempt in range(3):
-        try:
-            req = urllib.request.Request(
-                DO_ENDPOINT, data=data, headers=headers, method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                msg = result["choices"][0]["message"]
-                text = msg.get("content") or msg.get("reasoning_content") or ""
-                import re as _re
-                text = _re.sub(r"<think>[\s\S]*?</think>", "", text).strip()
-                return text or None
-
-        except urllib.error.HTTPError as e:
-            last_error = e
-            code = e.code
-            body_text = ""
-            try:
-                body_text = e.read().decode("utf-8", errors="replace")[:300]
-            except Exception:
-                pass
-            if code in (401, 403):
-                logger.error(f"DO auth failed — check DIGITALOCEAN_API_KEY ({body_text})")
-                return None
-            if code == 402:
-                logger.error(f"DO credits depleted ({body_text})")
-                return None
-            if code == 404:
-                model = body.get("model", "unknown")
-                logger.error(f"Model not found: {model}. Verify model ID. ({body_text})")
-                return None
-            if code == 429 or 500 <= code < 600:
-                wait = 1 * (2 ** attempt)
-                logger.warning(f"DO API {code}, retry {attempt + 1}/3 in {wait}s ({body_text})")
-                time.sleep(wait)
-                continue
-            logger.error(f"DO API error {code}: {body_text}")
-            return None
-
-        except Exception as e:
-            last_error = e
-            logger.error(f"DO request failed: {e}")
-            return None
-
-    logger.error(f"DO API failed after 3 attempts: {last_error}")
-    return None
+    except Exception as e:
+        logger.error(f"Text LLM error ({provider}): {e}")
+        return None
 
 
 def call_vision_llm(
     prompt: str, image_paths: List[str], max_tokens: int = 2048
 ) -> Optional[str]:
     """
-    Call DigitalOcean vision model with prompt and images.
+    Call the best available vision LLM with prompt and images.
 
-    Args:
-        prompt: Text prompt for the model.
-        image_paths: List of image file paths.
-        max_tokens: Max tokens in response.
-
-    Returns:
-        Response text or None on failure.
+    Tries Cerebras → Groq → NVIDIA NIM → DigitalOcean.
+    Returns response text or None on failure.
     """
-    api_key = _get_api_key()
-    if not api_key:
+    _load_dev_vars()
+    cfg = _get_vision_config()
+    if not cfg:
         return None
+    client, model, provider, base_url, api_key = cfg
 
     paths = image_paths[:MAX_IMAGES]
     if len(image_paths) > MAX_IMAGES:
-        logger.warning(
-            f"Capping images from {len(image_paths)} to {MAX_IMAGES}"
-        )
+        logger.warning(f"Capping images from {len(image_paths)} to {MAX_IMAGES}")
 
-    print(f"  LLM: calling digitalocean ({VISION_MODEL}) with {len(paths)} images")
+    print(f"  [llm] Vision: {provider} ({model}) with {len(paths)} images")
 
-    content: list = [{"type": "text", "text": prompt}]
+    image_content: list = [{"type": "text", "text": prompt}]
     if len(paths) == 1:
         data_url = _resize_image(paths[0]) if os.path.exists(paths[0]) else ""
     else:
         data_url = _mosaic_images(paths)
     if data_url:
-        content.append({
+        image_content.append({
             "type": "image_url",
             "image_url": {"url": data_url},
         })
 
     body = {
-        "model": VISION_MODEL,
-        "messages": [{"role": "user", "content": content}],
+        "model": model,
+        "messages": [{"role": "user", "content": image_content}],
         "max_tokens": max_tokens,
     }
-    return _post(body, api_key)
 
+    try:
+        t0 = time.time()
+        if client is not None:
+            response = client.chat.completions.create(**body)
+            text = response.choices[0].message.content or ""
+            text = _strip_think(text)
+        else:
+            text = _urllib_post(base_url, api_key, body) or ""
+        elapsed = time.time() - t0
+        print(f"  [llm] Vision ({provider}): {len(text)} chars ({elapsed:.1f}s)")
+        return text or None
 
-def call_text_llm(prompt: str, max_tokens: int = 2048) -> Optional[str]:
-    """
-    Call DigitalOcean text model with a text-only prompt.
-
-    Args:
-        prompt: Text prompt for the model.
-        max_tokens: Max tokens in response.
-
-    Returns:
-        Response text or None on failure.
-    """
-    api_key = _get_api_key()
-    if not api_key:
+    except Exception as e:
+        logger.error(f"Vision LLM error ({provider}): {e}")
         return None
-
-    print(f"  LLM: calling digitalocean ({TEXT_MODEL})")
-
-    body = {
-        "model": TEXT_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": max_tokens,
-    }
-    return _post(body, api_key)

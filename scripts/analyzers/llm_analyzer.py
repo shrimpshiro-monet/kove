@@ -24,8 +24,8 @@ def _get_client() -> Optional[OpenAI]:
         return _client
 
     providers = [
-        ("Groq", "https://api.groq.com/openai/v1", os.environ.get("GROQ_API_KEY"), "llama-3.3-70b-versatile"),
         ("Cerebras", "https://api.cerebras.ai/v1", os.environ.get("CEREBRAS_API_KEY"), "llama-3.3-70b"),
+        ("Groq", "https://api.groq.com/openai/v1", os.environ.get("GROQ_API_KEY"), "llama-3.3-70b-versatile"),
         ("NVIDIA", "https://integrate.api.nvidia.com/v1", os.environ.get("NVIDIA_NIM_API_KEY"), os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.6")),
     ]
     for name, base_url, api_key, model in providers:
