@@ -387,12 +387,13 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
     3. Select top N segments matching reference's shotType distribution
     4. Order by narrative arc (establishing → building → climax → resolution)
     5. Snap cuts to music beats
-    6. Apply reference effects, color grade, speed (scaled by style_intensity)
+    6. Apply reference effects (allowlisted per type, intensity-bounded), color grade, speed
 
     Args:
         style_intensity: 0.0–1.0, scales how aggressively reference effects are
                          applied to the user's footage. 0 = no effects, 1 = full
                          reference copy. Default 0.5 keeps edits tasteful.
+                         (Layer 2 of three-layer CRT protection.)
     """
     footage_info = get_video_info(footage_path)
     footage_duration = footage_info["duration"]
@@ -405,6 +406,7 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
     ref_speed = (dna.get("speed") or {}).get("avgSpeed", 1.0)
     ref_beats = (dna.get("audioAnalysis") or {}).get("beats", [])
     ref_rhythm = dna.get("rhythm", {})
+    ref_type = dna.get("referenceType", "unknown")
     cuts_on_beat = ref_rhythm.get("cuts_on_beat", 0)
     
     # Target clip count based on reference pacing
@@ -450,17 +452,29 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
     # Build EDL clips
     clips = []
     
-    # Calculate total effects to distribute across clips
-    total_effects = ref_effects.get("totalEffects", 0)
-    total_ref_shots = dna.get("totalShots", 1)
-    effects_per_clip = total_effects / total_ref_shots if total_ref_shots > 0 else 0
+    # ── Layer 1: Effect category allowlist by reference type ──
+    # Prevents inappropriate effects from bleeding through
+    allowed_effects = EFFECT_ALLOWLISTS.get(ref_type, EFFECT_ALLOWLISTS["unknown"])
+    print(f"  Effect allowlist ({ref_type}): {sorted(allowed_effects)}")
+    
+    # ── Layer 2: styleIntensity scaling ──
+    # Scales effect application probability and params (Layer 3 in render)
+    print(f"  Style intensity: {styleIntensity:.2f}")
+    
+    # Build allowlist-filtered effect pool from reference
     ref_visual_effects = ref_effects.get("visualEffects", {})
     weighted_effect_types = []
     for effect_name, count in ref_visual_effects.items():
         if effect_name == "none" or not count:
             continue
+        if effect_name not in allowed_effects:
+            continue
         weight = int(round(count))
         weighted_effect_types.extend([effect_name] * max(1, weight))
+    
+    total_effects = len(weighted_effect_types)
+    total_ref_shots = dna.get("totalShots", 1)
+    effects_per_clip = total_effects / total_ref_shots if total_ref_shots > 0 else 0
     
     import random
     random.seed(42)  # Deterministic effect distribution
@@ -476,12 +490,12 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
         # Importance from footage semantic analysis
         importance = seg.get("semantic_importance", 5)
         
-        # Build clip-level effects (blur EXCLUDED — blur is a transition, not a clip effect)
-        # style_intensity scales probability; cap at 2 concurrent effects per clip
+        # Build clip-level effects — allowlisted + intensity-gated (Layers 1+2)
         effects = []
         non_blur_effects = [e for e in weighted_effect_types if e != "blur"]
-        if non_blur_effects and effects_per_clip >= 0.3:
-            apply_prob = min(0.35, effects_per_clip / 3) * style_intensity
+        if non_blur_effects and effects_per_clip >= 0.1:
+            base_prob = min(0.35, effects_per_clip / 3)
+            apply_prob = base_prob * style_intensity  # Layer 2: intensity scales probability
             if random.random() < apply_prob:
                 chosen_type = random.choice(non_blur_effects)
                 effects.append({
@@ -603,6 +617,8 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
             "sampleRate": 48000,
             "projectId": dna["name"],
             "renderMethod": "editly-full",
+            "styleIntensity": styleIntensity,
+            "referenceType": ref_type,
         },
         "assets": {
             "media": {
@@ -950,7 +966,7 @@ def render_in_docker(edl: dict, output_path: str, music_path: Optional[str] = No
 
 
 # ---------------------------------------------------------------------------
-# Color grading → FFmpeg filter helpers
+# Color grading -> FFmpeg filter helpers
 # ---------------------------------------------------------------------------
 
 _LUT_PRESETS = {
@@ -1030,10 +1046,70 @@ def _wheels_to_ffmpeg(params: dict, intensity: float) -> Optional[str]:
     return ":".join(parts)
 
 
+# ── Effect category allowlist per reference type (Layer 1 of CRT fix) ──
+# Prevents inappropriate effect bleed-through from reference to footage.
+EFFECT_ALLOWLISTS = {
+    "sports_highlight": {"flash", "shake", "vignette", "high_contrast"},
+    "vlog": {"vignette", "flash"},
+    "amv_anime": {"glow", "flash", "shake", "chromatic_aberration", "grain", "vignette", "desaturation"},
+    "dance_edit": {"flash", "glow", "vignette", "shake"},
+    "gaming_montage": {"flash", "shake", "glow", "chromatic_aberration", "vignette"},
+    "movie_trailer": {"vignette", "high_contrast", "desaturation", "flash"},
+    "tiktok_general": {"flash", "glow", "vignette", "desaturation", "chromatic_aberration"},
+    "unknown": {"vignette", "flash"},
+}
+
+# Max concurrent global effects (from professional-editor doctrine: <30% shots, one per clip)
+MAX_CONCURRENT_EFFECTS = 2
+
+
+def _get_effect_filter(effect_type: str, intensity: float) -> str:
+    """
+    Get FFmpeg filter string for an effect at the given intensity (0–1).
+    Layer 3 of CRT fix: replaces hardcoded extreme params with sanity-bounded values.
+    """
+    intensity = max(0.0, min(1.0, intensity))
+    if not intensity:
+        return ""
+    if effect_type == "blur":
+        radius = max(1, int(8 * intensity))
+        return f"boxblur={radius}:{radius}"
+    elif effect_type == "vignette":
+        angle = max(0.05, 1.2 * intensity)
+        return f"vignette={angle}"
+    elif effect_type == "flash":
+        brightness = 0.1 + 0.3 * intensity
+        return f"eq=brightness={brightness}"
+    elif effect_type == "shake":
+        amount = max(1, int(8 * intensity))
+        return f"crop=w=in_w-{amount}:h=in_h-{amount}:x={amount // 2}:y={amount // 2}"
+    elif effect_type == "glow":
+        radius = max(1, int(5 * intensity))
+        amount = max(0.3, 1.5 * intensity)
+        return f"unsharp={radius}:{radius}:{amount}"
+    elif effect_type == "desaturation":
+        sat = max(0.5, 1.0 - 0.5 * intensity)
+        return f"eq=saturation={sat:.2f}"
+    elif effect_type == "high_contrast":
+        contrast = 1.0 + 0.25 * intensity
+        return f"eq=contrast={contrast:.2f}"
+    elif effect_type == "chromatic_aberration":
+        hue_shift = 20 * intensity
+        return f"hue=H={hue_shift:.0f}:h={hue_shift:.0f}"
+    elif effect_type == "grain":
+        noise = int(8 * intensity)
+        return f"noise=alls={noise}:allf=t+u"
+    return ""
+
+
 def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
                   style_intensity: float = 0.5) -> bool:
     """Render using FFmpeg directly (fallback or Linux native)."""
     print("Rendering with FFmpeg...")
+    
+    # Read styleIntensity from EDL (set by generate_edl_from_dna, default 0.5)
+    style_intensity = edl.get("meta", {}).get("styleIntensity", 0.5)
+    print(f"  Effect intensity: {style_intensity:.2f}")
     
     tmpdir = tempfile.mkdtemp(prefix="monet-render-")
     
@@ -1074,38 +1150,26 @@ def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
             else:
                 vf_parts = ["scale=576:576:force_original_aspect_ratio=decrease,pad=576:576:(ow-iw)/2:(oh-ih)/2"]
             
-            # Add effects — scaled by style_intensity, capped at 2 per clip
+            # Add effects — intensity-bounded via _get_effect_filter (Layer 3)
+            # plus remote's LUT/curves/wheels color grading
             unique_effects = list(dict.fromkeys(
                 [e.get("type", "") for e in clip.get("effects", [])
                  if e.get("type", "") != "cut"]
-            ))[:2]
+            ))[:MAX_CONCURRENT_EFFECTS]
 
             for effect_type in unique_effects:
-                si = style_intensity  # shorthand
-                if effect_type == "blur":
-                    radius = max(1, int(8 * si))
-                    vf_parts.append(f"boxblur={radius}:{radius}")
-                elif effect_type == "vignette":
-                    angle = max(0.1, 0.7854 * si)  # PI/4 scaled
-                    vf_parts.append(f"vignette={angle}")
-                elif effect_type == "flash":
-                    vf_parts.append(f"eq=brightness={0.3 * si}")
-                elif effect_type == "shake":
-                    offset = max(1, int(10 * si))
-                    vf_parts.append(f"crop=w=in_w-{offset*2}:h=in_h-{offset*2}:x={offset}:y={offset}")
-                elif effect_type == "glow":
-                    vf_parts.append(f"unsharp=5:5:{1.5 * si}")
-                elif effect_type == "desaturation":
-                    sat = max(0.1, 1.0 - (0.7 * si))  # 1.0 = no desat, 0.3 = heavy
-                    vf_parts.append(f"eq=saturation={sat:.2f}")
+                si = style_intensity
+                if effect_type in ("blur", "vignette", "flash", "shake", "glow",
+                                   "desaturation", "high_contrast", "chromatic_aberration", "grain"):
+                    filter_str = _get_effect_filter(effect_type, si)
+                    if filter_str:
+                        vf_parts.append(filter_str)
                 elif effect_type == "color_lut":
-                    # LUT preset → FFmpeg eq curves
                     preset = clip.get("effects", [{}])[0].get("params", {}).get("preset", "cinematic")
                     lut_eq = _lut_preset_to_ffmpeg(preset, si)
                     if lut_eq:
                         vf_parts.append(lut_eq)
                 elif effect_type == "color_curves":
-                    # Curves → FFmpeg curves filter
                     params = {}
                     for e in clip.get("effects", []):
                         if e.get("type") == "color_curves":
@@ -1115,7 +1179,6 @@ def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
                     if curves_str:
                         vf_parts.append(curves_str)
                 elif effect_type == "color_wheels":
-                    # Color wheels → FFmpeg eq filter
                     params = {}
                     for e in clip.get("effects", []):
                         if e.get("type") == "color_wheels":
@@ -1318,7 +1381,7 @@ if __name__ == "__main__":
                        choices=["weighted_avg", "dominant_wins", "union"],
                        help="Blending strategy for multi-reference")
     parser.add_argument("--style-intensity", "-s", type=float, default=0.5,
-                       help="Style strength 0.0-1.0 (0=no effects, 1=full reference copy)")
+                       help="Style strength 0.0-1.0 (0=no effects, 1=full reference copy, default 0.5)")
     
     args = parser.parse_args()
     
