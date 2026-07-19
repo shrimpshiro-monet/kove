@@ -2,9 +2,10 @@ import type { FastifyInstance } from "fastify";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import type { ProjectEDL } from "@monet/edl";
+import { refineEdlTypeScript } from "./refine-edl-ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -158,82 +159,56 @@ export async function registerVibeRefineRoute(app: FastifyInstance): Promise<voi
   });
 }
 
-function runRefinement(job: RefineJobStatus, projectName: string): void {
-  const scriptPath = path.join(WORKSPACE, "scripts", "monet_refine.py");
-  const args = [
-    scriptPath,
-    "--edl", path.join(job.tmpDir, "current-edl.json"),
-    "--prompt", path.join(job.tmpDir, "refine-prompt.txt"),
-    "--output", path.join(job.tmpDir, "refined-edl.json"),
-  ];
-
-  const scopePath = path.join(job.tmpDir, "scope.json");
-  if (fs.existsSync(scopePath)) {
-    args.push("--scope", scopePath);
-  }
-
-  const dnaPath = path.join(job.tmpDir, "reference-dna-path.txt");
-  if (fs.existsSync(dnaPath)) {
-    args.push("--reference-dna", fs.readFileSync(dnaPath, "utf-8").trim());
-  }
-
+async function runRefinement(job: RefineJobStatus, projectName: string): Promise<void> {
   job.status = "analyzing";
   job.progress = 10;
   job.message = "Analyzing current edit...";
 
-  const proc = spawn("python3", args, {
-    cwd: WORKSPACE,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  try {
+    // Load current EDL
+    const edlPath = path.join(job.tmpDir, "current-edl.json");
+    const edl: ProjectEDL = JSON.parse(fs.readFileSync(edlPath, "utf-8"));
 
-  let stdout = "";
-  let stderr = "";
-  proc.stdout?.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
-    stdout += text;
-    // Parse progress updates from stdout
-    const progressMatch = text.match(/progress:(\d+):(.+)/);
-    if (progressMatch) {
-      job.progress = parseInt(progressMatch[1], 10);
-      job.message = progressMatch[2].trim();
-    }
-  });
-  proc.stderr?.on("data", (chunk: Buffer) => {
-    stderr += chunk.toString();
-  });
+    // Load prompt
+    const prompt = fs.readFileSync(path.join(job.tmpDir, "refine-prompt.txt"), "utf-8").trim();
 
-  proc.on("close", (code) => {
-    if (code === 0 && fs.existsSync(path.join(job.tmpDir, "refined-edl.json"))) {
-      try {
-        const edl = JSON.parse(fs.readFileSync(path.join(job.tmpDir, "refined-edl.json"), "utf-8"));
-        job.status = "complete";
-        job.progress = 100;
-        job.message = "Refinement complete";
-        job.result = { edl };
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        job.status = "failed";
-        job.message = `Failed to parse refined EDL: ${msg}`;
-        job.error = msg;
-      }
-    } else {
-      job.status = "failed";
-      job.message = `Refinement script exited with code ${code}`;
-      job.error = stderr.slice(-500);
+    // Load scope if present
+    let scopeClipIds: string[] | undefined;
+    const scopePath = path.join(job.tmpDir, "scope.json");
+    if (fs.existsSync(scopePath)) {
+      scopeClipIds = JSON.parse(fs.readFileSync(scopePath, "utf-8"));
     }
 
-    // Schedule cleanup
-    setTimeout(() => {
-      try {
-        fs.rmSync(job.tmpDir, { recursive: true, force: true });
-      } catch {}
-      jobs.delete(job.jobId);
-    }, CLEANUP_MS);
-  });
+    job.progress = 30;
+    job.message = "Calling LLM for refinement actions...";
 
-  proc.on("error", (err) => {
+    // Run TypeScript refinement (GAP-002: unified path)
+    const result = await refineEdlTypeScript(edl, prompt, scopeClipIds);
+
+    job.progress = 90;
+    job.message = `Applied ${result.actions.length} refinement actions`;
+
+    // Save refined EDL
+    const outputPath = path.join(job.tmpDir, "refined-edl.json");
+    fs.writeFileSync(outputPath, JSON.stringify(result.edl, null, 2));
+
+    job.status = "complete";
+    job.progress = 100;
+    job.message = "Refinement complete (TypeScript path)";
+    job.result = { edl: result.edl };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
     job.status = "failed";
-    job.message = `Failed to start refinement: ${err.message}`;
-    job.error = err.message;
-  });
+    job.message = `Refinement failed: ${msg}`;
+    job.error = msg;
+    console.error("[vibe-refine] TypeScript refinement failed:", err);
+  }
+
+  // Schedule cleanup
+  setTimeout(() => {
+    try {
+      fs.rmSync(job.tmpDir, { recursive: true, force: true });
+    } catch {}
+    jobs.delete(job.jobId);
+  }, CLEANUP_MS);
 }
