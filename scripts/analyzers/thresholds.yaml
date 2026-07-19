@@ -1,0 +1,291 @@
+# scripts/analyzers/thresholds.yaml
+# Per-genre threshold profiles.
+# Generic profile used when genre is unknown or classifier confidence < 0.5.
+
+generic:
+  cut_detection:
+    threshold: 0.15
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.8
+    rapid: 1.8
+    balanced: 4.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.01
+    farneback_pan: 0.08
+    farneback_tracking: 0.20
+    farneback_handheld_variance: 0.002
+    farneback_standing: 0.02
+    farneback_walking: 0.08
+    farneback_running_peak: 0.15
+    frame_diff_static: 0.05
+    frame_diff_pan: 0.20
+    frame_diff_handheld_variance: 0.01
+    frame_diff_standing: 0.10
+    frame_diff_walking: 0.20
+    frame_diff_running_peak: 0.50
+  effect:
+    confidence_threshold: 0.7
+    flash_stddev_mult: 2.0
+    blur_edge_ratio: 0.3
+  text:
+    ocr_confidence: 50
+  color:
+    bw_saturation: 15
+    desaturated_saturation: 35
+    dark_luminance: 60
+    bright_luminance: 200
+    vibrant_saturation: 100
+
+sports_highlight:
+  cut_detection:
+    threshold: 0.12
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.5
+    rapid: 1.2
+    balanced: 3.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.015
+    farneback_pan: 0.10
+    farneback_tracking: 0.25
+    farneback_handheld_variance: 0.003
+    farneback_standing: 0.03
+    farneback_walking: 0.10
+    farneback_running_peak: 0.12
+    frame_diff_static: 0.06
+    frame_diff_pan: 0.25
+    frame_diff_handheld_variance: 0.015
+    frame_diff_standing: 0.12
+    frame_diff_walking: 0.25
+    frame_diff_running_peak: 0.40
+  effect:
+    confidence_threshold: 0.65
+    flash_stddev_mult: 1.5
+    blur_edge_ratio: 0.35
+  text:
+    ocr_confidence: 40
+  color:
+    bw_saturation: 10
+    desaturated_saturation: 30
+    dark_luminance: 55
+    bright_luminance: 210
+    vibrant_saturation: 110
+
+vlog:
+  cut_detection:
+    threshold: 0.18
+    min_shot_duration: 0.1
+  pacing:
+    frantic: 1.5
+    rapid: 3.0
+    balanced: 6.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.008
+    farneback_pan: 0.06
+    farneback_tracking: 0.15
+    farneback_handheld_variance: 0.0015
+    farneback_standing: 0.015
+    farneback_walking: 0.06
+    farneback_running_peak: 0.12
+    frame_diff_static: 0.04
+    frame_diff_pan: 0.15
+    frame_diff_handheld_variance: 0.008
+    frame_diff_standing: 0.08
+    frame_diff_walking: 0.15
+    frame_diff_running_peak: 0.40
+  effect:
+    confidence_threshold: 0.75
+    flash_stddev_mult: 2.5
+    blur_edge_ratio: 0.25
+  text:
+    ocr_confidence: 60
+  color:
+    bw_saturation: 20
+    desaturated_saturation: 40
+    dark_luminance: 65
+    bright_luminance: 200
+    vibrant_saturation: 95
+
+amv_anime:
+  cut_detection:
+    threshold: 0.10
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.4
+    rapid: 1.0
+    balanced: 2.5
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.02
+    farneback_pan: 0.12
+    farneback_tracking: 0.30
+    farneback_handheld_variance: 0.004
+    farneback_standing: 0.04
+    farneback_walking: 0.12
+    farneback_running_peak: 0.10
+    frame_diff_static: 0.08
+    frame_diff_pan: 0.30
+    frame_diff_handheld_variance: 0.02
+    frame_diff_standing: 0.15
+    frame_diff_walking: 0.30
+    frame_diff_running_peak: 0.35
+  effect:
+    confidence_threshold: 0.6
+    flash_stddev_mult: 1.2
+    blur_edge_ratio: 0.4
+  text:
+    ocr_confidence: 35
+  color:
+    bw_saturation: 8
+    desaturated_saturation: 25
+    dark_luminance: 50
+    bright_luminance: 220
+    vibrant_saturation: 120
+
+dance_edit:
+  cut_detection:
+    threshold: 0.11
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.5
+    rapid: 1.0
+    balanced: 2.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.01
+    farneback_pan: 0.09
+    farneback_tracking: 0.22
+    farneback_handheld_variance: 0.0025
+    farneback_standing: 0.02
+    farneback_walking: 0.09
+    farneback_running_peak: 0.13
+    frame_diff_static: 0.05
+    frame_diff_pan: 0.22
+    frame_diff_handheld_variance: 0.012
+    frame_diff_standing: 0.10
+    frame_diff_walking: 0.22
+    frame_diff_running_peak: 0.45
+  effect:
+    confidence_threshold: 0.65
+    flash_stddev_mult: 1.8
+    blur_edge_ratio: 0.3
+  text:
+    ocr_confidence: 45
+  color:
+    bw_saturation: 12
+    desaturated_saturation: 28
+    dark_luminance: 55
+    bright_luminance: 215
+    vibrant_saturation: 115
+
+gaming_montage:
+  cut_detection:
+    threshold: 0.09
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.3
+    rapid: 0.8
+    balanced: 2.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.025
+    farneback_pan: 0.15
+    farneback_tracking: 0.35
+    farneback_handheld_variance: 0.005
+    farneback_standing: 0.05
+    farneback_walking: 0.15
+    farneback_running_peak: 0.08
+    frame_diff_static: 0.10
+    frame_diff_pan: 0.35
+    frame_diff_handheld_variance: 0.025
+    frame_diff_standing: 0.18
+    frame_diff_walking: 0.35
+    frame_diff_running_peak: 0.30
+  effect:
+    confidence_threshold: 0.55
+    flash_stddev_mult: 1.0
+    blur_edge_ratio: 0.45
+  text:
+    ocr_confidence: 30
+  color:
+    bw_saturation: 5
+    desaturated_saturation: 20
+    dark_luminance: 45
+    bright_luminance: 230
+    vibrant_saturation: 130
+
+movie_trailer:
+  cut_detection:
+    threshold: 0.14
+    min_shot_duration: 0.1
+  pacing:
+    frantic: 0.6
+    rapid: 1.5
+    balanced: 3.5
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.005
+    farneback_pan: 0.05
+    farneback_tracking: 0.12
+    farneback_handheld_variance: 0.001
+    farneback_standing: 0.01
+    farneback_walking: 0.05
+    farneback_running_peak: 0.18
+    frame_diff_static: 0.03
+    frame_diff_pan: 0.12
+    frame_diff_handheld_variance: 0.005
+    frame_diff_standing: 0.06
+    frame_diff_walking: 0.12
+    frame_diff_running_peak: 0.55
+  effect:
+    confidence_threshold: 0.7
+    flash_stddev_mult: 2.0
+    blur_edge_ratio: 0.3
+  text:
+    ocr_confidence: 55
+  color:
+    bw_saturation: 18
+    desaturated_saturation: 38
+    dark_luminance: 60
+    bright_luminance: 200
+    vibrant_saturation: 100
+
+tiktok_general:
+  cut_detection:
+    threshold: 0.13
+    min_shot_duration: 0.034
+  pacing:
+    frantic: 0.5
+    rapid: 1.2
+    balanced: 3.0
+    slow_burn: 999.0
+  motion:
+    farneback_static: 0.012
+    farneback_pan: 0.08
+    farneback_tracking: 0.20
+    farneback_handheld_variance: 0.002
+    farneback_standing: 0.025
+    farneback_walking: 0.08
+    farneback_running_peak: 0.14
+    frame_diff_static: 0.06
+    frame_diff_pan: 0.20
+    frame_diff_handheld_variance: 0.01
+    frame_diff_standing: 0.10
+    frame_diff_walking: 0.20
+    frame_diff_running_peak: 0.45
+  effect:
+    confidence_threshold: 0.7
+    flash_stddev_mult: 1.8
+    blur_edge_ratio: 0.35
+  text:
+    ocr_confidence: 50
+  color:
+    bw_saturation: 15
+    desaturated_saturation: 35
+    dark_luminance: 60
+    bright_luminance: 210
+    vibrant_saturation: 105
