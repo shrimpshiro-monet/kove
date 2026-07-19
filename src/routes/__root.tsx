@@ -124,7 +124,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const clerkPubKey = (typeof process !== "undefined" ? (process.env as any).CLERK_PUBLISHABLE_KEY : "") || "";
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
 
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
