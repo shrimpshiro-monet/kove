@@ -10,6 +10,12 @@ from workers.estimate_depth import EstimateDepthRequest, estimate_depth
 from workers.segment_subject import SegmentSubjectRequest, segment_subject
 from workers.track_points import TrackPointsRequest, track_points
 from workers.track_subject import TrackSubjectRequest, track_subject
+from workers.subject_track_mask import (
+    ShotSpec,
+    SubjectSeed,
+    TrackMaskRequest,
+    track_mask,
+)
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
 
@@ -150,9 +156,69 @@ def track_points_route(body: TrackPointsBody) -> dict:
     return {"success": True, "data": result}
 
 
+class ShotSpecBody(BaseModel):
+    shotId: str = Field(min_length=1)
+    startFrame: int = Field(ge=0)
+    endFrame: int = Field(ge=0)
+
+
+class SubjectSeedBody(BaseModel):
+    subjectId: int = Field(ge=0)
+    label: str = Field(min_length=1)
+    seedFrame: int = Field(ge=0)
+    seedBox: list[float] = Field(min_length=4, max_length=4)
+
+
+class TrackMaskBody(BaseModel):
+    filePath: str = Field(min_length=1)
+    shots: list[ShotSpecBody] = Field(min_length=1)
+    subjects: list[SubjectSeedBody] = Field(min_length=1)
+    frameStep: int = Field(default=2, ge=1, le=10)
+    maxFramesPerShot: int = Field(default=300, ge=1, le=10000)
+    workingWidth: int = Field(default=1280, ge=320, le=3840)
+    checkpointPath: Optional[str] = None
+    modelConfig: Optional[str] = None
+    enableReid: bool = True
+    reidThreshold: float = Field(default=0.75, ge=0.0, le=1.0)
+
+
 class DeepAnalysisBody(BaseModel):
     filePath: str = Field(min_length=1)
     audioPath: Optional[str] = None
+
+
+@app.post("/spatial/track-mask")
+def track_mask_route(body: TrackMaskBody) -> dict:
+    result = track_mask(
+        TrackMaskRequest(
+            video_path=body.filePath,
+            shots=[
+                ShotSpec(
+                    shot_id=s.shotId,
+                    start_frame=s.startFrame,
+                    end_frame=s.endFrame,
+                )
+                for s in body.shots
+            ],
+            subjects=[
+                SubjectSeed(
+                    subject_id=s.subjectId,
+                    label=s.label,
+                    seed_frame=s.seedFrame,
+                    seed_box=s.seedBox,
+                )
+                for s in body.subjects
+            ],
+            frame_step=body.frameStep,
+            max_frames_per_shot=body.maxFramesPerShot,
+            working_width=body.workingWidth,
+            checkpoint_path=body.checkpointPath,
+            model_config=body.modelConfig,
+            enable_reid=body.enableReid,
+            reid_threshold=body.reidThreshold,
+        )
+    )
+    return {"success": True, "data": result}
 
 
 @app.post("/deep-analysis")

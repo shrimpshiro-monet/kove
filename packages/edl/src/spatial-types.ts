@@ -67,3 +67,27 @@ export interface PointTrackManifest {
   engine: "cotracker";
   licenseMode: "research-only" | "commercial-verified";
 }
+
+export interface TrackedMaskFrame {
+  frameIdx: number;
+  timestamp: number;
+  bbox: [number, number, number, number];
+  maskRle: { size: [number, number]; counts: string };
+  confidence: number;
+  occluded: boolean;
+}
+
+export interface TrackedSubject {
+  subjectId: number;
+  label: string;
+  frames: TrackedMaskFrame[];
+}
+
+export interface TrackMaskManifest {
+  jobId: string;
+  subjects: TrackedSubject[];
+  fps: number;
+  width: number;
+  height: number;
+  shotErrors: Array<{ shotId: string; error: string }>;
+}
