@@ -14,9 +14,9 @@ type P = z.infer<typeof Params>;
 export const ColorCurvesCapability: Capability<P> = {
   id: "color-curves",
   category: "effects",
-  status: "alpha",
+  status: "beta",
   version: "1.0.0",
-  description: "Adjust color curves for shadows, midtones, and highlights. Maps through OpenReel's existing curves engine for precise tonal control.",
+  description: "Adjust color curves for shadows, midtones, and highlights. Emits effect/apply action — render-side curves processing not yet wired to OpenReel's ColorGradingEngine.",
   triggerPhrases: [
     "color curves",
     "adjust curves",

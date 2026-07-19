@@ -15,9 +15,9 @@ type P = z.infer<typeof Params>;
 export const AudioEqCapability: Capability<P> = {
   id: "audio-eq",
   category: "audio",
-  status: "alpha",
+  status: "beta",
   version: "1.0.0",
-  description: "3-band parametric EQ (low/mid/high) for audio tonal shaping. Maps through OpenReel's existing audio EQ engine.",
+  description: "3-band parametric EQ (low/mid/high) for audio tonal shaping. Emits effect/apply action — render-side EQ not yet wired to OpenReel's AudioEffectsEngine.",
   triggerPhrases: [
     "audio eq",
     "equalizer",

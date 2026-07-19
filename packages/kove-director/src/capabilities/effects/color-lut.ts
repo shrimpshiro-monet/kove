@@ -13,9 +13,9 @@ type P = z.infer<typeof Params>;
 export const ColorLutCapability: Capability<P> = {
   id: "color-lut",
   category: "effects",
-  status: "alpha",
+  status: "beta",
   version: "1.0.0",
-  description: "Apply a color lookup table (LUT) to a clip for cinematic color grading. Maps through OpenReel's existing LUT engine with preset styles.",
+  description: "Apply a color lookup table (LUT) preset to a clip. Emits effect/apply action — render-side LUT application not yet wired to OpenReel's ColorGradingEngine.",
   triggerPhrases: [
     "apply lut",
     "color lut",

@@ -14,9 +14,9 @@ type P = z.infer<typeof Params>;
 export const ColorWheelsCapability: Capability<P> = {
   id: "color-wheels",
   category: "effects",
-  status: "alpha",
+  status: "beta",
   version: "1.0.0",
-  description: "Professional color wheels (lift/gamma/gain) for precise color correction. Maps through OpenReel's existing color wheels engine.",
+  description: "Professional color wheels (lift/gamma/gain) for precise color correction. Emits effect/apply action — render-side wheels processing not yet wired to OpenReel's ColorGradingEngine.",
   triggerPhrases: [
     "color wheels",
     "lift gamma gain",

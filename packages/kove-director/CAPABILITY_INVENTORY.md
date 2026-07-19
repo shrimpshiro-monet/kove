@@ -56,9 +56,9 @@
 | Reduce Interlace Flicker | alpha | `apps/web/src/components/editor/ClipInspector.tsx:569` + `packages/kove-director/src/capabilities/effects/interlace-flicker.ts` | `effect.custom` with `reduce_interlace_flicker` | Zod-validated capability. Interlace artifact reduction. Mapped via compiler.ts effectTypeMap. |
 | GL Transition (effect) | alpha | `apps/web/src/components/editor/effects/effect-control-registry.ts:127` + `packages/kove-director/src/capabilities/effects/gl-transition-effect.ts` | `effect.custom` with `gl_transition` | Zod-validated capability. GPU shader transitions with presets. Mapped via compiler.ts effectTypeMap. |
 | Speed Ramp (effect) | alpha | `apps/web/src/components/editor/effects/effect-control-registry.ts:72` + `packages/kove-director/src/capabilities/effects/speed-ramp-effect.ts` | `effect.custom` with `speed_ramp` | Zod-validated capability. Effect-layer speed ramp with easing. Mapped via compiler.ts effectTypeMap. |
-| Color LUT | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.lut` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
-| Color Curves | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.curves` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
-| Color Wheels | planned | `packages/kove-director/src/contract.ts` (tier list) | `color.wheels` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
+| Color LUT | beta | `packages/kove-director/src/capabilities/effects/color-lut.ts` | `color.lut` (compiled, effect/apply) | Zod schema + compile() emits effect/apply. **Render-side NOT wired** to OpenReel's ColorGradingEngine. |
+| Color Curves | beta | `packages/kove-director/src/capabilities/effects/color-curves.ts` | `color.curves` (compiled, effect/apply) | Zod schema + compile() emits effect/apply. **Render-side NOT wired** to OpenReel's ColorGradingEngine. |
+| Color Wheels | beta | `packages/kove-director/src/capabilities/effects/color-wheels.ts` | `color.wheels` (compiled, effect/apply) | Zod schema + compile() emits effect/apply. **Render-side NOT wired** to OpenReel's ColorGradingEngine. |
 
 ---
 
@@ -89,8 +89,8 @@
 | Audio Mixing (server) | alpha | `src/server/lib/audio-mixer.ts` + `packages/kove-director/src/capabilities/audio/audio-mixing.ts` | `audio.mixing` | Zod-validated capability. Multi-track volume balancing with stereo positioning. Mapped via compiler.ts. |
 | SFX Synthesis | alpha | `apps/web/src/engine/audio/audio-engine.ts:189` + `sfx-engine.ts` + `packages/kove-director/src/capabilities/audio/sfx-synthesis.ts` | `effect.custom` with `sfx_synthesis` | Zod-validated capability. Web Audio API whoosh/hit/bass_drop. Mapped via compiler.ts effectTypeMap. |
 | Dynamic SFX Injection | planned | `packages/edl-enhancers/src/sfx-injection.ts` + `feature-registry:217` | None | Feature registered v-beta-1. Adds hardcoded "impact-hit" clips. Full pipeline not connected. |
-| Audio EQ | planned | `packages/kove-director/src/contract.ts` (pro tier) | `audio.eq` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
-| Audio Dynamics | planned | `packages/kove-director/src/contract.ts` (pro tier) | `audio.dynamics` (declared, not compiled) | Listed in pro-tier capabilities. No implementation. |
+| Audio EQ | beta | `packages/kove-director/src/capabilities/audio/audio-eq.ts` | `audio.eq` (compiled, effect/apply) | Zod schema + compile() emits effect/apply. **Render-side NOT wired** to OpenReel's AudioEffectsEngine. |
+| Audio Dynamics | beta | `packages/kove-director/src/capabilities/audio/audio-dynamics.ts` | `audio.dynamics` (compiled, effect/apply) | Zod schema + compile() emits effect/apply. **Render-side NOT wired** to OpenReel's AudioEffectsEngine. |
 
 ---
 
@@ -155,13 +155,13 @@
 | Category | Alpha | Beta | Planned |
 |----------|-------|------|---------|
 | Edit | 9 | 1 | 0 |
-| Effects | 20 | 1 | 3 |
+| Effects | 17 | 4 | 3 |
 | Overlays | 6 | 0 | 3 |
-| Audio | 8 | 0 | 1 |
+| Audio | 6 | 2 | 1 |
 | Transitions | 19 | 1 | 1 |
 | Camera | 3 | 0 | 2 |
 | Composition | 4 | 0 | 5 |
-| **Total** | **77** | **1** | **12** |
+| **Total** | **72** | **6** | **12** |
 
 ---
 
