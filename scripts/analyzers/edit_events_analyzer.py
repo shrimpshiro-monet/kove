@@ -68,6 +68,7 @@ def analyze_edit_events(
     fps: float = 30.0,
     motion_data: Optional[list] = None,
     shared_frame_cache: Optional[tuple] = None,
+    profile: Optional[dict] = None,
 ) -> dict:
     """
     Run all three analyses and return a unified edit events report.

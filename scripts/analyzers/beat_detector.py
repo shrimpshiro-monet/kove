@@ -9,7 +9,7 @@ import subprocess
 import re
 import json
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ BEAT_CUT_TOLERANCE = 0.1  # 100ms
 BEAT_DRIVEN_THRESHOLD = 0.4  # 40% of cuts on beat = beat-driven
 
 
-def detect_beats(audio_path: str) -> Dict:
+def detect_beats(audio_path: str, profile: Optional[dict] = None) -> Dict:
     """
     Detect beats in audio.
     Primary: librosa beat tracking.
@@ -35,6 +35,8 @@ def detect_beats(audio_path: str) -> Dict:
         beat_method: str ("librosa" | "energy")
     """
     print("  Detecting beats...")
+    
+    _ = profile  # available for downstream use if needed
     
     # Try librosa first (real beat tracking)
     try:
@@ -199,15 +201,15 @@ def _estimate_tempo_from_beats(beats: List[Dict]) -> float:
     return bpm
 
 
-def analyze_rhythm(beats: List[Dict], cut_times: List[float]) -> Dict:
+def analyze_rhythm(beats: List[Dict], cut_times: List[float], profile: Optional[dict] = None) -> Dict:
     """
     Analyze rhythm: how cuts align with beats.
-    
-    Uses BEAT_CUT_TOLERANCE (100ms) to determine if a cut is "on beat".
-    A cut is on beat if any beat falls within BEAT_CUT_TOLERANCE seconds of it.
-    
-    isBeatDriven = True if cuts_on_beat > BEAT_DRIVEN_THRESHOLD (40%)
     """
+    p = profile or {}
+    bc = p.get("beat", {})
+    beat_cut_tolerance = bc.get("beat_cut_tolerance", 0.1)
+    beat_driven_threshold = bc.get("beat_driven_threshold", 0.4)
+    
     if not beats or not cut_times:
         return {
             "cuts_on_beat": 0.0,
@@ -219,15 +221,13 @@ def analyze_rhythm(beats: List[Dict], cut_times: List[float]) -> Dict:
     
     beat_times = [b["time"] for b in beats]
     
-    # For each cut, check if any beat falls within tolerance
     cuts_on_beat = 0
     beats_between_cuts = []
     rhythm_pattern = []
     
     for cut_time in cut_times:
-        # Check if any beat is within BEAT_CUT_TOLERANCE
         on_beat = any(
-            abs(cut_time - bt) <= BEAT_CUT_TOLERANCE
+            abs(cut_time - bt) <= beat_cut_tolerance
             for bt in beat_times
         )
         
@@ -237,7 +237,6 @@ def analyze_rhythm(beats: List[Dict], cut_times: List[float]) -> Dict:
         else:
             rhythm_pattern.append("off")
     
-    # Calculate beats between cuts
     for i in range(1, len(cut_times)):
         beats_in_segment = sum(
             1 for bt in beat_times
@@ -252,7 +251,7 @@ def analyze_rhythm(beats: List[Dict], cut_times: List[float]) -> Dict:
         "cuts_on_beat": on_beat_pct,
         "cuts_off_beat": 100 - on_beat_pct,
         "avg_beats_between_cuts": avg_beats,
-        "isBeatDriven": on_beat_pct / 100 > BEAT_DRIVEN_THRESHOLD,
+        "isBeatDriven": on_beat_pct / 100 > beat_driven_threshold,
         "rhythm_pattern": rhythm_pattern,
     }
 

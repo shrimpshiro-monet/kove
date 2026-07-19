@@ -12,10 +12,10 @@ import subprocess
 import os
 import tempfile
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from collections import Counter
 
-def detect_speed_ramps(video_path: str, shots: list) -> List[Dict]:
+def detect_speed_ramps(video_path: str, shots: list, profile: Optional[dict] = None) -> List[Dict]:
     """
     Detect speed ramps for each shot.
     Returns per-shot speed analysis.
@@ -26,7 +26,7 @@ def detect_speed_ramps(video_path: str, shots: list) -> List[Dict]:
     
     for i, shot in enumerate(shots):
         # Analyze shot speed
-        shot_speed = analyze_shot_speed(video_path, shot)
+        shot_speed = analyze_shot_speed(video_path, shot, profile)
         shot_speed["shotIndex"] = shot["index"]
         shot_speed["time"] = shot["start"]
         
@@ -34,8 +34,17 @@ def detect_speed_ramps(video_path: str, shots: list) -> List[Dict]:
     
     return speed_per_shot
 
-def analyze_shot_speed(video_path: str, shot: dict) -> Dict:
+def analyze_shot_speed(video_path: str, shot: dict, profile: Optional[dict] = None) -> Dict:
     """Analyze speed of a single shot."""
+    p = profile or {}
+    mc = p.get("motion", {})
+    slow_motion_thresh = mc.get("slow_motion", 0.03)
+    slow_thresh = mc.get("slow", 0.08)
+    normal_thresh = mc.get("normal", 0.15)
+    fast_thresh = mc.get("fast", 0.25)
+    ramp_slope_thresh = mc.get("ramp_slope", 0.005)
+    ramp_point_mag = mc.get("ramp_point_magnitude", 0.1)
+    
     result = {
         "avgSpeed": 1.0,
         "speedType": "normal",
@@ -45,84 +54,67 @@ def analyze_shot_speed(video_path: str, shot: dict) -> Dict:
     }
     
     try:
-        # Extract motion data for this shot
         motion_data = extract_motion_for_speed(video_path, shot["start"], shot["end"])
         
         if len(motion_data) < 3:
             return result
         
-        # Analyze motion pattern
         magnitudes = [m["magnitude"] for m in motion_data]
         times = [m["time"] for m in motion_data]
         
-        # Calculate speed indicators
-        # 1. Motion consistency (low variance = constant speed)
         variance = np.var(magnitudes)
-        
-        # 2. Motion magnitude (high = fast, low = slow)
         avg_magnitude = np.mean(magnitudes)
-        
-        # 3. Motion changes (gradual changes = ramp)
         diffs = np.diff(magnitudes)
-        max_change = np.max(np.abs(diffs))
         
-        # Determine speed type
-        if avg_magnitude < 0.03:
+        if avg_magnitude < slow_motion_thresh:
             speed_type = "slow_motion"
             avg_speed = 0.5
-        elif avg_magnitude < 0.08:
+        elif avg_magnitude < slow_thresh:
             speed_type = "slow"
             avg_speed = 0.75
-        elif avg_magnitude < 0.15:
+        elif avg_magnitude < normal_thresh:
             speed_type = "normal"
             avg_speed = 1.0
-        elif avg_magnitude < 0.25:
+        elif avg_magnitude < fast_thresh:
             speed_type = "fast"
             avg_speed = 1.5
         else:
             speed_type = "very_fast"
             avg_speed = 2.0
         
-        # Detect ramp (gradual speed change)
         has_ramp = False
         ramp_points = []
         
         if len(magnitudes) > 5:
-            # Check for linear trend
             x = np.arange(len(magnitudes))
             slope = np.polyfit(x, magnitudes, 1)[0]
             
-            # If significant slope, it's a ramp
-            if abs(slope) > 0.005:
+            if abs(slope) > ramp_slope_thresh:
                 has_ramp = True
                 
-                # Find ramp direction
                 if slope > 0:
                     ramp_type = "speed_up"
                 else:
                     ramp_type = "slow_down"
                 
-                # Find ramp points (where speed changes significantly)
                 threshold = np.std(diffs) * 1.5
                 for j, d in enumerate(diffs):
                     if abs(d) > threshold:
                         ramp_points.append({
                             "time": times[j],
-                            "from_speed": "slow" if magnitudes[j] < 0.1 else "fast",
-                            "to_speed": "slow" if magnitudes[j+1] < 0.1 else "fast",
+                            "from_speed": "slow" if magnitudes[j] < ramp_point_mag else "fast",
+                            "to_speed": "slow" if magnitudes[j+1] < ramp_point_mag else "fast",
                         })
         
-        # Build speed curve
         speed_curve = []
         for m in motion_data:
-            # Map magnitude to speed estimate
-            if m["magnitude"] < 0.03:
+            if m["magnitude"] < slow_motion_thresh:
                 speed = 0.5
-            elif m["magnitude"] < 0.08:
+            elif m["magnitude"] < slow_thresh:
                 speed = 0.75
-            elif m["magnitude"] < 0.15:
+            elif m["magnitude"] < normal_thresh:
                 speed = 1.0
-            elif m["magnitude"] < 0.25:
+            elif m["magnitude"] < fast_thresh:
                 speed = 1.5
             else:
                 speed = 2.0
