@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { UserButton, useAuth } from "@clerk/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Loader2, StickyNote, Upload, Undo2, Redo2 } from "lucide-react";
+import { Plus, Trash2, Send, Sparkles, Film, Paperclip, ArrowRight, Download, Loader2, StickyNote, Upload, Undo2, Redo2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -1395,6 +1395,20 @@ function ChatPage() {
                       >
                         <Film className="h-3.5 w-3.5" />
                       </a>
+                      <button
+                        onClick={() => {
+                          if (!currentEDL) return;
+                          const baseUrl = (import.meta as any).env?.VITE_KOVE_ADVANCED_URL || "http://localhost:5174";
+                          const edlJson = JSON.stringify(currentEDL);
+                          const edlBase64 = btoa(unescape(encodeURIComponent(edlJson)));
+                          const url = `${baseUrl}?edl=${encodeURIComponent(edlBase64)}&threadId=${encodeURIComponent(threadId)}`;
+                          window.open(url, "_blank");
+                        }}
+                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors text-primary"
+                        title="Open in Kove Advanced"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
