@@ -16,19 +16,22 @@ import os
 import tempfile
 import numpy as np
 from PIL import Image
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from collections import Counter
 
 # Confidence threshold for including effects in DNA
 EFFECT_CONFIDENCE_THRESHOLD = 0.7
 
 
-def detect_effects(video_path: str, shots: list) -> List[Dict]:
+def detect_effects(video_path: str, shots: list, profile: Optional[dict] = None) -> List[Dict]:
     """
     Detect effects for each shot in the video.
     Returns per-shot effect analysis with confidence scores.
     """
     print("  Detecting effects...")
+    
+    p = profile or {}
+    conf_threshold = p.get("effect", {}).get("confidence_threshold", 0.7)
     
     effects_per_shot = []
     
@@ -37,7 +40,7 @@ def detect_effects(video_path: str, shots: list) -> List[Dict]:
         end = shot["end"] + 0.1
         
         frames = extract_analysis_frames(video_path, start, end, shot["duration"])
-        shot_effects = analyze_shot_effects(frames, shot)
+        shot_effects = analyze_shot_effects(frames, shot, conf_threshold)
         shot_effects["shotIndex"] = shot["index"]
         shot_effects["time"] = shot["start"]
         
@@ -81,7 +84,7 @@ def extract_analysis_frames(video_path: str, start: float, end: float,
     return frames
 
 
-def analyze_shot_effects(frames: Dict[str, str], shot: dict) -> Dict:
+def analyze_shot_effects(frames: Dict[str, str], shot: dict, conf_threshold: float = 0.7) -> Dict:
     """Analyze effects in a single shot with confidence gating."""
     # Detect transitions
     transitions_with_conf = detect_transitions(frames)
@@ -93,9 +96,9 @@ def analyze_shot_effects(frames: Dict[str, str], shot: dict) -> Dict:
     overlays_with_conf = detect_overlays(frames)
     
     # Filter by confidence threshold
-    transitions = [t["type"] for t in transitions_with_conf if t["confidence"] >= EFFECT_CONFIDENCE_THRESHOLD]
-    visual_effects = [v["type"] for v in visual_with_conf if v["confidence"] >= EFFECT_CONFIDENCE_THRESHOLD]
-    overlays = [o["type"] for o in overlays_with_conf if o["confidence"] >= EFFECT_CONFIDENCE_THRESHOLD]
+    transitions = [t["type"] for t in transitions_with_conf if t["confidence"] >= conf_threshold]
+    visual_effects = [v["type"] for v in visual_with_conf if v["confidence"] >= conf_threshold]
+    overlays = [o["type"] for o in overlays_with_conf if o["confidence"] >= conf_threshold]
     
     all_effects = transitions + visual_effects + overlays
     
@@ -106,7 +109,7 @@ def analyze_shot_effects(frames: Dict[str, str], shot: dict) -> Dict:
         "effects": all_effects,
         "effectCount": len(all_effects),
         "dominantEffect": max(Counter(all_effects), key=Counter(all_effects).get) if all_effects else "none",
-        "confidenceThreshold": EFFECT_CONFIDENCE_THRESHOLD,
+        "confidenceThreshold": conf_threshold,
     }
 
 
@@ -519,7 +522,7 @@ def compute_watermark_confidence(pixels: np.ndarray) -> float:
     return 0.0
 
 
-def aggregate_effects(effects_per_shot: List[Dict]) -> Dict:
+def aggregate_effects(effects_per_shot: List[Dict], conf_threshold: float = 0.7) -> Dict:
     """Aggregate effects across all shots."""
     all_effects = []
     transition_counts = Counter()
@@ -548,7 +551,7 @@ def aggregate_effects(effects_per_shot: List[Dict]) -> Dict:
         "overlays": dict(overlay_counts),
         "mostCommonEffect": max(Counter(all_effects), key=Counter(all_effects).get) if all_effects else "none",
         "effectVariety": len(set(all_effects)),
-        "confidenceThreshold": EFFECT_CONFIDENCE_THRESHOLD,
+        "confidenceThreshold": conf_threshold,
     }
 
 

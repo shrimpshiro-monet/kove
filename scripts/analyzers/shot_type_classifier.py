@@ -15,7 +15,7 @@ import tempfile
 import logging
 import numpy as np
 from PIL import Image
-from typing import Dict, List
+from typing import Dict, List, Optional
 from collections import Counter
 
 logger = logging.getLogger(__name__)
@@ -38,22 +38,26 @@ except Exception:
     _MEDIPIPE_AVAILABLE = False
 
 
-def classify_shot_type(video_path: str, shots: list, sample_rate: float = 2.0) -> List[Dict]:
+def classify_shot_type(video_path: str, shots: list, sample_rate: float = 2.0, profile: Optional[dict] = None) -> List[Dict]:
     """
     Classify shot types for all shots in video.
     Returns list of shot type classifications.
     """
     print("  Classifying shot types...")
     
+    _p = profile or {}
+    min_shot_dur = _p.get("cut_detection", {}).get("min_shot_duration", 0.034)
+    valid_shots = [s for s in shots if s.get("duration", 0) >= min_shot_dur]
+    
     # Extract frames at shot midpoints
-    frame_times = [shot["start"] + shot["duration"] / 2 for shot in shots]
+    frame_times = [shot["start"] + shot["duration"] / 2 for shot in valid_shots]
     
     # Extract frames
     frames = extract_frames(video_path, frame_times, sample_rate=1.0)
     
     # Classify each frame
     classifications = []
-    for i, (shot, frame_path) in enumerate(zip(shots, frames)):
+    for i, (shot, frame_path) in enumerate(zip(valid_shots, frames)):
         if os.path.exists(frame_path):
             shot_type = classify_single_frame(frame_path)
             classifications.append({

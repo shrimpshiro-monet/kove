@@ -18,15 +18,17 @@ import subprocess
 import tempfile
 import time
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from llm_provider import call_vision_llm
 
 logger = logging.getLogger(__name__)
 
-def analyze_semantic_events(video_path: str, shots: list, name: str = "video") -> List[Dict]:
+def analyze_semantic_events(video_path: str, shots: list, name: str = "video", profile: Optional[dict] = None) -> List[Dict]:
     """Analyze semantic events for each shot. Returns per-shot semantic analysis."""
     print("  Analyzing semantic events with LLM...")
+    
+    # profile: available for future genre-conditioned thresholds
     frames = extract_key_frames(video_path, shots)
     
     if not frames:

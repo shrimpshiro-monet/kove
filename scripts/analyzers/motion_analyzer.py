@@ -9,7 +9,7 @@ import subprocess
 import re
 import json
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -260,83 +260,57 @@ def compute_motion_stats(motion_data: List[Dict]) -> Dict:
     }
 
 
-def classify_camera_motion(motion_data: List[Dict], shot_duration: float) -> str:
+def classify_camera_motion(motion_data: List[Dict], shot_duration: float, profile: Optional[dict] = None) -> str:
     """
     Classify dominant camera motion from motion vectors.
-    
-    Thresholds tuned for Farneback optical flow (0-1 normalized scale):
-    - Static: avg < 0.01 (nearly no pixel movement)
-    - Pan: avg 0.01-0.08 (moderate consistent motion)
-    - Tracking: avg 0.08-0.20 (significant consistent motion)
-    - Handheld: variance > 0.002 (inconsistent motion pattern)
-    
-    For frame_diff fallback, these thresholds will be less accurate
-    since frame_diff conflates lighting with motion.
     """
     if not motion_data or len(motion_data) < 3:
         return "static"
     
+    p = profile or {}
+    fc = p.get("motion", {})
+    
     magnitudes = [m["magnitude"] for m in motion_data]
     avg_mag = sum(magnitudes) / len(magnitudes)
     
-    # Compute variance for handheld detection
     variance = sum((m - avg_mag) ** 2 for m in magnitudes) / len(magnitudes)
     
-    # Check flow method for threshold adjustment
     flow_method = motion_data[0].get("flow_method", "unknown")
     
     if flow_method == "farneback":
-        # Farneback thresholds (calibrated against Curry reference)
-        # Curry avg_magnitude: ~0.35-0.45 range
-        
-        # Static: very little motion
-        if avg_mag < 0.01:
+        if avg_mag < fc.get("farneback_static", 0.01):
             return "static"
         
-        # Handheld: high variance in motion
-        if variance > 0.002:
+        if variance > fc.get("farneback_handheld_variance", 0.002):
             return "handheld"
         
-        # Tracking: significant, consistent motion
-        if avg_mag > 0.08:
+        if avg_mag > fc.get("farneback_tracking", 0.08):
             return "tracking"
         
-        # Pan: moderate motion
         return "pan"
     
     else:
-        # Frame_diff thresholds (legacy, less accurate)
-        # These were calibrated against inflated frame-diff values
-        
-        # Static: very little motion
-        if avg_mag < 0.05:
+        if avg_mag < fc.get("frame_diff_static", 0.05):
             return "static"
         
-        # Handheld: high variance
-        if variance > 0.01:
+        if variance > fc.get("frame_diff_handheld_variance", 0.01):
             return "handheld"
         
-        # Tracking: significant motion
-        if avg_mag > 0.2:
+        if avg_mag > fc.get("frame_diff_pan", 0.20):
             return "tracking"
         
-        # Pan: moderate motion
         return "pan"
 
 
-def classify_subject_motion(motion_data: List[Dict], shot_duration: float) -> str:
+def classify_subject_motion(motion_data: List[Dict], shot_duration: float, profile: Optional[dict] = None) -> str:
     """
     Classify subject motion from motion intensity patterns.
-    
-    Thresholds tuned for Farneback optical flow (0-1 normalized scale):
-    - Standing: avg < 0.02
-    - Walking: avg 0.02-0.08
-    - Running/Celebrating: avg > 0.08 or peak > 0.15
-    
-    For frame_diff fallback, thresholds are adjusted upward.
     """
     if not motion_data:
         return "standing"
+    
+    p = profile or {}
+    fc = p.get("motion", {})
     
     magnitudes = [m["magnitude"] for m in motion_data]
     avg_mag = sum(magnitudes) / len(magnitudes)
@@ -345,39 +319,27 @@ def classify_subject_motion(motion_data: List[Dict], shot_duration: float) -> st
     flow_method = motion_data[0].get("flow_method", "unknown")
     
     if flow_method == "farneback":
-        # Farneback thresholds
-        
-        # Very high motion (peak) = running/jumping
-        if peak_mag > 0.15:
+        if peak_mag > fc.get("farneback_running_peak", 0.15):
             return "running"
         
-        # High average motion = celebrating/gesturing
-        if avg_mag > 0.08:
+        if avg_mag > fc.get("farneback_walking", 0.08):
             return "celebrating"
         
-        # Moderate motion = walking/dribbling
-        if avg_mag > 0.02:
+        if avg_mag > fc.get("farneback_standing", 0.02):
             return "walking"
         
-        # Low motion = standing
         return "standing"
     
     else:
-        # Frame_diff thresholds (legacy)
-        
-        # Very high motion = running/jumping
-        if peak_mag > 0.5:
+        if peak_mag > fc.get("frame_diff_running_peak", 0.5):
             return "running"
         
-        # High motion = celebrating/gesturing
-        if avg_mag > 0.2:
+        if avg_mag > fc.get("frame_diff_walking", 0.2):
             return "celebrating"
         
-        # Moderate motion = walking/dribbling
-        if avg_mag > 0.1:
+        if avg_mag > fc.get("frame_diff_standing", 0.1):
             return "walking"
         
-        # Low motion = standing
         return "standing"
 
 
