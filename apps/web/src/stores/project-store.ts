@@ -1,4 +1,5 @@
 import type { ProjectEDL as MonetEDL, Clip, Track } from "@monet/edl";
+import { validateEDL } from "@monet/edl";
 import { create } from "zustand";
 import { produce } from "immer";
 import { convertShotEDLToProjectEDL } from "./shot-to-project-edl";
@@ -169,6 +170,9 @@ interface ProjectStoreState {
   markDirty: () => void;
   resetDirtyFlag: () => void;
 
+  // Advanced editor sync
+  syncFromAdvancedEditor: (edl: unknown) => ActionResult;
+
   // ProjectContext actions
   setAssets: (assets: Partial<ProjectAssets>) => void;
   setPrompt: (prompt: Partial<ProjectPrompt>) => void;
@@ -291,6 +295,23 @@ export const useProjectStore = create<ProjectStoreState>()((set, get) => ({
       const updated = { ...project, edl, modifiedAt: Date.now() };
       return { project: updated, timelineDirty: false, ...pushHistory(state, updated) };
     }),
+
+  syncFromAdvancedEditor: (edl: unknown) => {
+    try {
+      const validated = validateEDL(edl);
+      const project = get().project;
+      if (!project) {
+        return { success: false, error: { code: "NO_PROJECT", message: "No active project to sync into" } };
+      }
+      const updated = { ...project, edl: validated, modifiedAt: Date.now() };
+      set({ project: updated, timelineDirty: true, ...pushHistory(get(), updated) });
+      return { success: true, data: { trackCount: validated.timeline.tracks.length } };
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown validation error";
+      console.error("[syncFromAdvancedEditor] Failed:", message);
+      return { success: false, error: { code: "VALIDATION_FAILED", message, details: err } };
+    }
+  },
 
   markDirty: () => set({ timelineDirty: true }),
   resetDirtyFlag: () => set({ timelineDirty: false }),

@@ -1,12 +1,12 @@
 /**
  * AdvancedEditor — Studio Preview via OpenReel.
  *
- * One-way preview: Kove sends EDL to OpenReel iframe.
- * Manual edits inside OpenReel are not synced back to Kove yet.
+ * Bidirectional sync: Kove sends EDL to OpenReel iframe on load/update.
+ * Manual edits inside OpenReel are synced back via openreel:edl-updated messages.
  */
 
 import React, { useRef, useEffect, useState } from "react";
-import { useEDL } from "../../stores/project-store";
+import { useEDL, useProjectStore } from "../../stores/project-store";
 import { useRouterStore } from "../../stores/router-store";
 
 const OPENREEL_URL = import.meta.env.VITE_OPENREEL_URL || "http://localhost:5173";
@@ -26,9 +26,26 @@ export function AdvancedEditor() {
   }, [ready, edl]);
 
   useEffect(() => {
+    const syncFromAdvancedEditor = useProjectStore.getState().syncFromAdvancedEditor;
+
     function handleMessage(e: MessageEvent) {
-      if (e.data?.type === "openreel:ready") {
+      const { type } = e.data ?? {};
+      if (type === "openreel:ready") {
         setReady(true);
+        return;
+      }
+      if (type === "openreel:edl-updated") {
+        const edl = (e.data as { edl: unknown }).edl;
+        syncFromAdvancedEditor(edl);
+        return;
+      }
+      if (type === "openreel:project-loaded") {
+        console.log("[AdvancedEditor] OpenReel project loaded", e.data);
+        return;
+      }
+      if (type === "openreel:error") {
+        console.error("[AdvancedEditor] OpenReel error", e.data);
+        return;
       }
     }
     window.addEventListener("message", handleMessage);
