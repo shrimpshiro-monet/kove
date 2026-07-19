@@ -949,6 +949,87 @@ def render_in_docker(edl: dict, output_path: str, music_path: Optional[str] = No
         return render_native(edl, output_path, music_path)
 
 
+# ---------------------------------------------------------------------------
+# Color grading → FFmpeg filter helpers
+# ---------------------------------------------------------------------------
+
+_LUT_PRESETS = {
+    "cinematic": "eq=contrast=1.15:saturation=0.85:brightness=-0.05",
+    "vintage": "eq=contrast=0.9:saturation=0.7:brightness=0.05",
+    "warm": "eq=contrast=1.05:saturation=1.1:colorbalance=rs=0.1:gs=0.05:bs=-0.1",
+    "cool": "eq=contrast=1.05:saturation=1.0:colorbalance=rs=-0.1:gs=0:bs=0.15",
+    "noir": "eq=saturation=0:contrast=1.3:brightness=-0.05",
+    "vibrant": "eq=saturation=1.4:contrast=1.1:brightness=0.05",
+    "desaturated": "eq=saturation=0.4:contrast=1.1",
+}
+
+
+def _lut_preset_to_ffmpeg(preset: str, intensity: float) -> Optional[str]:
+    """Convert a LUT preset name to an FFmpeg eq filter string."""
+    base = _LUT_PRESETS.get(preset)
+    if not base:
+        return None
+    # Scale the effect by intensity (mix with identity)
+    if intensity >= 0.99:
+        return base
+    # Parse and scale each eq parameter
+    parts = []
+    for token in base.split(":"):
+        if "=" in token:
+            k, v = token.split("=", 1)
+            try:
+                fv = float(v)
+                # Mix toward identity (1.0 for contrast/saturation, 0.0 for brightness)
+                if k in ("saturation", "contrast"):
+                    mixed = fv * intensity + 1.0 * (1 - intensity)
+                elif k == "brightness":
+                    mixed = fv * intensity
+                else:
+                    mixed = fv * intensity
+                parts.append(f"{k}={mixed:.3f}")
+            except ValueError:
+                parts.append(token)
+        else:
+            parts.append(token)
+    return "eq=" + ":".join(parts) if parts else None
+
+
+def _curves_to_ffmpeg(params: dict, intensity: float) -> Optional[str]:
+    """Convert curves params (shadows/midtones/highlights) to FFmpeg curves filter."""
+    shadows = (params.get("shadows") or 0) * intensity
+    midtones = (params.get("midtones") or 0) * intensity
+    highlights = (params.get("highlights") or 0) * intensity
+
+    if abs(shadows) < 0.01 and abs(midtones) < 0.01 and abs(highlights) < 0.01:
+        return None
+
+    # Map to FFmpeg curves: master RGB curve
+    # Shadows control the low end (0-0.3), midtones the middle (0.3-0.7), highlights the top (0.7-1.0)
+    low = max(0.0, min(1.0, 0.0 + shadows * 0.3))
+    mid = max(0.0, min(1.0, 0.5 + midtones * 0.3))
+    high = max(0.0, min(1.0, 1.0 + highlights * 0.3))
+
+    return f"curves=master='0/0 0.3/{low:.2f} 0.5/{mid:.2f} 0.7/{high:.2f} 1/1'"
+
+
+def _wheels_to_ffmpeg(params: dict, intensity: float) -> Optional[str]:
+    """Convert color wheels (lift/gamma/gain) to FFmpeg eq + colorbalance filters."""
+    lift = (params.get("lift") or 0) * intensity
+    gamma = (params.get("gamma") or 0) * intensity
+    gain = (params.get("gain") or 0) * intensity
+
+    if abs(lift) < 0.01 and abs(gamma) < 0.01 and abs(gain) < 0.01:
+        return None
+
+    # Lift → brightness (shadows), Gamma → midtone contrast, Gain → brightness (highlights)
+    brightness = lift * 0.15  # subtle lift effect
+    contrast = 1.0 + gamma * 0.2  # gamma affects midtone contrast
+    saturation = 1.0 + gain * 0.3  # gain boosts saturation too
+
+    parts = [f"eq=brightness={brightness:.3f}:contrast={contrast:.3f}:saturation={saturation:.3f}"]
+    return ":".join(parts)
+
+
 def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
                   style_intensity: float = 0.5) -> bool:
     """Render using FFmpeg directly (fallback or Linux native)."""
@@ -1017,6 +1098,32 @@ def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
                 elif effect_type == "desaturation":
                     sat = max(0.1, 1.0 - (0.7 * si))  # 1.0 = no desat, 0.3 = heavy
                     vf_parts.append(f"eq=saturation={sat:.2f}")
+                elif effect_type == "color_lut":
+                    # LUT preset → FFmpeg eq curves
+                    preset = clip.get("effects", [{}])[0].get("params", {}).get("preset", "cinematic")
+                    lut_eq = _lut_preset_to_ffmpeg(preset, si)
+                    if lut_eq:
+                        vf_parts.append(lut_eq)
+                elif effect_type == "color_curves":
+                    # Curves → FFmpeg curves filter
+                    params = {}
+                    for e in clip.get("effects", []):
+                        if e.get("type") == "color_curves":
+                            params = e.get("params", {})
+                            break
+                    curves_str = _curves_to_ffmpeg(params, si)
+                    if curves_str:
+                        vf_parts.append(curves_str)
+                elif effect_type == "color_wheels":
+                    # Color wheels → FFmpeg eq filter
+                    params = {}
+                    for e in clip.get("effects", []):
+                        if e.get("type") == "color_wheels":
+                            params = e.get("params", {})
+                            break
+                    wheels_eq = _wheels_to_ffmpeg(params, si)
+                    if wheels_eq:
+                        vf_parts.append(wheels_eq)
             
             # Add grade based on shot type
             shot_type = clip.get("meta", {}).get("shotType", "medium")
