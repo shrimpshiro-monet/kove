@@ -34,14 +34,15 @@ def analyze_speed_direction(video_path: str, shots: list, profile: Optional[dict
             shot_results.append(_default_shot_speed())
             continue
 
-        result = _analyze_shot_direction(cap, start_frame, end_frame, shot)
+        result = _analyze_shot_direction(cap, start_frame, end_frame, shot, farneback_static, farneback_pan)
         shot_results.append(result)
 
     cap.release()
     return _aggregate_direction_results(shot_results)
 
 
-def _analyze_shot_direction(cap, start_frame: int, end_frame: int, shot: dict) -> Dict:
+def _analyze_shot_direction(cap, start_frame: int, end_frame: int, shot: dict,
+                            farneback_static: float = 0.03, farneback_pan: float = 0.08) -> Dict:
     """Analyze direction and speed of a single shot using optical flow."""
     cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     n_frames = end_frame - start_frame
@@ -109,14 +110,11 @@ def _analyze_shot_direction(cap, start_frame: int, end_frame: int, shot: dict) -
     if len(dirs) > 2:
         dir_mean = float(np.mean(dirs))
         dir_std = float(np.std(dirs))
-        # Consistent direction + high motion = intentional
-        if dir_std < 50 and avg_mag > 0.12:
-            # 135-225 deg = leftward dominant = likely reverse in sports edit
-            if 135 < dir_mean < 225:
-                is_reverse = True
-                reverse_confidence = min(1.0, (225 - abs(dir_mean - 180)) / 45)
-            else:
-                reverse_confidence = 0.0
+        # Consistent direction + high motion = intentional reverse playback
+        # Any highly directional flow can be reverse — depends on original footage
+        if dir_std < 50 and avg_mag > 0.3:
+            is_reverse = True
+            reverse_confidence = min(1.0, max(0.0, 1.0 - dir_std / 50))
         # Ramp: changing speed within shot
     ramp = bool(np.std(mags) > 0.20 * max(np.mean(mags), 0.01))
 

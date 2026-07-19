@@ -37,6 +37,9 @@ try:
 except Exception:
     _MEDIPIPE_AVAILABLE = False
 
+# Cached MediaPipe face detector (lazy init)
+_FACE_DETECTOR = None
+
 
 def classify_shot_type(video_path: str, shots: list, sample_rate: float = 2.0, profile: Optional[dict] = None) -> List[Dict]:
     """
@@ -237,13 +240,18 @@ def detect_faces_mediapipe(frame_path: str) -> float:
     Returns face_ratio = sum(face_bbox_areas) / total_frame_area.
     
     Uses model_selection=1 (full range, better for varied distances).
+    Caches the model at module level to avoid reloading per frame.
     """
-    import mediapipe as mp
     import cv2
+    global _FACE_DETECTOR
     
-    mp_face_detection = mp.solutions.face_detection
+    if _FACE_DETECTOR is None:
+        import mediapipe as mp
+        _FACE_DETECTOR = mp.solutions.face_detection.FaceDetection(
+            model_selection=1,
+            min_detection_confidence=0.5
+        )
     
-    # Read image
     img = cv2.imread(frame_path)
     if img is None:
         return 0.0
@@ -251,24 +259,16 @@ def detect_faces_mediapipe(frame_path: str) -> float:
     h, w = img.shape[:2]
     total_area = h * w
     
-    # Convert to RGB for MediaPipe
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
-    # Detect faces
-    with mp_face_detection.FaceDetection(
-        model_selection=1,  # 1 = full range (better for varied distances)
-        min_detection_confidence=0.5
-    ) as face_detection:
-        results = face_detection.process(img_rgb)
+    results = _FACE_DETECTOR.process(img_rgb)
     
     if not results.detections:
         return 0.0
     
-    # Calculate total face area
     total_face_area = 0
     for detection in results.detections:
         bbox = detection.location_data.relative_bounding_box
-        # bbox is relative (0-1), convert to pixels
         face_w = bbox.width * w
         face_h = bbox.height * h
         face_area = face_w * face_h

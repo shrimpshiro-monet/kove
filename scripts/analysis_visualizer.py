@@ -18,6 +18,7 @@ Layer names: motion, beats, events, effects, ocr, color, semantic, shot_info
 """
 
 import argparse
+import glob
 import json
 import os
 import subprocess
@@ -69,34 +70,52 @@ def load_analysis(path: str) -> dict:
         return json.load(f)
 
 
+def _parse_time_range(time_str: str) -> tuple[float, float]:
+    """Parse '0.0-0.5s' -> (0.0, 0.5)."""
+    parts = time_str.replace("s", "").split("-")
+    if len(parts) == 2:
+        return float(parts[0]), float(parts[1])
+    return 0.0, 0.0
+
+
 def build_timeline(analysis: dict, fps: float, duration: float) -> dict:
     """
     Build a unified frame-indexed timeline from all analyzer outputs.
-    Returns dict mapping frame_number -> list of active events at that frame.
+    Pipeline output schema: perShot array with embedded transition/color/effects.
     """
     total_frames = int(duration * fps)
     timeline: dict[int, list[dict]] = {i: [] for i in range(total_frames)}
+    per_shot = analysis.get("shots", [])
 
     # Shots
-    for i, shot in enumerate(analysis.get("shots", [])):
-        start_frame = int(shot.get("start", 0) * fps)
-        end_frame = int(shot.get("end", 0) * fps)
+    for i, shot in enumerate(per_shot):
+        start_t, end_t = _parse_time_range(shot.get("time", "0.0-0.0s"))
+        dur = shot.get("duration", end_t - start_t)
+        if dur <= 0:
+            dur = 0.1
+        start_frame = int(start_t * fps)
+        end_frame = int((start_t + dur) * fps)
         for f in range(start_frame, min(end_frame, total_frames)):
             timeline[f].append({
                 "type": "shot",
                 "shot_index": i,
                 "shot_type": shot.get("type", "medium"),
-                "camera_motion": shot.get("camera_motion", "static"),
                 "motion": shot.get("motion", 0),
                 "color": shot.get("color", {}),
+                "speed_direction": shot.get("speed_direction", {}),
             })
 
-    # Transitions
-    for t in analysis.get("edit_events", {}).get("transitions", []):
-        t_time = t.get("time", 0)
-        t_dur = t.get("duration", 0.1)
-        t_type = t.get("type", "cut")
-        t_conf = t.get("confidence", 0.8)
+    # Transitions embedded in perShot
+    for shot in per_shot:
+        trans = shot.get("transition")
+        if not trans:
+            continue
+        t_time = trans.get("time", 0)
+        if isinstance(t_time, str):
+            t_time = float(t_time.replace("s", ""))
+        t_type = trans.get("type", "cut")
+        t_conf = 0.8
+        t_dur = 0.1
         start_frame = int(max(0, (t_time - t_dur / 2)) * fps)
         end_frame = int(min(duration, (t_time + t_dur / 2)) * fps)
         for f in range(start_frame, min(end_frame, total_frames)):
@@ -106,42 +125,46 @@ def build_timeline(analysis: dict, fps: float, duration: float) -> dict:
                 "confidence": t_conf,
             })
 
-    # Events (flat timeline)
-    for ev in analysis.get("edit_events", {}).get("events", []):
-        ev_time = ev.get("time", 0)
-        ev_dur = ev.get("duration", 0.1)
-        ev_type = ev.get("type", "event")
-        ev_subtype = ev.get("subtype", "unknown")
-        start_frame = int(max(0, (ev_time - ev_dur / 2)) * fps)
-        end_frame = int(min(duration, (ev_time + ev_dur / 2)) * fps)
-        for f in range(start_frame, min(end_frame, total_frames)):
-            timeline[f].append({
-                "type": ev_type,
-                "subtype": ev_subtype,
-                "properties": ev.get("properties", {}),
-            })
-
-    # Beats
-    for beat in analysis.get("audio", {}).get("beats", []):
-        beat_time = beat.get("time", 0)
-        beat_frame = int(beat_time * fps)
-        if beat_frame < total_frames:
-            timeline[beat_frame].append({
-                "type": "beat",
-                "strength": beat.get("strength", 0.5),
-            })
-
-    # Effects
-    for effect in analysis.get("effects", []):
-        effect_time = effect.get("time", 0)
-        effect_type = effect.get("type", "")
-        effect_frame = int(effect_time * fps)
-        if effect_frame < total_frames:
-            timeline[effect_frame].append({
+    # Effects per shot
+    for shot in per_shot:
+        effs = shot.get("effects", [])
+        if not effs:
+            continue
+        start_t, _ = _parse_time_range(shot.get("time", "0.0-0.0s"))
+        eff_frame = int(start_t * fps)
+        for eff in effs:
+            timeline[eff_frame].append({
                 "type": "effect",
-                "subtype": effect_type,
-                "confidence": effect.get("confidence", 0.5),
+                "subtype": str(eff),
+                "confidence": 0.8,
             })
+
+    # Speed ramps from speed_direction per shot
+    for shot in per_shot:
+        sd = shot.get("speed_direction", {})
+        if sd.get("hasRamp"):
+            start_t, _ = _parse_time_range(shot.get("time", "0.0-0.0s"))
+            ramp_frame = int(start_t * fps)
+            if ramp_frame < total_frames:
+                timeline[ramp_frame].append({
+                    "type": "transition",
+                    "subtype": f"ramp_{sd.get('rampType', '?')}",
+                    "confidence": 0.8,
+                })
+
+    # Beats from standard.audio
+    audio_data = analysis.get("standard", {}).get("audio") or {}
+    bpm = audio_data.get("bpm", 0)
+    if bpm > 0:
+        beat_interval = 60.0 / bpm
+        for bi in range(int(duration / beat_interval) + 1):
+            beat_time = bi * beat_interval
+            beat_frame = int(beat_time * fps)
+            if beat_frame < total_frames:
+                timeline[beat_frame].append({
+                    "type": "beat",
+                    "strength": 0.5,
+                })
 
     return timeline
 
@@ -151,16 +174,23 @@ def build_timeline(analysis: dict, fps: float, duration: float) -> dict:
 # ---------------------------------------------------------------------------
 
 def render_shot_info(frame: np.ndarray, events: list[dict]) -> np.ndarray:
-    """Top-left corner: current shot type, camera motion."""
+    """Top-left corner: current shot type, motion, color grade, ramp/reverse."""
     shot = next((e for e in events if e["type"] == "shot"), None)
     if not shot:
         return frame
-    h, w = frame.shape[:2]
+    color = shot.get("color", {})
+    sd = shot.get("speed_direction", {})
     lines = [
         f"Shot: {shot.get('shot_type', '?')}",
-        f"Cam: {shot.get('camera_motion', '?')}",
         f"Motion: {shot.get('motion', 0):.2f}",
+        f"Grade: {color.get('grade', '?')} Temp: {color.get('temperature', '?')}",
     ]
+    if sd.get("hasRamp"):
+        rt = sd.get("rampType") or "?"
+        lines.append(f"RAMP: {rt}")
+    if sd.get("isReverse"):
+        rc = sd.get("reverseConfidence", 0)
+        lines.append(f"REVERSE (conf={rc:.0%})")
     y_offset = 20
     for line in lines:
         cv2.putText(frame, line, (10, y_offset),
@@ -246,74 +276,70 @@ def render_beats(frame: np.ndarray, events: list[dict], frame_idx: int,
 
 
 def render_color_swatch(frame: np.ndarray, events: list[dict]) -> np.ndarray:
-    """Corner color palette swatch + temperature label."""
+    """Corner color grade swatch + saturation + temperature."""
     shot = next((e for e in events if e["type"] == "shot"), None)
     if not shot:
         return frame
     color_data = shot.get("color", {})
-    palette = color_data.get("dominant_palette", [])
-    temp = color_data.get("color_temperature", "?")
+    grade = color_data.get("grade", "?")
+    temp = color_data.get("temperature", "?")
+    sat = color_data.get("saturation", 0)
+    bw = color_data.get("isBw", False)
 
     h, w = frame.shape[:2]
     swatch_x = w - 80
     swatch_y = 10
-    swatch_w = 70
-    swatch_h = 12
 
-    for i, color in enumerate(palette[:5]):
-        hex_color = color.get("hex", "#000000")
-        try:
-            r = int(hex_color[1:3], 16)
-            g = int(hex_color[3:5], 16)
-            b = int(hex_color[5:7], 16)
-        except (ValueError, IndexError):
-            r, g, b = 0, 0, 0
-        y = swatch_y + i * (swatch_h + 2)
-        cv2.rectangle(frame, (swatch_x, y),
-                      (swatch_x + swatch_w, y + swatch_h), (b, g, r), -1)
+    grade_colors = {
+        "vibrant": (0, 215, 255),
+        "dark": (50, 50, 50),
+        "bw": (200, 200, 200),
+        "muted": (150, 150, 100),
+        "normal": (100, 180, 200),
+    }
+    color_bgr = grade_colors.get(grade, (100, 100, 100))
+    cv2.rectangle(frame, (swatch_x, swatch_y),
+                  (swatch_x + 70, swatch_y + 20), color_bgr, -1)
+    cv2.putText(frame, grade.upper(), (swatch_x + 5, swatch_y + 15),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0) if not bw else (0, 0, 0), 1)
 
-    cv2.putText(frame, f"Temp: {temp}", (swatch_x, swatch_y + 80),
+    cv2.putText(frame, f"Temp: {temp}", (swatch_x, swatch_y + 35),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1)
+    cv2.putText(frame, f"Sat: {sat:.0f}", (swatch_x, swatch_y + 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 200), 1)
     return frame
 
 
 def render_semantic(frame: np.ndarray, events: list[dict],
                     semantic_data: Optional[list] = None) -> np.ndarray:
-    """Bottom-third semantic caption."""
+    """Bottom-third: speed direction + shot info."""
     shot = next((e for e in events if e["type"] == "shot"), None)
-    if not shot or not semantic_data:
+    if not shot:
         return frame
     shot_idx = shot.get("shot_index", 0)
-    if shot_idx < len(semantic_data):
-        sem = semantic_data[shot_idx]
-        desc = sem.get("description", "")
-        emotion = sem.get("emotion", "")
-        narrative = sem.get("narrative_role", "")
-        label = f"{desc} | {emotion} | {narrative}"
-        h, w = frame.shape[:2]
-        y = h - 80
-        cv2.putText(frame, label, (w // 2 - 200, y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_SEMANTIC, 1, cv2.LINE_AA)
+    h, w = frame.shape[:2]
+    lines = []
+    transition = next((e for e in events if e["type"] == "transition"), None)
+    if transition:
+        lines.append(f"Trans: {transition.get('subtype', '?')}")
+    if lines:
+        y = h - 40
+        for line in lines:
+            cv2.putText(frame, line, (10, y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_SEMANTIC, 1, cv2.LINE_AA)
+            y -= 20
     return frame
 
 
 def render_ocr(frame: np.ndarray, events: list[dict],
                ocr_data: Optional[list] = None) -> np.ndarray:
-    """OCR bounding boxes + recognized text."""
+    """OCR: shot text indicator."""
     shot = next((e for e in events if e["type"] == "shot"), None)
-    if not shot or not ocr_data:
+    if not shot:
         return frame
-    shot_idx = shot.get("shot_index", 0)
-    if shot_idx < len(ocr_data):
-        for text_item in ocr_data[shot_idx].get("texts", []):
-            bbox = text_item.get("bbox", [])
-            text = text_item.get("text", "")
-            if bbox and len(bbox) == 4:
-                x1, y1, x2, y2 = bbox
-                cv2.rectangle(frame, (int(x1), int(y1)),
-                              (int(x2), int(y2)), COLOR_TEXT, 2)
-                cv2.putText(frame, text, (int(x1), int(y1) - 5),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+    h, w = frame.shape[:2]
+    cv2.putText(frame, "[OCR]", (10, h - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1, cv2.LINE_AA)
     return frame
 
 
@@ -336,14 +362,13 @@ def render_analysis(video_path: str, analysis: dict, output_path: str,
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    writer = cv2.VideoWriter(output_path, fourcc, out_fps, (width, height))
-
     timeline = build_timeline(analysis, out_fps, duration)
-    semantic_data = analysis.get("semantic_events", [])
-    ocr_data = analysis.get("text_results", [])
+    semantic_data = analysis.get("standard", {}).get("shotTypes", {}).get("totalShots", 0)
+    ocr_data = analysis.get("standard", {}).get("text", {})
     motion_curve = None
 
+    # Render frames to temp directory as PNGs
+    tmpdir = tempfile.mkdtemp(prefix="qa_frames_")
     print(f"Rendering {total_frames} frames ({duration:.1f}s @ {out_fps}fps)...")
     frame_idx = 0
     while True:
@@ -368,7 +393,8 @@ def render_analysis(video_path: str, analysis: dict, output_path: str,
         if "ocr" in active_layers and ocr_data:
             frame = render_ocr(frame, events, ocr_data)
 
-        writer.write(frame)
+        frame_path = os.path.join(tmpdir, f"frame_{frame_idx:06d}.png")
+        cv2.imwrite(frame_path, frame)
         frame_idx += 1
 
         if frame_idx % 300 == 0:
@@ -376,20 +402,48 @@ def render_analysis(video_path: str, analysis: dict, output_path: str,
             print(f"  {pct:.0f}% ({frame_idx}/{total_frames})")
 
     cap.release()
-    writer.release()
 
-    # Mux audio
-    if not no_audio:
-        temp_out = output_path + ".tmp.mp4"
-        os.rename(output_path, temp_out)
-        cmd = [
-            "ffmpeg", "-y", "-i", temp_out, "-i", video_path,
-            "-c:v", "copy", "-c:a", "aac", "-map", "0:v:0", "-map", "1:a:0",
-            "-shortest", output_path,
+    # Encode frames to video via ffmpeg
+    pattern = os.path.join(tmpdir, "frame_%06d.png")
+    # Encode video
+    video_only = output_path + ".video.mp4"
+    ffmpeg_cmd = [
+        "ffmpeg", "-y",
+        "-framerate", str(out_fps),
+        "-i", pattern,
+        "-c:v", "h264_videotoolbox",
+        "-pix_fmt", "yuv420p",
+        "-b:v", "8M",
+        video_only,
+    ]
+    result = subprocess.run(ffmpeg_cmd, capture_output=True, timeout=600)
+    if result.returncode != 0:
+        err = result.stderr.decode() if result.stderr else "unknown"
+        print(f"ffmpeg encode error: {err[:500]}")
+
+    # Mux audio if available
+    if not no_audio and os.path.exists(video_only):
+        mux_cmd = [
+            "ffmpeg", "-y",
+            "-i", video_only,
+            "-i", video_path,
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-map", "0:v:0",
+            "-map", "1:a:0",
+            "-shortest",
+            output_path,
         ]
-        subprocess.run(cmd, capture_output=True, timeout=120)
-        os.remove(temp_out)
-        print(f"  Audio muxed via ffmpeg")
+        subprocess.run(mux_cmd, capture_output=True, timeout=120)
+        os.remove(video_only)
+        print("  Audio muxed")
+    elif os.path.exists(video_only):
+        os.rename(video_only, output_path)
+
+    # Cleanup frames
+    for f in glob.glob(os.path.join(tmpdir, "*.png")):
+        os.remove(f)
+    os.rmdir(tmpdir)
 
     print(f"  Output: {output_path}")
     return output_path

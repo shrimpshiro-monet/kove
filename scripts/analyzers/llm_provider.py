@@ -1,11 +1,14 @@
 """
 Unified LLM Provider with multi-vendor fallback chain.
 
-Priority: Cerebras → Groq → NVIDIA NIM → DigitalOcean
+Priority: Groq → NVIDIA NIM → Cerebras → DigitalOcean
 
 Two modes:
   - Vision: prompt + images (for frame analysis, reference classification)
   - Text:   prompt only (for DNA-to-text, semantic analysis)
+
+NOTE: Cerebras is low priority because its API does not support
+multimodal/vision requests (returns 403). Groq handles vision.
 
 Requires at least one of: CEREBRAS_API_KEY, GROQ_API_KEY,
 NVIDIA_NIM_API_KEY, DIGITALOCEAN_API_KEY env var.
@@ -89,21 +92,17 @@ def _strip_think(text: str) -> str:
 
 
 def _build_providers():
-    """Return [(name, base_url, api_key, text_model, vision_model), ...] in priority order."""
+    """Return [(name, base_url, api_key, text_model, vision_model), ...] in priority order.
+    
+    Groq first for both text and vision since Cerebras lacks multimodal support.
+    """
     return [
-        (
-            "Cerebras",
-            "https://api.cerebras.ai/v1",
-            os.environ.get("CEREBRAS_API_KEY"),
-            "llama-3.3-70b",
-            "llama-3.3-70b",  # Cerebras vision via same model
-        ),
         (
             "Groq",
             "https://api.groq.com/openai/v1",
             os.environ.get("GROQ_API_KEY"),
             "llama-3.3-70b-versatile",
-            "llama-3.3-70b-versatile",  # Groq vision via same model
+            "llama-3.2-90b-vision-preview",
         ),
         (
             "NVIDIA NIM",
@@ -111,6 +110,13 @@ def _build_providers():
             os.environ.get("NVIDIA_NIM_API_KEY"),
             os.environ.get("NVIDIA_NIM_MODEL", "moonshotai/kimi-k2.6"),
             "nvidia/llama-3.3-nemotron-super-49b-v1",
+        ),
+        (
+            "Cerebras",
+            "https://api.cerebras.ai/v1",
+            os.environ.get("CEREBRAS_API_KEY"),
+            "llama-3.3-70b",
+            "llama-3.3-70b",  # Cerebras vision via same model (text only, falls through)
         ),
         (
             "DigitalOcean",
@@ -294,42 +300,49 @@ def call_text_llm(prompt: str, max_tokens: int = 2048,
     """
     Call the best available text LLM with a text-only prompt.
 
-    Tries Cerebras → Groq → NVIDIA NIM → DigitalOcean.
-    Returns response text or None on failure.
+    Tries Groq → NVIDIA NIM → Cerebras → DigitalOcean.
+    Iterates providers on failure.
+    Returns response text or None if all fail.
     """
     _load_dev_vars()
-    cfg = _get_text_config()
-    if not cfg:
-        return None
-    client, model, provider, base_url, api_key = cfg
 
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
-    body = {
-        "model": model,
-        "messages": messages,
-        "temperature": 0.3,
-        "max_tokens": max_tokens,
-    }
+    for name, base_url, api_key, text_model, _ in _build_providers():
+        if not api_key:
+            continue
+        client = _make_client(base_url, api_key)
 
-    try:
-        t0 = time.time()
-        if client is not None:
-            response = client.chat.completions.create(**body)
-            content = response.choices[0].message.content or ""
-            content = _strip_think(content)
-        else:
-            content = _urllib_post(base_url, api_key, body) or ""
-        elapsed = time.time() - t0
-        print(f"  [llm] Text ({provider}): {len(content)} chars ({elapsed:.1f}s)")
-        return content or None
+        body = {
+            "model": text_model,
+            "messages": messages,
+            "temperature": 0.3,
+            "max_tokens": max_tokens,
+        }
 
-    except Exception as e:
-        logger.error(f"Text LLM error ({provider}): {e}")
-        return None
+        try:
+            t0 = time.time()
+            if client is not None:
+                response = client.chat.completions.create(**body)
+                content = response.choices[0].message.content or ""
+                content = _strip_think(content)
+            else:
+                content = _urllib_post(base_url, api_key, body) or ""
+            elapsed = time.time() - t0
+            if content:
+                print(f"  [llm] Text ({name}): {len(content)} chars ({elapsed:.1f}s)")
+                return content
+            print(f"  [llm] Text ({name}): empty response ({elapsed:.1f}s)")
+        except Exception as e:
+            logger.error(f"Text LLM error ({name}): {e}")
+            print(f"  [llm] Text ({name}): failed — {e}")
+            continue
+
+    print(f"  [llm] Text: all providers failed")
+    return None
 
 
 def call_vision_llm(
@@ -338,20 +351,15 @@ def call_vision_llm(
     """
     Call the best available vision LLM with prompt and images.
 
-    Tries Cerebras → Groq → NVIDIA NIM → DigitalOcean.
-    Returns response text or None on failure.
+    Tries Groq → NVIDIA NIM → Cerebras → DigitalOcean.
+    Iterates providers on failure (does not cache a broken provider).
+    Returns response text or None if all fail.
     """
     _load_dev_vars()
-    cfg = _get_vision_config()
-    if not cfg:
-        return None
-    client, model, provider, base_url, api_key = cfg
 
     paths = image_paths[:MAX_IMAGES]
     if len(image_paths) > MAX_IMAGES:
         logger.warning(f"Capping images from {len(image_paths)} to {MAX_IMAGES}")
-
-    print(f"  [llm] Vision: {provider} ({model}) with {len(paths)} images")
 
     image_content: list = [{"type": "text", "text": prompt}]
     if len(paths) == 1:
@@ -364,24 +372,36 @@ def call_vision_llm(
             "image_url": {"url": data_url},
         })
 
-    body = {
-        "model": model,
-        "messages": [{"role": "user", "content": image_content}],
-        "max_tokens": max_tokens,
-    }
+    for name, base_url, api_key, _, vision_model in _build_providers():
+        if not api_key:
+            continue
+        client = _make_client(base_url, api_key)
 
-    try:
-        t0 = time.time()
-        if client is not None:
-            response = client.chat.completions.create(**body)
-            text = response.choices[0].message.content or ""
-            text = _strip_think(text)
-        else:
-            text = _urllib_post(base_url, api_key, body) or ""
-        elapsed = time.time() - t0
-        print(f"  [llm] Vision ({provider}): {len(text)} chars ({elapsed:.1f}s)")
-        return text or None
+        print(f"  [llm] Vision trying: {name} ({vision_model}) with {len(paths)} images")
 
-    except Exception as e:
-        logger.error(f"Vision LLM error ({provider}): {e}")
-        return None
+        body = {
+            "model": vision_model,
+            "messages": [{"role": "user", "content": image_content}],
+            "max_tokens": max_tokens,
+        }
+
+        try:
+            t0 = time.time()
+            if client is not None:
+                response = client.chat.completions.create(**body)
+                text = response.choices[0].message.content or ""
+                text = _strip_think(text)
+            else:
+                text = _urllib_post(base_url, api_key, body) or ""
+            elapsed = time.time() - t0
+            if text:
+                print(f"  [llm] Vision ({name}): {len(text)} chars ({elapsed:.1f}s)")
+                return text
+            print(f"  [llm] Vision ({name}): empty response ({elapsed:.1f}s)")
+        except Exception as e:
+            logger.error(f"Vision LLM error ({name}): {e}")
+            print(f"  [llm] Vision ({name}): failed — {e}")
+            continue
+
+    print(f"  [llm] Vision: all providers failed")
+    return None

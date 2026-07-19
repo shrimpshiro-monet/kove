@@ -459,7 +459,7 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
     
     # ── Layer 2: styleIntensity scaling ──
     # Scales effect application probability and params (Layer 3 in render)
-    print(f"  Style intensity: {styleIntensity:.2f}")
+    print(f"  Style intensity: {style_intensity:.2f}")
     
     # Build allowlist-filtered effect pool from reference
     ref_visual_effects = ref_effects.get("visualEffects", {})
@@ -617,7 +617,7 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
             "sampleRate": 48000,
             "projectId": dna["name"],
             "renderMethod": "editly-full",
-            "styleIntensity": styleIntensity,
+            "styleIntensity": style_intensity,
             "referenceType": ref_type,
         },
         "assets": {

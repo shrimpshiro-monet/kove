@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@kove/ui": ["./src/index.ts"],
+      "@kove/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src"]
+}
