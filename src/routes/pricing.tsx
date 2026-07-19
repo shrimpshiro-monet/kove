@@ -12,36 +12,57 @@ const PLANS = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Get started with AI-powered video editing",
+    description: "Try the AI director, get hooked",
     features: [
       "5 edits per month",
-      "720p export resolution",
+      "720p export",
       "Chat UI only",
+      "1 reference video",
       "Basic AI effects",
-      "Community support",
+      "Watermarked exports",
     ],
     cta: "Get Started",
     highlighted: false,
     paddlePriceId: null,
   },
   {
-    id: "pro",
-    name: "Pro",
-    price: "$19",
+    id: "flux",
+    name: "Flux",
+    price: "$29",
     period: "/mo",
-    description: "Full power for professional editors",
+    description: "For creators who post regularly",
     features: [
-      "Unlimited edits",
-      "4K export resolution",
-      "Kove Advanced access",
-      "Priority rendering queue",
-      "Advanced AI effects",
-      "Reference style replication",
-      "Priority support",
+      "50 edits per month",
+      "1080p export",
+      "Kove Advanced (full NLE)",
+      "Reference style cloning",
+      "Unlimited reference videos",
+      "Conversational refinement",
+      "No watermark",
+      "Priority rendering",
     ],
     cta: "Start Free Trial",
     highlighted: true,
-    paddlePriceId: "pro_monthly_19", // Replace with actual Paddle price ID
+    paddlePriceId: "flux_monthly_29",
+  },
+  {
+    id: "nova",
+    name: "Nova",
+    price: "$49",
+    period: "/mo",
+    description: "For serious editors",
+    features: [
+      "150 edits per month",
+      "1080p export (higher bitrate)",
+      "Everything in Flux",
+      "Multi-reference blending",
+      "Batch editing",
+      "Custom AI training",
+      "Dedicated support",
+    ],
+    cta: "Start Free Trial",
+    highlighted: false,
+    paddlePriceId: "nova_monthly_49",
   },
 ];
 
@@ -135,7 +156,7 @@ function PricingPage() {
 
       {/* Plans */}
       <div className="max-w-4xl mx-auto px-6 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {PLANS.map((plan) => (
             <div
               key={plan.id}
@@ -160,7 +181,7 @@ function PricingPage() {
 
               <button
                 onClick={() => handleCheckout(plan.paddlePriceId)}
-                disabled={loading || (userTier === "pro" && plan.id === "free") || (userTier === "free" && plan.id === "free")}
+                disabled={loading || userTier === plan.id}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-sm transition-all ${
                   plan.highlighted
                     ? "bg-orange-500 hover:bg-orange-600 text-white"
@@ -173,9 +194,7 @@ function PricingPage() {
               >
                 {userTier === plan.id
                   ? "Current Plan"
-                  : userTier === "pro" && plan.id === "free"
-                    ? "Downgrade"
-                    : plan.cta}
+                  : plan.cta}
               </button>
 
               <ul className="mt-8 space-y-3">
@@ -222,8 +241,8 @@ function PricingPage() {
                 a: "Yes. Paddle is our Merchant of Record — they handle all taxes, compliance, and payment processing globally.",
               },
               {
-                q: "Is there a free trial for Pro?",
-                a: "Your first month on Pro is a full-featured trial. Cancel anytime before the period ends and you won't be charged.",
+                q: "Is there a free trial?",
+                a: "Your first month on any paid plan is a full-featured trial. Cancel anytime before the period ends and you won't be charged.",
               },
             ].map((faq) => (
               <div key={faq.q}>
@@ -231,6 +250,26 @@ function PricingPage() {
                 <p className="text-sm text-zinc-400">{faq.a}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Affiliate Program */}
+        <div className="mt-16 max-w-2xl mx-auto text-center">
+          <h2 className="text-2xl font-semibold mb-4">Affiliate Program</h2>
+          <p className="text-zinc-400 text-sm mb-6">
+            Earn by sharing Kove. Get paid for every subscriber you refer.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+            <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6">
+              <div className="text-2xl font-bold text-orange-400 mb-1">30%</div>
+              <div className="text-sm text-zinc-400">One-time commission</div>
+              <div className="text-xs text-zinc-500 mt-2">Per new subscriber you refer</div>
+            </div>
+            <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6">
+              <div className="text-2xl font-bold text-orange-400 mb-1">15%</div>
+              <div className="text-sm text-zinc-400">Monthly recurring</div>
+              <div className="text-xs text-zinc-500 mt-2">Ongoing while they stay subscribed</div>
+            </div>
           </div>
         </div>
       </div>
