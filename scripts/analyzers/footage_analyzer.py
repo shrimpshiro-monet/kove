@@ -98,7 +98,8 @@ def analyze_footage(video_path: str, music_path: str = None) -> Dict:
         
         if os.path.exists(audio_tmp) and os.path.getsize(audio_tmp) > 1000:
             beat_result = detect_beats(audio_tmp)
-            beats = beat_result.get("beats", [])
+            raw_beats = beat_result.get("beats", [])
+            beats = [b["time"] if isinstance(b, dict) else b for b in raw_beats]
             print(f"    Music: {beat_result.get('tempo_bpm', 0):.0f} BPM, {len(beats)} beats")
         os.remove(audio_tmp)
     elif info.get("has_audio"):
