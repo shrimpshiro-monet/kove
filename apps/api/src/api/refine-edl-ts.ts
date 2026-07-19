@@ -319,17 +319,49 @@ function applyActionsToEdl(edl: ProjectEDL, actions: DirectorAction[]): ProjectE
         break;
       }
 
-      // Actions that don't directly mutate EDL clips
+      case "track/create": {
+        const params = action.params as Record<string, unknown>;
+        const trackType = (params.type as string) || "video";
+        const newTrack: typeof result.timeline.tracks[0] = {
+          id: (params.trackId as string) || `track-${crypto.randomUUID().slice(0, 8)}`,
+          type: trackType as "video" | "audio" | "text" | "fx" | "mask",
+          order: result.timeline.tracks.length,
+          locked: false,
+          hidden: false,
+          clips: [],
+        };
+        result.timeline.tracks.push(newTrack);
+        break;
+      }
+
+      case "track/remove": {
+        const params = action.params as Record<string, unknown>;
+        const trackId = params.trackId as string;
+        if (trackId) {
+          result.timeline.tracks = result.timeline.tracks.filter((t) => t.id !== trackId);
+        }
+        break;
+      }
+
+      case "marker.add": {
+        const params = action.params as Record<string, unknown>;
+        if (!result.timeline.markers) result.timeline.markers = [];
+        result.timeline.markers.push({
+          id: `marker-${crypto.randomUUID().slice(0, 8)}`,
+          time: (params.time as number) || 0,
+          label: (params.label as string) || "marker",
+          type: "custom",
+        });
+        break;
+      }
+
+      // Structural actions — no-op for refinement
       case "timeline.build":
       case "timeline.clear":
-      case "track/create":
-      case "track/remove":
-      case "marker.add":
       case "audio.beat-sync":
       case "audio.ducking":
       case "stabilize":
       case "reframe":
-        // These are structural; handled at a higher level or no-op for refinement
         break;
     }
   }
@@ -389,6 +421,15 @@ export async function refineEdlTypeScript(
   prompt: string,
   scopeClipIds?: string[],
 ): Promise<RefineResult> {
+  // GAP-005: Re-validate scope against current EDL clip IDs
+  // Filter out any stale IDs that no longer exist in the EDL
+  if (scopeClipIds?.length) {
+    const currentClipIds = new Set(
+      currentEdl.timeline.tracks.flatMap((t) => t.clips.map((c) => c.id)),
+    );
+    scopeClipIds = scopeClipIds.filter((id) => currentClipIds.has(id));
+  }
+
   // Convert EDL to a compact representation for the LLM
   const edlSummary = summarizeEdl(currentEdl, scopeClipIds);
 
