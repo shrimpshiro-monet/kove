@@ -247,16 +247,11 @@ def run_test(test_conf, index, total):
     # Step 3: Generate EDL from footage
     print("\n  --- EDL GENERATION ---")
     t0 = time.time()
-    edl = generate_edl_from_dna(dna, test_conf["footage_path"], test_conf["music_path"])
+    edl = generate_edl_from_dna(dna, test_conf["footage_path"], test_conf["music_path"],
+                                style_intensity=0.5)
     edl["_dna"] = dna
     edl["_grammarRules"] = dna.get("grammarRules", {})
     edl_elapsed = time.time() - t0
-
-    # Strip effects from EDL to avoid CRT/color artifacts
-    for track in edl.get("timeline", {}).get("tracks", []):
-        for clip in track.get("clips", []):
-            clip["effects"] = []
-            clip["visualEffects"] = []
 
     edl_file = test_dir / f"{output_name}-edl.json"
     with open(edl_file, "w") as f:

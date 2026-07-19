@@ -376,17 +376,23 @@ def build_grammar_rules(dna: dict) -> dict:
     
     return rules
 
-def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str] = None) -> dict:
+def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str] = None,
+                          style_intensity: float = 0.5) -> dict:
     """
     Generate MonetEDL by applying reference grammar to footage content.
-    
+
     Algorithm:
     1. Calculate target clip count from reference's avgShotDuration
     2. Rank footage segments by motion + semantics + beat proximity
     3. Select top N segments matching reference's shotType distribution
     4. Order by narrative arc (establishing → building → climax → resolution)
     5. Snap cuts to music beats
-    6. Apply reference effects, color grade, speed
+    6. Apply reference effects, color grade, speed (scaled by style_intensity)
+
+    Args:
+        style_intensity: 0.0–1.0, scales how aggressively reference effects are
+                         applied to the user's footage. 0 = no effects, 1 = full
+                         reference copy. Default 0.5 keeps edits tasteful.
     """
     footage_info = get_video_info(footage_path)
     footage_duration = footage_info["duration"]
@@ -471,10 +477,11 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
         importance = seg.get("semantic_importance", 5)
         
         # Build clip-level effects (blur EXCLUDED — blur is a transition, not a clip effect)
+        # style_intensity scales probability; cap at 2 concurrent effects per clip
         effects = []
         non_blur_effects = [e for e in weighted_effect_types if e != "blur"]
         if non_blur_effects and effects_per_clip >= 0.3:
-            apply_prob = min(0.35, effects_per_clip / 3)
+            apply_prob = min(0.35, effects_per_clip / 3) * style_intensity
             if random.random() < apply_prob:
                 chosen_type = random.choice(non_blur_effects)
                 effects.append({
@@ -482,8 +489,18 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
                     "type": chosen_type,
                     "start": 0,
                     "duration": duration,
-                    "params": {},
+                    "params": {"intensity": style_intensity},
                 })
+                # Second effect only at half the probability, capped at 2 total
+                if len(effects) < 2 and random.random() < apply_prob * 0.5:
+                    second_type = random.choice([e for e in non_blur_effects if e != chosen_type] or non_blur_effects)
+                    effects.append({
+                        "id": f"effect-{i}-{second_type}",
+                        "type": second_type,
+                        "start": 0,
+                        "duration": duration,
+                        "params": {"intensity": style_intensity},
+                    })
         
         # Transition: use reference's transition distribution
         clip_transition = None
@@ -837,26 +854,27 @@ def apply_subject_crops(edl, output_path, crops_path=None, crops_meta_path=None)
     return crops
 
 
-def render_with_editly(edl: dict, output_path: str, music_path: Optional[str] = None) -> bool:
+def render_with_editly(edl: dict, output_path: str, music_path: Optional[str] = None,
+                       style_intensity: float = 0.5) -> bool:
     """
     Render EDL to video.
     - macOS: Docker container render (full effects + color grade + xfade)
     - Fallback: FFmpeg concat (no color grade, no transitions)
     """
     import platform
-    
+
     system = platform.system()
-    
+
     if system == "Darwin":
         print("Rendering with editly-full...")
         success = render_in_docker(edl, output_path, music_path)
         if success:
             return True
         print("  Docker render failed, falling back to FFmpeg concat")
-    
+
     edl["meta"]["renderMethod"] = "ffmpeg-concat-fallback"
     print("Rendering with ffmpeg-concat-fallback...")
-    return render_native(edl, output_path, music_path)
+    return render_native(edl, output_path, music_path, style_intensity=style_intensity)
 
 
 def render_in_docker(edl: dict, output_path: str, music_path: Optional[str] = None) -> bool:
@@ -931,7 +949,8 @@ def render_in_docker(edl: dict, output_path: str, music_path: Optional[str] = No
         return render_native(edl, output_path, music_path)
 
 
-def render_native(edl: dict, output_path: str, music_path: Optional[str] = None) -> bool:
+def render_native(edl: dict, output_path: str, music_path: Optional[str] = None,
+                  style_intensity: float = 0.5) -> bool:
     """Render using FFmpeg directly (fallback or Linux native)."""
     print("Rendering with FFmpeg...")
     
@@ -974,22 +993,30 @@ def render_native(edl: dict, output_path: str, music_path: Optional[str] = None)
             else:
                 vf_parts = ["scale=576:576:force_original_aspect_ratio=decrease,pad=576:576:(ow-iw)/2:(oh-ih)/2"]
             
-            # Add effects (deduplicate, cap at 1 per clip)
-            unique_effects = list(dict.fromkeys([e.get("type", "") for e in clip.get("effects", []) if e.get("type", "") != "cut"]))[:1]
-            
+            # Add effects — scaled by style_intensity, capped at 2 per clip
+            unique_effects = list(dict.fromkeys(
+                [e.get("type", "") for e in clip.get("effects", [])
+                 if e.get("type", "") != "cut"]
+            ))[:2]
+
             for effect_type in unique_effects:
+                si = style_intensity  # shorthand
                 if effect_type == "blur":
-                    vf_parts.append("boxblur=8:8")
+                    radius = max(1, int(8 * si))
+                    vf_parts.append(f"boxblur={radius}:{radius}")
                 elif effect_type == "vignette":
-                    vf_parts.append("vignette=PI/4")
+                    angle = max(0.1, 0.7854 * si)  # PI/4 scaled
+                    vf_parts.append(f"vignette={angle}")
                 elif effect_type == "flash":
-                    vf_parts.append("eq=brightness=0.3")
+                    vf_parts.append(f"eq=brightness={0.3 * si}")
                 elif effect_type == "shake":
-                    vf_parts.append("crop=w=in_w-10:h=in_h-10:x=5:y=5")
+                    offset = max(1, int(10 * si))
+                    vf_parts.append(f"crop=w=in_w-{offset*2}:h=in_h-{offset*2}:x={offset}:y={offset}")
                 elif effect_type == "glow":
-                    vf_parts.append("unsharp=5:5:1.5")
+                    vf_parts.append(f"unsharp=5:5:{1.5 * si}")
                 elif effect_type == "desaturation":
-                    vf_parts.append("eq=saturation=0.3")
+                    sat = max(0.1, 1.0 - (0.7 * si))  # 1.0 = no desat, 0.3 = heavy
+                    vf_parts.append(f"eq=saturation={sat:.2f}")
             
             # Add grade based on shot type
             shot_type = clip.get("meta", {}).get("shotType", "medium")
@@ -1071,6 +1098,7 @@ def run_pipeline(
     output_name: Optional[str] = None,
     references: List[Dict] = None,
     blend_strategy: str = "weighted_avg",
+    style_intensity: float = 0.5,
 ) -> dict:
     """
     Run the complete Monet pipeline.
@@ -1130,7 +1158,7 @@ def run_pipeline(
     
     # Step 2: Generate EDL (analyzes footage + applies reference grammar)
     print("\n[STEP 2/4] Generating EDL from footage...")
-    edl = generate_edl_from_dna(dna, footage_path, music_path)
+    edl = generate_edl_from_dna(dna, footage_path, music_path, style_intensity=style_intensity)
     edl["_dna"] = dna
     edl["_grammarRules"] = dna["grammarRules"]
     
@@ -1148,7 +1176,7 @@ def run_pipeline(
     # Step 4: Render
     print("\n[STEP 4/4] Rendering video...")
     render_path = OUTPUT_DIR / f"{output_name}-render.mp4"
-    render_with_editly(edl, str(render_path), music_path)
+    render_with_editly(edl, str(render_path), music_path, style_intensity=style_intensity)
     
     # Summary
     print("\n" + "="*60)
@@ -1182,6 +1210,8 @@ if __name__ == "__main__":
     parser.add_argument("--blend-strategy", "-b", default="weighted_avg",
                        choices=["weighted_avg", "dominant_wins", "union"],
                        help="Blending strategy for multi-reference")
+    parser.add_argument("--style-intensity", "-s", type=float, default=0.5,
+                       help="Style strength 0.0-1.0 (0=no effects, 1=full reference copy)")
     
     args = parser.parse_args()
     
@@ -1230,4 +1260,5 @@ if __name__ == "__main__":
         music_path=args.music,
         output_name=args.output,
         blend_strategy=args.blend_strategy,
+        style_intensity=args.style_intensity,
     )
