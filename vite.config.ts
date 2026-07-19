@@ -123,6 +123,9 @@ export default defineConfig({
       "process.env.MEDIA_SIDECAR_URL": JSON.stringify(
         loadDevVars().MEDIA_SIDECAR_URL || ""
       ),
+      "process.env.CLERK_PUBLISHABLE_KEY": JSON.stringify(
+        loadDevVars().CLERK_PUBLISHABLE_KEY || ""
+      ),
     },
   },
 });
