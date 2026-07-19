@@ -224,8 +224,6 @@ def separate_stems(audio_path: str) -> AudioStems:
     stems = AudioStems(raw_path=audio_path, extracted_wav=audio_path)
     try:
         import torch  # noqa: F401 — verify torch is available
-        from demucs import separate
-        from demucs.pretrained import get_model
 
         out_dir = tempfile.mkdtemp(prefix="stems-")
         # Demucs CLI: demucs --two-stems=vocals -o out_dir audio.wav
@@ -351,5 +349,5 @@ def analyze_vo_cadence(audio_path: str) -> dict:
 
 
 def _fallback_vad() -> dict:
-    """Fallback VAD using RMS energy threshold."""
+    """Fallback VAD returning silence (no voiceover detected)."""
     return {"speech_ratio": 0.0, "silence_pct": 1.0, "avg_speech_segment_duration": 0.0}
