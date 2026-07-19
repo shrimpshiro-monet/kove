@@ -1,7 +1,10 @@
 # monet/router/api.py
+import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Literal
+
+logger = logging.getLogger(__name__)
 from monet.engines.freecut.executor.types import Action, ProjectSettings
 from monet.engines.freecut.executor.asset_resolver import AssetResolver, AssetEntry
 from .dispatch import run_via_router
@@ -40,15 +43,18 @@ async def route_and_render(req: RouteRequest):
                                        req.settings, timeline, req.outputPath)
             return result.model_dump()
         except Exception as e:
-            raise HTTPException(500, str(e))
+            logger.exception("Force engine route failed")
+            raise HTTPException(500, "An internal error occurred")
     try:
         result = await run_via_router(req.actions, resolver, req.settings,
                                       req.outputPath, multi_pass=req.multiPass)
         return result.model_dump()
     except ValueError as e:
-        raise HTTPException(400, detail=str(e))
+        logger.exception("Router ValueError")
+        raise HTTPException(400, detail="Invalid request body")
     except RuntimeError as e:
-        raise HTTPException(500, detail=str(e))
+        logger.exception("Router RuntimeError")
+        raise HTTPException(500, detail="An internal error occurred")
 
 
 @router.post("/plan/inspect")

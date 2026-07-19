@@ -52,7 +52,7 @@ export async function registerVibeRenderRoute(app: FastifyInstance): Promise<voi
       return res.status(400).send({ error: "edl and footagePath are required" });
     } catch (error: any) {
       req.log.error({ error }, "Vibe render route failed");
-      return res.status(500).send({ error: error.message });
+      return res.status(500).send({ error: "An error occurred while rendering video. Please try again." });
     }
   });
 

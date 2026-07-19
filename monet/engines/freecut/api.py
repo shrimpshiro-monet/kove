@@ -1,7 +1,10 @@
 # monet/engines/freecut/api.py
+import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Literal
+
+logger = logging.getLogger(__name__)
 
 from .executor.types import Action, ProjectSettings
 from .executor.asset_resolver import AssetResolver, AssetEntry
@@ -39,6 +42,8 @@ async def render_endpoint(req: RenderRequest):
         )
         return result.model_dump()
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.exception("Freecut ValueError")
+        raise HTTPException(status_code=400, detail="Invalid request body")
     except RuntimeError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Freecut RuntimeError")
+        raise HTTPException(status_code=500, detail="An internal error occurred")

@@ -10,6 +10,7 @@ Wraps all forked tools into a single HTTP API:
   - RIFE: Frame interpolation (slow-mo)
 """
 
+import logging
 import os
 import sys
 import json
@@ -18,6 +19,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
+
+logger = logging.getLogger(__name__)
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -131,7 +134,8 @@ async def analyze_audio(req: AudioAnalysisRequest):
             "tempo_classification": "fast" if tempo > 130 else "medium" if tempo > 90 else "slow",
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Audio analysis failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 # ── Scene Detection (PySceneDetect) ─────────────────────────────────
@@ -166,7 +170,8 @@ async def detect_scenes(req: SceneDetectionRequest):
             "cut_rate": len(scenes) / max(video.duration.get_seconds(), 1),
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Scene detection failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 # ── Face Detection (face_recognition) ───────────────────────────────
@@ -216,7 +221,8 @@ async def detect_faces(req: FaceDetectionRequest):
             "faces_per_frame": faces_per_frame,
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Face detection failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 # ── Color Transfer (color-matcher) ──────────────────────────────────
@@ -287,7 +293,8 @@ async def transfer_color(req: ColorTransferRequest):
             "method": req.method,
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Color transfer failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 # ── Slow Motion (RIFE) ──────────────────────────────────────────────
@@ -320,7 +327,8 @@ async def slow_motion(req: SlowMotionRequest):
             "factor": req.factor,
         })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Slow motion interpolation failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 # ── Helpers ─────────────────────────────────────────────────────────

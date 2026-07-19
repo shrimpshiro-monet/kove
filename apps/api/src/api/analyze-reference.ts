@@ -87,7 +87,7 @@ export async function registerAnalyzeReferenceRoute(app: FastifyInstance): Promi
       });
     } catch (err: unknown) {
       req.log.error({ err }, "analyze-reference failed");
-      return res.status(500).send({ error: err instanceof Error ? err.message : String(err) });
+      return res.status(500).send({ error: "An error occurred while analyzing reference. Please try again." });
     }
   });
 

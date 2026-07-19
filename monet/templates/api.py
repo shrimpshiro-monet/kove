@@ -1,6 +1,9 @@
 # monet/templates/api.py
+import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 from monet.vibe.session import get_session
 from .library import list_templates, apply_template
 
@@ -25,4 +28,5 @@ async def apply(req: ApplyReq):
         s.status = "planned"
         return {"actionCount": len(s.actions)}
     except ValueError as e:
-        raise HTTPException(400, detail=str(e))
+        logger.exception("Template apply failed")
+        raise HTTPException(400, detail="Invalid template parameters")

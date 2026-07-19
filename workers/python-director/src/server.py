@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+
+logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -62,7 +65,8 @@ def generate_edl(request: GenerateRequest) -> dict:
         )
         return edl
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("EDL generation failed")
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @app.get("/api/progress/{job_id}")

@@ -109,9 +109,8 @@ export async function registerVibeRefineRoute(app: FastifyInstance): Promise<voi
 
       return res.send({ jobId, status: "queued" });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
       req.log.error({ err }, "vibe-refine failed");
-      return res.status(500).send({ error: message });
+      return res.status(500).send({ error: "An error occurred while refining EDL. Please try again." });
     }
   });
 

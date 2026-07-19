@@ -1186,7 +1186,7 @@ export default {
       } catch (error) {
         console.error("API error:", error);
         trackException(error, { tags: { path: pathname, method: request.method } });
-        return apiError("INTERNAL_ERROR", error instanceof Error ? error.message : "Internal server error", 500);
+        return apiError("INTERNAL_ERROR", "An internal error occurred. Please try again.", 500);
       }
     }
 

@@ -96,7 +96,7 @@ export async function registerVibeGenerateRoute(app: FastifyInstance): Promise<v
       });
     } catch (err: any) {
       req.log.error({ err }, "vibe-generate failed");
-      return res.status(500).send({ error: err.message });
+      return res.status(500).send({ error: "An error occurred while generating EDL. Please try again." });
     }
   });
 
