@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/landing")({
@@ -123,7 +123,6 @@ function useTypingPlaceholder() {
 export function LandingPage() {
   const heroWord = useRotatingWord();
   const typedPlaceholder = useTypingPlaceholder();
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -142,10 +141,10 @@ export function LandingPage() {
   }, []);
 
   const handleSubmit = useCallback(() => {
-    const q = query.trim() || typedPlaceholder;
-    if (!q) return;
-    navigate({ to: "/simple-editor" });
-  }, [query, typedPlaceholder, navigate]);
+    const email = query.trim();
+    if (!email) return;
+    window.location.href = "/sign-up";
+  }, [query]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden font-sans">
@@ -168,7 +167,10 @@ export function LandingPage() {
           ))}
         </nav>
 
-        <button className="bg-white text-[#0a0a0a] border-none px-6 py-2.5 rounded-full text-[12px] font-medium cursor-pointer transition-colors duration-300 hover:bg-[#e8e8e8]">
+        <button
+          onClick={() => { window.location.href = "/sign-up"; }}
+          className="bg-white text-[#0a0a0a] border-none px-6 py-2.5 rounded-full text-[12px] font-medium cursor-pointer transition-colors duration-300 hover:bg-[#e8e8e8]"
+        >
           Get Early Access
         </button>
       </header>
@@ -491,7 +493,7 @@ export function LandingPage() {
             <div className="relative" style={{ height: "clamp(400px, 50vw, 640px)" }}>
               <iframe
                 ref={iframeRef}
-                src="http://localhost:5173"
+                src={import.meta.env.VITE_OPENREEL_EDITOR_URL || "http://localhost:5173"}
                 className="absolute inset-0 w-full h-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; webgpu"
                 loading="lazy"
@@ -526,7 +528,10 @@ export function LandingPage() {
               kove is in public beta. Early users get lifetime access at founding
               rates.
             </p>
-            <button className="relative inline-flex items-center gap-2.5 bg-white text-[#0a0a0a] border-none px-9 py-4 rounded-full text-[14px] font-medium cursor-pointer transition-colors hover:bg-[#e8e8e8]">
+            <button
+              onClick={() => { window.location.href = "/sign-up"; }}
+              className="relative inline-flex items-center gap-2.5 bg-white text-[#0a0a0a] border-none px-9 py-4 rounded-full text-[14px] font-medium cursor-pointer transition-colors hover:bg-[#e8e8e8]"
+            >
               Join the Beta
               <svg
                 className="w-4 h-4"
