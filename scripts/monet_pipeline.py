@@ -346,7 +346,7 @@ def build_grammar_rules(dna: dict) -> dict:
         },
         "rhythm": {
             "tempo": dna["audioAnalysis"]["tempo_bpm"] if dna["audioAnalysis"] else 0,
-            "isBeatDriven": dna.get("rhythm", {}).get("cuts_on_beat", 0) > 60,
+            "isBeatDriven": (dna.get("rhythm") or {}).get("cuts_on_beat", 0) > 60,
         },
         "color": {
             "grade": dna["colorProfile"]["grade"],
@@ -399,11 +399,11 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
     
     # Reference grammar rules
     ref_avg_dur = dna.get("avgShotDuration", 1.5)
-    ref_shot_dist = dna.get("shotTypes", {}).get("distribution", {})
-    ref_effects = dna.get("effects", {})
-    ref_grade = dna.get("colorProfile", {}).get("grade", "normal")
-    ref_speed = dna.get("speed", {}).get("avgSpeed", 1.0)
-    ref_beats = dna.get("audioAnalysis", {}).get("beats", [])
+    ref_shot_dist = (dna.get("shotTypes") or {}).get("distribution", {})
+    ref_effects = dna.get("effects") or {}
+    ref_grade = (dna.get("colorProfile") or {}).get("grade", "normal")
+    ref_speed = (dna.get("speed") or {}).get("avgSpeed", 1.0)
+    ref_beats = (dna.get("audioAnalysis") or {}).get("beats", [])
     ref_rhythm = dna.get("rhythm", {})
     cuts_on_beat = ref_rhythm.get("cuts_on_beat", 0)
     
@@ -504,7 +504,7 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
         
         # Transition: use reference's transition distribution
         clip_transition = None
-        ref_transitions = dna.get("effects", {}).get("transitions", {})
+        ref_transitions = (dna.get("effects") or {}).get("transitions", {})
         if ref_transitions:
             trans_types = list(ref_transitions.keys())
             trans_weights = list(ref_transitions.values())
@@ -537,7 +537,7 @@ def generate_edl_from_dna(dna: dict, footage_path: str, music_path: Optional[str
             speed = 2.0    # very fast for lowest-value clips
         
         # Only inflate speed if reference is genuinely fast-paced with ramps
-        if ref_speed > 1.5 and dna.get("speed", {}).get("hasRamps", False):
+        if ref_speed > 1.5 and (dna.get("speed") or {}).get("hasRamps", False):
             if importance < 4:
                 speed = max(speed, min(ref_speed, 1.75))
         
