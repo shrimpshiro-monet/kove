@@ -36,7 +36,8 @@ def detect_beats(audio_path: str, profile: Optional[dict] = None) -> Dict:
     """
     print("  Detecting beats...")
     
-    _ = profile  # available for downstream use if needed
+    _p = profile or {}
+    beat_tolerance = _p.get("beat", {}).get("beat_cut_tolerance", 0.1)
     
     # Try librosa first (real beat tracking)
     try:
