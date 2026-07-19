@@ -18,7 +18,7 @@ def analyze_speed_direction(video_path: str, shots: list, profile: Optional[dict
     print("  Analyzing speed direction...")
     
     _p = profile or {}
-    farneback_static = _p.get("motion", {}).get("farneback_static", 0.01)
+    farneback_static = _p.get("motion", {}).get("farneback_static", 0.03)
     farneback_pan = _p.get("motion", {}).get("farneback_pan", 0.08)
 
     cap = cv2.VideoCapture(video_path)

@@ -12,7 +12,7 @@ generic:
     balanced: 4.0
     slow_burn: 999.0
   motion:
-    farneback_static: 0.01
+    farneback_static: 0.03
     farneback_pan: 0.08
     farneback_tracking: 0.20
     farneback_handheld_variance: 0.002
