@@ -85,6 +85,11 @@ def analyze_edit_events(
     """
     print("  Analyzing edit events (transitions + speed ramps + keyframes)...")
 
+    _p = profile or {}
+    cut_threshold = _p.get("cut_detection", {}).get("threshold", 0.15)
+    min_shot_duration = _p.get("cut_detection", {}).get("min_shot_duration", 0.034)
+    farneback_tracking = _p.get("motion", {}).get("farneback_tracking", 0.08)
+
     if shared_frame_cache:
         cache_dir, frame_map, cache_fps = shared_frame_cache
         print(f"    Using shared cache: {len(frame_map)} frames at {cache_fps}fps")

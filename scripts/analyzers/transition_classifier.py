@@ -16,7 +16,9 @@ def classify_transitions(video_path: str, shots: list, profile: Optional[dict] =
     """
     print("  Classifying transitions...")
     
-    _ = profile  # available for future threshold customization
+    _p = profile or {}
+    cut_threshold = _p.get("cut_detection", {}).get("threshold", 0.15)
+    bw_saturation = _p.get("color", {}).get("bw_saturation", 15)
 
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30

@@ -28,7 +28,7 @@ def analyze_semantic_events(video_path: str, shots: list, name: str = "video", p
     """Analyze semantic events for each shot. Returns per-shot semantic analysis."""
     print("  Analyzing semantic events with LLM...")
     
-    _ = profile  # available for future threshold customization
+    # profile: available for future genre-conditioned thresholds
     frames = extract_key_frames(video_path, shots)
     
     if not frames:

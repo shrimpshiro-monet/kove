@@ -17,7 +17,9 @@ def analyze_speed_direction(video_path: str, shots: list, profile: Optional[dict
     """
     print("  Analyzing speed direction...")
     
-    _ = profile  # available for future threshold customization
+    _p = profile or {}
+    farneback_static = _p.get("motion", {}).get("farneback_static", 0.01)
+    farneback_pan = _p.get("motion", {}).get("farneback_pan", 0.08)
 
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
@@ -82,10 +84,10 @@ def _analyze_shot_direction(cap, start_frame: int, end_frame: int, shot: dict) -
     avg_mag = float(np.mean(mags))
 
     # Speed classification
-    if avg_mag < 0.03:
+    if avg_mag < farneback_static:
         spd = 0
         spd_type = "static"
-    elif avg_mag < 0.08:
+    elif avg_mag < farneback_pan:
         spd = 0.5
         spd_type = "slow"
     elif avg_mag < 0.18:

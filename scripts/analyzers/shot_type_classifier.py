@@ -45,7 +45,7 @@ def classify_shot_type(video_path: str, shots: list, sample_rate: float = 2.0, p
     """
     print("  Classifying shot types...")
     
-    _ = profile  # available for future threshold customization
+    # profile: available for future genre-conditioned thresholds
     
     # Extract frames at shot midpoints
     frame_times = [shot["start"] + shot["duration"] / 2 for shot in shots]

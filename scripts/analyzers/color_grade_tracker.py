@@ -14,7 +14,9 @@ def track_color_grades(video_path: str, shots: list, profile: Optional[dict] = N
     """
     print("  Tracking color grades per shot...")
     
-    _ = profile  # available for future threshold customization
+    _p = profile or {}
+    bw_saturation = _p.get("color", {}).get("bw_saturation", 15)
+    desaturated_saturation = _p.get("color", {}).get("desaturated_saturation", 35)
 
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
@@ -46,14 +48,14 @@ def _analyze_shot_grade(frame: np.ndarray) -> Dict:
     low_sat_pct = float(np.sum(hsv[:, :, 1] < 25) / hsv[:, :, 1].size * 100)
 
     # B&W detection
-    is_bw = sat_mean < 20 or low_sat_pct > 60
+    is_bw = sat_mean < bw_saturation or low_sat_pct > 60
 
     # Grade classification
     if is_bw and val_mean < 30:
         grade = "dark_bw"
     elif is_bw:
         grade = "bw"
-    elif sat_mean < 35:
+    elif sat_mean < desaturated_saturation:
         grade = "desaturated"
     elif sat_mean < 60:
         grade = "muted"
