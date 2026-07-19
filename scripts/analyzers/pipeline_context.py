@@ -351,3 +351,101 @@ def analyze_vo_cadence(audio_path: str) -> dict:
 def _fallback_vad() -> dict:
     """Fallback VAD returning silence (no voiceover detected)."""
     return {"speech_ratio": 0.0, "silence_pct": 1.0, "avg_speech_segment_duration": 0.0}
+
+
+# ---------------------------------------------------------------------------
+# Orchestration
+# ---------------------------------------------------------------------------
+
+def classify_genre(video_path: str, name: str = "video") -> tuple[str, float]:
+    """Run reference_type_classifier and return (genre, confidence)."""
+    try:
+        from .reference_type_classifier import classify_reference_type
+        result = classify_reference_type(video_path, name)
+        return result.get("type", "unknown"), result.get("confidence", 0.0)
+    except Exception as e:
+        print(f"  [pipeline] Genre classification failed: {e}")
+        return "unknown", 0.0
+
+
+def analyze_composition(video: NormalizedVideo, shots: list) -> dict:
+    """Analyze video composition (stub — full implementation in Task 6)."""
+    return {}
+
+
+def run_pipeline(video_path: str, name: str = "reference") -> dict:
+    """
+    Run the complete analysis pipeline.
+
+    1. Normalize video
+    2. Classify genre
+    3. Load genre profile
+    4. Run all standard analyzers via editorial_style_export
+    5. Expand audio
+    6. Run composition analysis
+    7. Return unified result
+    """
+    print(f"╔══ Pipeline: {name} ═══╗")
+    print(f"  Input: {video_path}")
+
+    # Step 1: Normalize
+    normalized = normalize_video(video_path)
+    print(f"  Normalized: {normalized.width}x{normalized.height}"
+          f" @ {normalized.fps}fps"
+          f" {'[HDR→SDR]' if normalized.is_hdr else ''}")
+
+    # Step 2: Genre
+    genre, confidence = classify_genre(normalized.normalized_path, name)
+    normalized.genre = genre
+    normalized.genre_confidence = confidence
+    normalized.profile = get_profile(genre)
+    print(f"  Genre: {genre} (conf={confidence:.2f})")
+
+    # Step 3: Run editorial style export
+    from .editorial_style_export import export_editorial_style
+    style = export_editorial_style(normalized.normalized_path, name, verbose=False, profile=normalized.profile)
+
+    # Step 4: Audio expansion
+    audio_result = {"stems": None, "loudness": None, "vad": None}
+    if normalized.has_audio:
+        wav = extract_raw_audio(normalized.normalized_path)
+        if wav:
+            stems = separate_stems(wav)
+            audio_result["stems"] = {
+                "has_music": stems.music_path is not None,
+                "has_vocals": stems.vocals_path is not None,
+                "has_sfx": stems.sfx_path is not None,
+            }
+            audio_result["loudness"] = analyze_loudness(wav)
+            audio_result["vad"] = analyze_vo_cadence(wav)
+
+    # Step 5: Composition analysis
+    composition = analyze_composition(normalized, style.get("shots", []))
+
+    # Step 6: Cleanup temp normalized file
+    if normalized.normalized_path != normalized.original_path:
+        try:
+            os.remove(normalized.normalized_path)
+        except OSError:
+            pass
+
+    result = {
+        "name": name,
+        "genre": genre,
+        "genre_confidence": confidence,
+        "profile": normalized.profile,
+        "video": {
+            "path": video_path,
+            "duration": normalized.duration,
+            "resolution": f"{normalized.original_width}x{normalized.original_height}",
+            "fps": normalized.fps,
+            "is_hdr": normalized.is_hdr,
+            "aspect_ratio": round(normalized.aspect_ratio, 4),
+        },
+        "audio": audio_result,
+        "composition": composition,
+        **style,
+    }
+
+    print("╚══ Pipeline complete ═══╝")
+    return result
