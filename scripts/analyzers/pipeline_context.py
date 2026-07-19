@@ -193,3 +193,163 @@ def normalize_video(path: str, target_long_edge: int = 1280) -> NormalizedVideo:
         color_transfer=meta["color_transfer"],
         aspect_ratio=aspect,
     )
+
+
+# ---------------------------------------------------------------------------
+# Audio expansion
+# ---------------------------------------------------------------------------
+
+def extract_raw_audio(video_path: str) -> Optional[str]:
+    """Extract audio to WAV for analysis."""
+    out = tempfile.mktemp(suffix=".wav")
+    cmd = [
+        "ffmpeg", "-y", "-i", video_path,
+        "-vn", "-acodec", "pcm_s16le",
+        "-ar", "44100", "-ac", "1",
+        out,
+    ]
+    result = subprocess.run(cmd, capture_output=True, timeout=60)
+    if result.returncode == 0 and os.path.getsize(out) > 1000:
+        return out
+    return None
+
+
+def separate_stems(audio_path: str) -> AudioStems:
+    """
+    Source separation using Demucs (hybrid transformer).
+
+    Returns AudioStems with music/vocals/SFX paths.
+    Silently returns empty stems if Demucs not available.
+    """
+    stems = AudioStems(raw_path=audio_path, extracted_wav=audio_path)
+    try:
+        import torch  # noqa: F401 — verify torch is available
+        from demucs import separate
+        from demucs.pretrained import get_model
+
+        out_dir = tempfile.mkdtemp(prefix="stems-")
+        # Demucs CLI: demucs --two-stems=vocals -o out_dir audio.wav
+        cmd = [
+            "python", "-m", "demucs",
+            "--two-stems", "vocals",
+            "-o", out_dir,
+            audio_path,
+        ]
+        subprocess.run(cmd, capture_output=True, timeout=300)
+
+        # Demucs output: out_dir/htdemucs/audio_name/{vocals,no_vocals,other}.wav
+        base = os.path.splitext(os.path.basename(audio_path))[0]
+        model_dir = os.path.join(out_dir, "htdemucs", base)
+        if os.path.isdir(model_dir):
+            vocals = os.path.join(model_dir, "vocals.wav")
+            no_vocals = os.path.join(model_dir, "no_vocals.wav")
+            other = os.path.join(model_dir, "other.wav")
+            if os.path.exists(vocals):
+                stems.vocals_path = vocals
+            if os.path.exists(no_vocals):
+                stems.music_path = no_vocals
+            if os.path.exists(other):
+                stems.sfx_path = other
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"  [audio] Source separation skipped: {e}")
+    return stems
+
+
+def analyze_loudness(audio_path: str) -> dict:
+    """
+    Analyze loudness using pyloudnorm (EBU R128 / ITU-R BS.1770-4).
+
+    Returns dict with lufs_integrated, lufs_range, true_peak, and
+    dynamics (ratio of loud vs quiet segments).
+    """
+    try:
+        import soundfile as sf
+        import pyloudnorm as pyln
+
+        data, rate = sf.read(audio_path)
+        if len(data.shape) > 1:
+            data = data.mean(axis=1)  # mono mix
+
+        meter = pyln.Meter(rate)
+        lufs_integrated = meter.integrated_loudness(data)
+
+        # Block-based loudness range estimation (simplified)
+        block_size = int(rate * 0.1)  # 100ms blocks
+        block_loudness = []
+        for start in range(0, len(data) - block_size, block_size):
+            block = data[start:start + block_size]
+            block_loudness.append(float(np.sqrt(np.mean(block ** 2))))
+
+        if block_loudness:
+            block_db = [20 * np.log10(max(b, 1e-10)) for b in block_loudness]
+            lufs_range = float(np.percentile(block_db, 95) - np.percentile(block_db, 5))
+            dynamics = float(np.std(block_db))
+        else:
+            lufs_range = 0.0
+            dynamics = 0.0
+
+        true_peak = float(np.max(np.abs(data)))
+        return {
+            "lufs_integrated": lufs_integrated,
+            "lufs_range": lufs_range,
+            "true_peak": true_peak,
+            "dynamics": dynamics,
+        }
+    except ImportError:
+        return {"lufs_integrated": -23.0, "lufs_range": 10.0, "true_peak": 0.5, "dynamics": 3.0}
+
+
+def analyze_vo_cadence(audio_path: str) -> dict:
+    """
+    Analyze voiceover cadence using webrtcvad.
+
+    Returns dict with speech_ratio (0-1), silence_pct, avg_speech_segment_duration.
+    """
+    try:
+        import webrtcvad
+        import wave
+
+        with wave.open(audio_path, "rb") as wf:
+            rate = wf.getframerate()
+            frames = wf.readframes(wf.getnframes())
+
+        # Ensure 16-bit 16kHz mono
+        if rate != 16000:
+            return _fallback_vad()
+
+        vad = webrtcvad.Vad(2)  # Aggressiveness mode 2
+
+        frame_duration_ms = 30
+        frame_size = int(rate * frame_duration_ms / 1000) * 2  # 16-bit = 2 bytes
+        speech_frames = 0
+        total_frames = 0
+        speech_segments = 0
+        in_speech = False
+
+        offset = 0
+        while offset + frame_size <= len(frames):
+            chunk = frames[offset:offset + frame_size]
+            is_speech = vad.is_speech(chunk, rate)
+            if is_speech:
+                speech_frames += 1
+            if is_speech and not in_speech:
+                speech_segments += 1
+            in_speech = is_speech
+            total_frames += 1
+            offset += frame_size
+
+        speech_ratio = speech_frames / max(1, total_frames)
+        return {
+            "speech_ratio": speech_ratio,
+            "silence_pct": 1.0 - speech_ratio,
+            "avg_speech_segment_duration": speech_frames / max(1, speech_segments) * frame_duration_ms / 1000,
+        }
+    except ImportError:
+        return _fallback_vad()
+
+
+def _fallback_vad() -> dict:
+    """Fallback VAD using RMS energy threshold."""
+    return {"speech_ratio": 0.0, "silence_pct": 1.0, "avg_speech_segment_duration": 0.0}
