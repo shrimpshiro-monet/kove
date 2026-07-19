@@ -18,6 +18,7 @@ from workers.subject_track_mask import (
 )
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
+from workers.reference_analyzer import analyze_reference
 
 app = FastAPI(title="Monet Python AI Worker", version="0.2.0")
 
@@ -218,6 +219,16 @@ def track_mask_route(body: TrackMaskBody) -> dict:
             reid_threshold=body.reidThreshold,
         )
     )
+    return {"success": True, "data": result}
+
+
+class AnalyzeReferenceBody(BaseModel):
+    filePath: str = Field(min_length=1)
+
+
+@app.post("/analyze-reference")
+def analyze_reference_route(body: AnalyzeReferenceBody) -> dict:
+    result = analyze_reference(body.filePath)
     return {"success": True, "data": result}
 
 
