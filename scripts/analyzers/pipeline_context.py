@@ -369,8 +369,9 @@ def classify_genre(video_path: str, name: str = "video") -> tuple[str, float]:
 
 
 def analyze_composition(video: NormalizedVideo, shots: list) -> dict:
-    """Analyze video composition (stub — full implementation in Task 6)."""
-    return {}
+    """Analyze video composition via composition_analyzer."""
+    from .composition_analyzer import analyze_composition as _analyze_composition
+    return _analyze_composition(video, shots)
 
 
 def run_pipeline(video_path: str, name: str = "reference") -> dict:
