@@ -47,13 +47,25 @@ function mapTransform(monetTransform: any): Transform {
 
 function mapKeyframes(monetKeyframes: any[], property: string): Keyframe[] {
   if (!monetKeyframes?.length) return [];
-  return monetKeyframes.map((kf: any) => ({
-    id: `kf-${property}-${kf.time}-${Math.random().toString(36).slice(2, 8)}`,
-    time: kf.time,
-    property,
-    value: kf.value ?? kf.x ?? 0,
-    easing: (EASING_MAP[kf.easing] ?? "linear") as any,
-  }));
+  return monetKeyframes.map((kf: any) => {
+    // Extract the correct value based on property name
+    let value: number;
+    if (property === "position.x") value = kf.x ?? 0;
+    else if (property === "position.y") value = kf.y ?? 0;
+    else if (property === "crop.x") value = kf.x ?? kf.cropX ?? 0;
+    else if (property === "crop.y") value = kf.y ?? kf.cropY ?? 0;
+    else if (property === "crop.width") value = kf.width ?? kf.cropW ?? 1;
+    else if (property === "crop.height") value = kf.height ?? kf.cropH ?? 1;
+    else value = kf.value ?? 0;
+
+    return {
+      id: `kf-${property}-${kf.time}-${Math.random().toString(36).slice(2, 8)}`,
+      time: kf.time,
+      property,
+      value,
+      easing: (EASING_MAP[kf.easing] ?? "linear") as any,
+    };
+  });
 }
 
 function mapEffect(monetEffect: any): OpenReelEffect {
@@ -72,9 +84,44 @@ function mapEffect(monetEffect: any): OpenReelEffect {
 function mapClip(monetClip: any, trackId: string): OpenReelClip {
   const keyframes: Keyframe[] = [
     ...mapKeyframes(monetClip.transforms?.position, "position.x"),
+    ...mapKeyframes(monetClip.transforms?.position, "position.y"),
     ...mapKeyframes(monetClip.transforms?.scale, "scale.x"),
+    ...mapKeyframes(monetClip.transforms?.scale, "scale.y"),
     ...mapKeyframes(monetClip.transforms?.rotation, "rotation"),
+    ...mapKeyframes(monetClip.transforms?.crop, "crop.x"),
+    ...mapKeyframes(monetClip.transforms?.crop, "crop.y"),
+    ...mapKeyframes(monetClip.transforms?.crop, "crop.width"),
+    ...mapKeyframes(monetClip.transforms?.crop, "crop.height"),
   ];
+
+  // Map audio effects (fadeIn, fadeOut, pan) to OpenReel audioEffects
+  const audio = monetClip.audio ?? {};
+  const audioEffects: OpenReelEffect[] = [];
+  if (audio.fadeIn != null || audio.fadeOut != null) {
+    audioEffects.push({
+      id: `audio-fade-${monetClip.id}`,
+      type: "audio-fade",
+      params: {
+        fadeIn: audio.fadeIn ?? 0,
+        fadeOut: audio.fadeOut ?? 0,
+        startTime: 0,
+        duration: monetClip.duration,
+      },
+      enabled: true,
+    });
+  }
+  if (audio.pan != null) {
+    audioEffects.push({
+      id: `audio-pan-${monetClip.id}`,
+      type: "audio-pan",
+      params: {
+        pan: audio.pan,
+        startTime: 0,
+        duration: monetClip.duration,
+      },
+      enabled: true,
+    });
+  }
 
   return {
     id: monetClip.id,
@@ -85,9 +132,9 @@ function mapClip(monetClip: any, trackId: string): OpenReelClip {
     inPoint: monetClip.inPoint,
     outPoint: monetClip.outPoint,
     effects: (monetClip.effects ?? []).map(mapEffect),
-    audioEffects: [],
+    audioEffects,
     transform: mapTransform(monetClip.transforms),
-    volume: monetClip.audio?.gain ?? 1,
+    volume: audio.gain ?? 1,
     keyframes,
     speed: monetClip.speed ?? 1,
     meta: monetClip.meta,

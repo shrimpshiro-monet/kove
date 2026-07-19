@@ -78,10 +78,11 @@ interface TransformAccumulator {
   position: Array<{ time: number; x: number; y: number; easing?: Easing }>;
   scale: Array<{ time: number; value: number; easing?: Easing }>;
   rotation: Array<{ time: number; value: number; easing?: Easing }>;
+  crop: Array<{ time: number; x: number; y: number; width: number; height: number; easing?: Easing }>;
 }
 
 function createTransformAccumulator(): TransformAccumulator {
-  return { position: [], scale: [], rotation: [] };
+  return { position: [], scale: [], rotation: [], crop: [] };
 }
 
 function mergeKeyframeIntoTransform(
@@ -120,6 +121,42 @@ function mergeKeyframeIntoTransform(
       acc.rotation.push({ time: kf.time, value: kf.value, easing });
       break;
     }
+    case "crop.x": {
+      let existing = acc.crop.find((c) => Math.abs(c.time - kf.time) < 0.001);
+      if (!existing) {
+        existing = { time: kf.time, x: 0, y: 0, width: 1, height: 1, easing };
+        acc.crop.push(existing);
+      }
+      existing.x = kf.value;
+      break;
+    }
+    case "crop.y": {
+      let existing = acc.crop.find((c) => Math.abs(c.time - kf.time) < 0.001);
+      if (!existing) {
+        existing = { time: kf.time, x: 0, y: 0, width: 1, height: 1, easing };
+        acc.crop.push(existing);
+      }
+      existing.y = kf.value;
+      break;
+    }
+    case "crop.width": {
+      let existing = acc.crop.find((c) => Math.abs(c.time - kf.time) < 0.001);
+      if (!existing) {
+        existing = { time: kf.time, x: 0, y: 0, width: 1, height: 1, easing };
+        acc.crop.push(existing);
+      }
+      existing.width = kf.value;
+      break;
+    }
+    case "crop.height": {
+      let existing = acc.crop.find((c) => Math.abs(c.time - kf.time) < 0.001);
+      if (!existing) {
+        existing = { time: kf.time, x: 0, y: 0, width: 1, height: 1, easing };
+        acc.crop.push(existing);
+      }
+      existing.height = kf.value;
+      break;
+    }
     default: {
       debugLog(logs, kf.property, `clip:${clipId}`, `Unmapped keyframe property — preserved in meta`);
       break;
@@ -130,7 +167,7 @@ function mergeKeyframeIntoTransform(
 function buildTransformsFromAccumulator(
   acc: TransformAccumulator,
   baseTransform: OpenReelTransform,
-): { position: Array<{ time: number; x: number; y: number; easing?: Easing }>; scale: Array<{ time: number; value: number; easing?: Easing }>; rotation: Array<{ time: number; value: number; easing?: Easing }> } {
+): { position: Array<{ time: number; x: number; y: number; easing?: Easing }>; scale: Array<{ time: number; value: number; easing?: Easing }>; rotation: Array<{ time: number; value: number; easing?: Easing }>; crop: Array<{ time: number; x: number; y: number; width: number; height: number; easing?: Easing }> } {
   // Start with the base transform at time 0
   const position = acc.position.length > 0
     ? ensureBasePosition(acc.position, baseTransform)
@@ -144,7 +181,11 @@ function buildTransformsFromAccumulator(
     ? ensureBaseRotation(acc.rotation, baseTransform)
     : [{ time: 0, value: baseTransform.rotation }];
 
-  return { position, scale, rotation };
+  const crop = acc.crop.length > 0
+    ? acc.crop
+    : [{ time: 0, x: 0, y: 0, width: 1, height: 1 }];
+
+  return { position, scale, rotation, crop };
 }
 
 function ensureBasePosition(
@@ -291,9 +332,13 @@ export function openReelProjectToMonetEDL(
           position: mergedTransforms.position,
           scale: mergedTransforms.scale,
           rotation: mergedTransforms.rotation,
+          crop: mergedTransforms.crop,
         },
         audio: {
           gain: orClip.volume,
+          fadeIn: orClip.audioEffects?.find((e) => e.type === "audio-fade")?.params?.fadeIn,
+          fadeOut: orClip.audioEffects?.find((e) => e.type === "audio-fade")?.params?.fadeOut,
+          pan: orClip.audioEffects?.find((e) => e.type === "audio-pan")?.params?.pan,
         },
         effects,
         meta: orClip.meta,
