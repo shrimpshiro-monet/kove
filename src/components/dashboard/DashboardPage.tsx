@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/react";
 import { useNavigate } from "@tanstack/react-router";
-import { ThemeProvider, useTheme } from "./ThemeProvider";
+import { ThemeProvider } from "./ThemeProvider";
 import { DashboardLayout } from "./DashboardLayout";
 import { GreetingHero } from "./GreetingHero";
 import { ActionInput } from "./ActionInput";
@@ -46,15 +46,9 @@ function fireEasterEgg(username: string) {
 }
 
 function DashboardInner() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const easterEggFired = useRef(false);
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      // No redirect — show generic UI for unauthenticated users
-    }
-  }, [isSignedIn, isLoaded]);
 
   useEffect(() => {
     if (isSignedIn && !easterEggFired.current) {
@@ -86,12 +80,12 @@ function DashboardInner() {
         />
         <ActionInput
           onSubmit={(q) => {
-            window.location.href = `/simple-editor?q=${encodeURIComponent(q)}`;
+            navigate({ to: "/simple-editor", search: { q } });
           }}
         />
         <QuickActions
           onAction={(q) => {
-            window.location.href = `/simple-editor?q=${encodeURIComponent(q)}`;
+            navigate({ to: "/simple-editor", search: { q } });
           }}
         />
       </div>
