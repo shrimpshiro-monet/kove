@@ -10,7 +10,7 @@ interface ActionInputProps {
 export function ActionInput({ onSubmit, placeholder = "Describe the vibe…" }: ActionInputProps) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
-  const { active } = useTheme();
+  useTheme();
 
   const handleSubmit = useCallback(() => {
     if (query.trim()) {
