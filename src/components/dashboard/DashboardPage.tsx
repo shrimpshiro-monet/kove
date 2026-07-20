@@ -9,10 +9,12 @@ import { GreetingHero } from "./GreetingHero";
 import { ActionInput } from "./ActionInput";
 import { QuickActions } from "./QuickActions";
 import type { NavItem } from "./Sidebar";
+import { AffiliatePage } from "../affiliate/AffiliatePage";
 
 const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Overview" },
   { id: "projects", label: "Projects" },
+  { id: "affiliate", label: "Affiliate" },
 ];
 
 const COMMIT_HASH = import.meta.env.VITE_COMMIT_HASH || "dev";
@@ -70,7 +72,7 @@ function DashboardInner() {
   const easterEggFired = useRef(false);
   const { state, addProject } = useDashboardStore();
   const projects = state.projects;
-  const [page, setPage] = useState<"overview" | "projects">("overview");
+  const [page, setPage] = useState<"overview" | "projects" | "affiliate">("overview");
 
   const displayName = user?.firstName ?? user?.username ?? undefined;
 
@@ -78,6 +80,7 @@ function DashboardInner() {
   const { page: pageParam } = useSearch({ from: "/dashboard" });
   useEffect(() => {
     if (pageParam === "projects") setPage("projects");
+    else if (pageParam === "affiliate") setPage("affiliate");
   }, [pageParam]);
 
   useEffect(() => {
@@ -91,6 +94,9 @@ function DashboardInner() {
     if (p === "projects") {
       setPage("projects");
       navigate({ to: "/dashboard", search: { page: "projects" } });
+    } else if (p === "affiliate") {
+      setPage("affiliate");
+      navigate({ to: "/dashboard", search: { page: "affiliate" } });
     } else {
       setPage("overview");
       navigate({ to: "/dashboard" });
@@ -194,11 +200,13 @@ function DashboardInner() {
             </svg>
           </div>
         </div>
-      ) : (
+      ) : page === "projects" ? (
         <ProjectsPage
           projects={projects}
           onAdd={addProject}
         />
+      ) : (
+        <AffiliatePage />
       )}
     </DashboardLayout>
   );
