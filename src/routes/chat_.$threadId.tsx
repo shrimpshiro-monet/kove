@@ -1012,31 +1012,37 @@ function ChatPage() {
   };
 
   return (
-    <div className="grid h-screen grid-cols-[260px_1fr] bg-background text-foreground">
-      {/* Sidebar */}
-      <aside className="flex flex-col border-r border-border bg-sidebar">
-        <Link to="/" className="flex items-center gap-2 px-5 py-5 border-b border-sidebar-border">
-          <div className="h-2 w-2 rounded-full bg-primary" />
-          <span className="text-xs font-medium tracking-[0.3em] uppercase">monet</span>
+    <div className="flex h-screen bg-[#fafafa] text-black overflow-hidden font-sans">
+      {/* ── Sidebar ── */}
+      <aside className="w-[220px] h-full bg-white border-r border-black/[0.06] flex flex-col shrink-0">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2 px-4 py-4 border-b border-black/[0.06]">
+          <div className="w-7 h-7 rounded-lg bg-[#FF4E00] flex items-center justify-center text-white text-xs font-bold">k</div>
+          <span className="text-[13px] font-semibold tracking-tight">kove</span>
+          <span className="ml-auto text-[10px] text-black/30 font-mono">v0.1</span>
         </Link>
+
+        {/* New thread */}
         <div className="px-3 py-3">
-          <Button
+          <button
             onClick={handleNew}
-            className="w-full justify-start gap-2 bg-secondary text-foreground hover:bg-secondary/70"
-            size="sm"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FF4E00] text-white text-[12px] font-medium hover:bg-[#e64500] transition-colors"
           >
-            <Plus className="h-4 w-4" /> New conversation
-          </Button>
+            <Plus className="h-3.5 w-3.5" /> New edit
+          </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 pb-3">
+
+        {/* Thread list */}
+        <div className="px-2 flex-1 overflow-y-auto">
+          <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-black/30">Edits</div>
           {threads.map((t: ChatThread) => (
             <div
               key={t.id}
               className={cn(
-                "group flex items-center gap-1 rounded-md px-2 py-2 text-sm cursor-pointer",
+                "group flex items-center gap-2 px-2 py-2 rounded-lg text-[12px] cursor-pointer mb-0.5 transition-colors",
                 t.id === threadId
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/50",
+                  ? "bg-[#FF4E00]/8 text-[#FF4E00] font-medium"
+                  : "text-black/50 hover:bg-black/[0.03] hover:text-black/70"
               )}
             >
               <button
@@ -1045,79 +1051,85 @@ function ChatPage() {
                   navigate({ to: "/chat/$threadId", params: { threadId: t.id } } as any)
                 }
               >
-                {t.title || "New conversation"}
+                {t.title || "New edit"}
               </button>
               <button
                 onClick={() => handleDelete(t.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-background/50 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-black/[0.06] transition-opacity text-black/30 hover:text-red-500"
                 aria-label="Delete thread"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3 w-3" />
               </button>
             </div>
           ))}
         </div>
-        <div className="border-t border-sidebar-border p-3">
+
+        {/* Bottom actions */}
+        <div className="px-3 py-3 border-t border-black/[0.06] flex flex-col gap-1">
           <a
             href={`/studio?threadId=${encodeURIComponent(threadId)}`}
-            className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12px] text-black/40 hover:text-black/60 hover:bg-black/[0.03] transition-colors"
           >
-            <span className="flex items-center gap-2">
-              <Film className="h-3.5 w-3.5" /> Open Studio
-            </span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <Film className="h-3.5 w-3.5" /> Open Studio
+            <ArrowRight className="h-3 w-3 ml-auto" />
           </a>
+          {isSignedIn ? (
+            <div className="flex items-center gap-2 px-2 py-1.5">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          ) : (
+            <a
+              href="/sign-in"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12px] text-black/40 hover:text-black/60 hover:bg-black/[0.03] transition-colors"
+            >
+              Sign In
+            </a>
+          )}
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex flex-col h-screen">
-        <header className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
-          <div>
-            <div className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
-              {currentEDL ? "Editing" : "New edit"}
-            </div>
-            <h1 className="text-base font-medium truncate max-w-md">
-              {active?.title || "New conversation"}
-            </h1>
-          </div>
+      {/* ── Main content ── */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Header */}
+        <header className="h-12 border-b border-black/[0.06] flex items-center justify-between px-5 bg-white/60 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3">
+            <h1 className="text-[13px] font-semibold text-black truncate max-w-[300px]">
+              {active?.title || "New edit"}
+            </h1>
+            {currentEDL && (
+              <span className="text-[10px] font-mono text-black/30 bg-black/[0.04] px-2 py-0.5 rounded-full">
+                EDL loaded
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
             {currentEDL && (
               <button
                 onClick={() => setGeneration({ edl: undefined, edlId: undefined, status: "idle" })}
-                className="text-xs text-muted-foreground hover:text-foreground tracking-widest uppercase flex items-center gap-1.5 transition-colors"
+                className="text-[11px] text-black/30 hover:text-black/60 font-medium px-2 py-1 rounded-md hover:bg-black/[0.04] transition-colors"
               >
                 New edit
               </button>
             )}
             <a
               href={`/studio?threadId=${encodeURIComponent(threadId)}`}
-              className="text-xs text-muted-foreground hover:text-primary tracking-widest uppercase flex items-center gap-1.5"
+              className="text-[11px] text-black/30 hover:text-[#FF4E00] font-medium px-2 py-1 rounded-md hover:bg-black/[0.04] transition-colors"
             >
-              Studio <ArrowRight className="h-3 w-3" />
+              Studio
             </a>
-            {isSignedIn ? (
-              <UserButton />
-            ) : (
-              <a
-                href="/sign-in"
-                className="text-xs text-muted-foreground hover:text-foreground tracking-widest uppercase transition-colors"
-              >
-                Sign In
-              </a>
-            )}
           </div>
         </header>
 
-        {/* Split layout: chat + sliding preview */}
+        {/* ── Split layout: chat + sliding preview ── */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Chat column — full width when no EDL, narrows when preview slides in */}
+          {/* Chat column */}
           <div
             className={cn(
-              "flex flex-col min-w-0 border-r border-border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-              currentEDL ? "w-[55%]" : "w-full"
+              "flex flex-col min-w-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+              currentEDL ? "w-[55%] border-r border-black/[0.06]" : "w-full"
             )}
           >
+            {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto">
               <div className="mx-auto max-w-3xl px-6 py-10">
                 {active && active.messages.length === 0 && <EmptyChat onTriggerUpload={() => chatFileInputRef.current?.click()} />}
@@ -1125,7 +1137,6 @@ function ChatPage() {
                   <Message key={m.id} message={m} />
                 ))}
 
-                {/* Show thinking panel during generation */}
                 {isGenerating && (
                   <div className="mt-6">
                     <InteractiveThinkingPanel
@@ -1137,51 +1148,51 @@ function ChatPage() {
                   </div>
                 )}
 
-                {/* Refinement section — only when EDL exists */}
+                {/* Refinement — when EDL exists */}
                 {currentEDL && (
-                  <div className="mt-6 border-t border-border pt-4">
+                  <div className="mt-6 border-t border-black/[0.06] pt-5">
                     {patchSummary && (
-                      <div className="mb-4 rounded-lg bg-primary/5 border border-primary/20 p-3">
+                      <div className="mb-4 rounded-xl bg-[#FF4E00]/5 border border-[#FF4E00]/20 p-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="h-3 w-3 text-primary" />
-                          <span className="text-xs font-medium text-primary">Director Patch Applied</span>
+                          <Sparkles className="h-3.5 w-3.5 text-[#FF4E00]" />
+                          <span className="text-[11px] font-semibold text-[#FF4E00]">Director Patch Applied</span>
                         </div>
-                        <p className="text-sm text-foreground/80">{patchSummary}</p>
+                        <p className="text-[13px] text-black/70 leading-relaxed">{patchSummary}</p>
                         {directorPreviewUrl && (
-                          <div className="mt-3 rounded-md overflow-hidden border border-border bg-black aspect-video">
+                          <div className="mt-3 rounded-lg overflow-hidden border border-black/[0.06] bg-black aspect-video">
                             <video src={directorPreviewUrl} controls className="w-full h-full" />
                           </div>
                         )}
                       </div>
                     )}
 
-                    <div className="text-xs text-muted-foreground mb-2 tracking-wider uppercase">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-black/30 mb-2">
                       Refine with Director
                     </div>
-                    <div className="flex gap-2 flex-wrap mb-2">
+                    <div className="flex gap-2 flex-wrap mb-3">
                       {["Faster cuts", "Hit the drop harder", "More energy", "Calmer pace", "Add glow effect"].map((chip) => (
                         <button
                           key={chip}
                           onClick={() => setRefineFeedback(chip)}
-                          className="rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                          className="rounded-full border border-black/[0.08] px-3 py-1 text-[11px] text-black/40 hover:border-[#FF4E00]/40 hover:text-[#FF4E00] transition-colors"
                         >
                           {chip}
                         </button>
                       ))}
                     </div>
                     {annotations.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-2">
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {annotations.map((a) => (
                           <span
                             key={a.id}
-                            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[11px] text-amber-600"
                           >
                             <StickyNote className="h-2.5 w-2.5 shrink-0" />
                             <span className="font-mono">{Math.floor(a.timestamp / 60)}:{String(Math.floor(a.timestamp % 60)).padStart(2, "0")}</span>
                             <span className="max-w-[120px] truncate">{a.text}</span>
                             <button
                               onClick={() => setAnnotations((prev) => prev.filter((x) => x.id !== a.id))}
-                              className="ml-0.5 text-amber-500/60 hover:text-amber-500 transition-colors"
+                              className="ml-0.5 text-amber-500/50 hover:text-amber-500 transition-colors"
                             >
                               ×
                             </button>
@@ -1190,27 +1201,26 @@ function ChatPage() {
                       </div>
                     )}
                     <div className="flex gap-2">
-                      <Textarea
+                      <textarea
                         value={refineFeedback}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setRefineFeedback(e.target.value)}
-                        placeholder={annotations.length > 0 ? `${annotations.length} annotation${annotations.length !== 1 ? "s" : ""} queued — add global feedback or just hit Apply` : "What would you like to change? (e.g. 'make it more intense')"}
-                        className="min-h-[56px] resize-none bg-background border-border text-sm"
+                        onChange={(e) => setRefineFeedback(e.target.value)}
+                        placeholder={annotations.length > 0 ? `${annotations.length} annotation${annotations.length !== 1 ? "s" : ""} queued — add feedback or hit Apply` : "What would you like to change?"}
+                        className="flex-1 min-h-[48px] resize-none rounded-xl border border-black/[0.08] bg-white px-4 py-2.5 text-[13px] text-black placeholder:text-black/25 focus:outline-none focus:border-[#FF4E00]/40 focus:shadow-[0_0_0_3px_rgba(255,78,0,0.06)] transition-all"
                         disabled={isRefining}
-                        onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                        onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             handleRefine();
                           }
                         }}
                       />
-                      <Button
-                        size="sm"
+                      <button
                         onClick={handleRefine}
                         disabled={(!refineFeedback.trim() && annotations.length === 0) || isRefining}
-                        className="self-end h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+                        className="self-end h-9 w-9 rounded-xl bg-[#FF4E00] text-white flex items-center justify-center shrink-0 hover:bg-[#e64500] transition-colors disabled:opacity-40"
                       >
                         {isRefining ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1218,8 +1228,8 @@ function ChatPage() {
             </div>
 
             {/* Input area */}
-            <div className="border-t border-border bg-background shrink-0">
-              <div className="mx-auto max-w-3xl px-6 py-4 space-y-4">
+            <div className="border-t border-black/[0.06] bg-white/60 backdrop-blur-sm shrink-0">
+              <div className="mx-auto max-w-3xl px-6 py-4 space-y-3">
                 <VideoUploader
                   key={threadId}
                   onFilesChange={handleFilesChange}
@@ -1228,20 +1238,20 @@ function ChatPage() {
                 />
 
                 {isAnalyzingReference && (
-                  <div className="rounded-lg border border-border bg-card px-4 py-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="rounded-xl border border-black/[0.06] bg-white px-4 py-3 flex items-center gap-2 text-[12px] text-black/40">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Analyzing reference style…
+                    Analyzing reference style...
                   </div>
                 )}
                 {referenceStyle && !isAnalyzingReference && (
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 flex items-start justify-between gap-3">
+                  <div className="rounded-xl border border-[#FF4E00]/20 bg-[#FF4E00]/5 px-4 py-3 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-primary mb-1 flex items-center gap-1.5">
+                      <div className="text-[11px] font-semibold text-[#FF4E00] mb-1 flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3" />
                         Style reference loaded
                       </div>
-                      <div className="text-xs text-muted-foreground mb-1 capitalize">
-                        {(referenceStyle.intentMapping.genre ?? "unknown").replace(/_/g, " ")} · {referenceStyle.intentMapping.pacing ?? "unknown"} · {(referenceStyle.rhythm?.avgShotDuration ?? 0).toFixed(1)}s avg shot · {referenceStyle.rhythm?.cutAlignment ?? "unknown"} sync
+                      <div className="text-[11px] text-black/40 capitalize">
+                        {(referenceStyle.intentMapping.genre ?? "unknown").replace(/_/g, " ")} · {referenceStyle.intentMapping.pacing ?? "unknown"} · {(referenceStyle.rhythm?.avgShotDuration ?? 0).toFixed(1)}s avg shot
                       </div>
                     </div>
                     <button
@@ -1254,53 +1264,55 @@ function ChatPage() {
                         }
                         updateThread(threadId, (t: ChatThread) => ({ ...t, updatedAt: Date.now(), latestReferenceStyle: undefined }));
                       }}
-                      className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors text-lg leading-none mt-0.5"
-                      aria-label="Dismiss reference style"
+                      className="shrink-0 text-black/20 hover:text-black/50 transition-colors text-lg leading-none"
                     >
-                      ×
+                      x
                     </button>
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 px-1">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">Intensity</span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={editIntensity}
-                    onChange={(e) => setPrompt({ intensity: parseFloat(e.target.value) })}
-                    className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
-                  />
-                  <span className="text-xs text-muted-foreground w-8 text-right font-mono">{Math.round(editIntensity * 100)}%</span>
+                {/* Intensity + Tempo */}
+                <div className="flex items-center gap-4 px-1">
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-[10px] font-medium text-black/30 uppercase tracking-wider whitespace-nowrap">Intensity</span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={editIntensity}
+                      onChange={(e) => setPrompt({ intensity: parseFloat(e.target.value) })}
+                      className="flex-1 h-1 bg-black/[0.06] rounded-full appearance-none cursor-pointer accent-[#FF4E00]"
+                    />
+                    <span className="text-[10px] text-black/30 w-7 text-right font-mono">{Math.round(editIntensity * 100)}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-black/30 uppercase tracking-wider">Tempo</span>
+                    <select
+                      value={tempoMode}
+                      onChange={(e) => setPrompt({ tempoMode: e.target.value })}
+                      className="text-[11px] bg-white border border-black/[0.08] rounded-lg px-2 py-1 focus:outline-none focus:border-[#FF4E00]/40"
+                    >
+                      <option value="beat_anticipated">Hype</option>
+                      <option value="beat_locked">Beat sync</option>
+                      <option value="reference_mirror">Match ref</option>
+                      <option value="cinematic">Cinematic</option>
+                      <option value="narrative">Narrative</option>
+                      <option value="chill_vlog">Chill</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3 px-1">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">Tempo</span>
-                  <select
-                    value={tempoMode}
-                    onChange={(e) => setPrompt({ tempoMode: e.target.value })}
-                    className="flex-1 text-xs bg-muted border border-border rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="beat_anticipated">Hype (ramp + hit)</option>
-                    <option value="beat_locked">Beat sync</option>
-                    <option value="reference_mirror">Match reference</option>
-                    <option value="cinematic">Cinematic</option>
-                    <option value="narrative">Narrative</option>
-                    <option value="chill_vlog">Chill vlog</option>
-                  </select>
-                </div>
-
-                <div className="relative rounded-xl border border-border bg-card focus-within:border-primary/50 transition-colors">
-                  <Textarea
+                {/* Message input */}
+                <div className="relative rounded-xl border border-black/[0.08] bg-white focus-within:border-[#FF4E00]/40 focus-within:shadow-[0_0_0_3px_rgba(255,78,0,0.06)] transition-all">
+                  <textarea
                     ref={taRef}
                     value={draft}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDraft(e.target.value)}
-                    placeholder="Describe the edit you want…"
-                    className="min-h-[80px] resize-none border-0 bg-transparent px-4 py-3 pr-24 focus-visible:ring-0"
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="Describe the edit you want..."
+                    className="min-h-[72px] resize-none border-0 bg-transparent px-4 py-3 pr-24 text-[13px] text-black placeholder:text-black/25 focus-visible:ring-0"
                     disabled={isGenerating}
-                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                    onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         sendMessage();
@@ -1316,27 +1328,24 @@ function ChatPage() {
                       onChange={handleChatFileSelect}
                       className="hidden"
                     />
-                    <Button
-                      size="icon"
-                      variant="ghost"
+                    <button
                       onClick={() => chatFileInputRef.current?.click()}
                       disabled={isGenerating}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-black/25 hover:text-black/50 hover:bg-black/[0.04] transition-colors"
                       title="Attach files"
                     >
                       <Paperclip className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
+                    </button>
+                    <button
                       onClick={() => sendMessage()}
                       disabled={!draft.trim() || isGenerating}
-                      className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="w-8 h-8 rounded-lg bg-[#FF4E00] text-white flex items-center justify-center hover:bg-[#e64500] transition-colors disabled:opacity-40"
                     >
                       <Send className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
+                <p className="text-[10px] text-black/25 tracking-wider uppercase px-1">
                   {uploadedFiles.length > 0
                     ? `${uploadedFiles.filter(f => f.type === "footage").length} clip${uploadedFiles.filter(f => f.type === "footage").length !== 1 ? "s" : ""}${uploadedFiles.find(f => f.type === "music") ? " + music" : ""}${uploadedFiles.find(f => f.type === "reference") ? " + reference" : ""} ready`
                     : "Upload footage and music to get started"}
@@ -1353,51 +1362,30 @@ function ChatPage() {
             )}
           >
             {currentEDL && (
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full bg-white">
                 {/* Preview header */}
-                <div className="px-4 py-3 border-b border-border bg-background/80 shrink-0">
+                <div className="px-4 py-3 border-b border-black/[0.06] shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-[11px] font-semibold tracking-[0.08em] uppercase text-text-muted font-mono">Preview</span>
-                      <span className="text-text-tertiary">·</span>
-                      <span className="text-[10px] text-text-tertiary font-mono">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-black/40 font-mono">Preview</span>
+                      <span className="text-black/15">·</span>
+                      <span className="text-[10px] text-black/25 font-mono">
                         {previewShotCount} shots · {previewDuration.toFixed(1)}s
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => useProjectStore.getState().undo()}
-                        disabled={!useProjectStore.getState().canUndo()}
-                        title="Undo"
-                      >
+                    <div className="flex items-center gap-0.5">
+                      <PreviewBtn onClick={() => useProjectStore.getState().undo()} disabled={!useProjectStore.getState().canUndo()} title="Undo">
                         <Undo2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => useProjectStore.getState().redo()}
-                        disabled={!useProjectStore.getState().canRedo()}
-                        title="Redo"
-                      >
+                      </PreviewBtn>
+                      <PreviewBtn onClick={() => useProjectStore.getState().redo()} disabled={!useProjectStore.getState().canRedo()} title="Redo">
                         <Redo2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        title="Export MP4"
-                      >
+                      </PreviewBtn>
+                      <PreviewBtn onClick={handleExport} disabled={isExporting} title="Export MP4">
                         {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                      </Button>
+                      </PreviewBtn>
                       <a
                         href={`/studio?threadId=${encodeURIComponent(threadId)}`}
-                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
+                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-black/[0.04] transition-colors text-black/30 hover:text-black/60"
                         title="Open in Studio"
                       >
                         <Film className="h-3.5 w-3.5" />
@@ -1411,7 +1399,7 @@ function ChatPage() {
                           const url = `${baseUrl}?edl=${encodeURIComponent(edlBase64)}&threadId=${encodeURIComponent(threadId)}`;
                           window.open(url, "_blank");
                         }}
-                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors text-primary"
+                        className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-black/[0.04] transition-colors text-[#FF4E00]/60 hover:text-[#FF4E00]"
                         title="Open in Kove Advanced"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -1421,25 +1409,15 @@ function ChatPage() {
                 </div>
 
                 {/* Preview content */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {/* Blueprint */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#fafafa]">
                   <BlueprintPreview
                     edl={currentEDL as any}
                     creativeDensity={(thinkingData as any).creativeDensity}
                     referenceSimilarity={(thinkingData as any).referenceSimilarity}
                   />
+                  {analysisData?.music && <AnalysisPanel analysis={analysisData.music} />}
+                  {creativeBrief && <CreativeBriefPanel brief={creativeBrief} />}
 
-                  {/* Music Analysis (BeatSync) */}
-                  {analysisData?.music && (
-                    <AnalysisPanel analysis={analysisData.music} />
-                  )}
-
-                  {/* Creative Brief */}
-                  {creativeBrief && (
-                    <CreativeBriefPanel brief={creativeBrief} />
-                  )}
-
-                  {/* Video player */}
                   {previewReady ? (
                     <VideoPreview
                       edl={currentEDL}
@@ -1452,45 +1430,23 @@ function ChatPage() {
                       playing={false}
                     />
                   ) : (
-                    <div className="rounded-lg border border-border bg-secondary/20 p-4">
-                      <p className="text-sm font-medium">Timeline restored</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Re-upload source clips to bring back the player.
-                      </p>
-                      {missingPreviewClips.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {missingPreviewClips.slice(0, 4).map((clipId: string) => (
-                            <span key={clipId} className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
-                              {clipId}
-                            </span>
-                          ))}
-                          {missingPreviewClips.length > 4 && (
-                            <span className="rounded-full border border-border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
-                              +{missingPreviewClips.length - 4} more
-                            </span>
-                          )}
-                        </div>
-                      )}
+                    <div className="rounded-xl border border-dashed border-black/[0.08] bg-white p-6 text-center">
+                      <p className="text-[13px] font-medium text-black/60">Timeline restored</p>
+                      <p className="text-[11px] text-black/30 mt-1">Re-upload source clips to bring back the player.</p>
                     </div>
                   )}
 
-                  {/* Action buttons */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAddTrackedText} disabled={!currentEDL}>
-                      Tracked Text
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAutoFaceTrack} disabled={!currentEDL || isAutoTrackingFace}>
-                      {isAutoTrackingFace ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Tracking…</> : "Face Track"}
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleAddWallText} disabled={!currentEDL}>
-                      Wall Text
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleExport} disabled={isExporting}>
-                      {isExporting ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> {exportProgress?.percent ?? 0}%</> : <><Download className="h-3.5 w-3.5" /> Export</>}
-                    </Button>
+                    <ActionBtn onClick={handleAddTrackedText} disabled={!currentEDL}>Tracked Text</ActionBtn>
+                    <ActionBtn onClick={handleAutoFaceTrack} disabled={!currentEDL || isAutoTrackingFace}>
+                      {isAutoTrackingFace ? <><Loader2 className="h-3 w-3 animate-spin" /> Tracking...</> : "Face Track"}
+                    </ActionBtn>
+                    <ActionBtn onClick={handleAddWallText} disabled={!currentEDL}>Wall Text</ActionBtn>
+                    <ActionBtn onClick={handleExport} disabled={isExporting}>
+                      {isExporting ? <><Loader2 className="h-3 w-3 animate-spin" /> {exportProgress?.percent ?? 0}%</> : <><Download className="h-3 w-3" /> Export</>}
+                    </ActionBtn>
                   </div>
 
-                  {/* Text Timeline */}
                   {showTextTimeline && transcript && (
                     <TextTimeline
                       transcript={transcript}
@@ -1513,22 +1469,47 @@ function ChatPage() {
   );
 }
 
+function PreviewBtn({ children, onClick, disabled, title }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title: string }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-black/[0.04] transition-colors text-black/30 hover:text-black/60 disabled:opacity-30"
+    >
+      {children}
+    </button>
+  );
+}
+
+function ActionBtn({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-black/[0.08] bg-white px-3 py-1.5 text-[11px] font-medium text-black/50 hover:text-black/70 hover:border-black/[0.12] transition-colors disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
 function Message({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
       <div className="flex justify-end mb-6">
-        <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-2.5 text-primary-foreground text-sm leading-relaxed space-y-2">
+        <div className="max-w-[80%] rounded-2xl bg-[#FF4E00] px-4 py-2.5 text-white text-[13px] leading-relaxed space-y-2">
           <div>{message.content}</div>
           {message.attachments && message.attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {message.attachments.map((attachment: ChatAttachment) => (
                 <span
                   key={`${attachment.id}-${attachment.name}`}
-                  className="inline-flex items-center gap-1 rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-2 py-0.5 text-[11px] text-primary-foreground/90"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] text-white/80"
                   title={`${attachment.type} · ${formatSize(attachment.sizeBytes)}`}
                 >
-                  <Paperclip className="h-3 w-3 shrink-0" />
-                  <span className="max-w-[200px] truncate">{attachment.name}</span>
+                  <Paperclip className="h-2.5 w-2.5 shrink-0" />
+                  <span className="max-w-[160px] truncate">{attachment.name}</span>
                 </span>
               ))}
             </div>
@@ -1539,10 +1520,10 @@ function Message({ message }: { message: ChatMessage }) {
   }
   return (
     <div className="flex gap-3 mb-8">
-      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+      <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-[#FF4E00]">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <div className="flex-1 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+      <div className="flex-1 text-[13px] leading-relaxed whitespace-pre-wrap text-black/70">
         {message.content}
       </div>
     </div>
@@ -1557,22 +1538,24 @@ function formatSize(bytes: number): string {
 
 function EmptyChat({ onTriggerUpload }: { onTriggerUpload?: () => void }) {
   return (
-    <div className="flex flex-col items-center text-center pt-20 pb-10 gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-primary">
-        <Sparkles className="h-5 w-5" />
+    <div className="flex flex-col items-center text-center pt-20 pb-10 gap-5">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF4E00]/10 text-[#FF4E00]">
+        <Sparkles className="h-6 w-6" />
       </div>
-      <h2 className="text-2xl font-serif">What should we edit?</h2>
-      <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
-        Drop a clip and tell Monet the vibe. Anime, sports, fan edits — anything goes.
-      </p>
+      <div>
+        <h2 className="text-xl font-semibold text-black tracking-tight">What should we edit?</h2>
+        <p className="text-[13px] text-black/35 mt-1.5 max-w-md leading-relaxed">
+          Drop a clip and tell the director the vibe. Anime, sports, fan edits — anything goes.
+        </p>
+      </div>
       <button
         onClick={onTriggerUpload}
-        className="mt-2 flex items-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-5 py-3 text-sm text-primary hover:bg-primary/10 transition-colors"
+        className="flex items-center gap-2 rounded-xl border border-dashed border-[#FF4E00]/30 bg-[#FF4E00]/5 px-5 py-3 text-[13px] font-medium text-[#FF4E00] hover:bg-[#FF4E00]/10 transition-colors"
       >
         <Upload className="h-4 w-4" />
         Upload footage, music, or reference
       </button>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-4 w-full max-w-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 w-full max-w-2xl">
         {[
           "Make a 30s hype reel from this match",
           "Anime AMV cut to this song",
@@ -1580,7 +1563,7 @@ function EmptyChat({ onTriggerUpload }: { onTriggerUpload?: () => void }) {
         ].map((s) => (
           <div
             key={s}
-            className="rounded-lg border border-border bg-card px-3 py-2.5 text-xs text-muted-foreground text-left hover:border-primary/50 hover:text-foreground cursor-pointer transition-colors"
+            className="rounded-xl border border-black/[0.06] bg-white px-3 py-2.5 text-[12px] text-black/40 text-left hover:border-[#FF4E00]/30 hover:text-black/60 cursor-pointer transition-colors"
           >
             {s}
           </div>
