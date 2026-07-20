@@ -66,6 +66,39 @@ export interface DashboardSettings {
   payoutMinimum: string;
 }
 
+export type PlanTier = "free" | "flux" | "nova";
+
+export interface AffiliateProfile {
+  userId: string;
+  customCode: string | null;
+  tier: PlanTier;
+  oneTimeBonusUnlocked: boolean;
+  referredCount: number;
+  threshold: number;
+}
+
+export interface CommissionRecord {
+  id: string;
+  referredUserId: string;
+  type: "one_time" | "recurring";
+  planAtPayout: PlanTier;
+  rate: number;
+  amount: number;
+  status: "paid" | "accrued" | "pending";
+  createdAt: number;
+}
+
+export interface ReferredUser {
+  id: string;
+  username: string;
+  avatarInitials: string;
+  joinedAt: number;
+  planTier: PlanTier;
+  totalSpend: number;
+  commissionEarned: number;
+  status: "active" | "pending" | "churned";
+}
+
 export interface DashboardState {
   projects: Project[];
   referralLinks: ReferralLink[];
@@ -73,6 +106,9 @@ export interface DashboardState {
   payouts: Payout[];
   referrals: Referral[];
   settings: DashboardSettings;
+  affiliateProfile: AffiliateProfile;
+  referredUsers: ReferredUser[];
+  commissionRecords: CommissionRecord[];
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -146,6 +182,36 @@ const SEED: DashboardState = {
     payoutFrequency: "Weekly",
     payoutMinimum: "$100",
   },
+  affiliateProfile: {
+    userId: "current-user",
+    customCode: null,
+    tier: "flux" as const,
+    oneTimeBonusUnlocked: false,
+    referredCount: 3,
+    threshold: 5,
+  },
+  referredUsers: [
+    { id: uid(), username: "@designstudio", avatarInitials: "DS", joinedAt: daysAgo(1), planTier: "nova" as const, totalSpend: 2400, commissionEarned: 480, status: "active" as const },
+    { id: uid(), username: "@videopro", avatarInitials: "VP", joinedAt: daysAgo(14), planTier: "flux" as const, totalSpend: 1200, commissionEarned: 240, status: "active" as const },
+    { id: uid(), username: "@motiongraphics", avatarInitials: "MG", joinedAt: daysAgo(30), planTier: "flux" as const, totalSpend: 800, commissionEarned: 160, status: "active" as const },
+    { id: uid(), username: "@creativelab", avatarInitials: "CL", joinedAt: daysAgo(45), planTier: "free" as const, totalSpend: 400, commissionEarned: 80, status: "pending" as const },
+    { id: uid(), username: "@filmmakers", avatarInitials: "FM", joinedAt: daysAgo(60), planTier: "flux" as const, totalSpend: 600, commissionEarned: 120, status: "active" as const },
+    { id: uid(), username: "@studioflow", avatarInitials: "SF", joinedAt: daysAgo(75), planTier: "free" as const, totalSpend: 200, commissionEarned: 40, status: "churned" as const },
+    { id: uid(), username: "@editpro", avatarInitials: "EP", joinedAt: daysAgo(90), planTier: "nova" as const, totalSpend: 3600, commissionEarned: 720, status: "active" as const },
+  ],
+  commissionRecords: [
+    { id: uid(), referredUserId: "r1", type: "one_time", planAtPayout: "flux", rate: 20, amount: 480, status: "paid", createdAt: daysAgo(1) },
+    { id: uid(), referredUserId: "r2", type: "recurring", planAtPayout: "flux", rate: 5, amount: 60, status: "paid", createdAt: daysAgo(7) },
+    { id: uid(), referredUserId: "r3", type: "recurring", planAtPayout: "flux", rate: 5, amount: 40, status: "paid", createdAt: daysAgo(7) },
+    { id: uid(), referredUserId: "r4", type: "recurring", planAtPayout: "flux", rate: 4, amount: 16, status: "accrued", createdAt: daysAgo(14) },
+    { id: uid(), referredUserId: "r5", type: "recurring", planAtPayout: "flux", rate: 6, amount: 36, status: "paid", createdAt: daysAgo(14) },
+    { id: uid(), referredUserId: "r6", type: "recurring", planAtPayout: "flux", rate: 3, amount: 6, status: "pending", createdAt: daysAgo(30) },
+    { id: uid(), referredUserId: "r7", type: "recurring", planAtPayout: "flux", rate: 7, amount: 252, status: "paid", createdAt: daysAgo(30) },
+    { id: uid(), referredUserId: "r1", type: "recurring", planAtPayout: "flux", rate: 5, amount: 120, status: "paid", createdAt: daysAgo(30) },
+    { id: uid(), referredUserId: "r2", type: "recurring", planAtPayout: "flux", rate: 5, amount: 60, status: "accrued", createdAt: daysAgo(30) },
+    { id: uid(), referredUserId: "r3", type: "recurring", planAtPayout: "flux", rate: 5, amount: 40, status: "pending", createdAt: daysAgo(30) },
+    { id: uid(), referredUserId: "r5", type: "recurring", planAtPayout: "flux", rate: 6, amount: 36, status: "accrued", createdAt: daysAgo(30) },
+  ],
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -280,6 +346,19 @@ export function useDashboardStore() {
     .filter((p) => p.status === "paid")
     .reduce((sum, p) => sum + parseFloat(p.amount.replace(/[^0-9.]/g, "")), 0);
 
+  // ── Affiliate ──
+
+  const claimCustomCode = useCallback((code: string) => {
+    patch((s) => {
+      s.affiliateProfile.customCode = code;
+    });
+  }, [patch]);
+
+  const checkCodeAvailability = useCallback((code: string): boolean => {
+    const taken = ["taken", "reserved", "admin", "kove"];
+    return !taken.includes(code.toLowerCase());
+  }, []);
+
   return {
     state,
     addProject,
@@ -294,5 +373,10 @@ export function useDashboardStore() {
     pendingBalance,
     lifetimeEarnings,
     totalPaidOut,
+    claimCustomCode,
+    checkCodeAvailability,
+    affiliateProfile: state.affiliateProfile,
+    referredUsers: state.referredUsers,
+    commissionRecords: state.commissionRecords,
   };
 }
