@@ -19,6 +19,9 @@ export function ScrubbablePreview({ mode }: ScrubbablePreviewProps) {
   useEffect(() => {
     if (hasInteracted) return;
 
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
+
     let start: number | null = null;
     const duration = 4000;
 
@@ -71,7 +74,7 @@ export function ScrubbablePreview({ mode }: ScrubbablePreviewProps) {
         max={frames.length - 1}
         value={frameIndex}
         onChange={handleInput}
-        className="w-full h-8 mt-1 cursor-grab active:cursor-grabbing opacity-0"
+        className="w-full h-8 mt-1 cursor-grab active:cursor-grabbing sr-only focus:not-sr-only focus:absolute focus:inset-0"
         aria-label={`Scrub through ${mode} editor preview frames`}
       />
 
