@@ -654,46 +654,45 @@
   .stagger-5 { animation-delay: 0.25s; }
   .stagger-6 { animation-delay: 0.3s; }
 
-  /* ── Ocean tide wave animation ── */
+  /* ── Ocean tide — jalebis floating ── */
   .ocean-tide {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 200%;
-    height: 120px;
+    width: 100%;
+    height: 160px;
     pointer-events: none;
     z-index: 0;
   }
 
-  .ocean-tide .wave {
+  .ocean-tide .jalebi-tide {
     position: absolute;
     bottom: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.03;
-    animation: tide-drift 12s ease-in-out infinite;
   }
 
-  .ocean-tide .wave:nth-child(2) {
-    opacity: 0.025;
-    animation-duration: 16s;
-    animation-delay: -4s;
+  .ocean-tide .jalebi {
+    transform-origin: center;
+    animation: jalebi-float 14s ease-in-out infinite;
+  }
+
+  .ocean-tide .jalebi:nth-child(odd) {
+    animation-duration: 18s;
     animation-direction: reverse;
   }
 
-  .ocean-tide .wave:nth-child(3) {
-    opacity: 0.015;
-    animation-duration: 20s;
-    animation-delay: -8s;
+  .ocean-tide .jalebi:nth-child(3n) {
+    animation-duration: 12s;
   }
 }
 
-@keyframes tide-drift {
-  0% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(-25%) translateY(-3px); }
-  50% { transform: translateX(-50%) translateY(0); }
-  75% { transform: translateX(-25%) translateY(3px); }
-  100% { transform: translateX(0) translateY(0); }
+@keyframes jalebi-float {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  25% { transform: translateY(-8px) translateX(6px) rotate(3deg); }
+  50% { transform: translateY(0) translateX(0) rotate(0deg); }
+  75% { transform: translateY(6px) translateX(-4px) rotate(-2deg); }
+  100% { transform: translateY(0) translateX(0) rotate(0deg); }
 }
 
 /*

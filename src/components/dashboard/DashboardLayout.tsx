@@ -50,16 +50,57 @@ export function DashboardLayout({
 
   return (
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
-      {/* Ocean tide — subtle wave animation at bottom */}
+      {/* Ocean tide — jalebis floating */}
       <div className="ocean-tide">
-        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
-          <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" />
-        </svg>
-        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
-          <path d="M0,80 C300,20 600,100 900,60 C1200,20 1320,80 1440,60 L1440,120 L0,120 Z" />
-        </svg>
-        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
-          <path d="M0,40 C180,100 360,20 540,60 C720,100 900,0 1080,40 C1260,80 1350,60 1440,50 L1440,120 L0,120 Z" />
+        <svg className="jalebi-tide" viewBox="0 0 1440 160" preserveAspectRatio="xMidYMax slice" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.04">
+          {/* Row 1 — drifting right */}
+          <g className="jalebi" style={{ animationDelay: "0s" }} transform="translate(120, 80)">
+            <circle cx="0" cy="0" r="20" />
+            <circle cx="0" cy="0" r="12" strokeDasharray="3 3" />
+            <circle cx="0" cy="0" r="4" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "0.8s" }} transform="translate(320, 50)">
+            <circle cx="0" cy="0" r="14" />
+            <circle cx="0" cy="0" r="8" strokeDasharray="2.5 2.5" />
+            <circle cx="0" cy="0" r="3" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "1.6s" }} transform="translate(520, 90)">
+            <circle cx="0" cy="0" r="26" />
+            <circle cx="0" cy="0" r="16" strokeDasharray="4 4" />
+            <circle cx="0" cy="0" r="6" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          {/* Row 2 — drifting left */}
+          <g className="jalebi" style={{ animationDelay: "0.4s" }} transform="translate(720, 60)">
+            <circle cx="0" cy="0" r="18" />
+            <circle cx="0" cy="0" r="10" strokeDasharray="3 3" />
+            <circle cx="0" cy="0" r="4" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "1.2s" }} transform="translate(920, 100)">
+            <circle cx="0" cy="0" r="22" />
+            <circle cx="0" cy="0" r="13" strokeDasharray="3.5 3.5" />
+            <circle cx="0" cy="0" r="5" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "2.0s" }} transform="translate(1120, 40)">
+            <circle cx="0" cy="0" r="12" />
+            <circle cx="0" cy="0" r="7" strokeDasharray="2 2" />
+            <circle cx="0" cy="0" r="3" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          {/* Row 3 — scattered */}
+          <g className="jalebi" style={{ animationDelay: "0.6s" }} transform="translate(200, 120)">
+            <circle cx="0" cy="0" r="16" />
+            <circle cx="0" cy="0" r="9" strokeDasharray="2.5 2.5" />
+            <circle cx="0" cy="0" r="3" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "1.8s" }} transform="translate(600, 130)">
+            <circle cx="0" cy="0" r="24" />
+            <circle cx="0" cy="0" r="15" strokeDasharray="3.5 3.5" />
+            <circle cx="0" cy="0" r="5" strokeWidth="1.5" opacity="0.5" />
+          </g>
+          <g className="jalebi" style={{ animationDelay: "2.4s" }} transform="translate(1300, 70)">
+            <circle cx="0" cy="0" r="20" />
+            <circle cx="0" cy="0" r="12" strokeDasharray="3 3" />
+            <circle cx="0" cy="0" r="4" strokeWidth="1.5" opacity="0.5" />
+          </g>
         </svg>
       </div>
 
