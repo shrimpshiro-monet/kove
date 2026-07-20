@@ -116,50 +116,83 @@ function DashboardInner() {
       navItems={NAV_ITEMS}
     >
       {page === "overview" ? (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16">
-          <GreetingHero
-            isSignedIn={isSignedIn ?? false}
-            username={displayName}
-          />
-          <ActionInput
-            onSubmit={(q) => {
-              navigate({ to: "/simple-editor", search: { q } });
-            }}
-          />
-          <QuickActions
-            onAction={(q) => {
-              navigate({ to: "/simple-editor", search: { q } });
-            }}
-          />
+        <div className="flex flex-col items-center min-h-[calc(100vh-120px)] -mt-16">
+          <div className="flex flex-col items-center justify-center flex-1 w-full">
+            <GreetingHero
+              isSignedIn={isSignedIn ?? false}
+              username={displayName}
+            />
+            <ActionInput
+              onSubmit={(q) => {
+                navigate({ to: "/simple-editor", search: { q } });
+              }}
+            />
+            <QuickActions
+              onAction={(q) => {
+                navigate({ to: "/simple-editor", search: { q } });
+              }}
+            />
 
-          {/* Recent projects */}
-          {projects.length > 0 && (
-            <div className="w-full max-w-[400px] animate-slide-up stagger-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] text-[var(--text-tertiary)] font-medium tracking-wide uppercase">Recent</span>
-                <button
-                  onClick={() => handleNavigate("projects")}
-                  className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-                >
-                  View all
-                </button>
-              </div>
-              <div className="space-y-0.5">
-                {projects.slice(0, 4).map((p) => (
+            {/* Recent projects */}
+            {projects.length > 0 && (
+              <div className="w-full max-w-[400px] animate-slide-up stagger-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] text-[var(--text-tertiary)] font-medium tracking-wide uppercase">Recent</span>
                   <button
-                    key={p.id}
-                    onClick={() => navigate({ to: "/simple-editor", search: { project: p.id } })}
-                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.03] transition-all text-left group"
+                    onClick={() => handleNavigate("projects")}
+                    className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
                   >
-                    <span className="truncate">{p.name}</span>
-                    <span className="text-[10px] text-[var(--text-tertiary)] font-mono shrink-0 ml-3">
-                      {formatTimeAgo(p.updatedAt)}
-                    </span>
+                    View all
                   </button>
-                ))}
+                </div>
+                <div className="space-y-0.5">
+                  {projects.slice(0, 4).map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => navigate({ to: "/simple-editor", search: { project: p.id } })}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.03] transition-all text-left group"
+                    >
+                      <span className="truncate">{p.name}</span>
+                      <span className="text-[10px] text-[var(--text-tertiary)] font-mono shrink-0 ml-3">
+                        {formatTimeAgo(p.updatedAt)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Jalebi tide */}
+          <div className="w-full overflow-hidden h-20">
+            <svg className="w-full h-full" viewBox="0 0 1440 80" preserveAspectRatio="xMidYMax slice" fill="none" stroke="url(#jalebi-page-grad)" strokeWidth="2" opacity="0.06">
+              <defs>
+                <linearGradient id="jalebi-page-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#F59E0B" />
+                  <stop offset="50%" stopColor="#FCD34D" />
+                  <stop offset="100%" stopColor="#FEF3C7" />
+                </linearGradient>
+              </defs>
+              <g className="jalebi" style={{ animationDelay: "0s" }} transform="translate(120, 55)">
+                <circle cx="0" cy="0" r="18" /><circle cx="0" cy="0" r="10" strokeDasharray="3 3" /><circle cx="0" cy="0" r="4" strokeWidth="1.5" opacity="0.5" />
+              </g>
+              <g className="jalebi" style={{ animationDelay: "0.8s" }} transform="translate(320, 30)">
+                <circle cx="0" cy="0" r="12" /><circle cx="0" cy="0" r="7" strokeDasharray="2 2" /><circle cx="0" cy="0" r="3" strokeWidth="1.5" opacity="0.5" />
+              </g>
+              <g className="jalebi" style={{ animationDelay: "1.6s" }} transform="translate(540, 60)">
+                <circle cx="0" cy="0" r="22" /><circle cx="0" cy="0" r="13" strokeDasharray="4 4" /><circle cx="0" cy="0" r="5" strokeWidth="1.5" opacity="0.5" />
+              </g>
+              <g className="jalebi" style={{ animationDelay: "0.4s" }} transform="translate(780, 40)">
+                <circle cx="0" cy="0" r="15" /><circle cx="0" cy="0" r="9" strokeDasharray="2.5 2.5" /><circle cx="0" cy="0" r="3" strokeWidth="1.5" opacity="0.5" />
+              </g>
+              <g className="jalebi" style={{ animationDelay: "1.2s" }} transform="translate(1020, 65)">
+                <circle cx="0" cy="0" r="20" /><circle cx="0" cy="0" r="12" strokeDasharray="3 3" /><circle cx="0" cy="0" r="4" strokeWidth="1.5" opacity="0.5" />
+              </g>
+              <g className="jalebi" style={{ animationDelay: "2.0s" }} transform="translate(1280, 35)">
+                <circle cx="0" cy="0" r="10" /><circle cx="0" cy="0" r="6" strokeDasharray="2 2" /><circle cx="0" cy="0" r="2" strokeWidth="1.5" opacity="0.5" />
+              </g>
+            </svg>
+          </div>
         </div>
       ) : (
         <ProjectsPage

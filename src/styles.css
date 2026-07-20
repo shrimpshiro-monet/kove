@@ -654,35 +654,17 @@
   .stagger-5 { animation-delay: 0.25s; }
   .stagger-6 { animation-delay: 0.3s; }
 
-  /* ── Ocean tide — jalebis floating ── */
-  .ocean-tide {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 160px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .ocean-tide .jalebi-tide {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .ocean-tide .jalebi {
+  .jalebi {
     transform-origin: center;
     animation: jalebi-float 14s ease-in-out infinite;
   }
 
-  .ocean-tide .jalebi:nth-child(odd) {
+  .jalebi:nth-child(odd) {
     animation-duration: 18s;
     animation-direction: reverse;
   }
 
-  .ocean-tide .jalebi:nth-child(3n) {
+  .jalebi:nth-child(3n) {
     animation-duration: 12s;
   }
 }
