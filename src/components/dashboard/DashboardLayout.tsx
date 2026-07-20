@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icons } from "./Icons";
 import { Sidebar, type NavItem } from "./Sidebar";
@@ -47,6 +48,7 @@ export function DashboardLayout({
   isSignedIn,
   username,
 }: DashboardLayoutProps) {
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
   return (
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
@@ -104,9 +106,20 @@ export function DashboardLayout({
         </svg>
       </div>
 
-      <Sidebar active={activePage} onNavigate={onNavigate} items={navItems} />
+      <Sidebar
+        active={activePage}
+        onNavigate={onNavigate}
+        items={navItems}
+        expanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded((e) => !e)}
+      />
 
-      <main className="md:ml-[60px] p-4 md:p-8 min-h-screen animate-fade-in">
+      <main
+        className={cn(
+          "p-4 md:p-8 min-h-screen animate-fade-in transition-all duration-200 ease-out",
+          sidebarExpanded ? "md:ml-[200px]" : "md:ml-[52px]"
+        )}
+      >
         <TopBar isSignedIn={isSignedIn} username={username} />
         <div key={activePage} className="animate-slide-up">
           {children}

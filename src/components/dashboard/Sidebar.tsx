@@ -1,4 +1,3 @@
-import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 export interface NavItem {
@@ -10,13 +9,11 @@ interface SidebarProps {
   active: string;
   onNavigate: (page: string) => void;
   items: NavItem[];
+  expanded: boolean;
+  onToggle: () => void;
 }
 
-export function Sidebar({ active, onNavigate, items }: SidebarProps) {
-  const [expanded, setExpanded] = useState(true);
-
-  const toggle = useCallback(() => setExpanded((e) => !e), []);
-
+export function Sidebar({ active, onNavigate, items, expanded, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -30,11 +27,11 @@ export function Sidebar({ active, onNavigate, items }: SidebarProps) {
       <div className={cn("flex items-center mb-8", expanded ? "justify-between" : "justify-center")}>
         {expanded && (
           <span className="text-sm font-semibold font-display text-[var(--text-primary)] tracking-tight">
-            Kove
+            Jalebi
           </span>
         )}
         <button
-          onClick={toggle}
+          onClick={onToggle}
           className="w-5 h-5 flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
         >
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-3.5 h-3.5">

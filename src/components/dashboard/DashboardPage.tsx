@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth, useUser } from "@clerk/react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useDashboardStore } from "@/stores/dashboard-store";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectsPage } from "./ProjectsPage";
 import { ThemeProvider } from "./ThemeProvider";
 import { DashboardLayout } from "./DashboardLayout";
@@ -58,14 +57,8 @@ function fireEasterEgg(username: string) {
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16 gap-4">
-      <Skeleton className="h-10 w-64" />
-      <Skeleton className="h-5 w-48" />
-      <Skeleton className="h-14 w-full max-w-[640px] mt-6" />
-      <div className="flex gap-3 mt-4">
-        <Skeleton className="h-12 w-28 rounded-xl" />
-        <Skeleton className="h-12 w-28 rounded-xl" />
-        <Skeleton className="h-12 w-28 rounded-xl" />
-      </div>
+      <span className="text-4xl animate-pulse ">🥨</span>
+      <p className="text-[12px] text-[var(--text-tertiary)] font-medium tracking-wide animate-pulse">Frying jalebis...</p>
     </div>
   );
 }
