@@ -32,9 +32,7 @@ export function Hero() {
       </p>
 
       {/* Mode toggle */}
-      <div className="relative mb-12">
-        <EditorToggle mode={mode} onChange={setMode} />
-      </div>
+      <EditorToggle mode={mode} onChange={setMode} />
 
       {/* Preview placeholder — filled in Task 5 */}
       <div className="w-full max-w-[800px] aspect-video bg-jalebi-surface rounded-2xl border border-jalebi-border mb-10" />
@@ -43,13 +41,13 @@ export function Hero() {
       <div className="flex items-center gap-4">
         <a
           href="/sign-up"
-          className="px-8 py-3 rounded-full bg-jalebi-accent text-jalebi-bg font-semibold text-sm hover:bg-jalebi-accent-hover transition-colors duration-120"
+          className="px-8 py-3 rounded-full bg-jalebi-accent text-jalebi-bg font-semibold text-sm hover:bg-jalebi-accent-hover transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
         >
           Start editing free
         </a>
         <a
           href="#demo"
-          className="px-8 py-3 rounded-full border border-jalebi-border text-white font-medium text-sm hover:border-jalebi-border-strong transition-colors duration-120"
+          className="px-8 py-3 rounded-full border border-jalebi-border text-white font-medium text-sm hover:border-jalebi-border-strong transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
         >
           Watch demo
         </a>

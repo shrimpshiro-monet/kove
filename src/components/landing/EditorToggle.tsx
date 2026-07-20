@@ -7,10 +7,10 @@ interface EditorToggleProps {
 
 export function EditorToggle({ mode, onChange }: EditorToggleProps) {
   return (
-    <div className="relative inline-flex items-center bg-jalebi-surface rounded-full p-1 border border-jalebi-border">
+    <div className="relative inline-flex items-center bg-jalebi-surface rounded-full p-1 border border-jalebi-border mb-12">
       <button
         onClick={() => onChange("simple")}
-        className={`relative px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 z-10 ${
+        className={`relative px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg ${
           mode === "simple"
             ? "text-jalebi-bg"
             : "text-jalebi-border-strong hover:text-white"
@@ -20,7 +20,7 @@ export function EditorToggle({ mode, onChange }: EditorToggleProps) {
       </button>
       <button
         onClick={() => onChange("advanced")}
-        className={`relative px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 z-10 ${
+        className={`relative px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg ${
           mode === "advanced"
             ? "text-jalebi-bg"
             : "text-jalebi-border-strong hover:text-white"
