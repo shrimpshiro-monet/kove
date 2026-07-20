@@ -13,10 +13,6 @@
     "./*": {
       "import": "./src/*.ts",
       "types": "./src/*.ts"
-    },
-    "./edl": {
-      "import": "./src/edl/index.ts",
-      "types": "./src/edl/index.ts"
     }
   },
   "scripts": {
@@ -33,8 +29,8 @@
     "@types/uuid": "^11.0.0",
     "assemblyscript": "^0.27.0",
     "fast-check": "^3.19.0",
-    "typescript": "^5.4.5",
-    "vitest": "^1.6.0"
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.1"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",

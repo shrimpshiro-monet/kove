@@ -16,7 +16,6 @@ export * from "./ai";
 export * from "./animation";
 export * from "./effects";
 export * from "./device";
-export * from "./edl";
 export {
   ExportEngine,
   getExportEngine,
