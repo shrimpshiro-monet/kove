@@ -103,8 +103,6 @@ function DashboardInner() {
         activePage={page}
         onNavigate={handleNavigate}
         navItems={NAV_ITEMS}
-        isSignedIn={false}
-        username={undefined}
       >
         <DashboardSkeleton />
       </DashboardLayout>
@@ -116,8 +114,6 @@ function DashboardInner() {
       activePage={page}
       onNavigate={handleNavigate}
       navItems={NAV_ITEMS}
-      isSignedIn={isSignedIn ?? false}
-      username={displayName}
     >
       {page === "overview" ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16">

@@ -4,29 +4,12 @@ import { cn } from "@/lib/utils";
 import { Icons } from "./Icons";
 import { Sidebar, type NavItem } from "./Sidebar";
 
-interface TopBarProps {
-  isSignedIn: boolean;
-  username?: string;
-}
-
-function TopBar({ isSignedIn, username }: TopBarProps) {
+function TopBar() {
   return (
-    <header className="flex items-center justify-end py-4 mb-6 gap-3">
+    <header className="flex items-center justify-end py-4 mb-6">
       <button className="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.04] transition-colors">
         <Icons.search className="w-4 h-4" />
       </button>
-      {isSignedIn ? (
-        <div className="w-8 h-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-xs font-bold text-white">
-          {username?.[0]?.toUpperCase() || "?"}
-        </div>
-      ) : (
-        <a
-          href="/sign-in"
-          className="text-xs px-4 py-2 rounded-full border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-hover)] transition-all"
-        >
-          Log in
-        </a>
-      )}
     </header>
   );
 }
@@ -36,8 +19,6 @@ interface DashboardLayoutProps {
   activePage: string;
   onNavigate: (page: string) => void;
   navItems: NavItem[];
-  isSignedIn: boolean;
-  username?: string;
 }
 
 export function DashboardLayout({
@@ -45,8 +26,6 @@ export function DashboardLayout({
   activePage,
   onNavigate,
   navItems,
-  isSignedIn,
-  username,
 }: DashboardLayoutProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
@@ -127,7 +106,7 @@ export function DashboardLayout({
           sidebarExpanded ? "md:ml-[200px]" : "md:ml-[52px]"
         )}
       >
-        <TopBar isSignedIn={isSignedIn} username={username} />
+        <TopBar />
         <div key={activePage} className="animate-slide-up">
           {children}
         </div>
