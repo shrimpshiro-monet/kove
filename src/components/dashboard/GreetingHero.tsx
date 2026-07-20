@@ -23,7 +23,7 @@ interface GreetingHeroProps {
 }
 
 export function GreetingHero({ username, isSignedIn }: GreetingHeroProps) {
-  const { active } = useTheme();
+  useTheme();
 
   const headline = isSignedIn
     ? (username ? `Welcome back, ${username}` : pickRandom(GREETINGS_LOGGED_IN))
