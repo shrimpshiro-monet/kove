@@ -19,6 +19,14 @@ const NAV_ITEMS: NavItem[] = [
 const COMMIT_HASH = import.meta.env.VITE_COMMIT_HASH || "dev";
 const VERSION = "0.1.0-beta";
 
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return "now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+  return `${Math.floor(diff / 86400000)}d`;
+}
+
 function fireEasterEgg(username: string) {
   const alreadyFired = sessionStorage.getItem("kove-easter-egg");
   if (alreadyFired) return;
@@ -134,6 +142,35 @@ function DashboardInner() {
               navigate({ to: "/simple-editor", search: { q } });
             }}
           />
+
+          {/* Recent projects */}
+          {projects.length > 0 && (
+            <div className="w-full max-w-[400px] animate-slide-up stagger-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-[var(--text-tertiary)] font-medium tracking-wide uppercase">Recent</span>
+                <button
+                  onClick={() => handleNavigate("projects")}
+                  className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="space-y-0.5">
+                {projects.slice(0, 4).map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => navigate({ to: "/simple-editor", search: { project: p.id } })}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-[12px] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-white/[0.03] transition-all text-left group"
+                  >
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-[10px] text-[var(--text-tertiary)] font-mono shrink-0 ml-3">
+                      {formatTimeAgo(p.updatedAt)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <ProjectsPage
