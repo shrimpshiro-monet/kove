@@ -27,7 +27,7 @@ export function Footer() {
                 <li key={link}>
                   <a
                     href="#"
-                    className="text-sm text-jalebi-border-strong hover:text-white transition-colors duration-150"
+                    className="text-sm text-jalebi-border-strong hover:text-white transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg rounded-sm"
                   >
                     {link}
                   </a>
@@ -47,7 +47,7 @@ export function Footer() {
             <a
               key={icon}
               href="#"
-              className="w-8 h-8 rounded-full bg-jalebi-surface border border-jalebi-border flex items-center justify-center text-xs text-jalebi-border-strong hover:text-white hover:border-jalebi-border-strong transition-all duration-150"
+              className="w-8 h-8 rounded-full bg-jalebi-surface border border-jalebi-border flex items-center justify-center text-xs text-jalebi-border-strong hover:text-white hover:border-jalebi-border-strong transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
             >
               {icon}
             </a>

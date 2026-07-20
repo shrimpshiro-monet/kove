@@ -13,7 +13,7 @@ export function FinalCTA() {
         </h2>
         <a
           href="/sign-up"
-          className="inline-block px-10 py-4 rounded-full bg-jalebi-accent text-jalebi-bg font-semibold text-base hover:bg-jalebi-accent-hover transition-colors duration-120"
+          className="inline-block px-10 py-4 rounded-full bg-jalebi-accent text-jalebi-bg font-semibold text-base hover:bg-jalebi-accent-hover transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
         >
           Get started free
         </a>

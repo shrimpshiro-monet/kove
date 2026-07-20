@@ -58,11 +58,11 @@ export function TryItNow() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Or paste a link..."
-            className="flex-1 bg-transparent text-white text-sm placeholder:text-jalebi-border-strong outline-none"
+            className="flex-1 bg-transparent text-white text-sm placeholder:text-jalebi-border-strong outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg rounded-full"
           />
 
           <button
-            className="w-8 h-8 rounded-full bg-jalebi-accent flex items-center justify-center shrink-0 hover:bg-jalebi-accent-hover transition-colors duration-120"
+            className="w-8 h-8 rounded-full bg-jalebi-accent flex items-center justify-center shrink-0 hover:bg-jalebi-accent-hover transition-colors duration-120 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
             aria-label="Submit"
           >
             <svg className="w-4 h-4 text-jalebi-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -79,7 +79,7 @@ export function TryItNow() {
           {SAMPLE_CLIPS.map((clip) => (
             <button
               key={clip.label}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-jalebi-surface-2 border border-jalebi-border text-sm text-jalebi-border-strong hover:text-white hover:border-jalebi-border-strong transition-all duration-150"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-jalebi-surface-2 border border-jalebi-border text-sm text-jalebi-border-strong hover:text-white hover:border-jalebi-border-strong transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
             >
               <span>{clip.label}</span>
               <span className="text-xs text-jalebi-border-strong">{clip.duration}</span>
