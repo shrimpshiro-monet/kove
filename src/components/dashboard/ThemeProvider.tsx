@@ -53,11 +53,4 @@ export function useTheme() {
   return ctx;
 }
 
-export function useSetEditorContext() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useSetEditorContext must be used within ThemeProvider");
-  return useCallback((editor: "simple" | "advanced") => {
-    // This is a simplified version — the full implementation
-    // would use a separate context. For now, setTheme handles it.
-  }, []);
-}
+

@@ -1,5 +1,3 @@
-import { useTheme } from "./ThemeProvider";
-
 const GREETINGS_LOGGED_IN = [
   "What are we making today?",
   "Ready to create something?",
@@ -23,7 +21,6 @@ interface GreetingHeroProps {
 }
 
 export function GreetingHero({ username, isSignedIn }: GreetingHeroProps) {
-  useTheme();
 
   const headline = isSignedIn
     ? (username ? `Welcome back, ${username}` : pickRandom(GREETINGS_LOGGED_IN))

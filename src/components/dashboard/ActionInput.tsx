@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "./ThemeProvider";
 
 interface ActionInputProps {
   onSubmit: (query: string) => void;
@@ -10,7 +9,6 @@ interface ActionInputProps {
 export function ActionInput({ onSubmit, placeholder = "Describe the vibe…" }: ActionInputProps) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
-  useTheme();
 
   const handleSubmit = useCallback(() => {
     if (query.trim()) {

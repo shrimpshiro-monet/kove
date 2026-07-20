@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@clerk/react";
+import { useAuth, useUser } from "@clerk/react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useDashboardStore } from "@/stores/dashboard-store";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectsPage } from "./ProjectsPage";
 import { ThemeProvider } from "./ThemeProvider";
 import { DashboardLayout } from "./DashboardLayout";
@@ -47,13 +48,31 @@ function fireEasterEgg(username: string) {
   };
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16 gap-4">
+      <Skeleton className="h-10 w-64" />
+      <Skeleton className="h-5 w-48" />
+      <Skeleton className="h-14 w-full max-w-[640px] mt-6" />
+      <div className="flex gap-3 mt-4">
+        <Skeleton className="h-12 w-28 rounded-xl" />
+        <Skeleton className="h-12 w-28 rounded-xl" />
+        <Skeleton className="h-12 w-28 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 function DashboardInner() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const easterEggFired = useRef(false);
   const { state, addProject } = useDashboardStore();
   const projects = state.projects;
   const [page, setPage] = useState<"overview" | "projects">("overview");
+
+  const displayName = user?.firstName ?? user?.username ?? undefined;
 
   // Sync URL search param to page state
   const { page: pageParam } = useSearch({ from: "/dashboard" });
@@ -64,9 +83,9 @@ function DashboardInner() {
   useEffect(() => {
     if (isSignedIn && !easterEggFired.current) {
       easterEggFired.current = true;
-      fireEasterEgg("creator");
+      fireEasterEgg(displayName || "creator");
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, displayName]);
 
   const handleNavigate = (p: string) => {
     if (p === "projects") {
@@ -78,19 +97,33 @@ function DashboardInner() {
     }
   };
 
+  if (!isLoaded) {
+    return (
+      <DashboardLayout
+        activePage={page}
+        onNavigate={handleNavigate}
+        navItems={NAV_ITEMS}
+        isSignedIn={false}
+        username={undefined}
+      >
+        <DashboardSkeleton />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout
       activePage={page}
       onNavigate={handleNavigate}
       navItems={NAV_ITEMS}
       isSignedIn={isSignedIn ?? false}
-      username={isSignedIn ? "creator" : undefined}
+      username={displayName}
     >
       {page === "overview" ? (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16">
           <GreetingHero
             isSignedIn={isSignedIn ?? false}
-            username={isSignedIn ? "creator" : undefined}
+            username={displayName}
           />
           <ActionInput
             onSubmit={(q) => {

@@ -32,7 +32,10 @@ export function ProjectsPage({ projects, onAdd }: ProjectsPageProps) {
           </p>
         </div>
         <button
-          onClick={() => navigate({ to: "/simple-editor" })}
+          onClick={() => {
+            onAdd("Untitled Project");
+            navigate({ to: "/simple-editor" });
+          }}
           className="flex items-center gap-2 bg-[var(--accent)] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5 shrink-0"
         >
           <Icons.plus className="w-4 h-4" /> New Project

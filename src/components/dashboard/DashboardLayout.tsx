@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Icons } from "./Icons";
-import { useTheme } from "./ThemeProvider";
 import { Sidebar, type NavItem } from "./Sidebar";
 
 interface TopBarProps {
@@ -48,7 +47,6 @@ export function DashboardLayout({
   isSignedIn,
   username,
 }: DashboardLayoutProps) {
-  useTheme();
 
   return (
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
