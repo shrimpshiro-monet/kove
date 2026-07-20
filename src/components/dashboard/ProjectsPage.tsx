@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { Icons } from "./Icons";
-import { useTheme } from "./ThemeProvider";
 import type { Project } from "@/stores/dashboard-store";
 
 interface ProjectsPageProps {
