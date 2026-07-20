@@ -48,7 +48,7 @@ export function DashboardLayout({
   isSignedIn,
   username,
 }: DashboardLayoutProps) {
-  const { active } = useTheme();
+  useTheme();
 
   return (
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
