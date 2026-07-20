@@ -1,10 +1,16 @@
-import { useDashboardStore } from "@/stores/dashboard-store";
+import { useState, useEffect } from "react";
+import { useDashboardStore, type PlanTier } from "@/stores/dashboard-store";
 import { ReferralCodeCard } from "./ReferralCodeCard";
 import { ThresholdProgress } from "./ThresholdProgress";
 import { TierSummaryCards } from "./TierSummaryCards";
 import { ReferredUsersTable } from "./ReferredUsersTable";
 import { AffiliateCharts } from "./AffiliateCharts";
 import { EmptyState } from "./EmptyState";
+
+function mapBackendTier(backendTier: string): PlanTier {
+  if (backendTier === "pro") return "nova";
+  return "free";
+}
 
 export function AffiliatePage() {
   const {
@@ -15,6 +21,19 @@ export function AffiliatePage() {
     checkCodeAvailability,
   } = useDashboardStore();
 
+  const [realTier, setRealTier] = useState<PlanTier | null>(null);
+
+  useEffect(() => {
+    fetch("/api/billing/usage")
+      .then((r) => r.json())
+      .then((data: { tier?: string }) => {
+        if (data.tier) setRealTier(mapBackendTier(data.tier));
+      })
+      .catch(() => {});
+  }, []);
+
+  const currentTier = realTier ?? affiliateProfile.tier;
+  const profile = { ...affiliateProfile, tier: currentTier };
   const hasReferrals = referredUsers.length > 0;
 
   return (
@@ -31,25 +50,25 @@ export function AffiliatePage() {
           <h1 className="text-lg font-medium text-[var(--text-primary)]">Affiliate program</h1>
         </div>
         <span className="ml-auto text-xs font-medium text-[var(--accent)] bg-[var(--accent)]/10 px-2.5 py-1 rounded-full capitalize">
-          {affiliateProfile.tier} tier
+          {currentTier} tier
         </span>
       </div>
 
       <div className="space-y-6">
         <ReferralCodeCard
-          customCode={affiliateProfile.customCode}
+          customCode={profile.customCode}
           claimCustomCode={claimCustomCode}
           checkCodeAvailability={checkCodeAvailability}
         />
 
         <ThresholdProgress
-          referredCount={affiliateProfile.referredCount}
-          threshold={affiliateProfile.threshold}
-          oneTimeBonusUnlocked={affiliateProfile.oneTimeBonusUnlocked}
+          referredCount={profile.referredCount}
+          threshold={profile.threshold}
+          oneTimeBonusUnlocked={profile.oneTimeBonusUnlocked}
         />
 
         <TierSummaryCards
-          profile={affiliateProfile}
+          profile={profile}
           commissionRecords={commissionRecords}
         />
 
@@ -60,7 +79,7 @@ export function AffiliatePage() {
           />
         ) : (
           <EmptyState
-            customCode={affiliateProfile.customCode}
+            customCode={profile.customCode}
             onCopy={(text) => navigator.clipboard.writeText(text)}
           />
         )}
