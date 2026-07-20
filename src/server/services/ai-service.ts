@@ -20,7 +20,7 @@ export type AITask =
   | "refine-edl"
   | "clip-similarity";
 
-export type Provider = "cloudflare" | "cerebras" | "groq" | "nvidia";
+export type Provider = "cloudflare" | "cerebras" | "groq" | "nvidia" | "digitalocean";
 
 export type GenerationMode = "ai_director" | "fast_planner";
 
@@ -54,6 +54,7 @@ interface AIEnv {
   GROQ_API_KEY?: string;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL?: string;
+  DIGITALOCEAN_API_KEY?: string;
   ANALYTICS?: any;
 }
 
@@ -72,36 +73,36 @@ const ROUTES: Record<AITask, RouteConfig> = {
   "analyze-footage": {
     primary: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
     fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "nvidia", model: "nvidia/llama-3.3-nemotron-super-49b-v1" },
+    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
     timeoutMs: 45_000,
   },
   "analyze-music": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
-    lastResort: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
+    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
     timeoutMs: 45_000,
   },
   "analyze-reference": {
-    primary: { provider: "nvidia", model: "nvidia/llama-3.3-nemotron-super-49b-v1" },
+    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
     fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
+    lastResort: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
     timeoutMs: 60_000,
   },
   "decode-intent": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
+    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
     lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
     timeoutMs: 30_000,
   },
   "generate-edl-creative": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
+    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
     lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
     timeoutMs: 60_000,
   },
   "refine-edl": {
-    primary: { provider: "groq", model: "llama-3.3-70b-versatile" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
+    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    fallback: { provider: "groq", model: "llama-3.3-70b-versatile" },
     lastResort: { provider: "cerebras", model: "gpt-oss-120b" },
     timeoutMs: 60_000,
   },
@@ -119,8 +120,10 @@ class ProviderClients {
   cerebras: OpenAI;
   groq: OpenAI;
   nvidia: OpenAI | null;
+  digitalocean: OpenAI | null;
   cf: any;
   private nvidiaApiKey: string;
+  private doApiKey: string;
 
   constructor(env: AIEnv) {
     this.cerebras = new OpenAI({
@@ -133,6 +136,8 @@ class ProviderClients {
     });
     this.nvidiaApiKey = env.NVIDIA_NIM_API_KEY || "";
     this.nvidia = null;
+    this.doApiKey = env.DIGITALOCEAN_API_KEY || "";
+    this.digitalocean = null;
     this.cf = env.AI;
   }
 
@@ -144,6 +149,16 @@ class ProviderClients {
       });
     }
     return this.nvidia!;
+  }
+
+  getDigitalOcean(): OpenAI {
+    if (!this.digitalocean && this.doApiKey) {
+      this.digitalocean = new OpenAI({
+        baseURL: "https://api.digitalocean.com/v1",
+        apiKey: this.doApiKey,
+      });
+    }
+    return this.digitalocean!;
   }
 }
 
@@ -287,6 +302,11 @@ async function callRoute<T = unknown>(
       if (!nvidiaClient) throw new Error("NVIDIA NIM API key not configured");
       return callOpenAICompat(nvidiaClient, route.model, opts);
     }
+    case "digitalocean": {
+      const doClient = clients.getDigitalOcean();
+      if (!doClient) throw new Error("DigitalOcean API key not configured");
+      return callOpenAICompat(doClient, route.model, opts);
+    }
     default:
       throw new Error(`Unknown provider: ${route.provider}`);
   }
@@ -386,6 +406,7 @@ export class AIService {
       GROQ_API_KEY: env.GROQ_API_KEY,
       NVIDIA_NIM_API_KEY: (env as any).NVIDIA_NIM_API_KEY,
       NVIDIA_NIM_MODEL: (env as any).NVIDIA_NIM_MODEL,
+      DIGITALOCEAN_API_KEY: (env as any).DIGITALOCEAN_API_KEY,
       ANALYTICS: env.ANALYTICS,
     });
   }
@@ -587,9 +608,19 @@ export class AIService {
   private getLegacyProviderChain(): Array<{ provider: Provider; model: string }> {
     const chain: Array<{ provider: Provider; model: string }> = [];
 
-    // Cerebras first (fast reasoning)
+    // Cloudflare Workers AI — always first (10K neurons/day free)
+    if (this.env.AI) {
+      chain.push({ provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" });
+    }
+
+    // Cerebras (fast reasoning)
     if (this.env.CEREBRAS_API_KEY) {
       chain.push({ provider: "cerebras", model: "gpt-oss-120b" });
+    }
+
+    // Groq (fast streaming)
+    if (this.env.GROQ_API_KEY) {
+      chain.push({ provider: "groq", model: "llama-3.3-70b-versatile" });
     }
 
     // NVIDIA NIM (Kimi, Nemotron, DeepSeek)
@@ -598,14 +629,9 @@ export class AIService {
       chain.push({ provider: "nvidia", model });
     }
 
-    // Groq (fast streaming)
-    if (this.env.GROQ_API_KEY) {
-      chain.push({ provider: "groq", model: "llama-3.3-70b-versatile" });
-    }
-
-    // Cloudflare Workers AI (always available if binding exists)
-    if (this.env.AI) {
-      chain.push({ provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" });
+    // DigitalOcean (last resort)
+    if (this.env.DIGITALOCEAN_API_KEY) {
+      chain.push({ provider: "digitalocean", model: "llama-3.3-70b-versatile" });
     }
 
     return chain;
@@ -627,6 +653,11 @@ export class AIService {
         const nvidiaClient = this.clients.getNvidia();
         if (!nvidiaClient) throw new Error("NVIDIA NIM API key not configured");
         return callOpenAICompat(nvidiaClient, model, opts);
+      }
+      case "digitalocean": {
+        const doClient = this.clients.getDigitalOcean();
+        if (!doClient) throw new Error("DigitalOcean API key not configured");
+        return callOpenAICompat(doClient, model, opts);
       }
       default:
         throw new Error(`Unknown provider: ${provider}`);
