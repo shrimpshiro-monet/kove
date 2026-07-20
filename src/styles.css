@@ -78,6 +78,11 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
+  /* ── Dashboard accent ── */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-surface: var(--background-secondary);
+
   /* ── Background tiers (editor panels) ── */
   --color-background-secondary: var(--background-secondary);
   --color-background-tertiary: var(--background-tertiary);
@@ -255,6 +260,106 @@
 
 /*
  * ─────────────────────────────────────────────────────────────
+ * .theme-margalla — Islamabad green (simple editor)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-margalla,
+.theme-margalla {
+  --background: #0c0a09;
+  --background-secondary: #141210;
+  --background-tertiary: #1c1a17;
+  --background-elevated: #242220;
+
+  --foreground: #E0DCD4;
+  --text-primary: #E0DCD4;
+  --text-secondary: #9A9590;
+  --text-muted: #5A5854;
+  --text-tertiary: #3A3835;
+
+  --card: #181614;
+  --card-foreground: #E0DCD4;
+  --popover: #1c1a17;
+  --popover-foreground: #E0DCD4;
+
+  --primary: #4A7A6A;
+  --primary-foreground: #E0DCD4;
+  --primary-hover: #5A8A7A;
+  --primary-active: #3A6A5A;
+
+  --secondary: #1c1a17;
+  --secondary-foreground: #E0DCD4;
+  --muted: #1c1a17;
+  --muted-foreground: #9A9590;
+  --accent: #4A7A6A;
+  --accent-foreground: #E0DCD4;
+
+  --destructive: #8B4A4A;
+  --destructive-foreground: #E0DCD4;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-active: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #1c1a17;
+  --ring: #4A7A6A;
+
+  --status-success: #4A7A6A;
+  --status-warning: #B8863A;
+  --status-info: #5A7A9A;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
+ * .theme-multan — Multan blue (advanced editor)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-multan,
+.theme-multan {
+  --background: #0a0b0e;
+  --background-secondary: #121316;
+  --background-tertiary: #1a1b1f;
+  --background-elevated: #222328;
+
+  --foreground: #E2DDD4;
+  --text-primary: #E2DDD4;
+  --text-secondary: #9A9A9F;
+  --text-muted: #5A5A60;
+  --text-tertiary: #3A3A40;
+
+  --card: #15171c;
+  --card-foreground: #E2DDD4;
+  --popover: #1a1b1f;
+  --popover-foreground: #E2DDD4;
+
+  --primary: #4A8B8F;
+  --primary-foreground: #E2DDD4;
+  --primary-hover: #5A9B9F;
+  --primary-active: #3A7B7F;
+
+  --secondary: #1a1b1f;
+  --secondary-foreground: #E2DDD4;
+  --muted: #1a1b1f;
+  --muted-foreground: #9A9A9F;
+  --accent: #4A8B8F;
+  --accent-foreground: #E2DDD4;
+
+  --destructive: #8B4A5A;
+  --destructive-foreground: #E2DDD4;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-active: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #1a1b1f;
+  --ring: #4A8B8F;
+
+  --status-success: #4A8B8F;
+  --status-warning: #B8863A;
+  --status-info: #5A7A9A;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
  * Light theme — inverted Kove (paper canvas, ink text)
  * ─────────────────────────────────────────────────────────────
  */
@@ -395,6 +500,14 @@
   textarea:focus {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 1px var(--color-primary);
+  }
+
+  html {
+    transition: background-color 0.3s ease-out;
+  }
+
+  html body {
+    transition: background-color 0.3s ease-out, color 0.3s ease-out;
   }
 }
 
