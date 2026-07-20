@@ -57,7 +57,18 @@ function fireEasterEgg(username: string) {
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16 gap-4">
-      <span className="text-4xl animate-spin [animation-duration:2s]">🌀</span>
+      <svg className="animate-spin [animation-duration:2s]" viewBox="0 0 48 48" width="40" height="40" fill="none">
+        <defs>
+          <linearGradient id="jalebi-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#F59E0B" />
+            <stop offset="50%" stopColor="#FCD34D" />
+            <stop offset="100%" stopColor="#FEF3C7" />
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="20" stroke="url(#jalebi-grad)" strokeWidth="3" opacity="0.6" />
+        <circle cx="24" cy="24" r="14" stroke="url(#jalebi-grad)" strokeWidth="3" strokeDasharray="8 4" opacity="0.8" />
+        <circle cx="24" cy="24" r="6" stroke="url(#jalebi-grad)" strokeWidth="3" strokeDasharray="4 3" />
+      </svg>
       <p className="text-[12px] text-[var(--text-tertiary)] font-medium tracking-wide animate-pulse">Frying jalebis...</p>
     </div>
   );
