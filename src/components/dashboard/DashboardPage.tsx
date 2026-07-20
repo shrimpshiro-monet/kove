@@ -9,12 +9,11 @@ import { DashboardLayout } from "./DashboardLayout";
 import { GreetingHero } from "./GreetingHero";
 import { ActionInput } from "./ActionInput";
 import { QuickActions } from "./QuickActions";
-import { Icons } from "./Icons";
 import type { NavItem } from "./Sidebar";
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "overview", icon: Icons.grid, label: "Overview" },
-  { id: "projects", icon: Icons.folder, label: "Projects" },
+  { id: "overview", label: "Overview" },
+  { id: "projects", label: "Projects" },
 ];
 
 const COMMIT_HASH = import.meta.env.VITE_COMMIT_HASH || "dev";

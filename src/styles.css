@@ -653,6 +653,47 @@
   .stagger-4 { animation-delay: 0.2s; }
   .stagger-5 { animation-delay: 0.25s; }
   .stagger-6 { animation-delay: 0.3s; }
+
+  /* ── Ocean tide wave animation ── */
+  .ocean-tide {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 120px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ocean-tide .wave {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    animation: tide-drift 12s ease-in-out infinite;
+  }
+
+  .ocean-tide .wave:nth-child(2) {
+    opacity: 0.025;
+    animation-duration: 16s;
+    animation-delay: -4s;
+    animation-direction: reverse;
+  }
+
+  .ocean-tide .wave:nth-child(3) {
+    opacity: 0.015;
+    animation-duration: 20s;
+    animation-delay: -8s;
+  }
+}
+
+@keyframes tide-drift {
+  0% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(-25%) translateY(-3px); }
+  50% { transform: translateX(-50%) translateY(0); }
+  75% { transform: translateX(-25%) translateY(3px); }
+  100% { transform: translateX(0) translateY(0); }
 }
 
 /*

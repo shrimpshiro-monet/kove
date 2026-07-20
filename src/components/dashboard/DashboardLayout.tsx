@@ -50,24 +50,22 @@ export function DashboardLayout({
 
   return (
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
-      {/* Ambient glow */}
-      <div
-        className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[120px] pointer-events-none opacity-[0.04]"
-        style={{ backgroundColor: "var(--accent)" }}
-      />
-
-      {/* Grain overlay */}
-      <div
-        className="fixed inset-0 pointer-events-none z-[100] opacity-[0.012]"
-        style={{
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-          backgroundSize: "256px 256px",
-        }}
-      />
+      {/* Ocean tide — subtle wave animation at bottom */}
+      <div className="ocean-tide">
+        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
+          <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" />
+        </svg>
+        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
+          <path d="M0,80 C300,20 600,100 900,60 C1200,20 1320,80 1440,60 L1440,120 L0,120 Z" />
+        </svg>
+        <svg className="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="var(--accent)">
+          <path d="M0,40 C180,100 360,20 540,60 C720,100 900,0 1080,40 C1260,80 1350,60 1440,50 L1440,120 L0,120 Z" />
+        </svg>
+      </div>
 
       <Sidebar active={activePage} onNavigate={onNavigate} items={navItems} />
 
-      <main className="md:ml-[84px] p-4 md:p-6 lg:p-8 min-h-screen animate-fade-in">
+      <main className="md:ml-[60px] p-4 md:p-8 min-h-screen animate-fade-in">
         <TopBar isSignedIn={isSignedIn} username={username} />
         <div key={activePage} className="animate-slide-up">
           {children}
