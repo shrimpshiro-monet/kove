@@ -32,6 +32,7 @@ export function Sidebar({ active, onNavigate, items, expanded, onToggle }: Sideb
     >
       {/* Logo + Toggle */}
       <div className={cn("flex items-center mb-8", expanded ? "justify-between" : "justify-center")}>
+        <img src="/apple-touch-icon.png" alt="Jalebi logo" className="w-6 h-6" />
         {expanded && (
           <span className="text-sm font-semibold font-display text-[var(--text-primary)] tracking-tight">
             Jalebi
