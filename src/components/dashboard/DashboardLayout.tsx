@@ -54,7 +54,14 @@ export function DashboardLayout({
     <div className={cn("min-h-screen text-[var(--text-primary)] font-sans relative overflow-hidden")}>
       {/* Ocean tide — jalebis floating */}
       <div className="ocean-tide">
-        <svg className="jalebi-tide" viewBox="0 0 1440 160" preserveAspectRatio="xMidYMax slice" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.04">
+        <svg className="jalebi-tide" viewBox="0 0 1440 160" preserveAspectRatio="xMidYMax slice" fill="none" stroke="url(#jalebi-ocean-grad)" strokeWidth="2" opacity="0.08">
+          <defs>
+            <linearGradient id="jalebi-ocean-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="50%" stopColor="#FCD34D" />
+              <stop offset="100%" stopColor="#FEF3C7" />
+            </linearGradient>
+          </defs>
           {/* Row 1 — drifting right */}
           <g className="jalebi" style={{ animationDelay: "0s" }} transform="translate(120, 80)">
             <circle cx="0" cy="0" r="20" />
