@@ -117,17 +117,17 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Jalebi brand palette */
-  --color-jalebi-bg: #0a0a0b;
-  --color-jalebi-surface: #131316;
-  --color-jalebi-surface-2: #1a1a1d;
+  /* Jalebi brand palette — synced with Margalla dark surfaces */
+  --color-jalebi-bg: #0c0a09;
+  --color-jalebi-surface: #141210;
+  --color-jalebi-surface-2: #1c1a17;
   --color-jalebi-accent: #ff8a3d;
   --color-jalebi-accent-hover: #ff9d5c;
   --color-jalebi-accent-muted: rgba(255,138,61,0.12);
-  --color-jalebi-positive: #34d399;
+  --color-jalebi-positive: #4A7A6A;
   --color-jalebi-negative: #ff5c5c;
-  --color-jalebi-border: rgba(255,255,255,0.08);
-  --color-jalebi-border-strong: rgba(255,255,255,0.14);
+  --color-jalebi-border: rgba(255, 255, 255, 0.06);
+  --color-jalebi-border-strong: rgba(255, 255, 255, 0.20);
 }
 
 /*
