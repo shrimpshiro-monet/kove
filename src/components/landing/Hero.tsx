@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useScrollReveal } from "./shared/useScrollReveal";
 import { EditorToggle, type EditorMode } from "./EditorToggle";
+import { ScrubbablePreview } from "./ScrubbablePreview";
 
 export function Hero() {
   const [mode, setMode] = useState<EditorMode>("simple");
@@ -34,8 +35,10 @@ export function Hero() {
       {/* Mode toggle */}
       <EditorToggle mode={mode} onChange={setMode} />
 
-      {/* Preview placeholder — filled in Task 5 */}
-      <div className="w-full max-w-[800px] aspect-video bg-jalebi-surface rounded-2xl border border-jalebi-border mb-10" />
+      {/* Scrubbable preview */}
+      <div className="w-full max-w-[800px] mb-10">
+        <ScrubbablePreview mode={mode} />
+      </div>
 
       {/* CTAs */}
       <div className="flex items-center gap-4">
