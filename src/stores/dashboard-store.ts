@@ -221,7 +221,16 @@ const SEED: DashboardState = {
 function loadState(): DashboardState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        ...SEED,
+        ...parsed,
+        affiliateProfile: parsed.affiliateProfile ?? SEED.affiliateProfile,
+        referredUsers: parsed.referredUsers ?? SEED.referredUsers,
+        commissionRecords: parsed.commissionRecords ?? SEED.commissionRecords,
+      };
+    }
   } catch {}
   return SEED;
 }
