@@ -75,6 +75,13 @@ function ChatPage() {
   const navigate = Route.useNavigate();
   const { isSignedIn } = useAuth();
   const { threads, hydrated, createThread, deleteThread, updateThread } = useChatThreads();
+
+  // Gate: redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (isSignedIn === false) {
+      window.location.href = "/sign-in";
+    }
+  }, [isSignedIn]);
   const [draft, setDraft] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [thinkingStage, setThinkingStage] = useState<ThinkingStage>("idle");

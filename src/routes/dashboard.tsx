@@ -1,11 +1,28 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useAuth } from "@clerk/react";
 import { useDashboardStore } from "../stores/dashboard-store";
 import type { Project, ReferralLink, Transaction, Referral, DashboardSettings } from "../stores/dashboard-store";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
+
+function DashboardPage() {
+  const { isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isSignedIn === false) {
+      window.location.href = "/sign-in";
+    }
+  }, [isSignedIn]);
+
+  if (isSignedIn === false) return null;
+
+  return <DashboardContent />;
+}
+
+function DashboardContent() {
 
 // ════════════════════════════════════════════════════════════════
 // TYPES
@@ -967,7 +984,7 @@ function formatRelativeTime(ts: number): string {
 // MAIN DASHBOARD
 // ════════════════════════════════════════════════════════════════
 
-function DashboardPage() {
+function DashboardContent() {
   const [page, setPage] = useState<Page>("overview");
   const store = useDashboardStore();
 

@@ -167,12 +167,20 @@ export function LandingPage() {
           ))}
         </nav>
 
-        <button
-          onClick={() => { window.location.href = "/sign-up"; }}
-          className="bg-white text-[#0a0a0a] border-none px-6 py-2.5 rounded-full text-[12px] font-medium cursor-pointer transition-colors duration-300 hover:bg-[#e8e8e8]"
-        >
-          Get Early Access
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => { window.location.href = "/sign-in"; }}
+            className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer bg-transparent border-none"
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => { window.location.href = "/sign-up"; }}
+            className="bg-white text-[#0a0a0a] border-none px-6 py-2.5 rounded-full text-[12px] font-medium cursor-pointer transition-colors duration-300 hover:bg-[#e8e8e8]"
+          >
+            Get Early Access
+          </button>
+        </div>
       </header>
 
       {/* ── HERO ── */}
