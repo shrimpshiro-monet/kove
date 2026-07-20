@@ -44,7 +44,7 @@ export function ReferralCodeCard({ customCode, claimCustomCode, checkCodeAvailab
 
   const handleCopy = () => {
     if (!customCode) return;
-    navigator.clipboard.writeText(`yourapp.com/r/${customCode}`);
+    navigator.clipboard.writeText(`kove.to/r/${customCode}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -63,7 +63,7 @@ export function ReferralCodeCard({ customCode, claimCustomCode, checkCodeAvailab
       {isClaimed ? (
         <div className="flex items-center gap-2">
           <code className="flex-1 px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-sm font-mono text-[var(--text-primary)] truncate">
-            yourapp.com/r/{customCode}
+            kove.to/r/{customCode}
           </code>
           <button
             onClick={handleCopy}
@@ -81,7 +81,7 @@ export function ReferralCodeCard({ customCode, claimCustomCode, checkCodeAvailab
         <div>
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center">
-              <span className="text-sm text-[var(--text-muted)] mr-0 shrink-0">yourapp.com/r/</span>
+              <span className="text-sm text-[var(--text-muted)] mr-0 shrink-0">kove.to/r/</span>
               <input
                 type="text"
                 value={input}

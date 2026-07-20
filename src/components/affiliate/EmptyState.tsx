@@ -11,7 +11,7 @@ export function EmptyState({ customCode, onCopy }: EmptyStateProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    const link = `yourapp.com/r/${customCode}`;
+    const link = `kove.to/r/${customCode}`;
     onCopy(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -32,7 +32,7 @@ export function EmptyState({ customCode, onCopy }: EmptyStateProps) {
       {customCode && (
         <div className="flex items-center gap-2">
           <code className="px-3 py-1.5 bg-[var(--background-tertiary)] border border-[var(--border)] rounded-lg text-sm font-mono text-[var(--text-primary)]">
-            yourapp.com/r/{customCode}
+            kove.to/r/{customCode}
           </code>
           <button
             onClick={handleCopy}
