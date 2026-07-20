@@ -360,6 +360,63 @@
 
 /*
  * ─────────────────────────────────────────────────────────────
+ * .theme-fey — Fey financial dashboard (affiliate section)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-fey,
+.theme-fey {
+  --background: #0a0a0b;
+  --background-secondary: #0d0d10;
+  --background-tertiary: #131316;
+  --background-elevated: #1a1a1f;
+
+  --foreground: #f2f2f0;
+  --text-primary: #f2f2f0;
+  --text-secondary: #9a9a9f;
+  --text-muted: #6b6b70;
+  --text-tertiary: #4a4a4f;
+
+  --card: #131316;
+  --card-foreground: #f2f2f0;
+  --popover: #1a1a1f;
+  --popover-foreground: #f2f2f0;
+
+  --primary: var(--accent);
+  --primary-foreground: #f2f2f0;
+  --primary-hover: var(--accent);
+  --primary-active: var(--accent);
+
+  --secondary: #1a1a1f;
+  --secondary-foreground: #f2f2f0;
+  --muted: #1a1a1f;
+  --muted-foreground: #6b6b70;
+  --accent: var(--accent);
+  --accent-foreground: #f2f2f0;
+
+  --destructive: #ff5c5c;
+  --destructive-foreground: #f2f2f0;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #131316;
+  --ring: var(--accent);
+
+  --status-success: #34d399;
+  --status-warning: #b8863a;
+  --status-info: #5A7A9A;
+  --status-error: #ff5c5c;
+
+  --chart-1: var(--accent);
+  --chart-2: #9a9a9f;
+  --chart-3: #34d399;
+  --chart-4: #b8863a;
+  --chart-5: #6b6b70;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
  * Light theme — inverted Kove (paper canvas, ink text)
  * ─────────────────────────────────────────────────────────────
  */
