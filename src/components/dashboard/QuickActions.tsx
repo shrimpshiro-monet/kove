@@ -6,7 +6,7 @@ export interface QuickAction {
 }
 
 interface QuickActionsProps {
-  actions: QuickAction[];
+  actions?: QuickAction[];
   onAction: (query: string) => void;
 }
 
