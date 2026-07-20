@@ -34,6 +34,13 @@ import {
   handleGetUsage,
   handleIncrementUsage,
 } from "./server/api/billing";
+import {
+  handleGetAffiliateProfile,
+  handleGetAffiliateReferrals,
+  handleGetAffiliateCommissions,
+  handleClaimAffiliateCode,
+  handleTrackReferral,
+} from "./server/api/affiliate";
 import { getDevEnv } from "./server/lib/dev-env";
 import { runSandboxTestsJSON } from "./server/lib/test-engines-sandbox";
 import { getAIService } from "./server/services/ai-service";
@@ -1036,6 +1043,13 @@ const apiRoutes: ApiRoute[] = [
   { method: "POST", path: "/api/billing/webhook", handler: handleBillingWebhook },
   { method: "GET", path: "/api/billing/usage", handler: handleGetUsage },
   { method: "POST", path: "/api/billing/usage/increment", handler: handleIncrementUsage },
+
+  // Affiliate
+  { method: "GET", path: "/api/affiliate/profile", handler: handleGetAffiliateProfile },
+  { method: "GET", path: "/api/affiliate/referrals", handler: handleGetAffiliateReferrals },
+  { method: "GET", path: "/api/affiliate/commissions", handler: handleGetAffiliateCommissions },
+  { method: "POST", path: "/api/affiliate/claim-code", handler: handleClaimAffiliateCode },
+  { method: "POST", path: "/api/affiliate/track-referral", handler: handleTrackReferral },
 ];
 
 // ------------------------------------------------------------------

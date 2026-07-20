@@ -1,5 +1,6 @@
 import type { Env } from "../../types/env";
 import { jsonResponse } from "../../lib/api-response";
+import { getCommissionRate } from "../affiliate/index";
 
 const PADDLE_WEBHOOK_VERSION = "1";
 
@@ -109,6 +110,71 @@ async function handleTransactionCompleted(
     .run();
 
   console.log(`[webhook] Activated subscription for user ${clerkUserId}`);
+
+  // Check if this user was referred by an affiliate
+  const referral = await env.DB.prepare(
+    "SELECT affiliate_user_id, referral_code FROM referrals WHERE referred_user_id = ?"
+  )
+    .bind(clerkUserId)
+    .first<{ affiliate_user_id: string; referral_code: string }>();
+
+  if (referral) {
+    // Get affiliate's tier at time of payout
+    const affiliate = await env.DB.prepare(
+      "SELECT tier FROM affiliate_profiles WHERE clerk_user_id = ?"
+    )
+      .bind(referral.affiliate_user_id)
+      .first<{ tier: string }>();
+
+    const affiliateTier = affiliate?.tier ?? "free";
+    const referredCount = await env.DB.prepare(
+      "SELECT COUNT(*) as cnt FROM referrals WHERE affiliate_user_id = ?"
+    )
+      .bind(referral.affiliate_user_id)
+      .first<{ cnt: number }>();
+
+    const isFirstReferral = (referredCount?.cnt ?? 0) === 1;
+    const commissionType = isFirstReferral ? "one_time" : "recurring";
+    const rate = getCommissionRate(affiliateTier, commissionType);
+
+    // Get subscription amount from Paddle (approximate from plan)
+    const planId = (data.items as Array<{ priceId: string }> | undefined)?.[0]?.priceId;
+    let amount = 0;
+    if (planId?.includes("nova")) amount = 49;
+    else if (planId?.includes("flux")) amount = 19;
+    else amount = 0;
+
+    const commissionAmount = Math.round(amount * rate * 100) / 100;
+
+    if (commissionAmount > 0) {
+      await env.DB.prepare(
+        `INSERT INTO commissions (id, affiliate_user_id, referred_user_id, type, plan_at_payout, rate, amount, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`
+      )
+        .bind(
+          crypto.randomUUID(),
+          referral.affiliate_user_id,
+          clerkUserId,
+          commissionType,
+          affiliateTier,
+          rate,
+          commissionAmount,
+          Date.now(),
+        )
+        .run();
+
+      console.log(`[affiliate] Created ${commissionType} commission: $${commissionAmount} for ${referral.affiliate_user_id}`);
+
+      // If first referral, unlock the one-time bonus
+      if (isFirstReferral) {
+        await env.DB.prepare(
+          "UPDATE affiliate_profiles SET one_time_bonus_unlocked = 1, updated_at = ? WHERE clerk_user_id = ?"
+        )
+          .bind(Date.now(), referral.affiliate_user_id)
+          .run();
+      }
+    }
+  }
 }
 
 /**
