@@ -47,8 +47,8 @@ export function Pricing() {
             <div
               key={tier.name}
               className={`rounded-2xl p-8 flex flex-col ${
-                tier.featured
-                  ? "bg-jalebi-surface border-2 border-jalebi-accent relative"
+                tier.name === "Nova"
+                  ? "bg-jalebi-surface border-[1.5px] border-jalebi-accent relative"
                   : "bg-jalebi-surface border border-jalebi-border"
               }`}
             >
@@ -74,11 +74,11 @@ export function Pricing() {
               </ul>
 
               <a
-                href={tier.featured ? "/sign-up" : "/sign-up"}
+                href="/sign-up"
                 className={`w-full py-3 rounded-full text-sm font-semibold text-center transition-colors duration-120 ${
-                  tier.featured
-                    ? "bg-jalebi-accent text-jalebi-bg hover:bg-jalebi-accent-hover"
-                    : "border border-jalebi-border text-white hover:border-jalebi-border-strong"
+                  tier.name === "Nova"
+                    ? "bg-jalebi-accent text-jalebi-bg hover:bg-jalebi-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
+                    : "border border-jalebi-border text-white hover:border-jalebi-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jalebi-accent focus-visible:ring-offset-2 focus-visible:ring-offset-jalebi-bg"
                 }`}
               >
                 {tier.cta}
