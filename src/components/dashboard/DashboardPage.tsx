@@ -57,7 +57,7 @@ function fireEasterEgg(username: string) {
 function DashboardSkeleton() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16 gap-4">
-      <span className="text-4xl animate-pulse ">🥨</span>
+      <span className="text-4xl animate-spin [animation-duration:2s]">🥨</span>
       <p className="text-[12px] text-[var(--text-tertiary)] font-medium tracking-wide animate-pulse">Frying jalebis...</p>
     </div>
   );
