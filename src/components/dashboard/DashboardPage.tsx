@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@clerk/react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useDashboardStore } from "@/stores/dashboard-store";
+import { ProjectsPage } from "./ProjectsPage";
 import { ThemeProvider } from "./ThemeProvider";
 import { DashboardLayout } from "./DashboardLayout";
 import { GreetingHero } from "./GreetingHero";
@@ -49,6 +51,15 @@ function DashboardInner() {
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const easterEggFired = useRef(false);
+  const { state, addProject } = useDashboardStore();
+  const projects = state.projects;
+  const [page, setPage] = useState<"overview" | "projects">("overview");
+
+  // Sync URL search param to page state
+  const { page: pageParam } = useSearch({ from: "/dashboard" });
+  useEffect(() => {
+    if (pageParam === "projects") setPage("projects");
+  }, [pageParam]);
 
   useEffect(() => {
     if (isSignedIn && !easterEggFired.current) {
@@ -57,38 +68,47 @@ function DashboardInner() {
     }
   }, [isSignedIn]);
 
-  const handleNavigate = (page: string) => {
-    if (page === "projects") {
+  const handleNavigate = (p: string) => {
+    if (p === "projects") {
+      setPage("projects");
       navigate({ to: "/dashboard", search: { page: "projects" } });
     } else {
+      setPage("overview");
       navigate({ to: "/dashboard" });
     }
   };
 
   return (
     <DashboardLayout
-      activePage="overview"
+      activePage={page}
       onNavigate={handleNavigate}
       navItems={NAV_ITEMS}
       isSignedIn={isSignedIn ?? false}
       username={isSignedIn ? "creator" : undefined}
     >
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16">
-        <GreetingHero
-          isSignedIn={isSignedIn ?? false}
-          username={isSignedIn ? "creator" : undefined}
+      {page === "overview" ? (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] -mt-16">
+          <GreetingHero
+            isSignedIn={isSignedIn ?? false}
+            username={isSignedIn ? "creator" : undefined}
+          />
+          <ActionInput
+            onSubmit={(q) => {
+              navigate({ to: "/simple-editor", search: { q } });
+            }}
+          />
+          <QuickActions
+            onAction={(q) => {
+              navigate({ to: "/simple-editor", search: { q } });
+            }}
+          />
+        </div>
+      ) : (
+        <ProjectsPage
+          projects={projects}
+          onAdd={addProject}
         />
-        <ActionInput
-          onSubmit={(q) => {
-            navigate({ to: "/simple-editor", search: { q } });
-          }}
-        />
-        <QuickActions
-          onAction={(q) => {
-            navigate({ to: "/simple-editor", search: { q } });
-          }}
-        />
-      </div>
+      )}
     </DashboardLayout>
   );
 }
