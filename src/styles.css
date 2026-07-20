@@ -33,6 +33,7 @@
   --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-ui: "Inter", "Söhne", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+  --font-cursive: "Dancing Script", cursive;
 
   /* ── Radius ── */
   --radius-sm: calc(var(--radius) - 4px);
@@ -782,6 +783,108 @@
   50% { transform: translateY(0) translateX(0) rotate(0deg); }
   75% { transform: translateY(6px) translateX(-4px) rotate(-2deg); }
   100% { transform: translateY(0) translateX(0) rotate(0deg); }
+}
+
+/* ── Cooking Jalebi animations ── */
+@keyframes jalebi-pipe {
+  from { stroke-dashoffset: 800; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes jalebi-cook {
+  0% { stroke: var(--color-jalebi-accent); filter: none; }
+  50% { stroke: #ffcc00; filter: drop-shadow(0 0 6px rgba(255,200,0,0.4)); }
+  100% { stroke: var(--color-jalebi-accent); filter: drop-shadow(0 0 8px rgba(255,138,61,0.5)); }
+}
+
+@keyframes jalebi-bubble {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-20px) scale(1.2); }
+}
+
+@keyframes jalebi-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-jalebi-pipe {
+    animation: jalebi-pipe 2s ease-in-out forwards;
+  }
+
+  .animate-jalebi-cook {
+    animation: jalebi-cook 1s ease-in-out forwards;
+  }
+
+  .animate-jalebi-done {
+    filter: drop-shadow(0 0 8px rgba(255,138,61,0.5));
+  }
+
+  .animate-jalebi-bubble {
+    animation: jalebi-bubble 1.2s ease-out infinite;
+  }
+
+  .animate-jalebi-spiral-glow {
+    animation: jalebi-spiral-glow 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes jalebi-spiral-glow {
+  0%, 100% { opacity: 0.3; stroke-width: 2; }
+  50% { opacity: 0.7; stroke-width: 3.5; }
+}
+
+@keyframes jalebi-text-glow {
+  0% { text-shadow: none; }
+  50% { text-shadow: 0 0 20px rgba(255,138,61,0.6), 0 0 40px rgba(255,138,61,0.3); }
+  100% { text-shadow: 0 0 12px rgba(255,138,61,0.4); }
+}
+
+@keyframes jalebi-breathe {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.05); }
+}
+
+@keyframes jalebi-draw {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    text-shadow: none;
+  }
+  70% {
+    clip-path: inset(0 0% 0 0);
+    text-shadow: none;
+  }
+  100% {
+    clip-path: inset(0 0% 0 0);
+    text-shadow: 0 0 18px rgba(255,138,61,0.5), 0 0 36px rgba(255,138,61,0.25);
+  }
+}
+
+@layer utilities {
+  .animate-jalebi-text-glow {
+    animation: jalebi-text-glow 1.2s ease-in-out forwards;
+  }
+
+  .animate-jalebi-breathe {
+    animation: jalebi-breathe 6s ease-in-out infinite;
+  }
+
+  .animate-jalebi-draw {
+    animation: jalebi-draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+/* ── Spin ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-spin {
+    animation: spin 2s linear infinite;
+  }
 }
 
 /*

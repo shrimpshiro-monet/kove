@@ -9,7 +9,7 @@ export function FinalCTA() {
       <FilmstripBorder className="max-w-[1100px] mx-auto mb-16" />
       <div className="max-w-[600px] mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-white font-display mb-8">
-          Stop editing.<br />Start directing.
+          Stop editing.<br />Start <span className="text-jalebi-accent">directing</span>.
         </h2>
         <a
           href="/sign-up"

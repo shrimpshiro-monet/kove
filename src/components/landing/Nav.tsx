@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { JalebiLogo } from "./JalebiLogo";
 
 const LINKS = [
   { label: "Features", href: "#features" },
@@ -24,10 +25,8 @@ export function Nav() {
       }`}
     >
       {/* Logo */}
-      <a href="/" className="flex items-center gap-2.5">
-        <span className="text-lg font-semibold text-jalebi-accent tracking-tight font-display">
-          Jalebi
-        </span>
+      <a href="/" className="text-jalebi-accent">
+        <JalebiLogo />
       </a>
 
       {/* Nav links */}
