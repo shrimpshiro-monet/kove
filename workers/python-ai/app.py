@@ -18,6 +18,7 @@ from workers.subject_track_mask import (
 )
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
+from workers.frame_extractor import extract_frames
 from workers.reference_analyzer import analyze_reference
 
 app = FastAPI(title="Monet Python AI Worker", version="0.2.0")
@@ -183,9 +184,36 @@ class TrackMaskBody(BaseModel):
     reidThreshold: float = Field(default=0.75, ge=0.0, le=1.0)
 
 
+class ExtractFramesBody(BaseModel):
+    filePath: str = Field(min_length=1)
+    fps: float = Field(default=3.0, gt=0, le=30)
+    maxFrames: Optional[int] = Field(default=None, ge=1)
+    outputDir: Optional[str] = None
+
+
 class DeepAnalysisBody(BaseModel):
     filePath: str = Field(min_length=1)
     audioPath: Optional[str] = None
+
+
+@app.post("/extract-frames")
+def extract_frames_route(body: ExtractFramesBody) -> dict:
+    result = extract_frames(
+        file_path=body.filePath,
+        fps=body.fps,
+        max_frames=body.maxFrames,
+        output_dir=body.outputDir,
+    )
+    return {
+        "success": True,
+        "data": {
+            "frames": [
+                {"path": f.path, "timestamp_s": f.timestamp_s, "width": f.width, "height": f.height}
+                for f in result.frames
+            ],
+            "metadata": result.metadata,
+        },
+    }
 
 
 @app.post("/spatial/track-mask")
