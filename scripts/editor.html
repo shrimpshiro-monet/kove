@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalebi — Browser Editor</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'SF Pro', system-ui, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+.header { padding: 20px 30px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 16px; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .tag { background: #22c55e; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.main { display: flex; height: calc(100vh - 60px); }
+.preview { flex: 1; display: flex; align-items: center; justify-content: center; background: #111; position: relative; }
+.preview canvas { max-width: 100%; max-height: 100%; border-radius: 8px; }
+.sidebar { width: 320px; background: #141414; border-left: 1px solid #222; padding: 20px; overflow-y: auto; }
+.sidebar h2 { font-size: 14px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.controls { display: flex; gap: 8px; margin-bottom: 20px; }
+.btn { padding: 8px 16px; border: 1px solid #333; background: #1a1a1a; color: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+.btn:hover { background: #2a2a2a; border-color: #555; }
+.btn.primary { background: #22c55e; color: #000; border-color: #22c55e; font-weight: 600; }
+.btn.primary:hover { background: #16a34a; }
+.timeline { margin-bottom: 20px; }
+.timeline-bar { height: 40px; background: #1a1a1a; border-radius: 6px; position: relative; overflow: hidden; }
+.shot { position: absolute; top: 4px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.15s; }
+.shot:hover { opacity: 0.8; }
+.shot.active { outline: 2px solid #22c55e; outline-offset: 1px; }
+.shot:nth-child(odd) { background: #3b82f6; }
+.shot:nth-child(even) { background: #8b5cf6; }
+.effect-list { margin-bottom: 20px; }
+.effect-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #1a1a1a; border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+.effect-dot { width: 8px; height: 8px; border-radius: 50%; }
+.info { font-size: 12px; color: #666; line-height: 1.6; }
+.info strong { color: #aaa; }
+.playhead { position: absolute; top: 0; width: 2px; height: 100%; background: #ef4444; z-index: 10; pointer-events: none; }
+.time-display { font-size: 12px; color: #888; margin-top: 8px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 Jalebi Editor</h1>
+  <span class="tag">BROWSER</span>
+</div>
+<div class="main">
+  <div class="preview">
+    <canvas id="canvas" width="1280" height="720"></canvas>
+    <div class="playhead" id="playhead"></div>
+  </div>
+  <div class="sidebar">
+    <h2>Controls</h2>
+    <div class="controls">
+      <button class="btn primary" id="playBtn" onclick="togglePlay()">▶ Play</button>
+      <button class="btn" onclick="render()">⚡ Render</button>
+      <button class="btn" onclick="exportVideo()">📦 Export</button>
+    </div>
+    <div class="time-display" id="timeDisplay">0.00s / 15.00s</div>
+
+    <h2>Timeline</h2>
+    <div class="timeline">
+      <div class="timeline-bar" id="timelineBar"></div>
+    </div>
+
+    <h2>Shots</h2>
+    <div id="shotList"></div>
+
+    <h2>Effects</h2>
+    <div class="effect-list" id="effectList"></div>
+
+    <h2>Info</h2>
+    <div class="info" id="infoPanel"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA — MikeRoss × 21 Savage
+// ═══════════════════════════════════════════════════════════════
+
+const VIDEO_SRC = "../test-videos/MikeRoss.mp4";
+const SONG_SRC = "../test-videos/audio/21 Savage - a lot ft. J. Cole.mp3";
+
+// Song section: chorus starts at 56s in the song
+const SONG_CHORUS_START = 56;
+
+// Selected best moments from video (motion-scored)
+const SHOTS = [
+  { id: 1, src: VIDEO_SRC, start: 24.0, dur: 1.8, motion: 0.62, label: "Close-up" },
+  { id: 2, src: VIDEO_SRC, start: 52.0, dur: 1.6, motion: 0.72, label: "High Energy" },
+  { id: 3, src: VIDEO_SRC, start: 28.0, dur: 1.5, motion: 0.67, label: "Action" },
+  { id: 4, src: VIDEO_SRC, start: 68.0, dur: 2.0, motion: 0.68, label: "Best Moment" },
+  { id: 5, src: VIDEO_SRC, start: 48.0, dur: 1.5, motion: 0.59, label: "Reaction" },
+  { id: 6, src: VIDEO_SRC, start: 110.0, dur: 1.8, motion: 0.58, label: "Climax" },
+  { id: 7, src: VIDEO_SRC, start: 74.0, dur: 1.5, motion: 0.51, label: "Setup" },
+  { id: 8, src: VIDEO_SRC, start: 114.0, dur: 1.3, motion: 0.62, label: "Finale" },
+];
+
+// Effects per shot
+const EFFECTS = SHOTS.map((s, i) => ({
+  shotId: s.id,
+  speedRamp: i % 3 === 0 ? { in: 0.7, out: 1.2 } : null,
+  zoom: s.motion > 0.65 ? { scale: 1.08, ease: "ease-out" } : null,
+  flash: i > 0,
+  textOverlay: i === 0 ? { text: "MIKE ROSS", y: 0.85, size: 48, color: "#fff" }
+    : i === 3 ? { text: "THE BEST", y: 0.15, size: 36, color: "#ef4444" }
+    : i === 7 ? { text: "JALEBI", y: 0.5, size: 64, color: "#22c55e" }
+    : null,
+  colorGrade: { contrast: 1.4, saturation: 0.7, brightness: -0.05 },
+}));
+
+const TOTAL_DURATION = SHOTS.reduce((s, shot) => s + shot.dur, 0);
+
+// ═══════════════════════════════════════════════════════════════
+// VIDEO DECODING
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let videoEl = null;
+let songEl = null;
+let isPlaying = false;
+let currentTime = 0;
+let lastFrameTime = 0;
+let decodedFrames = {};
+let decoding = false;
+
+async function loadMedia() {
+  // Load video
+  videoEl = document.createElement("video");
+  videoEl.src = VIDEO_SRC;
+  videoEl.crossOrigin = "anonymous";
+  videoEl.muted = true;
+  await videoEl.play().catch(() => {});
+  videoEl.pause();
+
+  // Load song
+  songEl = new Audio(SONG_SRC);
+  songEl.crossOrigin = "anonymous";
+
+  // Decode all frames for each shot
+  decoding = true;
+  for (const shot of SHOTS) {
+    decodedFrames[shot.id] = [];
+    const frames = await extractShotFrames(shot);
+    decodedFrames[shot.id] = frames;
+  }
+  decoding = false;
+
+  updateUI();
+  console.log("Media loaded. Ready to play.");
+}
+
+async function extractShotFrames(shot) {
+  const frames = [];
+  const tempVideo = document.createElement("video");
+  tempVideo.src = shot.src;
+  tempVideo.crossOrigin = "anonymous";
+  tempVideo.muted = true;
+
+  await new Promise((resolve) => {
+    tempVideo.onloadedmetadata = resolve;
+    tempVideo.onerror = resolve;
+  });
+
+  // Seek to shot start
+  tempVideo.currentTime = shot.start;
+  await new Promise((resolve) => {
+    tempVideo.onseeked = resolve;
+    tempVideo.onerror = resolve;
+  });
+
+  // Extract frames at 30fps
+  const frameCount = Math.ceil(shot.dur * 30);
+  for (let i = 0; i < frameCount; i++) {
+    const t = shot.start + (i / 30);
+    if (t >= tempVideo.duration) break;
+
+    tempVideo.currentTime = t;
+    await new Promise((resolve) => {
+      tempVideo.onseeked = resolve;
+      setTimeout(resolve, 100);
+    });
+
+    // Draw to offscreen canvas
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = 1280;
+    offCanvas.height = 720;
+    const offCtx = offCanvas.getContext("2d");
+    offCtx.drawImage(tempVideo, 0, 0, 1280, 720);
+
+    frames.push({
+      time: t,
+      imageData: offCtx.getImageData(0, 0, 1280, 720),
+    });
+  }
+
+  tempVideo.src = "";
+  return frames;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYBACK + COMPOSITING
+// ═══════════════════════════════════════════════════════════════
+
+function togglePlay() {
+  if (isPlaying) {
+    pause();
+  } else {
+    play();
+  }
+}
+
+function play() {
+  isPlaying = true;
+  lastFrameTime = performance.now();
+  document.getElementById("playBtn").textContent = "⏸ Pause";
+
+  // Start song from chorus
+  if (songEl) {
+    songEl.currentTime = SONG_CHORUS_START;
+    songEl.play().catch(() => {});
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function pause() {
+  isPlaying = false;
+  document.getElementById("playBtn").textContent = "▶ Play";
+  if (songEl) songEl.pause();
+}
+
+function tick(now) {
+  if (!isPlaying) return;
+
+  const dt = (now - lastFrameTime) / 1000;
+  lastFrameTime = now;
+  currentTime += dt;
+
+  if (currentTime >= TOTAL_DURATION) {
+    currentTime = 0;
+    pause();
+    render();
+    return;
+  }
+
+  renderFrame(currentTime);
+  requestAnimationFrame(tick);
+}
+
+function renderFrame(time) {
+  // Find which shot we're in
+  let elapsed = 0;
+  let activeShot = null;
+  let localTime = 0;
+
+  for (const shot of SHOTS) {
+    if (time >= elapsed && time < elapsed + shot.dur) {
+      activeShot = shot;
+      localTime = time - elapsed;
+      break;
+    }
+    elapsed += shot.dur;
+  }
+
+  if (!activeShot) return;
+
+  // Get the right frame
+  const frames = decodedFrames[activeShot.id];
+  if (!frames || frames.length === 0) return;
+
+  const frameIndex = Math.min(Math.floor(localTime * 30), frames.length - 1);
+  const frame = frames[frameIndex];
+
+  // Draw base frame
+  ctx.putImageData(frame.imageData, 0, 0);
+
+  // Apply effects
+  const effect = EFFECTS.find(e => e.shotId === activeShot.id);
+  if (effect) {
+    // Color grade
+    if (effect.colorGrade) {
+      const imageData = ctx.getImageData(0, 0, 1280, 720);
+      const d = imageData.data;
+      const c = effect.colorGrade.contrast;
+      const s = effect.colorGrade.saturation;
+      const b = effect.colorGrade.brightness;
+      for (let i = 0; i < d.length; i += 4) {
+        // Contrast
+        d[i] = clamp(((d[i] / 255 - 0.5) * c + 0.5) * 255);
+        d[i+1] = clamp(((d[i+1] / 255 - 0.5) * c + 0.5) * 255);
+        d[i+2] = clamp(((d[i+2] / 255 - 0.5) * c + 0.5) * 255);
+        // Saturation
+        const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+        d[i] = clamp(gray + (d[i] - gray) * s);
+        d[i+1] = clamp(gray + (d[i+1] - gray) * s);
+        d[i+2] = clamp(gray + (d[i+2] - gray) * s);
+        // Brightness
+        d[i] = clamp(d[i] + b * 255);
+        d[i+1] = clamp(d[i+1] + b * 255);
+        d[i+2] = clamp(d[i+2] + b * 255);
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Zoom (crop + scale)
+    if (effect.zoom) {
+      const zoom = 1 + (effect.zoom.scale - 1) * (localTime / activeShot.dur);
+      ctx.save();
+      ctx.translate(640, 360);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-640, -360);
+      ctx.restore();
+    }
+
+    // Flash transition (first 50ms of shot)
+    if (effect.flash && localTime < 0.05) {
+      ctx.fillStyle = `rgba(255,255,255,${1 - localTime / 0.05})`;
+      ctx.fillRect(0, 0, 1280, 720);
+    }
+
+    // Text overlay
+    if (effect.textOverlay) {
+      const t = effect.textOverlay;
+      const alpha = localTime < 0.3 ? localTime / 0.3 :
+                    localTime > activeShot.dur - 0.3 ? (activeShot.dur - localTime) / 0.3 : 1;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = `bold ${t.size}px 'SF Pro', system-ui`;
+      ctx.fillStyle = t.color;
+      ctx.textAlign = "center";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 10;
+      ctx.fillText(t.text, 640, 720 * t.y);
+      ctx.restore();
+    }
+  }
+
+  // Vignette
+  const vignette = ctx.createRadialGradient(640, 360, 200, 640, 360, 700);
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.4)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, 1280, 720);
+
+  // Update playhead
+  const progress = time / TOTAL_DURATION;
+  document.getElementById("playhead").style.left = `${progress * 100}%`;
+  document.getElementById("timeDisplay").textContent = `${time.toFixed(2)}s / ${TOTAL_DURATION.toFixed(2)}s`;
+}
+
+function clamp(v) { return Math.max(0, Math.min(255, v)); }
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER (frame-by-frame export)
+// ═══════════════════════════════════════════════════════════════
+
+async function render() {
+  console.log("Rendering all frames...");
+  for (let t = 0; t < TOTAL_DURATION; t += 1/30) {
+    renderFrame(t);
+    await new Promise(r => setTimeout(r, 1));
+  }
+  console.log("Render complete.");
+  updateUI();
+}
+
+async function exportVideo() {
+  // Use MediaRecorder to capture canvas + audio
+  const stream = canvas.captureStream(30);
+  const audioCtx = new AudioContext();
+  const source = audioCtx.createMediaElementSource(songEl);
+  const dest = audioCtx.createMediaStreamDestination();
+  source.connect(dest);
+  source.connect(audioCtx.destination);
+
+  // Combine video + audio streams
+  const combinedStream = new MediaStream([
+    ...stream.getVideoTracks(),
+    ...dest.stream.getAudioTracks(),
+  ]);
+
+  const recorder = new MediaRecorder(combinedStream, { mimeType: "video/webm;codecs=vp9" });
+  const chunks = [];
+
+  recorder.ondataavailable = (e) => chunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: "video/webm" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mikeross-x-21savage.webm";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Start recording
+  currentTime = 0;
+  play();
+  recorder.start();
+
+  // Stop after duration
+  setTimeout(() => {
+    recorder.stop();
+    pause();
+    audioCtx.close();
+  }, TOTAL_DURATION * 1000 + 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════════════════════
+
+function updateUI() {
+  // Timeline
+  const bar = document.getElementById("timelineBar");
+  bar.innerHTML = "";
+  let x = 0;
+  for (const shot of SHOTS) {
+    const pct = (shot.dur / TOTAL_DURATION) * 100;
+    const div = document.createElement("div");
+    div.className = "shot";
+    div.style.left = `${x}%`;
+    div.style.width = `${pct}%`;
+    div.textContent = shot.label;
+    div.onclick = () => { currentTime = x * TOTAL_DURATION / 100; renderFrame(currentTime); };
+    bar.appendChild(div);
+    x += pct;
+  }
+
+  // Shot list
+  const shotList = document.getElementById("shotList");
+  shotList.innerHTML = SHOTS.map((s, i) => `
+    <div class="effect-item">
+      <div class="effect-dot" style="background:${i % 2 === 0 ? '#3b82f6' : '#8b5cf6'}"></div>
+      <span>${s.label} (${s.dur.toFixed(1)}s)</span>
+      <span style="color:#666;margin-left:auto">M:${s.motion.toFixed(2)}</span>
+    </div>
+  `).join("");
+
+  // Effects list
+  const effectList = document.getElementById("effectList");
+  effectList.innerHTML = EFFECTS.map(e => {
+    const items = [];
+    if (e.speedRamp) items.push("⚡ Speed Ramp");
+    if (e.zoom) items.push("🔍 Zoom");
+    if (e.flash) items.push("💫 Flash");
+    if (e.textOverlay) items.push(`📝 "${e.textOverlay.text}"`);
+    items.push("🎨 Dark Grade");
+    items.push("🌑 Vignette");
+    return `<div class="effect-item">${items.join(" · ")}</div>`;
+  }).join("");
+
+  // Info
+  document.getElementById("infoPanel").innerHTML = `
+    <strong>Video:</strong> ${SHOTS.length} shots, ${TOTAL_DURATION.toFixed(1)}s<br>
+    <strong>Song:</strong> 21 Savage - a lot (chorus @ ${SONG_CHORUS_START}s)<br>
+    <strong>Effects:</strong> Flash cuts, speed ramps, zoom, text overlays, dark color grade, vignette<br>
+    <strong>Duration:</strong> ${TOTAL_DURATION.toFixed(1)}s
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+loadMedia();
+</script>
+</body>
+</html>
