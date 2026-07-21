@@ -1,0 +1,28 @@
+{
+  "name": "@monet/engine-contracts",
+  "version": "0.0.1",
+  "description": "Shared parameter contracts extracted from kove-advanced engines. Single source of truth for valid engine params.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./video/*": "./src/video/*.ts",
+    "./audio/*": "./src/audio/*.ts",
+    "./text/*": "./src/text/*.ts",
+    "./overlays/*": "./src/overlays/*.ts",
+    "./spatial/*": "./src/spatial/*.ts",
+    "./animation/*": "./src/animation/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
