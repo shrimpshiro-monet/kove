@@ -18,6 +18,7 @@ from workers.subject_track_mask import (
 )
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
+from workers.cut_detector import detect_cuts
 from workers.frame_extractor import extract_frames
 from workers.reference_analyzer import analyze_reference
 
@@ -257,6 +258,20 @@ class AnalyzeReferenceBody(BaseModel):
 @app.post("/analyze-reference")
 def analyze_reference_route(body: AnalyzeReferenceBody) -> dict:
     result = analyze_reference(body.filePath)
+    return {"success": True, "data": result}
+
+
+class DetectCutsBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    fps: float = Field(default=3.0, gt=0)
+    threshold: float = Field(default=0.3, gt=0, lt=1)
+
+
+@app.post("/detect-cuts")
+def detect_cuts_route(body: DetectCutsBody) -> dict:
+    result = detect_cuts(
+        frame_dir=body.frameDir, fps=body.fps, threshold=body.threshold
+    )
     return {"success": True, "data": result}
 
 
