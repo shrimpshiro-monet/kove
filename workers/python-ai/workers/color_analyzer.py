@@ -7,12 +7,13 @@ import cv2
 import numpy as np
 
 
-def classify_temperature(avg_hue: float, avg_saturation: float) -> str:
+def classify_temperature(avg_hue: float) -> str:
     """Classify color temperature from HSV hue.
 
     Warm hues: 0-30 (red/orange/yellow)
+    Neutral: 30-89 (yellow-green transition)
     Cool hues: 90-150 (blue/cyan)
-    Neutral: everything else
+    Warm hues: >150 (magenta/red)
     """
     if avg_hue < 30 or avg_hue > 150:
         return "warm"
@@ -44,7 +45,7 @@ def analyze_color(
         if start_frame >= len(frame_files):
             shot_colors.append({
                 "shot_index": i,
-                "dominant_hue": "neutral",
+                "dominant_hue": "90",
                 "temperature": "neutral",
                 "saturation": 0,
                 "brightness": 0,
@@ -67,7 +68,7 @@ def analyze_color(
         avg_hue = float(np.mean(hues)) if hues else 90
         avg_sat = float(np.mean(sats)) if sats else 0.5
         avg_bright = float(np.mean(brights)) if brights else 0.5
-        temperature = classify_temperature(avg_hue, avg_sat)
+        temperature = classify_temperature(avg_hue)
 
         shot_colors.append({
             "shot_index": i,
@@ -93,7 +94,7 @@ def analyze_color(
         "global": {
             "contrast": round(contrast, 4),
             "saturation": round(global_sat, 4),
-            "temperature_shift": classify_temperature(global_hue, global_sat),
+            "temperature_shift": classify_temperature(global_hue),
             "shadows_tint": "neutral",
             "highlights_tint": "neutral",
         },
