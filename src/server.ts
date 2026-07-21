@@ -10,6 +10,7 @@ import { handleUploadAndDetect } from "./server/api/upload-and-detect";
 import { handleAnalyze } from "./server/api/analyze";
 import { handleGenerateEDL } from "./server/api/generate-edl";
 import { handleRefineEDL } from "./server/api/refine-edl";
+import { handleV3Analyze, handleV3Generate, handleV3Refine, handleV3Render } from "./server/api/v3-pipeline";
 import { handleTranscribe } from "./server/api/transcribe";
 import { handleAnalyzeReference } from "./server/api/analyze-reference";
 import { handleDirectorFeedbackRequest } from "./server/api/director-feedback";
@@ -1028,6 +1029,12 @@ const apiRoutes: ApiRoute[] = [
 
   // Style Replication
   { method: "POST", path: "/api/replicate-style", handler: handleReplicateStyle },
+
+  // V3 Pipeline (new)
+  { method: "POST", path: "/api/v3/analyze", handler: handleV3Analyze },
+  { method: "POST", path: "/api/v3/generate", handler: handleV3Generate },
+  { method: "POST", path: "/api/v3/refine", handler: handleV3Refine },
+  { method: "POST", path: "/api/v3/render", handler: handleV3Render },
 
   // Frame-Level Precision Tools
   { method: "POST", path: "/api/lut/generate", handler: handleGenerateLUT },

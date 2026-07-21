@@ -5,8 +5,8 @@
  * and Jalebi maps each line to the right moment in the footage.
  */
 import type { ClipAnalysis } from "./clip-analyzer";
-import type { Shot, ShotEDL } from "../../packages/edl-v3/src/schema";
-import { createShot, registerAsset } from "../../packages/edl-v3/src/helpers";
+import type { Shot, ShotEDL } from "@monet/edl-v3";
+import { createShot, registerAsset } from "@monet/edl-v3";
 import { findMatchingSegment, type SpeechSegment } from "./transcription";
 import { findBestCutPointNear, type CutPoint } from "./cut-point-detector";
 

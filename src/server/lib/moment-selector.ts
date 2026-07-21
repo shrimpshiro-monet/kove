@@ -5,8 +5,8 @@
  * Uses semantic labels, CV scores, face detection, and speech to rank segments.
  */
 import type { ClipAnalysis } from "./clip-analyzer";
-import type { Shot, ShotEDL } from "../../packages/edl-v3/src/schema";
-import { createShot, registerAsset } from "../../packages/edl-v3/src/helpers";
+import type { Shot, ShotEDL } from "@monet/edl-v3";
+import { createShot, registerAsset } from "@monet/edl-v3";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@
  * For server-side rendering, the advanced editor (kove-advanced) handles it
  * through its existing VideoEngine + ExportEngine pipeline.
  */
-import type { ShotEDL, Shot, ShotEffect, ShotTransition, Overlay } from "../../packages/edl-v3/src/schema";
+import type { ShotEDL, Shot, ShotEffect, ShotTransition, Overlay } from "@monet/edl-v3";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
