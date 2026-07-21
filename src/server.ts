@@ -20,6 +20,7 @@ import { handleGenerateComposition } from "./server/api/generate-composition";
 import { handleGetStudioProject, handlePersistStudioProject } from "./server/api/studio-project";
 import { handleQueueExport, handleGetExportStatus } from "./server/api/export";
 import { handleRenderPreview, handleRenderStatus } from "./server/api/render-preview";
+import { handleAnalyzeDNA } from "./server/api/analyze-dna";
 import { handleGeminiThinkEffects } from "./server/api/gemini-think-effects";
 import { handleStyleCompile } from "./server/api/style-compile";
 import { handleExportMP4 } from "./server/api/export-mp4";
@@ -969,6 +970,9 @@ const apiRoutes: ApiRoute[] = [
   // Composition Overlay
   { method: "POST", path: "/api/generate-composition", handler: handleGenerateComposition },
   
+  // Edit DNA Analysis Engine
+  { method: "POST", path: "/api/analyze-dna", handler: handleAnalyzeDNA },
+
   // Gemini Think Effects
   { method: "POST", path: "/api/gemini-think-effects", handler: handleGeminiThinkEffects },
   

@@ -57,6 +57,7 @@
     "vitest": "^3.2.1"
   },
   "dependencies": {
+    "@monet/edit-dna": "workspace:*",
     "@clerk/backend": "^1.21.0",
     "@clerk/react": "^6.12.5",
     "@paddle/paddle-js": "^1.6.4",
