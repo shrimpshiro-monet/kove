@@ -137,19 +137,21 @@ window.initRenderer = async function() {
   }
   if (!hasWebGPU) log("WebGPU: ✗ (Canvas 2D fallback)", "info");
 
-  // Load mediabunny
+  // Load mediabunny — use direct path since file:// can't resolve bare specifiers
   try {
-    mediabunny = await import("/node_modules/.pnpm/mediabunny@1.25.3/node_modules/mediabunny/dist/bundles/mediabunny.mjs");
-    log(`mediabunny: ✓ loaded`, "ok");
+    const mbUrl = new URL("../node_modules/.pnpm/mediabunny@1.50.9/node_modules/mediabunny/dist/bundles/mediabunny.mjs", window.location.href).href;
+    mediabunny = await import(mbUrl);
+    log(`mediabunny: ✓ loaded v${mediabunny.VERSION ?? "?"}`, "ok");
     isInitialized = true;
   } catch (e) {
-    // Try alternative import
+    log(`mediabunny: ✗ ${e.message}`, "err");
+    // Fallback: try bare specifier (works with dev server)
     try {
       mediabunny = await import("mediabunny");
-      log(`mediabunny: ✓ loaded (alt)`, "ok");
+      log(`mediabunny: ✓ loaded (bare specifier)`, "ok");
       isInitialized = true;
     } catch (e2) {
-      log(`mediabunny: ✗ ${e2.message}`, "err");
+      log(`mediabunny: ✗ all attempts failed`, "err");
     }
   }
 
