@@ -333,13 +333,7 @@ async function buildEdit(shots: EditShot[], refDNA: ReferenceDNA): Promise<strin
     // Build FFmpeg filters based on reference style + content type
     const filters: string[] = [];
 
-    // Speed ramp on high-energy face shots (celebrations)
-    if (shot.hasFace && shot.motion > 0.5 && refDNA.hasSpeedRamps) {
-      // Slow-mo the first 60% of the shot
-      filters.push(`setpts='if(lt(T,${dur * 0.6}),2.5*PTS,PTS)'`);
-    }
-
-    // Flash effect on quick cuts
+    // Flash effect on quick cuts (match reference flash-cut style)
     if (refDNA.hasFlashes && dur < 1.2) {
       filters.push("eq=brightness=0.15:contrast=1.3");
     }
