@@ -32,8 +32,8 @@ canvas{width:100%;border-radius:8px;background:#000;margin:12px 0}
     <h2>Engines</h2>
     <div id="engineStatus" class="status">Loading engines...</div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-      <label class="btn" style="cursor:pointer">📹 Video<input type="file" accept="video/*" id="vidIn" style="display:none" onchange="loadVid(this)"></label>
-      <label class="btn" style="cursor:pointer">🎵 Song<input type="file" accept="audio/*" id="audIn" style="display:none" onchange="loadAud(this)"></label>
+      <label class="btn" style="cursor:pointer">📹 Video<input type="file" accept="video/*" id="vidIn" style="display:none" onchange="loadVid(event)"></label>
+      <label class="btn" style="cursor:pointer">🎵 Song<input type="file" accept="audio/*" id="audIn" style="display:none" onchange="loadAud(event)"></label>
       <button class="btn primary" id="renderBtn" onclick="doRender()" disabled>⚡ Render</button>
     </div>
   </div>
