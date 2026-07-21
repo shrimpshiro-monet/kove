@@ -61,8 +61,8 @@ export type TextPosition = z.infer<typeof TextPositionSchema>;
 export const TextClipSchema = z.object({
   id: z.string(),
   text: z.string(),
-  style: TextStyleSchema,
-  position: TextPositionSchema,
+  style: TextStyleSchema.default({}),
+  position: TextPositionSchema.default({}),
   startTime: z.number().min(0),
   duration: z.number().min(0.1),
   behindSubject: z.boolean().default(false).describe("Render text behind the subject"),
