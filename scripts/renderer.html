@@ -82,6 +82,13 @@ body { font-family: system-ui; background: #0a0a0a; color: #fff; min-height: 100
   </div>
 </div>
 
+<script>
+// Load mediabunny via script tag (avoids ES module resolution issues)
+const mediabunnyScript = document.createElement("script");
+mediabunnyScript.src = "/node_modules/.pnpm/mediabunny@1.50.9/node_modules/mediabunny/dist/bundles/mediabunny.min.js";
+mediabunnyScript.onload = () => { window.__mediabunny = window.mediabunny || window.Mediabunny; };
+document.head.appendChild(mediabunnyScript);
+</script>
 <script type="module">
 // ═══════════════════════════════════════════════════════════════
 // mediabunny + WebGPU Renderer
