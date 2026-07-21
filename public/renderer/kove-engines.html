@@ -161,20 +161,97 @@ window.doRender = async function() {
     };
 
     L("Starting export...");
-    const result = await exportEngine.exportVideo(
-      vidFile,
-      {
+
+    // Build a Project from the video file
+    const project = {
+      id: "jalebi-export",
+      name: "Jalebi Export",
+      version: 1,
+      createdAt: Date.now(),
+      modifiedAt: Date.now(),
+      settings: {
         width: 1280,
         height: 720,
-        fps: 30,
-        format: "mp4",
-        codec: "h264",
-        quality: "high",
+        frameRate: 30,
+        sampleRate: 44100,
       },
-      progressCallback
-    );
+      mediaLibrary: {
+        items: [{
+          id: "source-1",
+          name: vidFile.name,
+          type: "video",
+          fileHandle: null,
+          blob: vidFile,
+          metadata: {
+            duration: duration,
+            width: 1280,
+            height: 720,
+            frameRate: 30,
+            codec: "h264",
+            sampleRate: 44100,
+            channels: 2,
+            fileSize: vidFile.size,
+          },
+          thumbnailUrl: null,
+          waveformData: null,
+        }],
+      },
+      timeline: {
+        tracks: [{
+          id: "video-main",
+          type: "video",
+          name: "Video",
+          clips: [{
+            id: "clip-1",
+            mediaId: "source-1",
+            trackId: "video-main",
+            startTime: 0,
+            duration: duration,
+            inPoint: 0,
+            outPoint: duration,
+            speed: 1,
+            effects: [],
+            audioEffects: [],
+            transform: {
+              position: { x: 0, y: 0 },
+              scale: { x: 1, y: 1 },
+              rotation: 0,
+              anchor: { x: 0.5, y: 0.5 },
+              opacity: 1,
+            },
+            volume: 1,
+            keyframes: [],
+          }],
+          transitions: [],
+          locked: false,
+          hidden: false,
+          muted: false,
+          solo: false,
+        }],
+        subtitles: [],
+        duration: duration,
+        markers: [],
+      },
+    };
 
-    if (result.blob) {
+    // Use ExportEngine
+    const progressCallback = (p) => {
+      const pct = Math.round((p.progress || 0) * 100);
+      prog(pct, `Rendering: ${pct}% — ${p.phase || ""}`);
+    };
+
+    // Run the async generator
+    let result = null;
+    for await (const progress of exportEngine.exportVideo(project, {
+      width: 1280,
+      height: 720,
+      fps: 30,
+    })) {
+      progressCallback(progress);
+      result = progress;
+    }
+
+    if (result && result.success && result.blob) {
       const url = URL.createObjectURL(result.blob);
       const a = document.createElement("a");
       a.href = url;
@@ -183,7 +260,7 @@ window.doRender = async function() {
       URL.revokeObjectURL(url);
       L(`✓ Render complete: ${(result.blob.size/1024/1024).toFixed(1)}MB`, "ok");
     } else {
-      L("✗ Render failed: " + (result.error || "unknown"), "err");
+      L("✗ Render failed: " + (result?.error?.message || "unknown"), "err");
     }
 
     prog(100, "Done!");
