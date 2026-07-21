@@ -238,6 +238,7 @@ async function analyzeSingleFrame(
 ): Promise<FrameMetrics> {
   let brightness = 128;
   let contrast = 128;
+  let motion = 0;
   let skinTone = 0;
   let edgeDensity = 0;
   let isBlackFrame = false;
@@ -284,8 +285,13 @@ async function analyzeSingleFrame(
     edgeDensity = yavg / 255; // More edges = more white in edge-detected image
   } catch {}
 
-  // Motion = brightness change from previous frame
-  const motion = Math.min(1, Math.abs(brightness - prevBrightness) / 100);
+  try {
+    // Motion: brightness delta from previous frame (simple but effective)
+    const brightnessDelta = Math.abs(brightness - prevBrightness) / 255;
+    // Also add contrast-based motion estimate
+    const contrastMotion = contrast > 150 ? 0.3 : contrast > 100 ? 0.15 : 0;
+    motion = Math.min(1, brightnessDelta * 3 + contrastMotion);
+  } catch {}
 
   return {
     timestamp,
