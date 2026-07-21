@@ -66,7 +66,7 @@ interface AIEnv {
 // ============================================================================
 
 // The one model for everything text/reasoning
-const UNIFIED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const UNIFIED_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 // Vision model (only when images are needed)
 const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 // Embedding model

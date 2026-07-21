@@ -55,12 +55,6 @@
 			"index_name": "clip-embeddings"
 		}
 	],
-	"ai_gateway": [
-		{
-			"binding": "AI_GATEWAY",
-			"id": "jalebi-gateway"
-		}
-	],
 	"analytics_engine_datasets": [
 		{
 			"binding": "ANALYTICS",
