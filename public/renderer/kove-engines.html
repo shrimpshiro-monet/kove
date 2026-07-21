@@ -106,7 +106,8 @@ async function init() {
     L("✓ TransitionEngine ready", "ok");
 
     L("Loading EffectsEngine...");
-    const effectsEngine = new VideoEffectsEngine();
+    const effectsEngine = new VideoEffectsEngine({ width: 1280, height: 720 });
+    await effectsEngine.initialize();
     window.__effectsEngine = effectsEngine;
     L("✓ EffectsEngine ready", "ok");
 
