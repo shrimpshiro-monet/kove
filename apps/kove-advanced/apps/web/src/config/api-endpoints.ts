@@ -7,16 +7,16 @@
 
 const isDev = import.meta.env.DEV;
 
-/** OpenReel cloud services */
+/** Jalebi cloud services */
 export const OPENREEL_CLOUD_URL = isDev
   ? "http://localhost:8787"
   : "https://openreel-cloud.niiyeboah1996.workers.dev";
 
-/** OpenReel transcription / TTS service */
-export const OPENREEL_TTS_URL = "https://transcribe.openreel.video";
+/** Jalebi transcription / TTS service */
+export const JALEBI_TTS_URL = "https://transcribe.openreel.video";
 
-/** OpenReel transcription service (GPU) */
-export const OPENREEL_TRANSCRIBE_URL = "https://cloud.openreel.video";
+/** Jalebi transcription service (GPU) */
+export const JALEBI_TRANSCRIBE_URL = "https://cloud.openreel.video";
 
 /**
  * Third-party API base URLs.

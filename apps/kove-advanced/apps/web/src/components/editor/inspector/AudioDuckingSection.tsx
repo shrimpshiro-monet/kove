@@ -323,7 +323,7 @@ export const AudioDuckingSection: React.FC<AudioDuckingSectionProps> = ({
         throw new Error("Failed to persist ducking on this clip.");
       }
 
-      window.dispatchEvent(new CustomEvent("openreel:preview-invalidate"));
+      window.dispatchEvent(new CustomEvent("jalebi:preview-invalidate"));
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to apply ducking.",
@@ -343,7 +343,7 @@ export const AudioDuckingSection: React.FC<AudioDuckingSectionProps> = ({
 
     setSettings(DEFAULT_SETTINGS);
     setErrorMessage(null);
-    window.dispatchEvent(new CustomEvent("openreel:preview-invalidate"));
+    window.dispatchEvent(new CustomEvent("jalebi:preview-invalidate"));
   }, [audioTargetClip?.id, clearClipAudioDucking, clipId]);
 
   return (

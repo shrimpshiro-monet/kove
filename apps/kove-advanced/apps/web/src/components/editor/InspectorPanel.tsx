@@ -51,7 +51,7 @@ import {
   AlignmentSection,
   BehindSubjectSection,
 } from "./inspector";
-import { OPENREEL_TRANSCRIBE_URL } from "../../config/api-endpoints";
+import { JALEBI_TRANSCRIBE_URL } from "../../config/api-endpoints";
 import { AutoEditPanel } from "./panels/AutoEditPanel";
 import { HighlightExtractorPanel } from "./panels/HighlightExtractorPanel";
 import {
@@ -463,7 +463,7 @@ export const InspectorPanel: React.FC = () => {
       try {
         await waitForEffectApplicationPaint();
         await apply();
-        window.dispatchEvent(new CustomEvent("openreel:preview-invalidate"));
+        window.dispatchEvent(new CustomEvent("jalebi:preview-invalidate"));
         await waitForEffectApplicationPaint();
       } finally {
         finishEffectApplication();
@@ -610,7 +610,7 @@ export const InspectorPanel: React.FC = () => {
 
     try {
       const transcriptionService = initializeTranscriptionService({
-        apiEndpoint: `${OPENREEL_TRANSCRIBE_URL}/transcribe`,
+        apiEndpoint: `${JALEBI_TRANSCRIBE_URL}/transcribe`,
         targetLanguage: targetLanguage !== "none" ? targetLanguage : undefined,
       });
 

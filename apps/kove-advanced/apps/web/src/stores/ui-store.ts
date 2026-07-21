@@ -551,7 +551,7 @@ export const useUIStore = create<UIState>()(
         },
       }),
       {
-        name: "openreel-ui-preferences",
+        name: "jalebi-ui-preferences",
         version: 1,
         migrate: (persisted: unknown, version: number) => {
           const state = persisted as Record<string, unknown>;

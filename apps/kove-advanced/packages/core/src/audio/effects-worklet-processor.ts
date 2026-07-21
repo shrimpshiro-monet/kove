@@ -1,4 +1,4 @@
-export const EFFECTS_WORKLET_NAME = "openreel-effects-processor";
+export const EFFECTS_WORKLET_NAME = "jalebi-effects-processor";
 
 export interface EffectWorkletParams {
   bypass: boolean;

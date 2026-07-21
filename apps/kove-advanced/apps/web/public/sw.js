@@ -10,9 +10,9 @@
  * - 35.4: Inform user that AI requires internet connectivity
  */
 
-const CACHE_NAME = "openreel-v1";
-const STATIC_CACHE_NAME = "openreel-static-v1";
-const DYNAMIC_CACHE_NAME = "openreel-dynamic-v1";
+const CACHE_NAME = "jalebi-v1";
+const STATIC_CACHE_NAME = "jalebi-static-v1";
+const DYNAMIC_CACHE_NAME = "jalebi-dynamic-v1";
 
 /**
  * Static assets to cache on install
@@ -111,7 +111,7 @@ self.addEventListener("activate", (event) => {
             .filter((name) => {
               // Delete old versions of our caches
               return (
-                name.startsWith("openreel-") &&
+                name.startsWith("jalebi-") &&
                 name !== STATIC_CACHE_NAME &&
                 name !== DYNAMIC_CACHE_NAME
               );
@@ -287,7 +287,7 @@ async function getCacheStatus() {
   let totalEntries = 0;
 
   for (const name of cacheNames) {
-    if (name.startsWith("openreel-")) {
+    if (name.startsWith("jalebi-")) {
       const cache = await caches.open(name);
       const keys = await cache.keys();
       totalEntries += keys.length;
@@ -295,7 +295,7 @@ async function getCacheStatus() {
   }
 
   return {
-    cacheNames: cacheNames.filter((n) => n.startsWith("openreel-")),
+    cacheNames: cacheNames.filter((n) => n.startsWith("jalebi-")),
     totalEntries,
     version: CACHE_NAME,
   };
@@ -308,7 +308,7 @@ async function clearAllCaches() {
   const cacheNames = await caches.keys();
   await Promise.all(
     cacheNames
-      .filter((name) => name.startsWith("openreel-"))
+      .filter((name) => name.startsWith("jalebi-"))
       .map((name) => caches.delete(name))
   );
 }

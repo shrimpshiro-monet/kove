@@ -79,7 +79,7 @@ export async function getStorageStats(): Promise<{
 export async function clearAllStorage(): Promise<void> {
   await storage.clearAllData();
 
-  const databasesToDelete = ["openreel-autosave", "openreel-projects", "openreel-templates"];
+  const databasesToDelete = ["jalebi-autosave", "jalebi-projects", "jalebi-templates"];
   await Promise.allSettled(
     databasesToDelete.map(
       (dbName) =>

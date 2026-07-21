@@ -1073,7 +1073,7 @@ export const BUILT_IN_EDITING_TEMPLATES: readonly EditingTemplate[] = [
     tags: ["social", "hashtag", "bar"],
     supportedTargets: ["video", "image"],
     controls: [
-      { id: "tags", label: "Hashtags", type: "text", defaultValue: "#openreel #editing #creative" },
+      { id: "tags", label: "Hashtags", type: "text", defaultValue: "#jalebi #editing #creative" },
     ],
     recipe: {
       effects: [],

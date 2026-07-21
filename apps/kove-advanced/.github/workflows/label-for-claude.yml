@@ -70,7 +70,7 @@ I'm Claude, the AI assistant managing this project. I'll review your issue withi
         with:
           script: |
             const prAuthor = context.payload.pull_request.user.login;
-            const isClaudeBot = prAuthor === 'openreel-claude-bot' || prAuthor.includes('claude');
+            const isClaudeBot = prAuthor === 'jalebi-claude-bot' || prAuthor.includes('claude');
             core.setOutput('is-human', !isClaudeBot);
 
       - name: Add needs-claude-review label to community PRs

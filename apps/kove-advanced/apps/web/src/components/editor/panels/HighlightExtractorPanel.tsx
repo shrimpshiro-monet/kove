@@ -7,7 +7,7 @@ import {
   initializeTranscriptionService,
   type TranscriptWord,
 } from "@kove/core";
-import { OPENREEL_TRANSCRIBE_URL } from "../../../config/api-endpoints";
+import { JALEBI_TRANSCRIBE_URL } from "../../../config/api-endpoints";
 import {
   extractHighlights,
   type HighlightResult,
@@ -62,7 +62,7 @@ export const HighlightExtractorPanel: React.FC<HighlightExtractorPanelProps> = (
       setProgress(5);
 
       const transcriptionService = getTranscriptionService() || initializeTranscriptionService({
-        apiEndpoint: `${OPENREEL_TRANSCRIBE_URL}/transcribe`,
+        apiEndpoint: `${JALEBI_TRANSCRIBE_URL}/transcribe`,
       });
       const subtitles = await transcriptionService.transcribeClip(
         clip,

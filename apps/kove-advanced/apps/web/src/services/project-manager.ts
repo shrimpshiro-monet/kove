@@ -30,7 +30,7 @@ interface FileHandleWithPermissions extends FileSystemFileHandle {
   requestPermission?: (options: { mode: string }) => Promise<string>;
 }
 
-const PROJECT_DB_NAME = "openreel-projects";
+const PROJECT_DB_NAME = "jalebi-projects";
 const PROJECT_DB_VERSION = 1;
 const PROJECTS_STORE = "projects";
 const RECENT_STORE = "recent";

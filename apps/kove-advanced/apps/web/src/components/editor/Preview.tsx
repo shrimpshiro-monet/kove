@@ -4580,8 +4580,8 @@ export const Preview: React.FC = () => {
       }
       setPreviewInvalidateCounter((c) => c + 1);
     };
-    window.addEventListener("openreel:preview-invalidate", handler);
-    return () => window.removeEventListener("openreel:preview-invalidate", handler);
+    window.addEventListener("jalebi:preview-invalidate", handler);
+    return () => window.removeEventListener("jalebi:preview-invalidate", handler);
   }, []);
 
   useEffect(() => {

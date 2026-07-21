@@ -89,7 +89,7 @@ export const BackgroundRemovalSection: React.FC<
       }
 
       onSettingsChange?.(newSettings);
-      window.dispatchEvent(new CustomEvent("openreel:preview-invalidate"));
+      window.dispatchEvent(new CustomEvent("jalebi:preview-invalidate"));
     },
     [settings, clipId, onSettingsChange],
   );

@@ -192,7 +192,7 @@ export const useSettingsStore = create<SettingsState>()(
         closeSettings: () => set({ settingsOpen: false }),
       }),
       {
-        name: "openreel-settings",
+        name: "jalebi-settings",
         version: 1,
         partialize: (state) => ({
           autoSave: state.autoSave,

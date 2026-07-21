@@ -770,7 +770,7 @@ export const ALL_EXPORT_PRESETS: PlatformExportPreset[] = [
   ...AUDIO_PRESETS,
 ];
 
-const CUSTOM_PRESETS_KEY = "openreel-custom-export-presets";
+const CUSTOM_PRESETS_KEY = "jalebi-custom-export-presets";
 
 class ExportPresetsManager {
   private customPresets: PlatformExportPreset[] = [];

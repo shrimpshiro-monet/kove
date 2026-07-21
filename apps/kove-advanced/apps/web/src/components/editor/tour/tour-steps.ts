@@ -70,4 +70,4 @@ export const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-export const ONBOARDING_KEY = "openreel-onboarding-complete";
+export const ONBOARDING_KEY = "jalebi-onboarding-complete";
