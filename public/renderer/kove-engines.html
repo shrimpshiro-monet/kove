@@ -244,16 +244,25 @@ window.doRender = async function() {
       prog(pct, `Rendering: ${pct}% — ${p.phase || ""}`);
     };
 
-    // Run the async generator
-    let result = null;
-    for await (const progress of exportEngine.exportVideo(project, {
+    // Run the async generator properly — get return value
+    const iterator = exportEngine.exportVideo(project, {
       width: 1280,
       height: 720,
       fps: 30,
-    })) {
-      progressCallback(progress);
-      result = progress;
+    });
+
+    let result = null;
+    let next = await iterator.next();
+    while (!next.done) {
+      const progress = next.value;
+      L(`Phase: ${progress.phase} | ${Math.round((progress.progress||0)*100)}% | Frame ${progress.currentFrame}/${progress.totalFrames}`);
+      prog(Math.round((progress.progress||0)*100), `${progress.phase}: ${Math.round((progress.progress||0)*100)}%`);
+      next = await iterator.next();
     }
+    // The return value is the ExportResult
+    result = next.value;
+
+    L(`Result: success=${result?.success} blob=${!!result?.blob} error=${result?.error?.message || "none"}`);
 
     if (result && result.success && result.blob) {
       const url = URL.createObjectURL(result.blob);
