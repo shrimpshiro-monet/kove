@@ -64,6 +64,12 @@ export interface Env {
   // Cloudflare Workers AI binding
   AI: any;
 
+  // Cloudflare Vectorize (semantic search)
+  VECTORIZE?: any;
+
+  // Cloudflare AI Gateway (caching, analytics)
+  AI_GATEWAY?: any;
+
   // Cloudflare Analytics Engine (optional)
   ANALYTICS?: any;
 

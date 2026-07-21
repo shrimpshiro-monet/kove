@@ -60,7 +60,17 @@ interface AIEnv {
 
 // ============================================================================
 // ROUTING TABLE
+//
+// ONE MODEL STRATEGY: Use Cloudflare Workers AI as the single primary.
+// Keeps costs minimal. Scale to Claude/MiMo when the app grows.
 // ============================================================================
+
+// The one model for everything text/reasoning
+const UNIFIED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+// Vision model (only when images are needed)
+const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+// Embedding model
+const EMBEDDING_MODEL = "@cf/baai/bge-large-en-v1.5";
 
 interface RouteConfig {
   primary: { provider: Provider; model: string };
@@ -71,43 +81,33 @@ interface RouteConfig {
 
 const ROUTES: Record<AITask, RouteConfig> = {
   "analyze-footage": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: VISION_MODEL },
+    fallback: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 45_000,
   },
   "analyze-music": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 45_000,
   },
   "analyze-reference": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
+    primary: { provider: "cloudflare", model: VISION_MODEL },
+    fallback: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "decode-intent": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 30_000,
   },
   "generate-edl-creative": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "refine-edl": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
-    fallback: { provider: "groq", model: "llama-3.3-70b-versatile" },
-    lastResort: { provider: "cerebras", model: "gpt-oss-120b" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "clip-similarity": {
-    primary: { provider: "cloudflare", model: "@cf/openai/clip-vit-base-patch32" },
+    primary: { provider: "cloudflare", model: EMBEDDING_MODEL },
     timeoutMs: 10_000,
   },
 };
