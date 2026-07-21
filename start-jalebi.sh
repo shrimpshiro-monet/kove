@@ -57,13 +57,26 @@ echo -e "${GREEN}✓ Dependencies installed${NC}"
 # ── Start Python workers (Docker) ────────────────────────────
 
 echo -e "\n${YELLOW}Starting Python workers + Redis...${NC}"
-docker compose -f infra/docker-compose.yml up -d 2>/dev/null || \
-  docker-compose -f infra/docker-compose.yml up -d 2>/dev/null || \
-  echo -e "${RED}⚠ Docker compose failed — Python workers may not be available${NC}"
+if [ -f "infra/docker-compose.yml" ]; then
+  docker compose -f infra/docker-compose.yml up -d 2>/dev/null || \
+    docker-compose -f infra/docker-compose.yml up -d 2>/dev/null || \
+    echo -e "${YELLOW}⚠ Docker compose failed — Python workers will run on host instead${NC}"
+else
+  echo -e "${YELLOW}⚠ No docker-compose.yml found — starting Python workers on host${NC}"
+  # Start Python workers directly if Docker isn't available
+  if [ -d "workers/python-ai" ]; then
+    (cd workers/python-ai && python3 -m uvicorn app:app --host 0.0.0.0 --port 8102 &)
+    echo -e "${GREEN}✓ Python AI worker started on :8102${NC}"
+  fi
+  if [ -d "workers/python-audio" ]; then
+    (cd workers/python-audio && python3 -m uvicorn app:app --host 0.0.0.0 --port 8101 &)
+    echo -e "${GREEN}✓ Python Audio worker started on :8101${NC}"
+  fi
+fi
 
 # Wait for services to be healthy
 echo -n "Waiting for Python AI worker"
-for i in {1..30}; do
+for i in {1..15}; do
   if curl -s http://localhost:8102/health &>/dev/null; then
     echo -e " ${GREEN}✓${NC}"
     break
@@ -71,9 +84,12 @@ for i in {1..30}; do
   echo -n "."
   sleep 1
 done
+if ! curl -s http://localhost:8102/health &>/dev/null; then
+  echo -e " ${YELLOW}⚠ not running (will use fallback)${NC}"
+fi
 
 echo -n "Waiting for Python Audio worker"
-for i in {1..30}; do
+for i in {1..15}; do
   if curl -s http://localhost:8101/health &>/dev/null; then
     echo -e " ${GREEN}✓${NC}"
     break
@@ -81,11 +97,14 @@ for i in {1..30}; do
   echo -n "."
   sleep 1
 done
+if ! curl -s http://localhost:8101/health &>/dev/null; then
+  echo -e " ${YELLOW}⚠ not running (will use fallback)${NC}"
+fi
 
 # ── Check Redis ──────────────────────────────────────────────
 
 echo -n "Waiting for Redis"
-for i in {1..15}; do
+for i in {1..10}; do
   if docker exec monet-redis redis-cli ping 2>/dev/null | grep -q PONG; then
     echo -e " ${GREEN}✓${NC}"
     break
@@ -93,11 +112,13 @@ for i in {1..15}; do
   echo -n "."
   sleep 1
 done
+if ! docker exec monet-redis redis-cli ping 2>/dev/null | grep -q PONG; then
+  echo -e " ${YELLOW}⚠ not running (BullMQ will fail)${NC}"
+fi
 
 # ── Start all services ───────────────────────────────────────
 
 echo -e "\n${YELLOW}Starting Jalebi services...${NC}"
-echo -e "  ${BLUE}→ Vite dev server    :8787${NC}"
 echo -e "  ${BLUE}→ Fastify API       :3000${NC}"
 echo -e "  ${BLUE}→ BullMQ worker     (background)${NC}"
 echo -e "  ${BLUE}→ Cloudflare Worker (wrangler dev)${NC}"
@@ -106,5 +127,19 @@ echo -e "  ${BLUE}→ Python Audio      :8101${NC}"
 echo -e "  ${BLUE}→ Redis             :6379${NC}"
 echo ""
 
-# bun run dev runs everything in parallel
-exec bun run dev
+# Start API and worker (Vite has peer dep issues — start manually)
+pnpm dev:api &
+pnpm dev:worker &
+
+# Start Cloudflare Worker (wrangler dev)
+echo -e "${YELLOW}Starting Cloudflare Worker...${NC}"
+npx wrangler dev --port 8787 &
+
+echo -e "\n${GREEN}Jalebi is running!${NC}"
+echo -e "  ${BLUE}API:    http://localhost:3000${NC}"
+echo -e "  ${BLUE}Worker: http://localhost:8787${NC}"
+echo ""
+echo -e "Press ${RED}Ctrl+C${NC} to stop all services"
+
+# Wait for any process to exit
+wait
