@@ -19,6 +19,7 @@ from workers.subject_track_mask import (
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
 from workers.cut_detector import detect_cuts
+from workers.motion_analyzer import analyze_motion
 from workers.frame_extractor import extract_frames
 from workers.reference_analyzer import analyze_reference
 
@@ -272,6 +273,17 @@ def detect_cuts_route(body: DetectCutsBody) -> dict:
     result = detect_cuts(
         frame_dir=body.frameDir, fps=body.fps, threshold=body.threshold
     )
+    return {"success": True, "data": result}
+
+
+class AnalyzeMotionBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    shots: list[dict] = Field(min_length=1)
+
+
+@app.post("/analyze-motion")
+def analyze_motion_route(body: AnalyzeMotionBody) -> dict:
+    result = analyze_motion(frame_dir=body.frameDir, shots=body.shots)
     return {"success": True, "data": result}
 
 
