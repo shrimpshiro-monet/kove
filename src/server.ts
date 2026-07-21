@@ -21,6 +21,7 @@ import { handleGetStudioProject, handlePersistStudioProject } from "./server/api
 import { handleQueueExport, handleGetExportStatus } from "./server/api/export";
 import { handleRenderPreview, handleRenderStatus } from "./server/api/render-preview";
 import { handleAnalyzeDNA } from "./server/api/analyze-dna";
+import { handleCompileIntent } from "./server/api/compile-intent";
 import { handleGeminiThinkEffects } from "./server/api/gemini-think-effects";
 import { handleStyleCompile } from "./server/api/style-compile";
 import { handleExportMP4 } from "./server/api/export-mp4";
@@ -972,6 +973,9 @@ const apiRoutes: ApiRoute[] = [
   
   // Edit DNA Analysis Engine
   { method: "POST", path: "/api/analyze-dna", handler: handleAnalyzeDNA },
+
+  // Intent Compiler
+  { method: "POST", path: "/api/compile-intent", handler: handleCompileIntent },
 
   // Gemini Think Effects
   { method: "POST", path: "/api/gemini-think-effects", handler: handleGeminiThinkEffects },

@@ -58,6 +58,7 @@
   },
   "dependencies": {
     "@monet/edit-dna": "workspace:*",
+    "@monet/intent-compiler": "workspace:*",
     "@clerk/backend": "^1.21.0",
     "@clerk/react": "^6.12.5",
     "@paddle/paddle-js": "^1.6.4",

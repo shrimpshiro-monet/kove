@@ -18,7 +18,8 @@ export type AITask =
   | "decode-intent"
   | "generate-edl-creative"
   | "refine-edl"
-  | "clip-similarity";
+  | "clip-similarity"
+  | "compile-intent";
 
 export type Provider = "cloudflare" | "cerebras" | "groq" | "nvidia" | "digitalocean";
 
@@ -109,6 +110,10 @@ const ROUTES: Record<AITask, RouteConfig> = {
   "clip-similarity": {
     primary: { provider: "cloudflare", model: EMBEDDING_MODEL },
     timeoutMs: 10_000,
+  },
+  "compile-intent": {
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
+    timeoutMs: 60_000,
   },
 };
 
