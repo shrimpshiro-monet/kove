@@ -64,7 +64,7 @@ export const CompositionSchema = z.object({
   width: z.number().int().min(1),
   height: z.number().int().min(1),
   fps: z.number().min(1).max(120).default(30),
-  duration: z.number().min(0).max(600).describe("seconds"),
+  duration: z.number().min(0).max(600).default(30).describe("seconds"),
   layers: z.array(CompositionLayerSchema),
 });
 export type Composition = z.infer<typeof CompositionSchema>;
