@@ -285,11 +285,11 @@ window.renderVideo = async function() {
   document.getElementById("renderBtn").disabled = true;
 
   try {
-    const { Input, Output, MP4, ALL_FORMATS, BlobSource, CanvasSink } = mediabunny;
+    const { Input, Output, Mp4OutputFormat, ALL_FORMATS, BlobSource, CanvasSink } = mediabunny;
 
     // Create output
     const output = new Output({
-      format: new MP4(),
+      format: new Mp4OutputFormat(),
       video: { codec: "h264", width: 1280, height: 720, fps: 30 },
     });
 
