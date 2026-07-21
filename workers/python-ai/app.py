@@ -22,6 +22,7 @@ from workers.cut_detector import detect_cuts
 from workers.motion_analyzer import analyze_motion
 from workers.frame_extractor import extract_frames
 from workers.reference_analyzer import analyze_reference
+from workers.color_analyzer import analyze_color
 
 app = FastAPI(title="Monet Python AI Worker", version="0.2.0")
 
@@ -284,6 +285,17 @@ class AnalyzeMotionBody(BaseModel):
 @app.post("/analyze-motion")
 def analyze_motion_route(body: AnalyzeMotionBody) -> dict:
     result = analyze_motion(frame_dir=body.frameDir, shots=body.shots)
+    return {"success": True, "data": result}
+
+
+class AnalyzeColorBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    shots: list[dict] = Field(min_length=1)
+
+
+@app.post("/analyze-color")
+def analyze_color_route(body: AnalyzeColorBody) -> dict:
+    result = analyze_color(frame_dir=body.frameDir, shots=body.shots)
     return {"success": True, "data": result}
 
 
