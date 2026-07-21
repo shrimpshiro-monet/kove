@@ -88,13 +88,40 @@ async function main() {
 
   for (let i = 0; i < selectedShots.length; i++) {
     const shot = selectedShots[i];
+    const isShort = shot.duration < 0.6; // flash-cut shots
+    const isLong = shot.duration > 1.5;  // hold shots
 
-    // Extract the segment
+    // Build per-shot filters
+    const filters: string[] = [];
+
+    // Speed ramp: speed up start, slow down end (match reference rhythm)
+    if (!isShort) {
+      // Speed ramp in: first 30% at 1.3x speed
+      // Speed ramp out: last 20% at 0.7x speed
+      const rampIn = shot.duration * 0.3;
+      const rampOut = shot.duration * 0.7;
+      filters.push(
+        `setpts='if(lt(T,${rampIn}),PTS*0.77,if(gt(T,${rampOut}),PTS*1.43,PTS))'`,
+      );
+    }
+
+    // Zoom: slow push-in on longer shots (1.0 → 1.08 over duration)
+    if (isLong) {
+      const zoomEnd = 1.08;
+      filters.push(
+        `zoompan=z='min(${zoomEnd},1+(${zoomEnd}-1)*on/(${shot.duration * 30}))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${Math.round(shot.duration * 30)}:s=1280x720:fps=30`,
+      );
+    }
+
+    // Extract segment with filters
     const segPath = path.join(tmpDir, `shot_${i}.mp4`);
+    const filterArgs = filters.length > 0 ? ["-vf", filters.join(",")] : [];
+
     await execFileAsync("ffmpeg", [
       "-ss", String(shot.inPoint),
       "-i", RAW,
       "-t", String(shot.duration),
+      ...filterArgs,
       "-c:v", "libx264",
       "-preset", "fast",
       "-crf", "18",
@@ -107,10 +134,9 @@ async function main() {
 
     segmentFiles.push(segPath);
 
-    // Add white flash frame before each cut (except first)
+    // Add flash frame with B&W effect (desaturated white flash)
     if (i > 0) {
       const flashPath = path.join(tmpDir, `flash_${i}.mp4`);
-      // Get video dimensions from first frame
       const { stdout: dims } = await execFileAsync("ffprobe", [
         "-v", "error",
         "-select_streams", "v:0",
@@ -120,13 +146,14 @@ async function main() {
       ], { timeout: 5000 });
       const [w, h] = dims.trim().split(",").map(Number);
 
-      // Create white flash frame
+      // White flash + slight B&W tint
       await execFileAsync("ffmpeg", [
         "-f", "lavfi",
         "-i", `color=c=white:s=${w || 1280}x${h || 720}:d=${FLASH_DURATION}:r=30`,
         "-f", "lavfi",
         "-i", `anullsrc=r=44100:cl=stereo`,
         "-t", String(FLASH_DURATION),
+        "-vf", "eq=saturation=0.3",
         "-c:v", "libx264",
         "-preset", "fast",
         "-crf", "18",
@@ -158,12 +185,16 @@ async function main() {
     "-y", rawConcatPath,
   ], { timeout: 60000 });
 
-  // Step 5: Apply color grading (match reference)
+  // Step 5: Apply final color grade (match reference + B&W on transitions)
   console.log("Applying color grade...");
   const outputPath = path.join(OUTPUT, "steph-curry-replicate.mp4");
+
+  // Two-pass: first desaturate flashes, then boost body
+  // The flash frames are already B&W from the creation step
+  // Apply overall: contrast boost + saturation boost + slight vignette
   await execFileAsync("ffmpeg", [
     "-i", rawConcatPath,
-    "-vf", "eq=contrast=1.2:saturation=1.15:brightness=0.02",
+    "-vf", "eq=contrast=1.25:saturation=1.1:brightness=0.02",
     "-c:v", "libx264",
     "-preset", "fast",
     "-crf", "18",
