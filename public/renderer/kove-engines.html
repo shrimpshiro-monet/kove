@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalebi — kove-advanced Engine Test</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#0a0a0a;color:#fff;min-height:100vh}
+.header{padding:16px 24px;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px}
+.header h1{font-size:18px}
+.tag{background:#8b5cf6;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px}
+.main{padding:24px;max-width:800px;margin:0 auto}
+.section{background:#141414;border-radius:8px;padding:20px;margin-bottom:16px}
+.section h2{font-size:14px;color:#888;margin-bottom:12px;text-transform:uppercase}
+.btn{padding:10px 20px;border:1px solid #333;background:#1a1a1a;color:#fff;border-radius:6px;cursor:pointer;font-size:14px}
+.btn:hover{background:#2a2a2a}
+.btn.primary{background:#22c55e;color:#000;font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.progress{height:6px;background:#222;border-radius:3px;overflow:hidden;margin:12px 0}
+.progress-bar{height:100%;background:#22c55e;transition:width .2s}
+.status{font-size:13px;color:#888;margin-top:8px}
+canvas{width:100%;border-radius:8px;background:#000;margin:12px 0}
+.log{font-family:monospace;font-size:12px;color:#666;max-height:200px;overflow-y:auto}
+.log div{padding:2px 0}.log .ok{color:#22c55e}.log .err{color:#ef4444}.log .info{color:#3b82f6}
+</style>
+</head>
+<body>
+<div class="header"><h1>🎬 Jalebi Engine Test</h1><span class="tag">kove-advanced</span></div>
+<div class="main">
+  <div class="section">
+    <h2>Engines</h2>
+    <div id="engineStatus" class="status">Loading engines...</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <label class="btn" style="cursor:pointer">📹 Video<input type="file" accept="video/*" id="vidIn" style="display:none" onchange="loadVid(this)"></label>
+      <label class="btn" style="cursor:pointer">🎵 Song<input type="file" accept="audio/*" id="audIn" style="display:none" onchange="loadAud(this)"></label>
+      <button class="btn primary" id="renderBtn" onclick="doRender()" disabled>⚡ Render</button>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Preview</h2>
+    <canvas id="cv" width="1280" height="720"></canvas>
+    <div class="progress" id="prog" style="display:none"><div class="progress-bar" id="progFill" style="width:0%"></div></div>
+    <div id="renderStat" class="status"></div>
+  </div>
+  <div class="section"><h2>Log</h2><div class="log" id="log"></div></div>
+</div>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════
+// Import REAL kove-advanced engines
+// ═══════════════════════════════════════════════════════════════
+
+import { VideoEngine } from "/apps/kove-advanced/packages/core/src/video/video-engine.ts";
+import { ExportEngine, getExportEngine } from "/apps/kove-advanced/packages/core/src/export/export-engine.ts";
+import { TransitionEngine } from "/apps/kove-advanced/packages/core/src/video/transition-engine.ts";
+import { SpeedEngine, getSpeedEngine } from "/apps/kove-advanced/packages/core/src/video/speed-engine.ts";
+import { MediaBunnyEngine } from "/apps/kove-advanced/packages/core/src/media/mediabunny-engine.ts";
+import { VideoEffectsEngine } from "/apps/kove-advanced/packages/core/src/video/video-effects-engine.ts";
+
+const cv = document.getElementById("cv");
+const cx = cv.getContext("2d");
+let vidFile = null;
+let audFile = null;
+
+const L = (m, t = "info") => {
+  const d = document.createElement("div");
+  d.className = t;
+  d.textContent = m;
+  document.getElementById("log").appendChild(d);
+  document.getElementById("log").scrollTop = 99999;
+};
+
+function prog(pct, text) {
+  document.getElementById("prog").style.display = "block";
+  document.getElementById("progFill").style.width = pct + "%";
+  document.getElementById("renderStat").textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — load real engines
+// ═══════════════════════════════════════════════════════════════
+
+async function init() {
+  try {
+    L("Loading VideoEngine...");
+    const videoEngine = new VideoEngine({ maxFrames: 50 });
+    await videoEngine.initialize();
+    window.__videoEngine = videoEngine;
+    L("✓ VideoEngine ready", "ok");
+
+    L("Loading ExportEngine...");
+    const exportEngine = getExportEngine();
+    await exportEngine.initialize();
+    window.__exportEngine = exportEngine;
+    L("✓ ExportEngine ready", "ok");
+
+    L("Loading SpeedEngine...");
+    const speedEngine = getSpeedEngine();
+    window.__speedEngine = speedEngine;
+    L("✓ SpeedEngine ready", "ok");
+
+    L("Loading TransitionEngine...");
+    const transitionEngine = new TransitionEngine({ width: 1280, height: 720 });
+    window.__transitionEngine = transitionEngine;
+    L("✓ TransitionEngine ready", "ok");
+
+    L("Loading EffectsEngine...");
+    const effectsEngine = new VideoEffectsEngine();
+    window.__effectsEngine = effectsEngine;
+    L("✓ EffectsEngine ready", "ok");
+
+    L("Loading MediaBunnyEngine...");
+    const mediabunnyEngine = new MediaBunnyEngine();
+    await mediabunnyEngine.initialize();
+    window.__mediabunnyEngine = mediabunnyEngine;
+    L("✓ MediaBunnyEngine ready", "ok");
+
+    document.getElementById("engineStatus").textContent = "All engines loaded ✓";
+    document.getElementById("renderBtn").disabled = false;
+  } catch (e) {
+    L("✗ Engine init failed: " + e.message, "err");
+    document.getElementById("engineStatus").textContent = "Failed: " + e.message;
+    console.error(e);
+  }
+}
+
+window.loadVid = (e) => { vidFile = e.target.files[0]; if (vidFile) L("Video: " + vidFile.name); chk(); };
+window.loadAud = (e) => { audFile = e.target.files[0]; if (audFile) L("Audio: " + audFile.name); chk(); };
+function chk() { document.getElementById("renderBtn").disabled = !(vidFile); }
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER — using real kove-advanced engines
+// ═══════════════════════════════════════════════════════════════
+
+window.doRender = async function() {
+  if (!vidFile) return;
+  L("Starting render with kove-advanced engines...");
+  document.getElementById("renderBtn").disabled = true;
+
+  try {
+    const videoEngine = window.__videoEngine;
+    const exportEngine = window.__exportEngine;
+
+    // Create export decoder for the video
+    const mediaBunny = window.__mediabunnyEngine;
+    const decoder = await mediaBunny.createExportDecoder("source", vidFile, 1280);
+    if (!decoder) { L("✗ Could not create decoder", "err"); return; }
+    L("✓ Video decoder created", "ok");
+
+    // Get video info
+    const input = await mediaBunny.createInput(vidFile);
+    const duration = await input.computeDuration();
+    L(`Duration: ${duration.toFixed(1)}s`);
+
+    // Render using ExportEngine
+    const progressCallback = (p) => {
+      const pct = Math.round(p * 100);
+      prog(pct, `Rendering: ${pct}%`);
+    };
+
+    L("Starting export...");
+    const result = await exportEngine.exportVideo(
+      vidFile,
+      {
+        width: 1280,
+        height: 720,
+        fps: 30,
+        format: "mp4",
+        codec: "h264",
+        quality: "high",
+      },
+      progressCallback
+    );
+
+    if (result.blob) {
+      const url = URL.createObjectURL(result.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "jalebi-render.mp4";
+      a.click();
+      URL.revokeObjectURL(url);
+      L(`✓ Render complete: ${(result.blob.size/1024/1024).toFixed(1)}MB`, "ok");
+    } else {
+      L("✗ Render failed: " + (result.error || "unknown"), "err");
+    }
+
+    prog(100, "Done!");
+  } catch (e) {
+    L("✗ Render error: " + e.message, "err");
+    console.error(e);
+    prog(0, "Failed");
+  }
+  document.getElementById("renderBtn").disabled = false;
+};
+
+// Auto-init
+init();
+</script>
+</body>
+</html>
