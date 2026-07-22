@@ -248,20 +248,25 @@ function applyColor(
   tracks: Track[],
   op: Extract<Operation, { type: "apply_color" }>,
 ): void {
+  const colorEffect: Effect = {
+    id: generateId("color"),
+    type: "color",
+    params: { ...op.params },
+    enabled: true,
+  };
+
   if (op.target === "global") {
+    for (const track of tracks) {
+      for (const clip of track.clips) {
+        clip.effects.push(colorEffect);
+      }
+    }
     return;
   }
 
   for (const track of tracks) {
     for (const clip of track.clips) {
       if (op.clip_id && clip.mediaId !== op.clip_id) continue;
-
-      const colorEffect: Effect = {
-        id: generateId("color"),
-        type: "color",
-        params: { ...op.params },
-        enabled: true,
-      };
       clip.effects.push(colorEffect);
     }
   }
@@ -302,9 +307,39 @@ export function executePlan(
     applyOperation(tracks, op, mediaMap);
   }
 
+  // Apply global_effects to ALL clips
+  for (const ge of plan.global_effects) {
+    const effect: Effect = {
+      id: generateId("ge"),
+      type: ge.type,
+      params: { ...ge.params },
+      enabled: true,
+    };
+    for (const track of tracks) {
+      for (const clip of track.clips) {
+        clip.effects.push(effect);
+      }
+    }
+  }
+
+  // Map text_overlays to subtitles
+  const subtitles: import("../types/timeline").Subtitle[] = plan.text_overlays.map((t) => ({
+    id: generateId("text"),
+    text: t.text,
+    startTime: t.start_s,
+    endTime: t.end_s,
+    style: {
+      fontFamily: "Helvetica",
+      fontSize: 24,
+      color: "#ffffff",
+      backgroundColor: "transparent",
+      position: (t.position.y < 0.3 ? "top" : t.position.y > 0.7 ? "bottom" : "center") as "top" | "center" | "bottom",
+    },
+  }));
+
   const timeline: Timeline = {
     tracks,
-    subtitles: [],
+    subtitles,
     duration: plan.target_duration_s,
     markers: [],
   };

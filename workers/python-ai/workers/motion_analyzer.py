@@ -18,19 +18,15 @@ class ShotMotion:
 
 
 def _compute_flow_stats(img1: np.ndarray, img2: np.ndarray) -> tuple[float, float, float]:
-    """Compute mean magnitude, dominant angle, and radial component of optical flow.
-
-    Returns:
-        (mean_magnitude, dominant_angle_rad, radial_fraction)
-    """
-    flow = cv2.calcOpticalFlowFarneback(
-        img1, img2, None, 0.5, 3, 15, 3, 5, 1.2, 0
-    )
+    flow = cv2.calcOpticalFlowFarneback(img1, img2, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     vx, vy = flow[..., 0], flow[..., 1]
     magnitude, angle = cv2.cartToPolar(vx, vy)
 
     mean_mag = float(np.mean(magnitude))
-    dominant_angle = float(np.median(angle))
+
+    # Weight angle by magnitude — ignore static regions (sky, walls, floors)
+    mask = magnitude > np.percentile(magnitude, 75)
+    dominant_angle = float(np.median(angle[mask])) if mask.any() else float(np.median(angle))
 
     h, w = img1.shape
     cy, cx = h / 2, w / 2

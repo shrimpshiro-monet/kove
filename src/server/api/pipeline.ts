@@ -64,14 +64,24 @@ export async function handlePipeline(
       );
     }
 
-    // Step 2: Build clip manifest from clip paths
+    // Step 2: Analyze user's own footage for real clip manifest
+    const clipAnalyses = await Promise.all(
+      parsed.data.clipPaths.map((p) =>
+        analyzeVideo(env, { filePath: p, fps: 3, type: "footage" })
+      )
+    );
+
     const manifest: ClipManifest = {
-      clips: parsed.data.clipPaths.map((path, i) => ({
+      clips: clipAnalyses.map((a, i) => ({
         id: `clip-${i}`,
-        filePath: path,
-        duration_s: 10,
-        resolution: { width: 1920, height: 1080 },
-        content_tags: [],
+        filePath: parsed.data.clipPaths[i],
+        duration_s: a.ok ? a.value.source.duration_s : 10,
+        resolution: a.ok
+          ? a.value.source.resolution
+          : { width: 1920, height: 1080 },
+        content_tags: a.ok
+          ? a.value.shots.flatMap((s) => s.content.subjects)
+          : [],
       })),
     };
 
