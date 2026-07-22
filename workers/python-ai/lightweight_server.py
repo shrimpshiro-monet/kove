@@ -297,6 +297,32 @@ def analyze_color_route(body: AnalyzeColorBody) -> dict:
     return {"success": True, "data": result}
 
 
+# ─── Frame Mosaic ───
+
+class CreateMosaicBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    fps: float = Field(default=3.0, gt=0, le=30)
+    cols: int = Field(default=6, ge=2, le=12)
+    thumbWidth: int = Field(default=320, ge=100, le=800)
+    thumbHeight: int = Field(default=180, ge=60, le=450)
+
+
+def create_mosaic(frame_dir, fps=3.0, cols=6, thumb_width=320, thumb_height=180):
+    from workers.frame_mosaic import create_mosaic as _create_mosaic
+    output_path = os.path.join(frame_dir, "_mosaic.jpg")
+    result = _create_mosaic(frame_dir, output_path, cols=cols, thumb_width=thumb_width, thumb_height=thumb_height, fps=fps)
+    if result and os.path.exists(result):
+        file_size = os.path.getsize(result)
+        return {"path": result, "file_size": file_size, "exists": True}
+    return {"path": "", "file_size": 0, "exists": False}
+
+
+@app.post("/create-mosaic")
+def create_mosaic_route(body: CreateMosaicBody) -> dict:
+    result = create_mosaic(body.frameDir, body.fps, body.cols, body.thumbWidth, body.thumbHeight)
+    return {"success": True, "data": result}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8102)

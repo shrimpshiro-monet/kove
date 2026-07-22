@@ -3,10 +3,15 @@
  * This pipeline is kept for A/B testing and backward compatibility.
  * The main chat route uses the new intent pipeline (runIntentPipeline).
  */
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { runGenerationPipeline, type PipelineStage } from "../apps/web/src/lib/kove-generation-pipeline";
 
-export default function ExperimentalPage() {
+export const Route = createFileRoute("/experimental")({
+  component: ExperimentalPage,
+});
+
+function ExperimentalPage() {
   const [stage, setStage] = useState<PipelineStage>("idle");
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +22,6 @@ export default function ExperimentalPage() {
     setResult(null);
 
     try {
-      // Demo: use a test file
       const res = await runGenerationPipeline({
         projectId: "experimental-test",
         files: [],
