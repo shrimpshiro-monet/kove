@@ -16,7 +16,7 @@ import { TextTimeline } from "@/components/chat/TextTimeline";
 import { AnalysisPanel } from "@/components/chat/AnalysisPanel";
 import { CreativeBriefPanel } from "@/components/chat/CreativeBriefPanel";
 import { uploadFileDirect, transcribeMedia, analyzeReferenceStyle, analyzeReferenceStyleByUrl, persistStudioProject } from "@/lib/api-client";
-import { runGenerationPipeline, runIntentPipeline, refineProject, exportProject, type PipelineStage } from "../../apps/web/src/lib/kove-generation-pipeline";
+import { runIntentPipeline, refineProject, exportProject, type PipelineStage } from "../../apps/web/src/lib/kove-generation-pipeline";
 import type { ReferenceStyle } from "@/server/types/reference-style";
 import type { TimelineAnnotation } from "@/server/types/annotation";
 import { type ExportProgress } from "@/lib/export-engine";
@@ -619,63 +619,26 @@ function ChatPage() {
       const abort = new AbortController();
       abortRef.current = abort;
 
-      // Use intent pipeline (new) or legacy pipeline (experimental)
-      const USE_INTENT_PIPELINE = true;
+      // Intent pipeline: vision AI analysis + intent compilation
+      const pipelineResult = await runIntentPipeline({
+        projectId: threadId,
+        files: uploadedFiles.map((f) => ({ file: f.file, type: f.type as any })),
+        prompt: text,
+        signal: abort.signal,
+        onStageChange: (stage: PipelineStage) => {
+          if (stage === "uploading") setThinkingStage("intent");
+          else if (stage === "analyzing") setThinkingStage("analysis");
+          else if (stage === "generating") setThinkingStage("edl");
+          else if (stage === "ready") setThinkingStage("complete");
+          else if (stage === "error") setThinkingStage("error");
+        },
+      });
 
-      let pipelineResult: any;
-      if (USE_INTENT_PIPELINE) {
-        // New intent-driven pipeline: vision AI analysis + intent compilation
-        const intentResult = await runIntentPipeline({
-          projectId: threadId,
-          files: uploadedFiles.map((f) => ({ file: f.file, type: f.type as any })),
-          prompt: text,
-          signal: abort.signal,
-          onStageChange: (stage: PipelineStage) => {
-            if (stage === "uploading") setThinkingStage("intent");
-            else if (stage === "analyzing") setThinkingStage("analysis");
-            else if (stage === "generating") setThinkingStage("edl");
-            else if (stage === "ready") setThinkingStage("complete");
-            else if (stage === "error") setThinkingStage("error");
-          },
-        });
-
-        if (!intentResult.success) {
-          throw new Error(intentResult.error || "Intent pipeline failed");
-        }
-
-        // Store editDNA and operationPlan for later use
-        pipelineResult = {
-          success: true,
-          edl: intentResult.editDNA, // Store editDNA as "edl" for compatibility
-          edlId: undefined,
-          scores: undefined,
-          usedFallback: false,
-          mode: "intent",
-          mediaUrlMap: intentResult.mediaUrlMap,
-          editDNA: intentResult.editDNA,
-          operationPlan: intentResult.operationPlan,
-        };
-      } else {
-        // Legacy two-pass pipeline (experimental)
-        pipelineResult = await runGenerationPipeline({
-          projectId: threadId,
-          files: uploadedFiles.map((f) => ({ file: f.file, type: f.type as any })),
-          prompt: text,
-          intensity: editIntensity,
-          tempoMode,
-          referenceMode: referenceStyle ? "strict_replication" : "inspired",
-          signal: abort.signal,
-          onStageChange: (stage: PipelineStage) => {
-            if (stage === "uploading") setThinkingStage("intent");
-            else if (stage === "analyzing") setThinkingStage("analysis");
-            else if (stage === "generating") setThinkingStage("edl");
-            else if (stage === "ready") setThinkingStage("complete");
-            else if (stage === "error") setThinkingStage("error");
-          },
-        });
+      if (!pipelineResult.success) {
+        throw new Error(pipelineResult.error || "Intent pipeline failed");
       }
 
-      if (!pipelineResult.success || !pipelineResult.edl) {
+      if (!pipelineResult.success || !pipelineResult.editDNA) {
         throw new Error(pipelineResult.error || "Generation failed");
       }
 
@@ -683,7 +646,6 @@ function ChatPage() {
       if (pipelineResult.mediaUrlMap) {
         setUploadedFiles((prev) =>
           prev.map((f) => {
-            // Check if this file's name or ID appears in the mediaUrlMap keys
             for (const key of Object.keys(pipelineResult.mediaUrlMap)) {
               if (key === f.id || key === f.file.name || key === `dev-${f.file.name}`) {
                 return { ...f, r2FileId: key };
@@ -694,54 +656,28 @@ function ChatPage() {
         );
       }
 
-      const generatedEDL = pipelineResult.edl as MonetEDL;
-
-      // Apply EDL to Zustand store (or editDNA for intent pipeline)
-      if (pipelineResult.mode === "intent") {
-        // Intent pipeline: store editDNA + operationPlan
-        setGeneration({
-          edl: pipelineResult.editDNA as any,
-          edlId: undefined,
-          mode: "intent" as any,
-          status: "ready",
-        });
-      } else {
-        // Legacy pipeline: apply EDL
-        await applyGeneratedEDLToProject(generatedEDL, uploadedFiles);
-      }
+      // Store editDNA + operationPlan
+      setGeneration({
+        edl: pipelineResult.editDNA as any,
+        edlId: undefined,
+        mode: "intent" as any,
+        status: "ready",
+      });
 
       setThinkingStage("complete");
 
-      // Build response message
-      let message = "";
-      if (pipelineResult.mode === "intent") {
-        // Intent pipeline response
-        const editDNA = pipelineResult.editDNA as any;
-        const shotCount = editDNA?.shots?.length ?? 0;
-        const duration = editDNA?.source?.duration_s ?? 0;
-        const avgShot = shotCount > 0 ? (duration / shotCount).toFixed(1) : "0";
-        const dominantMood = editDNA?.pacing?.energy_curve ?? "unknown";
+      // Intent pipeline response
+      const editDNA = pipelineResult.editDNA as any;
+      const shotCount = editDNA?.shots?.length ?? 0;
+      const duration = editDNA?.source?.duration_s ?? 0;
+      const avgShot = shotCount > 0 ? (duration / shotCount).toFixed(1) : "0";
+      const dominantMood = editDNA?.pacing?.energy_curve ?? "unknown";
 
-        message = `✨ Intent analysis complete!\n\n`;
-        message += `🧠 ${shotCount} shots detected, ${duration}s total (${avgShot}s avg)\n`;
-        message += `🎭 Dominant mood: ${dominantMood}\n`;
-        message += `🎨 Color: contrast=${editDNA?.color?.contrast?.toFixed(2) ?? "?"}, saturation=${editDNA?.color?.saturation?.toFixed(2) ?? "?"}\n`;
-        message += `\nVision AI understood the reference. Ready to compile!`;
-      } else {
-        // Legacy pipeline response
-        const shots = generatedEDL.shots?.length ?? 0;
-        const duration = generatedEDL.timeline?.duration ?? 30;
-        const avgShot = shots > 0 ? (duration / shots).toFixed(1) : "0";
-        const beatSync = pipelineResult.scores?.beatSyncScore != null
-          ? Math.round(pipelineResult.scores.beatSyncScore * 100)
-          : 0;
-
-        message = `✨ Edit complete!\n\n`;
-        message += `📊 ${shots} shots, ${duration}s total (${avgShot}s avg)\n`;
-        message += `🎵 Beat sync: ${beatSync}%\n`;
-        if (pipelineResult.fallbackUsed) message += `\n⚠️ Generated with deterministic fallback (LLM busy)`;
-        message += `\n\nReady to preview and refine!`;
-      }
+      let message = `✨ Intent analysis complete!\n\n`;
+      message += `🧠 ${shotCount} shots detected, ${duration}s total (${avgShot}s avg)\n`;
+      message += `🎭 Dominant mood: ${dominantMood}\n`;
+      message += `🎨 Color: contrast=${editDNA?.color?.contrast?.toFixed(2) ?? "?"}, saturation=${editDNA?.color?.saturation?.toFixed(2) ?? "?"}\n`;
+      message += `\nVision AI understood the reference. Ready to compile!`;
 
       const assistantMsg: ChatMessage = {
         id: cryptoId(),
