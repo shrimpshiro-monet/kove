@@ -1,75 +1,118 @@
 /**
- * Experimental page — legacy two-pass EDL generation pipeline.
- * This pipeline is kept for A/B testing and backward compatibility.
- * The main chat route uses the new intent pipeline (runIntentPipeline).
+ * Experimental page — legacy pipeline test.
+ * Simplified to avoid importing the heavy pipeline module.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { runGenerationPipeline, type PipelineStage } from "../apps/web/src/lib/kove-generation-pipeline";
 
 export const Route = createFileRoute("/experimental")({
   component: ExperimentalPage,
 });
 
 function ExperimentalPage() {
-  const [stage, setStage] = useState<PipelineStage>("idle");
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState("idle");
+  const [result, setResult] = useState<string | null>(null);
 
-  const handleTest = async () => {
-    setStage("uploading");
-    setError(null);
-    setResult(null);
-
+  const testPipeline = async () => {
+    setStatus("testing");
     try {
-      const res = await runGenerationPipeline({
-        projectId: "experimental-test",
-        files: [],
-        prompt: "Test edit with legacy pipeline",
-        onStageChange: setStage,
+      const res = await fetch("/api/generate-edl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: "experimental-test",
+          intentId: "",
+          analysisId: "",
+          prompt: "Test edit",
+        }),
       });
-      setResult(res);
+      const data = await res.json();
+      setResult(JSON.stringify(data, null, 2));
+      setStatus("done");
     } catch (err: any) {
-      setError(err.message);
+      setResult(err.message);
+      setStatus("error");
+    }
+  };
+
+  const testIntentPipeline = async () => {
+    setStatus("testing");
+    try {
+      const res = await fetch("/api/analyze-dna", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filePath: "test.mp4", fps: 3 }),
+      });
+      const data = await res.json();
+      setResult(JSON.stringify(data, null, 2));
+      setStatus("done");
+    } catch (err: any) {
+      setResult(err.message);
+      setStatus("error");
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <h1 className="text-2xl font-bold mb-4">Experimental — Legacy Pipeline</h1>
-      <p className="text-neutral-400 mb-6">
-        This page tests the legacy two-pass EDL generation pipeline.
-        The main chat route uses the new intent pipeline instead.
+    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: "2rem" }}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
+        Experimental — Pipeline Testing
+      </h1>
+      <p style={{ color: "#888", marginBottom: "1.5rem" }}>
+        Test individual pipeline endpoints. The main chat uses the new intent pipeline.
       </p>
 
-      <div className="space-y-4">
-        <div>
-          <span className="text-sm text-neutral-500">Status:</span>
-          <span className="ml-2 text-sm">{stage}</span>
-        </div>
-
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
         <button
-          onClick={handleTest}
-          disabled={stage !== "idle"}
-          className="px-4 py-2 bg-neutral-800 rounded hover:bg-neutral-700 disabled:opacity-50"
+          onClick={testPipeline}
+          disabled={status === "testing"}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "#333",
+            color: "#fff",
+            border: "none",
+            borderRadius: "0.25rem",
+            cursor: "pointer",
+          }}
         >
-          Run Legacy Pipeline
+          Test Legacy /api/generate-edl
         </button>
 
-        {error && (
-          <div className="p-4 bg-red-900/20 border border-red-800 rounded text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
-        {result && (
-          <div className="p-4 bg-neutral-900 border border-neutral-800 rounded">
-            <pre className="text-xs overflow-auto max-h-96">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        )}
+        <button
+          onClick={testIntentPipeline}
+          disabled={status === "testing"}
+          style={{
+            padding: "0.5rem 1rem",
+            background: "#333",
+            color: "#fff",
+            border: "none",
+            borderRadius: "0.25rem",
+            cursor: "pointer",
+          }}
+        >
+          Test New /api/analyze-dna
+        </button>
       </div>
+
+      <div style={{ marginBottom: "0.5rem", color: "#888" }}>
+        Status: <span style={{ color: "#fff" }}>{status}</span>
+      </div>
+
+      {result && (
+        <pre
+          style={{
+            padding: "1rem",
+            background: "#111",
+            border: "1px solid #333",
+            borderRadius: "0.25rem",
+            fontSize: "0.75rem",
+            overflow: "auto",
+            maxHeight: "400px",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {result}
+        </pre>
+      )}
     </div>
   );
 }
