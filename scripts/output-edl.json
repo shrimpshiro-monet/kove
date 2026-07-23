@@ -1,0 +1,806 @@
+{
+  "version": 3,
+  "id": "edl-1784619536222-re68sj",
+  "meta": {
+    "aspectRatio": "9:16",
+    "fps": 30,
+    "duration": 27.133333999999994,
+    "createdAt": 1784619536222,
+    "prompt": "Steph Curry highlight reel",
+    "generationMode": "montage"
+  },
+  "shots": [
+    {
+      "id": "shot-1784619536222-isbaql",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 6.666667,
+        "outPoint": 8.666667
+      },
+      "timing": {
+        "startTime": 0,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536222-8ugz7p",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 8.7,
+        "outPoint": 10.333333
+      },
+      "timing": {
+        "startTime": 2,
+        "duration": 1.6333330000000004,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536222-128bmq",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 10.333333,
+        "outPoint": 12.333333
+      },
+      "timing": {
+        "startTime": 3.6333330000000004,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536222-1yx4wr",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 12.666667,
+        "outPoint": 14.666667
+      },
+      "timing": {
+        "startTime": 5.633333,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-7rgxcw",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 15.166667,
+        "outPoint": 17.166667
+      },
+      "timing": {
+        "startTime": 7.633333,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-5qjo4m",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 18.466667,
+        "outPoint": 20.466667
+      },
+      "timing": {
+        "startTime": 9.633333,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-oxkrjs",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 20.833333,
+        "outPoint": 22.833333
+      },
+      "timing": {
+        "startTime": 11.633333,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-2gcgn8",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 23.1,
+        "outPoint": 25.1
+      },
+      "timing": {
+        "startTime": 13.633333,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-vj5aq6",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 25.933333,
+        "outPoint": 26.733333
+      },
+      "timing": {
+        "startTime": 15.633333,
+        "duration": 0.7999999999999972,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-uloqlk",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 26.733333,
+        "outPoint": 28.733333
+      },
+      "timing": {
+        "startTime": 16.433332999999998,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-h6an16",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 28.733333,
+        "outPoint": 30.4
+      },
+      "timing": {
+        "startTime": 18.433332999999998,
+        "duration": 1.6666670000000003,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-nsjt92",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 30.4,
+        "outPoint": 32.4
+      },
+      "timing": {
+        "startTime": 20.099999999999998,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-v9lfbo",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 35.333333,
+        "outPoint": 36.366667
+      },
+      "timing": {
+        "startTime": 22.099999999999998,
+        "duration": 1.0333339999999964,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-2x1j7z",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 36.366667,
+        "outPoint": 38.366667
+      },
+      "timing": {
+        "startTime": 23.133333999999994,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    },
+    {
+      "id": "shot-1784619536223-7fiqfv",
+      "source": {
+        "clipId": "steph-curry",
+        "inPoint": 40.133333,
+        "outPoint": 42.133333
+      },
+      "timing": {
+        "startTime": 25.133333999999994,
+        "duration": 2,
+        "speed": 1,
+        "beatLocked": false
+      },
+      "transition": {
+        "type": "cut",
+        "duration": 0,
+        "easing": "linear",
+        "params": {}
+      },
+      "effects": [],
+      "audio": {
+        "gain": 1,
+        "fadeIn": 0,
+        "fadeOut": 0,
+        "pan": 0
+      },
+      "transform": {
+        "position": [
+          {
+            "time": 0,
+            "x": 0,
+            "y": 0
+          }
+        ],
+        "scale": [
+          {
+            "time": 0,
+            "value": 1
+          }
+        ],
+        "rotation": [
+          {
+            "time": 0,
+            "value": 0
+          }
+        ]
+      },
+      "overlays": [],
+      "meta": {
+        "importance": 0.5
+      }
+    }
+  ],
+  "assets": {
+    "media": {
+      "steph-curry": {
+        "id": "steph-curry",
+        "path": "/Users/hamza/Desktop/reserves/monet-ai-story/test-videos/High Quality Steph Curry Clips for Edits! (2024-25).mp4",
+        "duration": 72.83,
+        "width": 1280,
+        "height": 720
+      }
+    }
+  },
+  "markers": []
+}

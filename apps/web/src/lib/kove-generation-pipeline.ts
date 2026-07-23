@@ -10,6 +10,8 @@ import {
   generateEDL as apiGenerateEDL,
   compileStyle,
   submitDirectorFeedback,
+  analyzeDNA,
+  compileIntent,
   type UploadResult,
 } from "@/lib/api-client";
 import {
@@ -296,8 +298,13 @@ export async function generateProjectEDL(input: {
   };
 }
 
-// --- Full Pipeline ---
+// --- Full Pipeline (EXPERIMENTAL — legacy two-pass EDL generation) ---
 
+/**
+ * @deprecated EXPERIMENTAL — Legacy two-pass pipeline.
+ * Use runIntentPipeline for the new intent-driven pipeline.
+ * This pipeline is kept for backward compatibility and A/B testing.
+ */
 export async function runGenerationPipeline(input: {
   projectId: string;
   files: UploadAssetInput[];
@@ -476,6 +483,105 @@ export async function runGenerationPipeline(input: {
       success: false,
       mediaUrlMap,
       error: err.message || "Pipeline failed",
+    };
+  }
+}
+
+// --- Intent Pipeline (new) ---
+
+export type IntentPipelineResult = {
+  success: boolean;
+  editDNA?: unknown;
+  operationPlan?: unknown;
+  mediaUrlMap: Record<string, string>;
+  error?: string;
+};
+
+/**
+ * New intent-driven pipeline: analyze reference + footage with vision AI,
+ * compile intent into engine operations. Replaces the old two-pass EDL generation.
+ */
+export async function runIntentPipeline(input: {
+  projectId: string;
+  files: UploadAssetInput[];
+  prompt: string;
+  signal?: AbortSignal;
+  onStageChange?: (stage: PipelineStage) => void;
+}): Promise<IntentPipelineResult> {
+  const mediaUrlMap: Record<string, string> = {};
+
+  try {
+    // Stage 1: Upload
+    input.onStageChange?.("uploading");
+
+    const uploadResult = await uploadAssets({
+      projectId: input.projectId,
+      files: input.files,
+      signal: input.signal,
+    });
+
+    if (uploadResult.errors.length > 0 && uploadResult.footageIds.length === 0) {
+      throw new Error(`Upload failed: ${uploadResult.errors.map((e) => e.error).join(", ")}`);
+    }
+
+    Object.assign(mediaUrlMap, uploadResult.mediaUrlMap);
+
+    // Stage 2: Analyze reference with vision AI
+    input.onStageChange?.("analyzing");
+
+    const refFile = uploadResult.assets.find((a) => a.type === "reference" && a.uploadStatus === "uploaded");
+    if (!refFile) {
+      throw new Error("No reference video uploaded");
+    }
+
+    const refAnalysis = await analyzeDNA(refFile.r2FileId || refFile.id, 3, "reference");
+    if (!refAnalysis.success) {
+      throw new Error(`Reference analysis failed: ${refAnalysis.error}`);
+    }
+
+    // Stage 2b: Analyze user footage
+    const footageFiles = uploadResult.assets.filter((a) => a.type === "footage" && a.uploadStatus === "uploaded");
+    const footageAnalyses = await Promise.all(
+      footageFiles.map((f) => analyzeDNA(f.r2FileId || f.id, 3, "footage"))
+    );
+
+    // Build clip manifest from real analysis
+    const manifest = {
+      clips: footageAnalyses.map((a, i) => {
+        const footage = footageFiles[i];
+        const dna = a.data as any;
+        return {
+          id: footage.id,
+          filePath: footage.r2FileId || footage.id,
+          duration_s: dna?.source?.duration_s || 10,
+          resolution: dna?.source?.resolution || { width: 1920, height: 1080 },
+          content_tags: dna?.shots?.flatMap((s: any) => s.content?.subjects || []) || [],
+        };
+      }),
+    };
+
+    // Stage 3: Compile intent
+    input.onStageChange?.("generating");
+
+    const compiled = await compileIntent(refAnalysis.data, manifest, input.prompt);
+    if (!compiled.success) {
+      throw new Error(`Intent compilation failed: ${compiled.error}`);
+    }
+
+    input.onStageChange?.("ready");
+
+    return {
+      success: true,
+      editDNA: refAnalysis.data,
+      operationPlan: compiled.data,
+      mediaUrlMap,
+    };
+  } catch (err: any) {
+    input.onStageChange?.("error");
+    return {
+      success: false,
+      mediaUrlMap,
+      error: err.message || "Intent pipeline failed",
     };
   }
 }

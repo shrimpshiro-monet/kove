@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalebi — mediabunny Renderer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: system-ui; background: #0a0a0a; color: #fff; min-height: 100vh; }
+.header { padding: 16px 24px; border-bottom: 1px solid #222; display: flex; align-items: center; gap: 12px; }
+.header h1 { font-size: 18px; font-weight: 600; }
+.tag { background: #22c55e; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag.webgpu { background: #8b5cf6; }
+.main { padding: 24px; max-width: 800px; margin: 0 auto; }
+.section { background: #141414; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+.section h2 { font-size: 14px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.btn { padding: 10px 20px; border: 1px solid #333; background: #1a1a1a; color: #fff; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.15s; }
+.btn:hover { background: #2a2a2a; border-color: #555; }
+.btn.primary { background: #22c55e; color: #000; border-color: #22c55e; font-weight: 600; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.progress { height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin: 12px 0; }
+.progress-bar { height: 100%; background: #22c55e; transition: width 0.2s; }
+.status { font-size: 13px; color: #888; margin-top: 8px; }
+.preview { margin: 16px 0; }
+.preview canvas { width: 100%; border-radius: 8px; background: #000; }
+.log { font-family: 'SF Mono', monospace; font-size: 12px; color: #666; max-height: 200px; overflow-y: auto; }
+.log div { padding: 2px 0; }
+.log .ok { color: #22c55e; }
+.log .err { color: #ef4444; }
+.log .info { color: #3b82f6; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 Jalebi Renderer</h1>
+  <span class="tag">mediabunny</span>
+  <span class="tag webgpu">WebGPU</span>
+</div>
+<div class="main">
+  <div class="section">
+    <h2>Setup</h2>
+    <div id="setupStatus" class="status">Checking mediabunny + WebGPU...</div>
+    <div style="margin-top: 12px;">
+      <button class="btn primary" id="initBtn" onclick="initRenderer()">Initialize</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Source Files</h2>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <label class="btn" style="cursor: pointer;">
+        📹 Video
+        <input type="file" accept="video/*" id="videoInput" style="display:none" onchange="loadVideo(this)">
+      </label>
+      <label class="btn" style="cursor: pointer;">
+        🎵 Song
+        <input type="file" accept="audio/*" id="audioInput" style="display:none" onchange="loadAudio(this)">
+      </label>
+    </div>
+    <div id="fileStatus" class="status" style="margin-top: 8px;">No files loaded</div>
+  </div>
+
+  <div class="section">
+    <h2>Preview</h2>
+    <div class="preview">
+      <canvas id="previewCanvas" width="1280" height="720"></canvas>
+    </div>
+    <div class="controls" style="display: flex; gap: 8px; margin-top: 12px;">
+      <button class="btn" id="playBtn" onclick="togglePreview()" disabled>▶ Preview</button>
+      <button class="btn primary" id="renderBtn" onclick="renderVideo()" disabled>⚡ Render</button>
+      <button class="btn" id="exportBtn" onclick="exportVideo()" disabled>📦 Export</button>
+    </div>
+    <div class="progress" id="progressBar" style="display:none;">
+      <div class="progress-bar" id="progressFill" style="width:0%"></div>
+    </div>
+    <div id="renderStatus" class="status"></div>
+  </div>
+
+  <div class="section">
+    <h2>Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════
+// mediabunny + WebGPU Renderer
+// ═══════════════════════════════════════════════════════════════
+
+let mediabunny = null;
+let gpuDevice = null;
+let videoFile = null;
+let audioFile = null;
+let renderer = null;
+let isInitialized = false;
+
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+const logEl = document.getElementById("log");
+
+function log(msg, type = "info") {
+  const div = document.createElement("div");
+  div.className = type;
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function updateProgress(percent, text) {
+  document.getElementById("progressBar").style.display = "block";
+  document.getElementById("progressFill").style.width = `${percent}%`;
+  document.getElementById("renderStatus").textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INITIALIZATION
+// ═══════════════════════════════════════════════════════════════
+
+window.initRenderer = async function() {
+  log("Initializing...");
+
+  // Check WebCodecs
+  const hasWebCodecs = typeof VideoDecoder !== "undefined" && typeof VideoEncoder !== "undefined";
+  log(`WebCodecs: ${hasWebCodecs ? "✓" : "✗"}`, hasWebCodecs ? "ok" : "err");
+
+  // Check WebGPU
+  let hasWebGPU = false;
+  if (navigator.gpu) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (adapter) {
+        gpuDevice = await adapter.requestDevice();
+        hasWebGPU = true;
+        log("WebGPU: ✓ (GPU compositor ready)", "ok");
+      }
+    } catch {}
+  }
+  if (!hasWebGPU) log("WebGPU: ✗ (Canvas 2D fallback)", "info");
+
+  // Load mediabunny — use absolute path through Vite's module resolution
+  try {
+    // Vite serves node_modules as /node_modules/
+    const mbUrl = "/node_modules/.pnpm/mediabunny@1.50.9/node_modules/mediabunny/dist/bundles/mediabunny.mjs";
+    mediabunny = await import(/* @vite-ignore */ mbUrl);
+    log(`mediabunny: ✓ loaded v${mediabunny.VERSION ?? "?"}`, "ok");
+    isInitialized = true;
+  } catch (e) {
+    log(`mediabunny: ✗ ${e.message}`, "err");
+    // Fallback: try bare specifier
+    try {
+      mediabunny = await import("mediabunny");
+      log(`mediabunny: ✓ loaded (bare)`, "ok");
+      isInitialized = true;
+    } catch (e2) {
+      log(`mediabunny: ✗ all failed`, "err");
+    }
+  }
+
+  document.getElementById("initBtn").disabled = isInitialized;
+  document.getElementById("setupStatus").textContent = isInitialized
+    ? `Ready. WebCodecs: ${hasWebCodecs ? "✓" : "✗"} | WebGPU: ${hasWebGPU ? "✓" : "✗"}`
+    : "Failed to initialize";
+};
+
+// ═══════════════════════════════════════════════════════════════
+// FILE LOADING
+// ═══════════════════════════════════════════════════════════════
+
+window.loadVideo = async function(input) {
+  if (!input.files[0]) return;
+  videoFile = input.files[0];
+  log(`Video loaded: ${videoFile.name} (${(videoFile.size/1024/1024).toFixed(1)}MB)`, "ok");
+  document.getElementById("fileStatus").textContent = `Video: ${videoFile.name}`;
+  checkReady();
+};
+
+window.loadAudio = async function(input) {
+  if (!input.files[0]) return;
+  audioFile = input.files[0];
+  log(`Audio loaded: ${audioFile.name} (${(audioFile.size/1024/1024).toFixed(1)}MB)`, "ok");
+  checkReady();
+};
+
+function checkReady() {
+  const ready = isInitialized && videoFile;
+  document.getElementById("playBtn").disabled = !ready;
+  document.getElementById("renderBtn").disabled = !ready;
+  document.getElementById("exportBtn").disabled = !ready;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PREVIEW (mediabunny decode → Canvas)
+// ═══════════════════════════════════════════════════════════════
+
+let previewPlaying = false;
+let previewVideo = null;
+let previewSink = null;
+
+window.togglePreview = async function() {
+  if (previewPlaying) {
+    stopPreview();
+    return;
+  }
+
+  if (!mediabunny || !videoFile) return;
+
+  log("Starting preview...");
+
+  try {
+    const { Input, ALL_FORMATS, BlobSource, CanvasSink } = mediabunny;
+    const input = new Input({ source: new BlobSource(videoFile), formats: ALL_FORMATS });
+    const videoTrack = await input.getPrimaryVideoTrack();
+    if (!videoTrack) { log("No video track found", "err"); return; }
+
+    previewSink = new CanvasSink(videoTrack, { width: 1280, height: 720, fit: "contain" });
+    previewVideo = input;
+    previewPlaying = true;
+
+    document.getElementById("playBtn").textContent = "⏸ Pause";
+
+    // Render frames via async iterator
+    let frameCount = 0;
+    for await (const frame of previewSink.canvases(0, 30)) {
+      if (!previewPlaying) break;
+
+      // Apply color grade
+      ctx.clearRect(0, 0, 1280, 720);
+      ctx.drawImage(frame.canvas, 0, 0);
+
+      // Dark grade
+      const imageData = ctx.getImageData(0, 0, 1280, 720);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = Math.max(0, Math.min(255, ((d[i]/255 - 0.5) * 1.3 + 0.5) * 255));
+        d[i+1] = Math.max(0, Math.min(255, ((d[i+1]/255 - 0.5) * 1.3 + 0.5) * 255));
+        d[i+2] = Math.max(0, Math.min(255, ((d[i+2]/255 - 0.5) * 1.3 + 0.5) * 255));
+        const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i] = Math.max(0, Math.min(255, gray + (d[i]-gray) * 0.7));
+        d[i+1] = Math.max(0, Math.min(255, gray + (d[i+1]-gray) * 0.7));
+        d[i+2] = Math.max(0, Math.min(255, gray + (d[i+2]-gray) * 0.7));
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      // Vignette
+      const vig = ctx.createRadialGradient(640, 360, 200, 640, 360, 700);
+      vig.addColorStop(0, "rgba(0,0,0,0)");
+      vig.addColorStop(1, "rgba(0,0,0,0.4)");
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, 1280, 720);
+
+      frameCount++;
+      if (frameCount % 30 === 0) log(`Preview: ${frameCount} frames`);
+    }
+
+    stopPreview();
+    log("Preview complete");
+  } catch (e) {
+    log(`Preview error: ${e.message}`, "err");
+    stopPreview();
+  }
+};
+
+function stopPreview() {
+  previewPlaying = false;
+  document.getElementById("playBtn").textContent = "▶ Preview";
+  if (previewSink) previewSink = null;
+  if (previewVideo) { previewVideo[Symbol.dispose]?.(); previewVideo = null; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER (mediabunny decode → effects → encode)
+// ═══════════════════════════════════════════════════════════════
+
+window.renderVideo = async function() {
+  if (!mediabunny || !videoFile) return;
+
+  log("Starting render...");
+  document.getElementById("renderBtn").disabled = true;
+
+  try {
+    const { Input, Output, Mp4OutputFormat, BufferTarget, CanvasSource, ALL_FORMATS, BlobSource, CanvasSink } = mediabunny;
+
+    // Create output with target
+    const target = new BufferTarget();
+    const output = new Output({
+      format: new Mp4OutputFormat(),
+      target,
+    });
+
+    // Create input decoder
+    const input = new Input({ source: new BlobSource(videoFile), formats: ALL_FORMATS });
+    const videoTrack = await input.getPrimaryVideoTrack();
+    if (!videoTrack) { log("No video track", "err"); return; }
+
+    const sink = new CanvasSink(videoTrack, { width: 1280, height: 720, fit: "contain", poolSize: 4 });
+
+    // Get duration
+    const duration = await input.computeDuration();
+    const totalFrames = Math.ceil(duration * 30);
+    log(`Duration: ${duration.toFixed(1)}s, ${totalFrames} frames`);
+
+    // Create canvas source for encoding
+    const encodeCanvas = new OffscreenCanvas(1280, 720);
+    const canvasSource = new CanvasSource(encodeCanvas, {
+      codec: "h264",
+      width: 1280,
+      height: 720,
+    });
+
+    // Add video track to output
+    output.addVideoTrack(canvasSource);
+
+    // Also add audio track if available
+    let audioSource = null;
+    if (audioFile) {
+      try {
+        const audioInput = new Input({ source: new BlobSource(audioFile), formats: ALL_FORMATS });
+        const audioTrack = await audioInput.getPrimaryAudioTrack();
+        if (audioTrack) {
+          const { AudioSampleSink } = mediabunny;
+          const audioSink = new AudioSampleSink(audioTrack);
+          // We'll add audio samples later
+          log("Audio track found");
+        }
+        audioInput[Symbol.dispose]?.();
+      } catch (e) {
+        log(`Audio: ${e.message}`, "err");
+      }
+    }
+
+    // Process frames
+    let frameCount = 0;
+    const offCtx = encodeCanvas.getContext("2d");
+
+    for await (const frame of sink.canvases(0, 30)) {
+      // Draw decoded frame to encode canvas
+      offCtx.clearRect(0, 0, 1280, 720);
+      offCtx.drawImage(frame.canvas, 0, 0, 1280, 720);
+
+      // Apply dark color grade
+      const imageData = offCtx.getImageData(0, 0, 1280, 720);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = Math.max(0, Math.min(255, ((d[i]/255 - 0.5) * 1.4 + 0.5) * 255));
+        d[i+1] = Math.max(0, Math.min(255, ((d[i+1]/255 - 0.5) * 1.4 + 0.5) * 255));
+        d[i+2] = Math.max(0, Math.min(255, ((d[i+2]/255 - 0.5) * 1.4 + 0.5) * 255));
+        const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i] = Math.max(0, Math.min(255, gray + (d[i]-gray) * 0.7));
+        d[i+1] = Math.max(0, Math.min(255, gray + (d[i+1]-gray) * 0.7));
+        d[i+2] = Math.max(0, Math.min(255, gray + (d[i+2]-gray) * 0.7));
+        d[i] = Math.max(0, Math.min(255, d[i] - 13));
+        d[i+1] = Math.max(0, Math.min(255, d[i+1] - 13));
+        d[i+2] = Math.max(0, Math.min(255, d[i+2] - 13));
+      }
+      offCtx.putImageData(imageData, 0, 0);
+
+      // Vignette
+      const vig = offCtx.createRadialGradient(640, 360, 200, 640, 360, 700);
+      vig.addColorStop(0, "rgba(0,0,0,0)");
+      vig.addColorStop(1, "rgba(0,0,0,0.4)");
+      offCtx.fillStyle = vig;
+      offCtx.fillRect(0, 0, 1280, 720);
+
+      // Add frame to output
+      await canvasSource.add(frameCount / 30, 1/30);
+
+      frameCount++;
+      if (frameCount % 30 === 0) {
+        const pct = Math.round((frameCount / totalFrames) * 100);
+        updateProgress(pct, `Rendering: ${frameCount}/${totalFrames} frames (${pct}%)`);
+      }
+    }
+
+    // Finalize
+    updateProgress(99, "Finalizing...");
+    await output.close();
+
+    // Get buffer from target
+    const buffer = target.buffer;
+    if (!buffer) throw new Error("No output buffer");
+    const blob = new Blob([buffer], { type: "video/mp4" });
+
+    input[Symbol.dispose]?.();
+
+    // Download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jalebi-render.mp4";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    updateProgress(100, `Done! ${frameCount} frames rendered`);
+    log(`Render complete: ${(blob.size/1024/1024).toFixed(1)}MB`, "ok");
+
+  } catch (e) {
+    log(`Render error: ${e.message}`, "err");
+    console.error(e);
+    updateProgress(0, "Failed");
+  }
+
+  document.getElementById("renderBtn").disabled = false;
+};
+    if (!buffer) throw new Error("No output buffer");
+    const blob = new Blob([buffer], { type: "video/mp4" });
+
+    input[Symbol.dispose]?.();
+
+    // Download
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jalebi-render.mp4";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    updateProgress(100, `Done! ${frameCount} frames rendered`);
+    log(`Render complete: ${(blob.size/1024/1024).toFixed(1)}MB`, "ok");
+
+  } catch (e) {
+    log(`Render error: ${e.message}`, "err");
+    updateProgress(0, "Failed");
+  }
+
+  document.getElementById("renderBtn").disabled = false;
+};
+
+window.exportVideo = window.renderVideo;
+</script>
+</body>
+</html>

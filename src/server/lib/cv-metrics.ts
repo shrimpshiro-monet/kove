@@ -154,16 +154,16 @@ export async function extractCVMetrics(
       const isStaticFrame = avgMotion < 0.02;
 
       // Compute overall quality (higher = better for selection)
-      const motionQuality = isStaticFrame ? 0.2 : Math.min(1, avgMotion * 1.5);
-      const brightnessQuality = isBlackFrame ? 0.1 : 1 - Math.abs(avgBrightness - 0.5) * 2;
-      const sharpnessQuality = avgBlur;
-      const dynamicQuality = sceneChangeScore;
+      const motionQuality = isStaticFrame ? 0.2 : Math.min(1, (avgMotion || 0) * 1.5);
+      const brightnessQuality = isBlackFrame ? 0.1 : 1 - Math.abs((avgBrightness || 0.5) - 0.5) * 2;
+      const sharpnessQuality = avgBlur || 0.5;
+      const dynamicQuality = sceneChangeScore || 0;
 
       const overallQuality = (
-        motionQuality * 0.3 +
-        brightnessQuality * 0.2 +
-        sharpnessQuality * 0.25 +
-        dynamicQuality * 0.25
+        (motionQuality || 0) * 0.3 +
+        (brightnessQuality || 0) * 0.2 +
+        (sharpnessQuality || 0) * 0.25 +
+        (dynamicQuality || 0) * 0.25
       );
 
       segments.push({
@@ -269,9 +269,13 @@ async function analyzeFrame(
     }
   }
   const laplacianVariance = laplacianSum / ((height - 2) * (w - 2)) / 255;
-  const blur = Math.min(1, laplacianVariance * 10); // Normalize to 0-1
+  const blur = Math.min(1, Math.max(0, laplacianVariance * 10)); // Normalize to 0-1
 
-  return { motion, brightness, blur };
+  return {
+    motion: Math.max(0, Math.min(1, motion || 0.5)),
+    brightness: Math.max(0, Math.min(1, brightness || 0.5)),
+    blur: Math.max(0, Math.min(1, blur || 0.5)),
+  };
 }
 
 function emptyResult(totalDuration: number): CVMetricsResult {

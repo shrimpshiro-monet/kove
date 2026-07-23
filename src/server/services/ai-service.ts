@@ -18,9 +18,10 @@ export type AITask =
   | "decode-intent"
   | "generate-edl-creative"
   | "refine-edl"
-  | "clip-similarity";
+  | "clip-similarity"
+  | "compile-intent";
 
-export type Provider = "cloudflare" | "cerebras" | "groq" | "nvidia";
+export type Provider = "cloudflare" | "cerebras" | "groq" | "nvidia" | "digitalocean";
 
 export type GenerationMode = "ai_director" | "fast_planner";
 
@@ -50,16 +51,29 @@ export interface AICallResult<T = unknown> {
 
 interface AIEnv {
   AI: any;
+  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
   CEREBRAS_API_KEY?: string;
   GROQ_API_KEY?: string;
   NVIDIA_NIM_API_KEY?: string;
   NVIDIA_NIM_MODEL?: string;
+  DIGITALOCEAN_API_KEY?: string;
   ANALYTICS?: any;
 }
 
 // ============================================================================
 // ROUTING TABLE
+//
+// ONE MODEL STRATEGY: Use Cloudflare Workers AI as the single primary.
+// Keeps costs minimal. Scale to Claude/MiMo when the app grows.
 // ============================================================================
+
+// The one model for everything text/reasoning
+const UNIFIED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+// Vision model (only when images are needed)
+const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+// Embedding model
+const EMBEDDING_MODEL = "@cf/baai/bge-large-en-v1.5";
 
 interface RouteConfig {
   primary: { provider: Provider; model: string };
@@ -70,44 +84,38 @@ interface RouteConfig {
 
 const ROUTES: Record<AITask, RouteConfig> = {
   "analyze-footage": {
-    primary: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "nvidia", model: "nvidia/llama-3.3-nemotron-super-49b-v1" },
+    primary: { provider: "cloudflare", model: VISION_MODEL },
+    fallback: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 45_000,
   },
   "analyze-music": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
-    lastResort: { provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 45_000,
   },
   "analyze-reference": {
-    primary: { provider: "nvidia", model: "nvidia/llama-3.3-nemotron-super-49b-v1" },
-    fallback: { provider: "cerebras", model: "gpt-oss-120b" },
-    lastResort: { provider: "cloudflare", model: "@cf/meta/llama-3.2-11b-vision-instruct" },
+    primary: { provider: "cloudflare", model: VISION_MODEL },
+    fallback: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "decode-intent": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 30_000,
   },
   "generate-edl-creative": {
-    primary: { provider: "cerebras", model: "gpt-oss-120b" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
-    lastResort: { provider: "groq", model: "llama-3.3-70b-versatile" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "refine-edl": {
-    primary: { provider: "groq", model: "llama-3.3-70b-versatile" },
-    fallback: { provider: "nvidia", model: "moonshotai/kimi-k2.6" },
-    lastResort: { provider: "cerebras", model: "gpt-oss-120b" },
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
     timeoutMs: 60_000,
   },
   "clip-similarity": {
-    primary: { provider: "cloudflare", model: "@cf/openai/clip-vit-base-patch32" },
+    primary: { provider: "cloudflare", model: EMBEDDING_MODEL },
     timeoutMs: 10_000,
+  },
+  "compile-intent": {
+    primary: { provider: "cloudflare", model: UNIFIED_MODEL },
+    timeoutMs: 60_000,
   },
 };
 
@@ -119,8 +127,12 @@ class ProviderClients {
   cerebras: OpenAI;
   groq: OpenAI;
   nvidia: OpenAI | null;
+  digitalocean: OpenAI | null;
   cf: any;
   private nvidiaApiKey: string;
+  private doApiKey: string;
+  private cfApiToken: string;
+  private cfAccountId: string;
 
   constructor(env: AIEnv) {
     this.cerebras = new OpenAI({
@@ -133,7 +145,11 @@ class ProviderClients {
     });
     this.nvidiaApiKey = env.NVIDIA_NIM_API_KEY || "";
     this.nvidia = null;
+    this.doApiKey = env.DIGITALOCEAN_API_KEY || "";
+    this.digitalocean = null;
     this.cf = env.AI;
+    this.cfApiToken = env.CLOUDFLARE_API_TOKEN || "";
+    this.cfAccountId = env.CLOUDFLARE_ACCOUNT_ID || "";
   }
 
   getNvidia(): OpenAI {
@@ -144,6 +160,16 @@ class ProviderClients {
       });
     }
     return this.nvidia!;
+  }
+
+  getDigitalOcean(): OpenAI {
+    if (!this.digitalocean && this.doApiKey) {
+      this.digitalocean = new OpenAI({
+        baseURL: "https://api.digitalocean.com/v1",
+        apiKey: this.doApiKey,
+      });
+    }
+    return this.digitalocean!;
   }
 }
 
@@ -156,10 +182,6 @@ async function callCloudflare(
   model: string,
   opts: AICallOptions
 ): Promise<{ raw: string; inputTokens?: number; outputTokens?: number }> {
-  if (!clients.cf) {
-    throw new Error("Cloudflare Workers AI binding not available (env.AI is undefined)");
-  }
-
   const messages = [
     ...(opts.systemPrompt ? [{ role: "system", content: opts.systemPrompt }] : []),
     { role: "user", content: opts.prompt },
@@ -182,15 +204,68 @@ async function callCloudflare(
     };
   }
 
-  const result: any = await clients.cf.run(model, payload);
+  // Try the Workers AI binding first (works in deployed Workers)
+  if (clients.cf) {
+    try {
+      const result: any = await clients.cf.run(model, payload);
+      const raw =
+        result?.response ?? result?.result?.response ?? JSON.stringify(result);
+      return {
+        raw,
+        inputTokens: result?.usage?.prompt_tokens,
+        outputTokens: result?.usage?.completion_tokens,
+      };
+    } catch (err) {
+      console.warn(`[AI] Workers AI binding failed, trying REST API: ${(err as Error).message?.slice(0, 100)}`);
+    }
+  }
 
+  // Fallback: Cloudflare REST API (works in local dev with API token from .dev.vars)
+  const apiToken = clients.cfApiToken || (globalThis as any).process?.env?.CLOUDFLARE_API_TOKEN || "";
+  const accountId = clients.cfAccountId || (globalThis as any).process?.env?.CLOUDFLARE_ACCOUNT_ID || "";
+  if (apiToken && accountId) {
+    return callCloudflareREST(apiToken, accountId, model, payload);
+  }
+
+  throw new Error("Cloudflare Workers AI not available (no binding and no API token)");
+}
+
+async function callCloudflareREST(
+  apiToken: string,
+  accountId: string,
+  model: string,
+  payload: Record<string, unknown>
+): Promise<{ raw: string; inputTokens?: number; outputTokens?: number }> {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Cloudflare REST API ${resp.status}: ${body.slice(0, 200)}`);
+  }
+
+  const json: any = await resp.json();
+  if (!json.success) {
+    throw new Error(`Cloudflare REST API error: ${JSON.stringify(json.errors).slice(0, 200)}`);
+  }
+
+  // REST API returns OpenAI-compatible format: result.choices[0].message.content
+  // Binding returns: result.response
   const raw =
-    result?.response ?? result?.result?.response ?? JSON.stringify(result);
-
+    json?.result?.response ??
+    json?.result?.choices?.[0]?.message?.content ??
+    JSON.stringify(json?.result);
   return {
     raw,
-    inputTokens: result?.usage?.prompt_tokens,
-    outputTokens: result?.usage?.completion_tokens,
+    inputTokens: json?.result?.usage?.prompt_tokens,
+    outputTokens: json?.result?.usage?.completion_tokens,
   };
 }
 
@@ -259,11 +334,37 @@ export async function getClipEmbedding(
   env: AIEnv,
   imageBytes: Uint8Array
 ): Promise<number[]> {
-  if (!env.AI) return [];
-  const result: any = await env.AI.run("@cf/openai/clip-vit-base-patch32", {
-    image: Array.from(imageBytes),
-  });
-  return result?.data?.[0] ?? result?.embedding ?? [];
+  // Try the Workers AI binding first
+  if (env.AI) {
+    try {
+      const result: any = await env.AI.run("@cf/openai/clip-vit-base-patch32", {
+        image: Array.from(imageBytes),
+      });
+      return result?.data?.[0] ?? result?.embedding ?? [];
+    } catch {
+      // Fall through to REST API
+    }
+  }
+
+  // Fallback: REST API
+  const apiToken = (env as any).CLOUDFLARE_API_TOKEN || (globalThis as any).process?.env?.CLOUDFLARE_API_TOKEN || "";
+  const accountId = (env as any).CLOUDFLARE_ACCOUNT_ID || (globalThis as any).process?.env?.CLOUDFLARE_ACCOUNT_ID || "";
+  if (!apiToken || !accountId) return [];
+
+  const resp = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/openai/clip-vit-base-patch32`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: Array.from(imageBytes) }),
+    }
+  );
+  if (!resp.ok) return [];
+  const json: any = await resp.json();
+  return json?.result?.data?.[0] ?? json?.result?.embedding ?? [];
 }
 
 // ============================================================================
@@ -286,6 +387,11 @@ async function callRoute<T = unknown>(
       const nvidiaClient = clients.getNvidia();
       if (!nvidiaClient) throw new Error("NVIDIA NIM API key not configured");
       return callOpenAICompat(nvidiaClient, route.model, opts);
+    }
+    case "digitalocean": {
+      const doClient = clients.getDigitalOcean();
+      if (!doClient) throw new Error("DigitalOcean API key not configured");
+      return callOpenAICompat(doClient, route.model, opts);
     }
     default:
       throw new Error(`Unknown provider: ${route.provider}`);
@@ -382,10 +488,13 @@ export class AIService {
     this.env = env;
     this.clients = new ProviderClients({
       AI: env.AI,
+      CLOUDFLARE_API_TOKEN: (env as any).CLOUDFLARE_API_TOKEN,
+      CLOUDFLARE_ACCOUNT_ID: (env as any).CLOUDFLARE_ACCOUNT_ID,
       CEREBRAS_API_KEY: env.CEREBRAS_API_KEY,
       GROQ_API_KEY: env.GROQ_API_KEY,
       NVIDIA_NIM_API_KEY: (env as any).NVIDIA_NIM_API_KEY,
       NVIDIA_NIM_MODEL: (env as any).NVIDIA_NIM_MODEL,
+      DIGITALOCEAN_API_KEY: (env as any).DIGITALOCEAN_API_KEY,
       ANALYTICS: env.ANALYTICS,
     });
   }
@@ -587,9 +696,19 @@ export class AIService {
   private getLegacyProviderChain(): Array<{ provider: Provider; model: string }> {
     const chain: Array<{ provider: Provider; model: string }> = [];
 
-    // Cerebras first (fast reasoning)
+    // Cloudflare Workers AI — always first (10K neurons/day free)
+    if (this.env.AI) {
+      chain.push({ provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" });
+    }
+
+    // Cerebras (fast reasoning)
     if (this.env.CEREBRAS_API_KEY) {
       chain.push({ provider: "cerebras", model: "gpt-oss-120b" });
+    }
+
+    // Groq (fast streaming)
+    if (this.env.GROQ_API_KEY) {
+      chain.push({ provider: "groq", model: "llama-3.3-70b-versatile" });
     }
 
     // NVIDIA NIM (Kimi, Nemotron, DeepSeek)
@@ -598,14 +717,9 @@ export class AIService {
       chain.push({ provider: "nvidia", model });
     }
 
-    // Groq (fast streaming)
-    if (this.env.GROQ_API_KEY) {
-      chain.push({ provider: "groq", model: "llama-3.3-70b-versatile" });
-    }
-
-    // Cloudflare Workers AI (always available if binding exists)
-    if (this.env.AI) {
-      chain.push({ provider: "cloudflare", model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast" });
+    // DigitalOcean (last resort)
+    if (this.env.DIGITALOCEAN_API_KEY) {
+      chain.push({ provider: "digitalocean", model: "llama-3.3-70b-versatile" });
     }
 
     return chain;
@@ -627,6 +741,11 @@ export class AIService {
         const nvidiaClient = this.clients.getNvidia();
         if (!nvidiaClient) throw new Error("NVIDIA NIM API key not configured");
         return callOpenAICompat(nvidiaClient, model, opts);
+      }
+      case "digitalocean": {
+        const doClient = this.clients.getDigitalOcean();
+        if (!doClient) throw new Error("DigitalOcean API key not configured");
+        return callOpenAICompat(doClient, model, opts);
       }
       default:
         throw new Error(`Unknown provider: ${provider}`);

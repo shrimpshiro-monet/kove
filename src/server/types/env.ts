@@ -64,6 +64,16 @@ export interface Env {
   // Cloudflare Workers AI binding
   AI: any;
 
+  // Cloudflare API credentials (for REST API fallback in local dev)
+  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
+
+  // Cloudflare Vectorize (semantic search)
+  VECTORIZE?: any;
+
+  // Cloudflare AI Gateway (caching, analytics)
+  AI_GATEWAY?: any;
+
   // Cloudflare Analytics Engine (optional)
   ANALYTICS?: any;
 
@@ -74,6 +84,11 @@ export interface Env {
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_SECRET_KEY?: string;
   CLERK_JWT_KEY?: string;
+
+  // Paddle Billing (v2)
+  PADDLE_API_KEY?: string;
+  PADDLE_WEBHOOK_SECRET?: string;
+  PADDLE_ENV?: string; // "sandbox" or "production"
 
   // Sentry error tracking
   SENTRY_DSN?: string;

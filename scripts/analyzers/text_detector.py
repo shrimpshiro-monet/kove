@@ -45,15 +45,18 @@ def _get_easyocr():
     return _ocr_reader
 
 
-def detect_text(video_path: str, shots: list, use_easyocr: bool = False) -> list[dict]:
+def detect_text(video_path: str, shots: list, use_easyocr: bool = False, profile: Optional[dict] = None) -> list[dict]:
     """Detect and read text overlays for each shot using pytesseract OCR."""
     print(f"  Detecting text overlays (pytesseract{' + EasyOCR' if use_easyocr else ''})...")
+
+    p = profile or {}
+    ocr_conf = p.get("text", {}).get("ocr_confidence", 50)
 
     text_per_shot = []
 
     for i, shot in enumerate(shots):
         frames = _extract_frames(video_path, shot["start"], shot["end"])
-        shot_text = _analyze_shot_text(frames, shot, use_easyocr=use_easyocr)
+        shot_text = _analyze_shot_text(frames, shot, use_easyocr=use_easyocr, ocr_conf_threshold=ocr_conf)
         shot_text["shotIndex"] = shot["index"]
         shot_text["time"] = shot["start"]
         text_per_shot.append(shot_text)
@@ -164,7 +167,7 @@ def _score_editor_text(text: str, fontSize: str, placement: str, confidence: flo
     return max(0.0, min(1.0, score))
 
 
-def _run_ocr_on_frame(frame_path: str, use_easyocr: bool = False) -> tuple[list[dict], list[dict]]:
+def _run_ocr_on_frame(frame_path: str, use_easyocr: bool = False, ocr_conf_threshold: int = 50) -> tuple[list[dict], list[dict]]:
     """Run tesseract and optionally EasyOCR on a frame, return (tesseract_items, easyocr_items)."""
     tess_items = []
     easy_items = []
@@ -185,7 +188,7 @@ def _run_ocr_on_frame(frame_path: str, use_easyocr: bool = False) -> tuple[list[
         for i in range(len(ocr_data["text"])):
             conf = int(ocr_data["conf"][i])
             text = ocr_data["text"][i].strip()
-            if conf < TEXT_CONFIDENCE_THRESHOLD or not text:
+            if conf < ocr_conf_threshold or not text:
                 continue
             if len(text) < 2 and not text.isalpha():
                 continue
@@ -272,7 +275,7 @@ def _merge_ocr_results(tess_items: list[dict], easy_items: list[dict]) -> list[d
     return deduped
 
 
-def _analyze_shot_text(frames: list[str], shot: dict, use_easyocr: bool = False) -> dict:
+def _analyze_shot_text(frames: list[str], shot: dict, use_easyocr: bool = False, ocr_conf_threshold: int = 50) -> dict:
     """Run OCR + analysis on a shot's frames."""
     result: dict[str, Any] = {
         "hasText": False,
@@ -281,7 +284,7 @@ def _analyze_shot_text(frames: list[str], shot: dict, use_easyocr: bool = False)
         "textContent": [],
         "properties": {},
         "confidence": 0.0,
-        "confidenceThreshold": TEXT_CONFIDENCE_THRESHOLD,
+        "confidenceThreshold": ocr_conf_threshold,
     }
 
     try:
@@ -296,7 +299,7 @@ def _analyze_shot_text(frames: list[str], shot: dict, use_easyocr: bool = False)
             frame_h, frame_w = pixels.shape[:2]
 
             # Pass 1 & 2: OCR (tesseract + optional EasyOCR, merged)
-            tess_items, easy_items = _run_ocr_on_frame(frame_path, use_easyocr=use_easyocr)
+            tess_items, easy_items = _run_ocr_on_frame(frame_path, use_easyocr=use_easyocr, ocr_conf_threshold=ocr_conf_threshold)
             merged = _merge_ocr_results(tess_items, easy_items)
 
             # Score and filter
@@ -326,7 +329,7 @@ def _analyze_shot_text(frames: list[str], shot: dict, use_easyocr: bool = False)
 
         elif all_regions:
             high_conf = [r for r in all_regions
-                         if r.get("confidence", 0) >= TEXT_CONFIDENCE_THRESHOLD]
+                         if r.get("confidence", 0) >= ocr_conf_threshold]
             if high_conf:
                 result["hasText"] = True
                 result["textCount"] = len(high_conf)

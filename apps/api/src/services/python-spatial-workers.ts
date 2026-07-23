@@ -3,6 +3,7 @@ import type {
   DepthManifest,
   PointTrackManifest,
   SubjectMaskManifest,
+  TrackMaskManifest,
 } from "@monet/edl";
 
 function getEnv(name: string, fallback: string): string {
@@ -128,5 +129,46 @@ export async function trackPointsWithPython(
     gridSize: input.gridSize ?? 10,
     maxFrames: input.maxFrames ?? 120,
     commercialVerified: input.commercialVerified ?? false,
+  });
+}
+
+export interface TrackMaskShotInput {
+  shotId: string;
+  startFrame: number;
+  endFrame: number;
+}
+
+export interface TrackMaskSubjectInput {
+  subjectId: number;
+  label: string;
+  seedFrame: number;
+  seedBox: [number, number, number, number];
+}
+
+export interface TrackMaskInput {
+  filePath: string;
+  shots: TrackMaskShotInput[];
+  subjects: TrackMaskSubjectInput[];
+  frameStep?: number;
+  maxFramesPerShot?: number;
+  workingWidth?: number;
+  enableReid?: boolean;
+  reidThreshold?: number;
+}
+
+export async function trackMaskWithPython(
+  input: TrackMaskInput
+): Promise<ActionResult<TrackMaskManifest>> {
+  const baseUrl = getEnv("PYTHON_AI_URL", "http://127.0.0.1:8102");
+
+  return postJson<TrackMaskManifest>(`${baseUrl}/spatial/track-mask`, {
+    filePath: input.filePath,
+    shots: input.shots,
+    subjects: input.subjects,
+    frameStep: input.frameStep ?? 2,
+    maxFramesPerShot: input.maxFramesPerShot ?? 300,
+    workingWidth: input.workingWidth ?? 1280,
+    enableReid: input.enableReid ?? true,
+    reidThreshold: input.reidThreshold ?? 0.75,
   });
 }

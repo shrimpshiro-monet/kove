@@ -257,10 +257,51 @@ export async function analyzeMedia(
   return handleResponse<AnalysisResult>(res);
 }
 
+// ─── Intent Pipeline (new) ─────────────────────────────────
+
+export interface AnalyzeDNAResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+export async function analyzeDNA(
+  filePath: string,
+  fps: number = 3,
+  type: "reference" | "footage" = "reference"
+): Promise<AnalyzeDNAResult> {
+  const res = await fetch(`${API_BASE}/api/analyze-dna`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filePath, fps, type }),
+  });
+  return handleResponse<AnalyzeDNAResult>(res);
+}
+
+export interface CompileIntentResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+export async function compileIntent(
+  editDNA: unknown,
+  manifest: { clips: { id: string; filePath: string; duration_s: number; resolution: { width: number; height: number }; content_tags?: string[] }[] },
+  prompt: string
+): Promise<CompileIntentResult> {
+  const res = await fetch(`${API_BASE}/api/compile-intent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ editDNA, manifest, prompt }),
+  });
+  return handleResponse<CompileIntentResult>(res);
+}
+
 /**
  * Generate EDL from intent + analysis.
  * Pass referenceStyle to inject the reference editor's philosophy directly
  * into the EDL generation prompt — this is what makes it edit like them.
+ * @deprecated Use runIntentPipeline for the new intent-driven pipeline.
  */
 export async function generateEDL(
   projectId: string,

@@ -11,7 +11,7 @@ import json
 import os
 import tempfile
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from collections import Counter
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
 # Fixed seed for deterministic results
 SEED = 42
 
-def analyze_color(video_path: str, sample_rate: float = 2.0) -> Dict:
+def analyze_color(video_path: str, sample_rate: float = 2.0, profile: Optional[dict] = None) -> Dict:
     """
     Analyze color properties of video.
     Returns dominant palette, histograms, and grade classification.
@@ -39,7 +39,7 @@ def analyze_color(video_path: str, sample_rate: float = 2.0) -> Dict:
     # Analyze each frame
     frame_colors = []
     for frame_path in frames:
-        colors = analyze_frame_color(frame_path)
+        colors = analyze_frame_color(frame_path, profile=profile)
         frame_colors.append(colors)
     
     # Check for empty or all-default results
@@ -79,9 +79,17 @@ def extract_sample_frames(video_path: str, sample_rate: float = 2.0) -> List[str
     
     return frames
 
-def analyze_frame_color(frame_path: str) -> Dict:
+def analyze_frame_color(frame_path: str, profile: Optional[dict] = None) -> Dict:
     """Analyze color of a single frame using k-means-like clustering."""
     try:
+        p = profile or {}
+        cc = p.get("color", {})
+        bw_sat = cc.get("bw_saturation", 15)
+        desat_sat = cc.get("desaturated_saturation", 35)
+        dark_lum = cc.get("dark_luminance", 60)
+        bright_lum = cc.get("bright_luminance", 200)
+        vibrant_sat = cc.get("vibrant_saturation", 100)
+        
         from PIL import Image
         import numpy as np
         
@@ -148,15 +156,15 @@ def analyze_frame_color(frame_path: str) -> Dict:
         avg_sat = float(np.mean(saturation))
         avg_lum = float(np.mean(luminance))
         
-        if avg_sat < 15:
+        if avg_sat < bw_sat:
             grade = "bw"
-        elif avg_sat < 35:
+        elif avg_sat < desat_sat:
             grade = "desaturated"
-        elif avg_lum < 60:
+        elif avg_lum < dark_lum:
             grade = "dark"
-        elif avg_lum > 200:
+        elif avg_lum > bright_lum:
             grade = "bright"
-        elif avg_sat > 100:
+        elif avg_sat > vibrant_sat:
             grade = "vibrant"
         else:
             grade = "normal"

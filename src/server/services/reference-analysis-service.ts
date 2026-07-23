@@ -26,20 +26,27 @@ import * as os from "node:os";
 
 const execFileAsync = promisify(execFile);
 
-async function runRhythm(mediaPath: string) {
-  const scriptDir = path.resolve(process.cwd(), "workers/python-ai/workers");
-  const venvBeat = path.resolve(process.cwd(), "workers/python-ai/.venv-beat/bin/python3");
+async function runRhythm(mediaPath: string, env: Env) {
+  const pythonAiUrl = env.PYTHON_AI_URL || "http://localhost:8102";
   try {
-    const { stdout } = await execFileAsync(
-      venvBeat,
-      [
-        "-c",
-        `import json,sys;sys.path.insert(0,'${scriptDir}');from beat_engine import analyze_rhythm;print(json.dumps(analyze_rhythm(sys.argv[1])))`,
-        mediaPath,
-      ],
-      { timeout: 120_000, maxBuffer: 50 * 1024 * 1024 },
-    );
-    return JSON.parse(stdout.trim());
+    const res = await fetch(`${pythonAiUrl}/analyze-reference`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filePath: mediaPath }),
+      signal: AbortSignal.timeout(120_000),
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${await res.text().catch(() => "unknown")}`);
+    }
+    const json = await res.json() as { success: boolean; data?: { rhythm?: any } };
+    if (!json.success || !json.data) {
+      throw new Error("Python worker returned failure");
+    }
+    return json.data.rhythm ?? {
+      bpm: 120, beats: [], downbeats: [], onsets: [],
+      drop_candidates: [], source: "error", duration: 0,
+      beat_sync_available: false,
+    };
   } catch (err) {
     console.error(`[rhythm] analysis failed: ${(err as Error).message}`);
     return {
@@ -50,20 +57,23 @@ async function runRhythm(mediaPath: string) {
   }
 }
 
-export async function runPerceptionPro(videoPath: string) {
-  const scriptDir = path.resolve(process.cwd(), "workers/python-ai/workers");
-  const venvPro = path.resolve(process.cwd(), "workers/python-ai/.venv/bin/python3");
+export async function runPerceptionPro(videoPath: string, env: Env) {
+  const pythonAiUrl = env.PYTHON_AI_URL || "http://localhost:8102";
   try {
-    const { stdout } = await execFileAsync(
-      venvPro,
-      [
-        "-c",
-        `import json,sys;sys.path.insert(0,'${scriptDir}');from perception_pro import run;print(json.dumps(run(sys.argv[1])))`,
-        videoPath,
-      ],
-      { timeout: 180_000, maxBuffer: 80 * 1024 * 1024 },
-    );
-    return JSON.parse(stdout.trim());
+    const res = await fetch(`${pythonAiUrl}/analyze-reference`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filePath: videoPath }),
+      signal: AbortSignal.timeout(180_000),
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${await res.text().catch(() => "unknown")}`);
+    }
+    const json = await res.json() as { success: boolean; data?: { perception?: any } };
+    if (!json.success || !json.data) {
+      throw new Error("Python worker returned failure");
+    }
+    return json.data.perception ?? { shots: [], velocity: [], backends: { shots: "error", flow: "error" } };
   } catch (err) {
     console.error(`[perception-pro] failed: ${(err as Error).message}`);
     return { shots: [], velocity: [], backends: { shots: "error", flow: "error" } };
@@ -420,8 +430,8 @@ export async function analyzeReference(
     var proData: any = null;
     try {
       [rhythmData, proData] = await Promise.all([
-        runRhythm(tmpPath),
-        runPerceptionPro(tmpPath),
+        runRhythm(tmpPath, env),
+        runPerceptionPro(tmpPath, env),
       ]);
       console.log(`[reference-analysis] Rhythm: bpm=${rhythmData.bpm}, source=${rhythmData.source}, beats=${rhythmData.beats.length}, onsets=${rhythmData.onsets.length}`);
       console.log(`[perception-pro] shots=${proData.shots.length} flow=${proData.backends.flow}`);

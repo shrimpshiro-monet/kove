@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jalebi — WebCodecs Renderer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#0a0a0a;color:#fff;min-height:100vh}
+.header{padding:16px 24px;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px}
+.header h1{font-size:18px;font-weight:600}
+.tag{background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.main{padding:24px;max-width:800px;margin:0 auto}
+.section{background:#141414;border-radius:8px;padding:20px;margin-bottom:16px}
+.section h2{font-size:14px;color:#888;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.btn{padding:10px 20px;border:1px solid #333;background:#1a1a1a;color:#fff;border-radius:6px;cursor:pointer;font-size:14px}
+.btn:hover{background:#2a2a2a;border-color:#555}
+.btn.primary{background:#22c55e;color:#000;border-color:#22c55e;font-weight:600}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.progress{height:6px;background:#222;border-radius:3px;overflow:hidden;margin:12px 0}
+.progress-bar{height:100%;background:#22c55e;transition:width .2s}
+.status{font-size:13px;color:#888;margin-top:8px}
+.preview canvas{width:100%;border-radius:8px;background:#000;margin:12px 0}
+.log{font-family:'SF Mono',monospace;font-size:12px;color:#666;max-height:200px;overflow-y:auto}
+.log div{padding:2px 0}
+.log .ok{color:#22c55e}
+.log .err{color:#ef4444}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎬 Jalebi Renderer</h1>
+  <span class="tag">WebCodecs</span>
+</div>
+<div class="main">
+  <div class="section">
+    <h2>Setup</h2>
+    <div id="status" class="status">Checking WebCodecs...</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <label class="btn" style="cursor:pointer">📹 Video<input type="file" accept="video/*" id="vidIn" style="display:none" onchange="loadVid(this)"></label>
+      <label class="btn" style="cursor:pointer">🎵 Song<input type="file" accept="audio/*" id="audIn" style="display:none" onchange="loadAud(this)"></label>
+      <button class="btn primary" id="renderBtn" onclick="doRender()" disabled>⚡ Render</button>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Preview</h2>
+    <canvas id="cv" width="1280" height="720"></canvas>
+    <div class="progress" id="prog" style="display:none"><div class="progress-bar" id="progFill" style="width:0%"></div></div>
+    <div id="renderStat" class="status"></div>
+  </div>
+  <div class="section">
+    <h2>Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById("cv"),cx=cv.getContext("2d");
+let vidFile=null,audFile=null;
+const L=(m,t="info")=>{const d=document.createElement("div");d.className=t;d.textContent=m;document.getElementById("log").appendChild(d);document.getElementById("log").scrollTop=99999};
+
+// Check WebCodecs
+const wc=typeof VideoDecoder!=="undefined"&&typeof VideoEncoder!=="undefined";
+document.getElementById("status").textContent=`WebCodecs: ${wc?"✓ supported":"✗ not supported"}`;
+L(`WebCodecs: ${wc?"✓":"✗"}`,wc?"ok":"err");
+
+function loadVid(e){vidFile=e.target.files[0];if(vidFile)L(`Video: ${vidFile.name} (${(vidFile.size/1e6).toFixed(1)}MB)`,"ok");chk()}
+function loadAud(e){audFile=e.target.files[0];if(audFile)L(`Audio: ${audFile.name}`,"ok")}
+function chk(){document.getElementById("renderBtn").disabled=!(vidFile&&wc)}
+
+// ═══════════════════════════════════════════════════════════════
+// WebCodecs RENDER PIPELINE
+// ═══════════════════════════════════════════════════════════════
+
+async function doRender(){
+  if(!vidFile||!wc)return;
+  L("Starting render...");
+  document.getElementById("renderBtn").disabled=true;
+  document.getElementById("prog").style.display="block";
+
+  try{
+    // 1. Read file as ArrayBuffer
+    const buf=await vidFile.arrayBuffer();
+
+    // 2. Create video decoder
+    const decoder=new VideoDecoder({
+      output:(frame)=>{
+        // Process each decoded frame
+        processFrame(frame);
+        frame.close();
+      },
+      error:(e)=>L(`Decode error: ${e.message}`,"err"),
+    });
+
+    // 3. Configure decoder
+    // We need to detect codec from file. Use MP4 container detection.
+    const detected=detectCodec(new Uint8Array(buf));
+    L(`Codec: ${detected}`);
+
+    decoder.configure({
+      codec:detected,
+      codedWidth:1280,
+      codedHeight:720,
+    });
+
+    // 4. Create video track reader
+    const reader=new VideoTrackReader(buf,detected);
+
+    // 5. Create encoder for output
+    const chunks=[];
+    const encoder=new VideoEncoder({
+      output:(chunk,meta)=>{
+        chunks.push({chunk,meta});
+      },
+      error:(e)=>L(`Encode error: ${e.message}`,"err"),
+    });
+
+    encoder.configure({
+      codec:"vp09.00.10.08",
+      width:1280,
+      height:720,
+      bitrate:5e6,
+    });
+
+    // 6. Process frames
+    let frameCount=0;
+    const totalFrames=reader.frameCount||300;
+
+    for(const frame of reader.frames){
+      // Apply effects
+      applyEffects(frame);
+
+      // Encode
+      const canvas=document.createElement("canvas");
+      canvas.width=1280;canvas.height=720;
+      const ctx2=canvas.getContext("2d");
+      ctx2.drawImage(cv,0,0);
+
+      encoder.encode(new VideoFrame(canvas,{
+        timestamp:frameCount*(1e6/30),
+        duration:Math.round(1e6/30),
+      }),{keyFrame:frameCount%30===0});
+
+      frameCount++;
+      if(frameCount%30===0){
+        const pct=Math.round(frameCount/totalFrames*100);
+        document.getElementById("progFill").style.width=pct+"%";
+        document.getElementById("renderStat").textContent=`${frameCount}/${totalFrames} frames (${pct}%)`;
+      }
+    }
+
+    await encoder.flush();
+
+    // 7. Create WebM from encoded chunks
+    L(`Encoded ${chunks.length} chunks`);
+    L("Build WebM...");
+
+    const webmBlob=buildWebM(chunks);
+    const url=URL.createObjectURL(webmBlob);
+    const a=document.createElement("a");
+    a.href=url;a.download="jalebi-render.webm";a.click();
+    URL.revokeObjectURL(url);
+
+    L(`Done! ${(webmBlob.size/1e6).toFixed(1)}MB`,"ok");
+    document.getElementById("progFill").style.width="100%";
+    document.getElementById("renderStat").textContent="Complete!";
+
+  }catch(e){
+    L(`Error: ${e.message}`,"err");
+  }
+  document.getElementById("renderBtn").disabled=false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function processFrame(frame){
+  // Draw to canvas with effects
+  cx.drawImage(frame,0,0,1280,720);
+
+  // Dark color grade
+  const img=cx.getImageData(0,0,1280,720);
+  const d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    // Contrast 1.4
+    d[i]=clamp(((d[i]/255-.5)*1.4+.5)*255);
+    d[i+1]=clamp(((d[i+1]/255-.5)*1.4+.5)*255);
+    d[i+2]=clamp(((d[i+2]/255-.5)*1.4+.5)*255);
+    // Desaturate 30%
+    const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    d[i]=clamp(g+(d[i]-g)*.7);
+    d[i+1]=clamp(g+(d[i+1]-g)*.7);
+    d[i+2]=clamp(g+(d[i+2]-g)*.7);
+    // Darken
+    d[i]=clamp(d[i]-13);d[i+1]=clamp(d[i+1]-13);d[i+2]=clamp(d[i+2]-13);
+  }
+  cx.putImageData(img,0,0);
+
+  // Vignette
+  const v=cx.createRadialGradient(640,360,200,640,360,700);
+  v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(0,0,0,.4)");
+  cx.fillStyle=v;cx.fillRect(0,0,1280,720);
+}
+
+function clamp(v){return Math.max(0,Math.min(255,v))}
+
+function applyEffects(frame){
+  // Draw frame to canvas
+  cx.drawImage(frame,0,0,1280,720);
+  // Color grade is applied in processFrame
+}
+
+function detectCodec(buf){
+  // Check for H264/H265 in MP4 container
+  for(let i=0;i<Math.min(buf.length-4,1000);i++){
+    if(buf[i]===0x61&&buf[i+1]===0x76&&buf[i+2]===0x63&&buf[i+3]===0x1)return "avc1.mp4"; // H264
+    if(buf[i]===0x68&&buf[i+1]===0x76&&buf[i+2]===0x63&&buf[i+3]===0x1)return "hvc1.mp4"; // H265
+  }
+  return "avc1.mp4"; // Default to H264
+}
+
+// Simple VideoTrackReader (extracts frames from MP4 via WebCodecs)
+class VideoTrackReader{
+  constructor(buf,codec){
+    this.frames=[];
+    this.frameCount=0;
+    // For now, extract frames using a simple approach
+    // In production, use MP4Box.js or similar
+    this.extractFrames(buf,codec);
+  }
+
+  async extractFrames(buf,codec){
+    // Use MediaRecorder approach for simplicity
+    // This extracts frames by decoding the video
+    const blob=new Blob([buf]);
+    const url=URL.createObjectURL(blob);
+    const video=document.createElement("video");
+    video.src=url;
+    video.muted=true;
+
+    await new Promise(r=>{video.onloadedmetadata=r;video.onerror=r});
+    const dur=video.duration||10;
+    const fps=30;
+    const count=Math.min(Math.ceil(dur*fps),300); // Max 300 frames (10s)
+
+    for(let i=0;i<count;i++){
+      video.currentTime=(i/fps);
+      await new Promise(r=>{video.onseeked=r;video.onerror=r;setTimeout(r,50)});
+
+      const c=document.createElement("canvas");
+      c.width=1280;c.height=720;
+      const ctx=c.getContext("2d");
+      ctx.drawImage(video,0,0,1280,720);
+
+      this.frames.push(c);
+      this.frameCount++;
+    }
+
+    URL.revokeObjectURL(url);
+    L(`Extracted ${this.frameCount} frames from ${dur.toFixed(1)}s video`,"ok");
+  }
+}
+
+// Simple WebM builder (minimal)
+function buildWebM(chunks){
+  // For demo: create a simple WebM with VP9
+  // In production, use EBML library
+  const blob=new Blob(chunks.map(c=>c.chunk?.data||new Uint8Array()),{type:"video/webm"});
+  return blob;
+}
+</script>
+</body>
+</html>

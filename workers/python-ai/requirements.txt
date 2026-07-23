@@ -31,3 +31,4 @@ julius
 mir_eval
 imageio
 tifffile
+pycocotools

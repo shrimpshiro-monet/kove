@@ -2,4 +2,5 @@ packages:
   - "apps/*"
   - "packages/*"
   - "workers/*"
-  - "external/openreel-video/packages/*"
+  - "apps/kove-advanced/apps/*"
+  - "apps/kove-advanced/packages/*"

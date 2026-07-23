@@ -1,10 +1,30 @@
 # AGENTS.md — Monet AI Director
 
-## Two pipelines, one repo
+## Architecture: Two layers, one pipeline
 
-Two codebases coexist. **Not obvious from layout, but critical:**
-- **Monet v1** (root `src/`) — Cloudflare Worker, TanStack Start, Gemini-driven EDL generation. Entry: `src/server.ts` (1217-line `fetch` handler with inline `{method, path, handler}[]` route registry).
-- **Kove v2** (`apps/api/`) — Fastify server, reference-driven pipeline, BullMQ/Redis. Entry: `apps/api/src/server.ts`.
+The system has two runtime layers that work together:
+
+```
+┌─────────────────────────────────────────────────┐
+│  LAYER 1: AI Brain (Cloudflare Worker)          │
+│  src/server.ts — Gemini-driven EDL generation   │
+│  Upload → Analyze → Intent → Generate → Refine  │
+│  Cannot spawn child processes (Worker limitation)│
+└──────────────────────┬──────────────────────────┘
+                       │ fetch() to port 3000
+                       ▼
+┌─────────────────────────────────────────────────┐
+│  LAYER 2: Execution Engine (Fastify + Node.js)  │
+│  apps/api/src/server.ts — FFmpeg, Blender,      │
+│  Python, BullMQ queue, local filesystem         │
+│  /api/execute/ffmpeg, /api/execute/blender       │
+└─────────────────────────────────────────────────┘
+```
+
+- **Monet v1** (`src/`) — Cloudflare Worker, TanStack Start, AI brain. Entry: `src/server.ts` (1217-line fetch handler).
+- **Kove v2** (`apps/api/`) — Fastify server, execution engine. Entry: `apps/api/src/server.ts`.
+- v1 calls v2 for FFmpeg/Blender execution. v2 has standalone Python pipelines (vibe-generate, create-heavy-edit) that bypass v1.
+- Frontend (`apps/web/`) routes AI calls to v1, execution calls to v2.
 
 Two schemas: `packages/edl/` (v1, integrated) and `packages/edl-v2/` (v5.1, not wired).
 

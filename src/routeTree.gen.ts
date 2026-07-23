@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StyleLabRouteImport } from './routes/style-lab'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as SimpleEditorRouteImport } from './routes/simple-editor'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as ExperimentalRouteImport } from './routes/experimental'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudioProjectIdRouteImport } from './routes/studio_.$projectId'
+import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
+import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as ChatThreadIdRouteImport } from './routes/chat_.$threadId'
 
 const StyleLabRoute = StyleLabRouteImport.update({
@@ -35,9 +40,19 @@ const SimpleEditorRoute = SimpleEditorRouteImport.update({
   path: '/simple-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExperimentalRoute = ExperimentalRouteImport.update({
+  id: '/experimental',
+  path: '/experimental',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorRoute = EditorRouteImport.update({
@@ -65,6 +80,21 @@ const StudioProjectIdRoute = StudioProjectIdRouteImport.update({
   path: '/studio/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignUpSplatRoute = SignUpSplatRouteImport.update({
+  id: '/sign-up/$',
+  path: '/sign-up/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInSplatRoute = SignInSplatRouteImport.update({
+  id: '/sign-in/$',
+  path: '/sign-in/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
   id: '/chat_/$threadId',
   path: '/chat/$threadId',
@@ -76,11 +106,16 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/experimental': typeof ExperimentalRoute
   '/landing': typeof LandingRoute
+  '/pricing': typeof PricingRoute
   '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
   '/style-lab': typeof StyleLabRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/r/$code': typeof RCodeRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesByTo {
@@ -88,11 +123,16 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/experimental': typeof ExperimentalRoute
   '/landing': typeof LandingRoute
+  '/pricing': typeof PricingRoute
   '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
   '/style-lab': typeof StyleLabRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
+  '/r/$code': typeof RCodeRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/studio/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRoutesById {
@@ -101,11 +141,16 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/experimental': typeof ExperimentalRoute
   '/landing': typeof LandingRoute
+  '/pricing': typeof PricingRoute
   '/simple-editor': typeof SimpleEditorRoute
   '/studio': typeof StudioRoute
   '/style-lab': typeof StyleLabRoute
   '/chat_/$threadId': typeof ChatThreadIdRoute
+  '/r/$code': typeof RCodeRoute
+  '/sign-in/$': typeof SignInSplatRoute
+  '/sign-up/$': typeof SignUpSplatRoute
   '/studio_/$projectId': typeof StudioProjectIdRoute
 }
 export interface FileRouteTypes {
@@ -115,11 +160,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/editor'
+    | '/experimental'
     | '/landing'
+    | '/pricing'
     | '/simple-editor'
     | '/studio'
     | '/style-lab'
     | '/chat/$threadId'
+    | '/r/$code'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/studio/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,11 +177,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/editor'
+    | '/experimental'
     | '/landing'
+    | '/pricing'
     | '/simple-editor'
     | '/studio'
     | '/style-lab'
     | '/chat/$threadId'
+    | '/r/$code'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/studio/$projectId'
   id:
     | '__root__'
@@ -139,11 +194,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/editor'
+    | '/experimental'
     | '/landing'
+    | '/pricing'
     | '/simple-editor'
     | '/studio'
     | '/style-lab'
     | '/chat_/$threadId'
+    | '/r/$code'
+    | '/sign-in/$'
+    | '/sign-up/$'
     | '/studio_/$projectId'
   fileRoutesById: FileRoutesById
 }
@@ -152,11 +212,16 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRoute
   EditorRoute: typeof EditorRoute
+  ExperimentalRoute: typeof ExperimentalRoute
   LandingRoute: typeof LandingRoute
+  PricingRoute: typeof PricingRoute
   SimpleEditorRoute: typeof SimpleEditorRoute
   StudioRoute: typeof StudioRoute
   StyleLabRoute: typeof StyleLabRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
+  RCodeRoute: typeof RCodeRoute
+  SignInSplatRoute: typeof SignInSplatRoute
+  SignUpSplatRoute: typeof SignUpSplatRoute
   StudioProjectIdRoute: typeof StudioProjectIdRoute
 }
 
@@ -183,11 +248,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SimpleEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/landing': {
       id: '/landing'
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experimental': {
+      id: '/experimental'
+      path: '/experimental'
+      fullPath: '/experimental'
+      preLoaderRoute: typeof ExperimentalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor': {
@@ -225,6 +304,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-up/$': {
+      id: '/sign-up/$'
+      path: '/sign-up/$'
+      fullPath: '/sign-up/$'
+      preLoaderRoute: typeof SignUpSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/$': {
+      id: '/sign-in/$'
+      path: '/sign-in/$'
+      fullPath: '/sign-in/$'
+      preLoaderRoute: typeof SignInSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat_/$threadId': {
       id: '/chat_/$threadId'
       path: '/chat/$threadId'
@@ -240,11 +340,16 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   DashboardRoute: DashboardRoute,
   EditorRoute: EditorRoute,
+  ExperimentalRoute: ExperimentalRoute,
   LandingRoute: LandingRoute,
+  PricingRoute: PricingRoute,
   SimpleEditorRoute: SimpleEditorRoute,
   StudioRoute: StudioRoute,
   StyleLabRoute: StyleLabRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
+  RCodeRoute: RCodeRoute,
+  SignInSplatRoute: SignInSplatRoute,
+  SignUpSplatRoute: SignUpSplatRoute,
   StudioProjectIdRoute: StudioProjectIdRoute,
 }
 export const routeTree = rootRouteImport

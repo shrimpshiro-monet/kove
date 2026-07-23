@@ -146,13 +146,14 @@ async function analyzeFootageClip(
   }
 
   if (!analysis) {
-    analysis = await buildFallbackAnalysis(fileId, buffer, mimeType, actualDuration);
+    analysis = await buildFallbackAnalysis(env, fileId, buffer, mimeType, actualDuration);
   }
 
   return analysis;
 }
 
 async function buildFallbackAnalysis(
+  env: Env,
   fileId: string,
   buffer: ArrayBuffer | null,
   mimeType: string,
@@ -311,7 +312,7 @@ async function buildFallbackAnalysis(
       const ext = mimeType.includes("quicktime") ? ".mov" : ".mp4";
       const tmpPath = path.join(tmpDir, `input${ext}`);
       await fs.writeFile(tmpPath, Buffer.from(buffer));
-      const pro = await runPerceptionPro(tmpPath);
+      const pro = await runPerceptionPro(tmpPath, env);
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
 
       for (const segment of segments) {

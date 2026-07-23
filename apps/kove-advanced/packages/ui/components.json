@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral"
+  },
+  "aliases": {
+    "components": "@kove/ui/components",
+    "utils": "@kove/ui/lib/utils",
+    "hooks": "@kove/ui/hooks",
+    "ui": "@kove/ui/components",
+    "lib": "@kove/ui/lib"
+  }
+}

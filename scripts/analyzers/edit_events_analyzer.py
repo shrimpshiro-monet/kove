@@ -68,6 +68,7 @@ def analyze_edit_events(
     fps: float = 30.0,
     motion_data: Optional[list] = None,
     shared_frame_cache: Optional[tuple] = None,
+    profile: Optional[dict] = None,
 ) -> dict:
     """
     Run all three analyses and return a unified edit events report.
@@ -83,6 +84,8 @@ def analyze_edit_events(
         dict with keys: transitions, speed_ramps, keyframes, events (flat list)
     """
     print("  Analyzing edit events (transitions + speed ramps + keyframes)...")
+
+    # profile: available for genre-conditioned threshold tuning
 
     if shared_frame_cache:
         cache_dir, frame_map, cache_fps = shared_frame_cache

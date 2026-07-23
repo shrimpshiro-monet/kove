@@ -33,6 +33,7 @@
   --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-ui: "Inter", "Söhne", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Berkeley Mono", ui-monospace, monospace;
+  --font-cursive: "Dancing Script", cursive;
 
   /* ── Radius ── */
   --radius-sm: calc(var(--radius) - 4px);
@@ -78,6 +79,11 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
+  /* ── Dashboard accent ── */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-surface: var(--background-secondary);
+
   /* ── Background tiers (editor panels) ── */
   --color-background-secondary: var(--background-secondary);
   --color-background-tertiary: var(--background-tertiary);
@@ -110,6 +116,18 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Jalebi brand palette — synced with Margalla dark surfaces */
+  --color-jalebi-bg: #0c0a09;
+  --color-jalebi-surface: #141210;
+  --color-jalebi-surface-2: #1c1a17;
+  --color-jalebi-accent: #ff8a3d;
+  --color-jalebi-accent-hover: #ff9d5c;
+  --color-jalebi-accent-muted: rgba(255,138,61,0.12);
+  --color-jalebi-positive: #4A7A6A;
+  --color-jalebi-negative: #ff5c5c;
+  --color-jalebi-border: rgba(255, 255, 255, 0.06);
+  --color-jalebi-border-strong: rgba(255, 255, 255, 0.20);
 }
 
 /*
@@ -255,6 +273,163 @@
 
 /*
  * ─────────────────────────────────────────────────────────────
+ * .theme-margalla — Islamabad green (simple editor)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-margalla,
+.theme-margalla {
+  --background: #0c0a09;
+  --background-secondary: #141210;
+  --background-tertiary: #1c1a17;
+  --background-elevated: #242220;
+
+  --foreground: #E0DCD4;
+  --text-primary: #E0DCD4;
+  --text-secondary: #9A9590;
+  --text-muted: #5A5854;
+  --text-tertiary: #3A3835;
+
+  --card: #181614;
+  --card-foreground: #E0DCD4;
+  --popover: #1c1a17;
+  --popover-foreground: #E0DCD4;
+
+  --primary: #4A7A6A;
+  --primary-foreground: #E0DCD4;
+  --primary-hover: #5A8A7A;
+  --primary-active: #3A6A5A;
+
+  --secondary: #1c1a17;
+  --secondary-foreground: #E0DCD4;
+  --muted: #1c1a17;
+  --muted-foreground: #9A9590;
+  --accent: #4A7A6A;
+  --accent-foreground: #E0DCD4;
+
+  --destructive: #8B4A4A;
+  --destructive-foreground: #E0DCD4;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-active: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #1c1a17;
+  --ring: #4A7A6A;
+
+  --status-success: #4A7A6A;
+  --status-warning: #B8863A;
+  --status-info: #5A7A9A;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
+ * .theme-multan — Multan blue (advanced editor)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-multan,
+.theme-multan {
+  --background: #0a0b0e;
+  --background-secondary: #121316;
+  --background-tertiary: #1a1b1f;
+  --background-elevated: #222328;
+
+  --foreground: #E2DDD4;
+  --text-primary: #E2DDD4;
+  --text-secondary: #9A9A9F;
+  --text-muted: #5A5A60;
+  --text-tertiary: #3A3A40;
+
+  --card: #15171c;
+  --card-foreground: #E2DDD4;
+  --popover: #1a1b1f;
+  --popover-foreground: #E2DDD4;
+
+  --primary: #4A8B8F;
+  --primary-foreground: #E2DDD4;
+  --primary-hover: #5A9B9F;
+  --primary-active: #3A7B7F;
+
+  --secondary: #1a1b1f;
+  --secondary-foreground: #E2DDD4;
+  --muted: #1a1b1f;
+  --muted-foreground: #9A9A9F;
+  --accent: #4A8B8F;
+  --accent-foreground: #E2DDD4;
+
+  --destructive: #8B4A5A;
+  --destructive-foreground: #E2DDD4;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-active: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #1a1b1f;
+  --ring: #4A8B8F;
+
+  --status-success: #4A8B8F;
+  --status-warning: #B8863A;
+  --status-info: #5A7A9A;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
+ * .theme-fey — Fey financial dashboard (affiliate section)
+ * ─────────────────────────────────────────────────────────────
+ */
+:root.theme-fey,
+.theme-fey {
+  --background: #0a0a0b;
+  --background-secondary: #0d0d10;
+  --background-tertiary: #131316;
+  --background-elevated: #1a1a1f;
+
+  --foreground: #f2f2f0;
+  --text-primary: #f2f2f0;
+  --text-secondary: #9a9a9f;
+  --text-muted: #6b6b70;
+  --text-tertiary: #4a4a4f;
+
+  --card: #131316;
+  --card-foreground: #f2f2f0;
+  --popover: #1a1a1f;
+  --popover-foreground: #f2f2f0;
+
+  --primary: var(--accent);
+  --primary-foreground: #f2f2f0;
+  --primary-hover: var(--accent);
+  --primary-active: var(--accent);
+
+  --secondary: #1a1a1f;
+  --secondary-foreground: #f2f2f0;
+  --muted: #1a1a1f;
+  --muted-foreground: #6b6b70;
+  --accent: var(--accent);
+  --accent-foreground: #f2f2f0;
+
+  --destructive: #ff5c5c;
+  --destructive-foreground: #f2f2f0;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-active: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --input: #131316;
+  --ring: var(--accent);
+
+  --status-success: #34d399;
+  --status-warning: #b8863a;
+  --status-info: #5A7A9A;
+  --status-error: #ff5c5c;
+
+  --chart-1: var(--accent);
+  --chart-2: #9a9a9f;
+  --chart-3: #34d399;
+  --chart-4: #b8863a;
+  --chart-5: #6b6b70;
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
  * Light theme — inverted Kove (paper canvas, ink text)
  * ─────────────────────────────────────────────────────────────
  */
@@ -396,6 +571,14 @@
     border-color: var(--color-primary);
     box-shadow: 0 0 0 1px var(--color-primary);
   }
+
+  html {
+    transition: background-color 0.3s ease-out;
+  }
+
+  html body {
+    transition: background-color 0.3s ease-out, color 0.3s ease-out;
+  }
 }
 
 /*
@@ -441,6 +624,29 @@
     background: oklch(0.06 0 0 / 0.6);
     backdrop-filter: blur(12px) saturate(1.1);
     -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  }
+
+  .filmstrip-border {
+    height: 3px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-jalebi-accent) 0px,
+      var(--color-jalebi-accent) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+    opacity: 0.4;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 100ms ease-out, transform 100ms ease-out;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -540,6 +746,145 @@
   .stagger-4 { animation-delay: 0.2s; }
   .stagger-5 { animation-delay: 0.25s; }
   .stagger-6 { animation-delay: 0.3s; }
+
+  .jalebi {
+    transform-origin: center;
+    animation: jalebi-float 14s ease-in-out infinite;
+  }
+
+  .jalebi:nth-child(odd) {
+    animation-duration: 18s;
+    animation-direction: reverse;
+  }
+
+  .jalebi:nth-child(3n) {
+    animation-duration: 12s;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 40s linear infinite;
+  }
+
+  .marquee-track:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes jalebi-float {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  25% { transform: translateY(-8px) translateX(6px) rotate(3deg); }
+  50% { transform: translateY(0) translateX(0) rotate(0deg); }
+  75% { transform: translateY(6px) translateX(-4px) rotate(-2deg); }
+  100% { transform: translateY(0) translateX(0) rotate(0deg); }
+}
+
+/* ── Cooking Jalebi animations ── */
+@keyframes jalebi-pipe {
+  from { stroke-dashoffset: 800; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes jalebi-cook {
+  0% { stroke: var(--color-jalebi-accent); filter: none; }
+  50% { stroke: #ffcc00; filter: drop-shadow(0 0 6px rgba(255,200,0,0.4)); }
+  100% { stroke: var(--color-jalebi-accent); filter: drop-shadow(0 0 8px rgba(255,138,61,0.5)); }
+}
+
+@keyframes jalebi-bubble {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  20% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-20px) scale(1.2); }
+}
+
+@keyframes jalebi-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-jalebi-pipe {
+    animation: jalebi-pipe 2s ease-in-out forwards;
+  }
+
+  .animate-jalebi-cook {
+    animation: jalebi-cook 1s ease-in-out forwards;
+  }
+
+  .animate-jalebi-done {
+    filter: drop-shadow(0 0 8px rgba(255,138,61,0.5));
+  }
+
+  .animate-jalebi-bubble {
+    animation: jalebi-bubble 1.2s ease-out infinite;
+  }
+
+  .animate-jalebi-spiral-glow {
+    animation: jalebi-spiral-glow 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes jalebi-spiral-glow {
+  0%, 100% { opacity: 0.3; stroke-width: 2; }
+  50% { opacity: 0.7; stroke-width: 3.5; }
+}
+
+@keyframes jalebi-text-glow {
+  0% { text-shadow: none; }
+  50% { text-shadow: 0 0 20px rgba(255,138,61,0.6), 0 0 40px rgba(255,138,61,0.3); }
+  100% { text-shadow: 0 0 12px rgba(255,138,61,0.4); }
+}
+
+@keyframes jalebi-breathe {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.05); }
+}
+
+@keyframes jalebi-draw {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    text-shadow: none;
+  }
+  70% {
+    clip-path: inset(0 0% 0 0);
+    text-shadow: none;
+  }
+  100% {
+    clip-path: inset(0 0% 0 0);
+    text-shadow: 0 0 18px rgba(255,138,61,0.5), 0 0 36px rgba(255,138,61,0.25);
+  }
+}
+
+@layer utilities {
+  .animate-jalebi-text-glow {
+    animation: jalebi-text-glow 1.2s ease-in-out forwards;
+  }
+
+  .animate-jalebi-breathe {
+    animation: jalebi-breathe 6s ease-in-out infinite;
+  }
+
+  .animate-jalebi-draw {
+    animation: jalebi-draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+}
+
+/* ── Spin ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-spin {
+    animation: spin 2s linear infinite;
+  }
 }
 
 /*
@@ -552,5 +897,13 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    transition: none;
+  }
+
+  .marquee-track {
+    animation: none;
   }
 }

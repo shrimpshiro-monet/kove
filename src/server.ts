@@ -10,6 +10,8 @@ import { handleUploadAndDetect } from "./server/api/upload-and-detect";
 import { handleAnalyze } from "./server/api/analyze";
 import { handleGenerateEDL } from "./server/api/generate-edl";
 import { handleRefineEDL } from "./server/api/refine-edl";
+import { handleV3Analyze, handleV3Generate, handleV3Refine, handleV3Render } from "./server/api/v3-pipeline";
+import { handleV3Tweak, handleV3Ask } from "./server/api/v3-tweak";
 import { handleTranscribe } from "./server/api/transcribe";
 import { handleAnalyzeReference } from "./server/api/analyze-reference";
 import { handleDirectorFeedbackRequest } from "./server/api/director-feedback";
@@ -18,6 +20,9 @@ import { handleGenerateComposition } from "./server/api/generate-composition";
 import { handleGetStudioProject, handlePersistStudioProject } from "./server/api/studio-project";
 import { handleQueueExport, handleGetExportStatus } from "./server/api/export";
 import { handleRenderPreview, handleRenderStatus } from "./server/api/render-preview";
+import { handleAnalyzeDNA } from "./server/api/analyze-dna";
+import { handleCompileIntent } from "./server/api/compile-intent";
+import { handlePipeline } from "./server/api/pipeline";
 import { handleGeminiThinkEffects } from "./server/api/gemini-think-effects";
 import { handleStyleCompile } from "./server/api/style-compile";
 import { handleExportMP4 } from "./server/api/export-mp4";
@@ -27,6 +32,20 @@ import { handleSpecialistIsolate } from "./server/api/specialist-isolate";
 import { handleSpecialistDepth } from "./server/api/specialist-depth";
 import { handleSpecialistSlowmo } from "./server/api/specialist-slowmo";
 import { handleReplicateStyle } from "./server/api/replicate-style";
+import {
+  handleCreateCheckout,
+  handleCustomerPortal,
+  handleBillingWebhook,
+  handleGetUsage,
+  handleIncrementUsage,
+} from "./server/api/billing";
+import {
+  handleGetAffiliateProfile,
+  handleGetAffiliateReferrals,
+  handleGetAffiliateCommissions,
+  handleClaimAffiliateCode,
+  handleTrackReferral,
+} from "./server/api/affiliate";
 import { getDevEnv } from "./server/lib/dev-env";
 import { runSandboxTestsJSON } from "./server/lib/test-engines-sandbox";
 import { getAIService } from "./server/services/ai-service";
@@ -953,6 +972,15 @@ const apiRoutes: ApiRoute[] = [
   // Composition Overlay
   { method: "POST", path: "/api/generate-composition", handler: handleGenerateComposition },
   
+  // Edit DNA Analysis Engine
+  { method: "POST", path: "/api/analyze-dna", handler: handleAnalyzeDNA },
+
+  // Intent Compiler
+  { method: "POST", path: "/api/compile-intent", handler: handleCompileIntent },
+
+  // Full Pipeline (analyze → compile → execute)
+  { method: "POST", path: "/api/pipeline", handler: handlePipeline },
+
   // Gemini Think Effects
   { method: "POST", path: "/api/gemini-think-effects", handler: handleGeminiThinkEffects },
   
@@ -1015,6 +1043,14 @@ const apiRoutes: ApiRoute[] = [
   // Style Replication
   { method: "POST", path: "/api/replicate-style", handler: handleReplicateStyle },
 
+  // V3 Pipeline (new)
+  { method: "POST", path: "/api/v3/analyze", handler: handleV3Analyze },
+  { method: "POST", path: "/api/v3/generate", handler: handleV3Generate },
+  { method: "POST", path: "/api/v3/refine", handler: handleV3Refine },
+  { method: "POST", path: "/api/v3/render", handler: handleV3Render },
+  { method: "POST", path: "/api/v3/tweak", handler: handleV3Tweak },
+  { method: "POST", path: "/api/v3/ask", handler: handleV3Ask },
+
   // Frame-Level Precision Tools
   { method: "POST", path: "/api/lut/generate", handler: handleGenerateLUT },
   { method: "POST", path: "/api/lut/apply", handler: handleApplyLUT },
@@ -1022,6 +1058,20 @@ const apiRoutes: ApiRoute[] = [
   { method: "POST", path: "/api/subject/blur", handler: handleSubjectBlur },
   { method: "POST", path: "/api/text/ass", handler: handleGenerateASS },
   { method: "POST", path: "/api/text/word-ass", handler: handleWordHighlightASS },
+
+  // Billing (Paddle)
+  { method: "POST", path: "/api/billing/checkout", handler: handleCreateCheckout },
+  { method: "POST", path: "/api/billing/checkout/customer-portal", handler: handleCustomerPortal },
+  { method: "POST", path: "/api/billing/webhook", handler: handleBillingWebhook },
+  { method: "GET", path: "/api/billing/usage", handler: handleGetUsage },
+  { method: "POST", path: "/api/billing/usage/increment", handler: handleIncrementUsage },
+
+  // Affiliate
+  { method: "GET", path: "/api/affiliate/profile", handler: handleGetAffiliateProfile },
+  { method: "GET", path: "/api/affiliate/referrals", handler: handleGetAffiliateReferrals },
+  { method: "GET", path: "/api/affiliate/commissions", handler: handleGetAffiliateCommissions },
+  { method: "POST", path: "/api/affiliate/claim-code", handler: handleClaimAffiliateCode },
+  { method: "POST", path: "/api/affiliate/track-referral", handler: handleTrackReferral },
 ];
 
 // ------------------------------------------------------------------

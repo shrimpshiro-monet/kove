@@ -10,8 +10,19 @@ from workers.estimate_depth import EstimateDepthRequest, estimate_depth
 from workers.segment_subject import SegmentSubjectRequest, segment_subject
 from workers.track_points import TrackPointsRequest, track_points
 from workers.track_subject import TrackSubjectRequest, track_subject
+from workers.subject_track_mask import (
+    ShotSpec,
+    SubjectSeed,
+    TrackMaskRequest,
+    track_mask,
+)
 from workers.transcribe import TranscribeRequest, transcribe_audio
 from workers.deep_analysis import run_deep_analysis
+from workers.cut_detector import detect_cuts
+from workers.motion_analyzer import analyze_motion
+from workers.frame_extractor import extract_frames
+from workers.reference_analyzer import analyze_reference
+from workers.color_analyzer import analyze_color
 
 app = FastAPI(title="Monet Python AI Worker", version="0.2.0")
 
@@ -150,9 +161,142 @@ def track_points_route(body: TrackPointsBody) -> dict:
     return {"success": True, "data": result}
 
 
+class ShotSpecBody(BaseModel):
+    shotId: str = Field(min_length=1)
+    startFrame: int = Field(ge=0)
+    endFrame: int = Field(ge=0)
+
+
+class SubjectSeedBody(BaseModel):
+    subjectId: int = Field(ge=0)
+    label: str = Field(min_length=1)
+    seedFrame: int = Field(ge=0)
+    seedBox: list[float] = Field(min_length=4, max_length=4)
+
+
+class TrackMaskBody(BaseModel):
+    filePath: str = Field(min_length=1)
+    shots: list[ShotSpecBody] = Field(min_length=1)
+    subjects: list[SubjectSeedBody] = Field(min_length=1)
+    frameStep: int = Field(default=2, ge=1, le=10)
+    maxFramesPerShot: int = Field(default=300, ge=1, le=10000)
+    workingWidth: int = Field(default=1280, ge=320, le=3840)
+    checkpointPath: Optional[str] = None
+    modelConfig: Optional[str] = None
+    enableReid: bool = True
+    reidThreshold: float = Field(default=0.75, ge=0.0, le=1.0)
+
+
+class ExtractFramesBody(BaseModel):
+    filePath: str = Field(min_length=1)
+    fps: float = Field(default=3.0, gt=0, le=30)
+    maxFrames: Optional[int] = Field(default=None, ge=1)
+    outputDir: Optional[str] = None
+
+
 class DeepAnalysisBody(BaseModel):
     filePath: str = Field(min_length=1)
     audioPath: Optional[str] = None
+
+
+@app.post("/extract-frames")
+def extract_frames_route(body: ExtractFramesBody) -> dict:
+    result = extract_frames(
+        file_path=body.filePath,
+        fps=body.fps,
+        max_frames=body.maxFrames,
+        output_dir=body.outputDir,
+    )
+    return {
+        "success": True,
+        "data": {
+            "frames": [
+                {"path": f.path, "timestamp_s": f.timestamp_s, "width": f.width, "height": f.height}
+                for f in result.frames
+            ],
+            "metadata": result.metadata,
+        },
+    }
+
+
+@app.post("/spatial/track-mask")
+def track_mask_route(body: TrackMaskBody) -> dict:
+    result = track_mask(
+        TrackMaskRequest(
+            video_path=body.filePath,
+            shots=[
+                ShotSpec(
+                    shot_id=s.shotId,
+                    start_frame=s.startFrame,
+                    end_frame=s.endFrame,
+                )
+                for s in body.shots
+            ],
+            subjects=[
+                SubjectSeed(
+                    subject_id=s.subjectId,
+                    label=s.label,
+                    seed_frame=s.seedFrame,
+                    seed_box=s.seedBox,
+                )
+                for s in body.subjects
+            ],
+            frame_step=body.frameStep,
+            max_frames_per_shot=body.maxFramesPerShot,
+            working_width=body.workingWidth,
+            checkpoint_path=body.checkpointPath,
+            model_config=body.modelConfig,
+            enable_reid=body.enableReid,
+            reid_threshold=body.reidThreshold,
+        )
+    )
+    return {"success": True, "data": result}
+
+
+class AnalyzeReferenceBody(BaseModel):
+    filePath: str = Field(min_length=1)
+
+
+@app.post("/analyze-reference")
+def analyze_reference_route(body: AnalyzeReferenceBody) -> dict:
+    result = analyze_reference(body.filePath)
+    return {"success": True, "data": result}
+
+
+class DetectCutsBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    fps: float = Field(default=3.0, gt=0)
+    threshold: float = Field(default=0.3, gt=0, lt=1)
+
+
+@app.post("/detect-cuts")
+def detect_cuts_route(body: DetectCutsBody) -> dict:
+    result = detect_cuts(
+        frame_dir=body.frameDir, fps=body.fps, threshold=body.threshold
+    )
+    return {"success": True, "data": result}
+
+
+class AnalyzeMotionBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    shots: list[dict] = Field(min_length=1)
+
+
+@app.post("/analyze-motion")
+def analyze_motion_route(body: AnalyzeMotionBody) -> dict:
+    result = analyze_motion(frame_dir=body.frameDir, shots=body.shots)
+    return {"success": True, "data": result}
+
+
+class AnalyzeColorBody(BaseModel):
+    frameDir: str = Field(min_length=1)
+    shots: list[dict] = Field(min_length=1)
+
+
+@app.post("/analyze-color")
+def analyze_color_route(body: AnalyzeColorBody) -> dict:
+    result = analyze_color(frame_dir=body.frameDir, shots=body.shots)
+    return {"success": True, "data": result}
 
 
 @app.post("/deep-analysis")
