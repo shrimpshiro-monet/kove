@@ -51,6 +51,8 @@ export interface AICallResult<T = unknown> {
 
 interface AIEnv {
   AI: any;
+  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
   CEREBRAS_API_KEY?: string;
   GROQ_API_KEY?: string;
   NVIDIA_NIM_API_KEY?: string;
@@ -67,7 +69,7 @@ interface AIEnv {
 // ============================================================================
 
 // The one model for everything text/reasoning
-const UNIFIED_MODEL = "@cf/google/gemma-4-26b-a4b-it";
+const UNIFIED_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 // Vision model (only when images are needed)
 const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 // Embedding model
@@ -129,6 +131,8 @@ class ProviderClients {
   cf: any;
   private nvidiaApiKey: string;
   private doApiKey: string;
+  private cfApiToken: string;
+  private cfAccountId: string;
 
   constructor(env: AIEnv) {
     this.cerebras = new OpenAI({
@@ -144,6 +148,8 @@ class ProviderClients {
     this.doApiKey = env.DIGITALOCEAN_API_KEY || "";
     this.digitalocean = null;
     this.cf = env.AI;
+    this.cfApiToken = env.CLOUDFLARE_API_TOKEN || "";
+    this.cfAccountId = env.CLOUDFLARE_ACCOUNT_ID || "";
   }
 
   getNvidia(): OpenAI {
@@ -176,10 +182,6 @@ async function callCloudflare(
   model: string,
   opts: AICallOptions
 ): Promise<{ raw: string; inputTokens?: number; outputTokens?: number }> {
-  if (!clients.cf) {
-    throw new Error("Cloudflare Workers AI binding not available (env.AI is undefined)");
-  }
-
   const messages = [
     ...(opts.systemPrompt ? [{ role: "system", content: opts.systemPrompt }] : []),
     { role: "user", content: opts.prompt },
@@ -202,15 +204,68 @@ async function callCloudflare(
     };
   }
 
-  const result: any = await clients.cf.run(model, payload);
+  // Try the Workers AI binding first (works in deployed Workers)
+  if (clients.cf) {
+    try {
+      const result: any = await clients.cf.run(model, payload);
+      const raw =
+        result?.response ?? result?.result?.response ?? JSON.stringify(result);
+      return {
+        raw,
+        inputTokens: result?.usage?.prompt_tokens,
+        outputTokens: result?.usage?.completion_tokens,
+      };
+    } catch (err) {
+      console.warn(`[AI] Workers AI binding failed, trying REST API: ${(err as Error).message?.slice(0, 100)}`);
+    }
+  }
 
+  // Fallback: Cloudflare REST API (works in local dev with API token from .dev.vars)
+  const apiToken = clients.cfApiToken || (globalThis as any).process?.env?.CLOUDFLARE_API_TOKEN || "";
+  const accountId = clients.cfAccountId || (globalThis as any).process?.env?.CLOUDFLARE_ACCOUNT_ID || "";
+  if (apiToken && accountId) {
+    return callCloudflareREST(apiToken, accountId, model, payload);
+  }
+
+  throw new Error("Cloudflare Workers AI not available (no binding and no API token)");
+}
+
+async function callCloudflareREST(
+  apiToken: string,
+  accountId: string,
+  model: string,
+  payload: Record<string, unknown>
+): Promise<{ raw: string; inputTokens?: number; outputTokens?: number }> {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`Cloudflare REST API ${resp.status}: ${body.slice(0, 200)}`);
+  }
+
+  const json: any = await resp.json();
+  if (!json.success) {
+    throw new Error(`Cloudflare REST API error: ${JSON.stringify(json.errors).slice(0, 200)}`);
+  }
+
+  // REST API returns OpenAI-compatible format: result.choices[0].message.content
+  // Binding returns: result.response
   const raw =
-    result?.response ?? result?.result?.response ?? JSON.stringify(result);
-
+    json?.result?.response ??
+    json?.result?.choices?.[0]?.message?.content ??
+    JSON.stringify(json?.result);
   return {
     raw,
-    inputTokens: result?.usage?.prompt_tokens,
-    outputTokens: result?.usage?.completion_tokens,
+    inputTokens: json?.result?.usage?.prompt_tokens,
+    outputTokens: json?.result?.usage?.completion_tokens,
   };
 }
 
@@ -279,11 +334,37 @@ export async function getClipEmbedding(
   env: AIEnv,
   imageBytes: Uint8Array
 ): Promise<number[]> {
-  if (!env.AI) return [];
-  const result: any = await env.AI.run("@cf/openai/clip-vit-base-patch32", {
-    image: Array.from(imageBytes),
-  });
-  return result?.data?.[0] ?? result?.embedding ?? [];
+  // Try the Workers AI binding first
+  if (env.AI) {
+    try {
+      const result: any = await env.AI.run("@cf/openai/clip-vit-base-patch32", {
+        image: Array.from(imageBytes),
+      });
+      return result?.data?.[0] ?? result?.embedding ?? [];
+    } catch {
+      // Fall through to REST API
+    }
+  }
+
+  // Fallback: REST API
+  const apiToken = (env as any).CLOUDFLARE_API_TOKEN || (globalThis as any).process?.env?.CLOUDFLARE_API_TOKEN || "";
+  const accountId = (env as any).CLOUDFLARE_ACCOUNT_ID || (globalThis as any).process?.env?.CLOUDFLARE_ACCOUNT_ID || "";
+  if (!apiToken || !accountId) return [];
+
+  const resp = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/openai/clip-vit-base-patch32`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ image: Array.from(imageBytes) }),
+    }
+  );
+  if (!resp.ok) return [];
+  const json: any = await resp.json();
+  return json?.result?.data?.[0] ?? json?.result?.embedding ?? [];
 }
 
 // ============================================================================
@@ -407,6 +488,8 @@ export class AIService {
     this.env = env;
     this.clients = new ProviderClients({
       AI: env.AI,
+      CLOUDFLARE_API_TOKEN: (env as any).CLOUDFLARE_API_TOKEN,
+      CLOUDFLARE_ACCOUNT_ID: (env as any).CLOUDFLARE_ACCOUNT_ID,
       CEREBRAS_API_KEY: env.CEREBRAS_API_KEY,
       GROQ_API_KEY: env.GROQ_API_KEY,
       NVIDIA_NIM_API_KEY: (env as any).NVIDIA_NIM_API_KEY,

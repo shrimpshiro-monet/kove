@@ -5,6 +5,7 @@
  *        caption shots (vision AI) → analyze audio → assemble Edit DNA
  */
 
+import { z } from "zod";
 import { validateEditDNA, type EditDNA, type Result } from "@monet/edit-dna";
 import type { Env } from "../types/env";
 import { captionShots, type ShotCaption } from "./vision-captioner.js";
@@ -60,7 +61,12 @@ interface AudioAnalysisResult {
   summary: { beatCount: number; transientCount: number; averageEnergy: number; maxEnergy: number };
 }
 
-async function pythonPost<T>(url: string, body: unknown): Promise<T> {
+const PythonWorkerResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.unknown(),
+});
+
+async function pythonPost<T>(url: string, body: unknown, dataSchema: z.ZodType<T>): Promise<T> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -69,9 +75,17 @@ async function pythonPost<T>(url: string, body: unknown): Promise<T> {
   if (!res.ok) {
     throw new Error(`Python worker ${url} returned ${res.status}`);
   }
-  const data = await res.json() as { success: boolean; data: T };
-  if (!data.success) throw new Error(`Python worker error at ${url}`);
-  return data.data;
+  const raw = await res.json();
+  const parsed = PythonWorkerResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(`Python worker at ${url} returned invalid envelope: ${JSON.stringify(raw)}`);
+  }
+  if (!parsed.data.success) throw new Error(`Python worker error at ${url}`);
+  const dataResult = dataSchema.safeParse(parsed.data.data);
+  if (!dataResult.success) {
+    throw new Error(`Python worker at ${url} returned invalid data: ${dataResult.error.message}`);
+  }
+  return dataResult.data;
 }
 
 export async function analyzeVideo(
@@ -79,8 +93,8 @@ export async function analyzeVideo(
   options: AnalysisOptions,
 ): Promise<Result<EditDNA, string>> {
   const { filePath, fps = 3, type = "reference" } = options;
-  const aiUrl = (env as any).PYTHON_AI_URL || PYTHON_AI_URL_DEFAULT;
-  const audioUrl = (env as any).PYTHON_AUDIO_URL || PYTHON_AUDIO_URL_DEFAULT;
+  const aiUrl = env.PYTHON_AI_URL || PYTHON_AI_URL_DEFAULT;
+  const audioUrl = env.PYTHON_AUDIO_URL || PYTHON_AUDIO_URL_DEFAULT;
 
   try {
     // Step 1: Extract frames

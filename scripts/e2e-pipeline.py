@@ -75,16 +75,10 @@ def post_python_ai(endpoint, data):
 
 def call_cloudflare_vision(images_b64, prompt):
     """Call Cloudflare Workers AI vision model with images + text."""
-    content = []
-    for img_b64 in images_b64:
-        content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{img_b64}", "detail": "low"},
-        })
-    content.append({"type": "text", "text": prompt})
-
+    # Native /ai/run/ endpoint: prompt + image at top level
     payload = json.dumps({
-        "messages": [{"role": "user", "content": content}],
+        "prompt": prompt,
+        "image": images_b64[0] if len(images_b64) == 1 else images_b64,
         "max_tokens": 2000,
     }).encode()
 

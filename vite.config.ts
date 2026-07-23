@@ -126,6 +126,12 @@ export default defineConfig({
       "process.env.CLERK_PUBLISHABLE_KEY": JSON.stringify(
         loadDevVars().CLERK_PUBLISHABLE_KEY || ""
       ),
+      "process.env.CLOUDFLARE_API_TOKEN": JSON.stringify(
+        loadDevVars().CLOUDFLARE_API_TOKEN || ""
+      ),
+      "process.env.CLOUDFLARE_ACCOUNT_ID": JSON.stringify(
+        loadDevVars().CLOUDFLARE_ACCOUNT_ID || ""
+      ),
     },
   },
 });

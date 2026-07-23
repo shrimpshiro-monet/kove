@@ -64,6 +64,10 @@ export interface Env {
   // Cloudflare Workers AI binding
   AI: any;
 
+  // Cloudflare API credentials (for REST API fallback in local dev)
+  CLOUDFLARE_API_TOKEN?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
+
   // Cloudflare Vectorize (semantic search)
   VECTORIZE?: any;
 

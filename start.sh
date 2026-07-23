@@ -1,112 +1,40 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
 
-# ── Colors ──────────────────────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-DIM='\033[2m'
-RESET='\033[0m'
+echo "🚀 Starting Kove dev environment..."
 
-log()  { echo -e "${CYAN}[monet]${RESET} $*"; }
-ok()   { echo -e "${GREEN}  ✓${RESET} $*"; }
-warn() { echo -e "${YELLOW}  ⚠${RESET} $*"; }
-err()  { echo -e "${RED}  ✗${RESET} $*"; }
-
-# ── Config ──────────────────────────────────────────────────────────
-PORTS=(3000 5173 8101 8102)
-TURBO_CACHE=".turbo"
-NODE_CACHE="node_modules/.cache"
-
-# ── Phase 1: Kill existing processes ────────────────────────────────
-log "Killing stale processes..."
-
-killed=0
-for port in "${PORTS[@]}"; do
-  pids=$(lsof -ti :"$port" 2>/dev/null || true)
-  if [[ -n "$pids" ]]; then
-    echo "$pids" | xargs kill -9 2>/dev/null || true
-    ok "Killed process on port $port"
-    ((killed++))
-  fi
+# Kill any existing processes on our ports
+for port in 8787 3000 5005 8101 8102; do
+  lsof -ti :$port | xargs kill -9 2>/dev/null || true
 done
 
-# Kill any lingering node/vite/tsx processes from this project
-for pattern in "tsx watch.*server.ts" "tsx watch.*index.ts" "vite dev"; do
-  pids=$(pgrep -f "$pattern" 2>/dev/null || true)
-  if [[ -n "$pids" ]]; then
-    echo "$pids" | xargs kill -9 2>/dev/null || true
-    ok "Killed $pattern"
-    ((killed++))
-  fi
-done
-
-if [[ $killed -eq 0 ]]; then
-  ok "No stale processes found"
-fi
-
-# Small delay for ports to release
 sleep 1
 
-# ── Phase 2: Clean caches ──────────────────────────────────────────
-log "Cleaning caches..."
+echo "⏳ Starting services..."
 
-rm -rf "$TURBO_CACHE" 2>/dev/null && ok "Removed $TURBO_CACHE" || true
-rm -rf "$NODE_CACHE" 2>/dev/null && ok "Removed $NODE_CACHE" || true
-rm -rf apps/api/.turbo apps/web/.turbo apps/worker-node/.turbo 2>/dev/null && ok "Removed app-level turbo caches" || true
+# Start everything with pnpm dev
+pnpm dev 2>&1 &
+DEV_PID=$!
 
-# ── Phase 3: Install dependencies ──────────────────────────────────
-log "Installing dependencies..."
-pnpm install --frozen-lockfile 2>&1 | tail -3
-ok "Dependencies installed"
+# Wait for Vite to be ready
+echo "  → Waiting for Vite (:8787)..."
+for i in $(seq 1 60); do
+  if curl -s http://localhost:8787 > /dev/null 2>&1; then
+    echo ""
+    echo "✅ All services running!"
+    echo ""
+    echo "  🌐 Landing:   http://localhost:8787/"
+    echo "  💬 Chat UI:   http://localhost:8787/chat"
+    echo "  💰 Pricing:   http://localhost:8787/pricing"
+    echo ""
+    echo "  Press Ctrl+C to stop"
+    echo ""
+    wait $DEV_PID
+    exit 0
+  fi
+  sleep 1
+done
 
-# ── Phase 4: Create storage dir ────────────────────────────────────
-mkdir -p apps/api/storage/uploads
-ok "Storage directory ready"
-
-# ── Phase 5: Start all services ────────────────────────────────────
-log "Starting services..."
-echo ""
-
-# Trap to kill all child processes on exit
-cleanup() {
-  log "Shutting down..."
-  kill $(jobs -p) 2>/dev/null || true
-  wait 2>/dev/null || true
-  ok "All services stopped"
-}
-trap cleanup EXIT INT TERM
-
-# Start Vite dev server (TanStack Start)
-log "${DIM}Starting Vite dev server (port 5173)...${RESET}"
-npx vite dev --port 5173 --host 0.0.0.0 &
-VITE_PID=$!
-sleep 3
-
-# Start API server
-log "${DIM}Starting API server (port 3000)...${RESET}"
-pnpm dev:api &
-API_PID=$!
-sleep 3
-
-# Start worker (optional — needs Redis)
-# Uncomment if you have Redis running:
-# log "${DIM}Starting render worker...${RESET}"
-# pnpm dev:worker &
-# WORKER_PID=$!
-
-echo ""
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo -e "${GREEN}  All services running!${RESET}"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-echo ""
-echo -e "  ${CYAN}Web${RESET}      → http://localhost:5173"
-echo -e "  ${CYAN}API${RESET}      → http://localhost:3000"
-echo -e "  ${CYAN}Health${RESET}   → curl http://localhost:3000/health"
-echo ""
-echo -e "  ${DIM}Press Ctrl+C to stop all services${RESET}"
-echo ""
-
-# Wait for any child to exit
-wait
+echo "❌ Vite didn't start in 60s. Check logs."
+kill $DEV_PID 2>/dev/null || true
+exit 1
