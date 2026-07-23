@@ -32,7 +32,7 @@ CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct"
 
 # Load Cloudflare credentials from .dev.vars
 DEV_VARS = {}
-dev_vars_path = os.path.join(os.path.dirname(__file__), ".dev.vars")
+dev_vars_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".dev.vars")
 if os.path.exists(dev_vars_path):
     with open(dev_vars_path) as f:
         for line in f:
